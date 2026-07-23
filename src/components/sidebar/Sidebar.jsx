@@ -1,4 +1,8 @@
 import { Nav } from "react-bootstrap";
+import { AiFillMessage } from "react-icons/ai";
+import { CgProfile } from "react-icons/cg";
+import { IoMdLogOut } from "react-icons/io";
+import { RiContactsFill } from "react-icons/ri";
 
 function Sidebar({ activeTab, setActiveTab }) {
   return (
@@ -14,7 +18,7 @@ function Sidebar({ activeTab, setActiveTab }) {
           className={activeTab === "dm" ? "text-white fw-bold" : "text-secondary"}
           onClick={() => setActiveTab("dm")}
         >
-          💬 DM
+          <AiFillMessage/> DM
         </Nav.Link>
 
         <Nav.Link
@@ -22,7 +26,7 @@ function Sidebar({ activeTab, setActiveTab }) {
           className={activeTab === "contacts" ? "text-white fw-bold" : "text-secondary"}
           onClick={() => setActiveTab("contacts")}
         >
-          👥 Contacts
+          <RiContactsFill/> Contacts
         </Nav.Link>
 
         <Nav.Link
@@ -30,7 +34,7 @@ function Sidebar({ activeTab, setActiveTab }) {
           className={activeTab === "profile" ? "text-white fw-bold" : "text-secondary"}
           onClick={() => setActiveTab("profile")}
         >
-          👤 Profile
+          <CgProfile/> Profile
         </Nav.Link>
       </Nav>
 
@@ -40,7 +44,7 @@ function Sidebar({ activeTab, setActiveTab }) {
           className="text-danger"
           onClick={() => alert("Logout")}
         >
-          🚪 Logout
+          <IoMdLogOut/> Logout
         </Nav.Link>
       </div>
     </div>
