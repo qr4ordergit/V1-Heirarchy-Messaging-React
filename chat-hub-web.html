@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hub — Web</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bs-primary:#4B3FF2;
+    --bs-primary-rgb:75,63,242;
+    --brand-ink:#2E23B0;
+    --bg:#F6F5FB;
+    --ink:#16142B;
+    --muted:#7A7791;
+    --border:#E7E5F3;
+    --accent:#17B890;
+  }
+  body{ background:var(--bg); font-family:'Inter',sans-serif; color:var(--ink); }
+  .font-display{ font-family:'Space Grotesk',sans-serif; }
+  .font-mono{ font-family:'IBM Plex Mono',monospace; }
+  .text-muted-2{ color:var(--muted) !important; }
+
+  .btn-primary{ background:var(--bs-primary); border-color:var(--bs-primary); box-shadow:0 10px 24px -10px rgba(75,63,242,.55); }
+  .btn-primary:hover,.btn-primary:focus{ background:var(--brand-ink); border-color:var(--brand-ink); }
+  .nav-pills .nav-link.active{ background:var(--bs-primary); }
+  .nav-pills .nav-link{ color:var(--ink); font-weight:600; border-radius:12px; }
+  a, .link{ color:var(--bs-primary); cursor:pointer; }
+  .form-check-input:checked{ background-color:var(--bs-primary); border-color:var(--bs-primary); }
+
+  .avatar{ border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; font-family:'Space Grotesk',sans-serif; }
+  .sidebar{ background:#fff; border-right:1px solid var(--border); min-height:100vh; }
+  .sidebar .nav-link{ display:flex; align-items:center; gap:10px; padding:.65rem .9rem; }
+  .brand-mark{ width:38px; height:38px; border-radius:11px; background:linear-gradient(135deg,var(--bs-primary),var(--brand-ink)); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; }
+
+  .topbar{ background:#fff; border-bottom:1px solid var(--border); }
+
+  .list-row{ display:flex; align-items:center; gap:12px; padding:.7rem .6rem; border-radius:14px; cursor:pointer; }
+  .list-row:hover{ background:#00000006; }
+  .list-row.active{ background:#4B3FF212; }
+  .chat-preview{ color:var(--muted); font-size:.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .time-sm{ font-size:.72rem; color:var(--muted); font-family:'IBM Plex Mono',monospace; white-space:nowrap; }
+
+  .chat-window{ display:flex; flex-direction:column; height:calc(100vh - 64px); }
+  .messages{ flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:8px; background:var(--bg); }
+  .day-chip{ align-self:center; font-size:.72rem; background:#00000010; color:var(--muted); padding:3px 12px; border-radius:20px; margin-bottom:6px; }
+  .bubble-row{ display:flex; }
+  .bubble-row.me{ justify-content:flex-end; }
+  .bubble{ max-width:70%; background:#fff; border:1px solid var(--border); padding:.55rem .8rem; border-radius:16px 16px 16px 4px; font-size:.9rem; }
+  .bubble-row.me .bubble{ background:var(--bs-primary); color:#fff; border:none; border-radius:16px 16px 4px 16px; }
+  .bubble-sender{ font-size:.72rem; font-weight:700; color:var(--bs-primary); margin-bottom:2px; }
+  .bubble-row.me .bubble-sender{ color:#fff; }
+  .bubble-time{ font-size:.65rem; opacity:.65; margin-top:4px; text-align:right; }
+  .composer{ display:flex; align-items:center; gap:8px; padding:.7rem 1rem; border-top:1px solid var(--border); background:#fff; }
+
+  .perm-row{ display:flex; align-items:center; gap:12px; padding:.55rem 0; border-bottom:1px solid var(--border); }
+  .perm-icon{ width:30px; height:30px; border-radius:9px; background:#4B3FF214; color:var(--bs-primary); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .perm-label{ flex:1; font-size:.88rem; font-weight:600; }
+  .perm-bool{ font-family:'IBM Plex Mono',monospace; font-size:.72rem; color:var(--muted); width:44px; }
+  .perm-bool.true{ color:var(--accent); }
+
+  .hub-hero{ min-height:100vh; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 30% 20%, #EFECFC, #E3E0F7 60%, #DAD5F5); }
+  .orbit-wrap{ position:relative; width:180px; height:180px; margin:8px auto 16px; display:flex; align-items:center; justify-content:center; }
+  .orbit-ring{ position:absolute; inset:0; animation:spin 16s linear infinite; }
+  .orbit-pos{ position:absolute; top:50%; left:50%; width:0; height:0; }
+  .orbit-counter{ animation:spin 16s linear infinite reverse; }
+  .orbit-dot{ width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-size:.68rem; font-weight:700; font-family:'IBM Plex Mono',monospace; box-shadow:0 4px 10px -2px rgba(0,0,0,.35); }
+  .orbit-core{ width:78px; height:78px; border-radius:50%; background:linear-gradient(135deg,var(--bs-primary),var(--brand-ink)); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-size:30px; font-weight:700; z-index:2; box-shadow:0 12px 26px -8px rgba(75,63,242,.6); }
+  @keyframes spin{ from{ transform:rotate(0deg);} to{ transform:rotate(360deg);} }
+
+  .toast-fixed{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:2000; }
+  @media (max-width: 767.98px){
+    .chat-window{ height:calc(100vh - 56px); }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useRef, useEffect } = React;
+
+/* ---------- design tokens & data ---------- */
+const PALETTE = ["#4B3FF2", "#17B890", "#FF6B4A", "#3F8CFF", "#B34BF2", "#F2B705"];
+function initials(name){ return (name||"").split(/[.\s]/).filter(Boolean).slice(0,2).map(s=>s[0].toUpperCase()).join(""); }
+function colorFor(i){ return PALETTE[i % PALETTE.length]; }
+
+const PERMISSION_DEFS = [
+  { key: "createChannel", label: "Create Channel", icon: "bi-chat-dots" },
+  { key: "readChannel", label: "Read Channel", icon: "bi-chat-dots" },
+  { key: "updateChannel", label: "Update Channel", icon: "bi-chat-dots" },
+  { key: "deleteChannel", label: "Delete Channel", icon: "bi-chat-dots" },
+  { key: "createGroup", label: "Create Group", icon: "bi-people" },
+  { key: "readGroup", label: "Read Group", icon: "bi-people" },
+  { key: "updateGroup", label: "Update Group", icon: "bi-people" },
+  { key: "deleteGroup", label: "Delete Group", icon: "bi-people" },
+  { key: "createUser", label: "Create User", icon: "bi-person-gear" },
+  { key: "readUser", label: "Read User", icon: "bi-person-gear" },
+  { key: "updateUser", label: "Update User", icon: "bi-person-gear" },
+  { key: "deleteUser", label: "Delete User", icon: "bi-person-gear" },
+  { key: "userTree", label: "User Tree", icon: "bi-diagram-3" },
+  { key: "permissionUpdate", label: "Permission Update", icon: "bi-shield-check" },
+];
+const DEFAULT_PERMS = { createChannel:true, readChannel:true, updateChannel:false, deleteChannel:false, createGroup:true, readGroup:true, updateGroup:false, deleteGroup:false, createUser:true, readUser:true, updateUser:false, deleteUser:false, userTree:true, permissionUpdate:false };
+
+const INITIAL_DMS = [
+  { id:"dm1", name:"Alice Johnson", time:"9:41 AM", preview:"Hey! How are you?",
+    messages:[ {id:1,text:"Hey! How are you?",isMe:false,time:"9:41 AM"}, {id:2,text:"Doing well, just settling into the new hub 👋",isMe:true,time:"9:42 AM"} ] },
+  { id:"dm2", name:"Mark Smith", time:"Yesterday", preview:"Sure, I will send it",
+    messages:[ {id:1,text:"Can you send over the file?",isMe:false,time:"Yesterday"}, {id:2,text:"Sure, I will send it",isMe:false,time:"Yesterday"} ] },
+];
+const INITIAL_GROUPS = [
+  { id:"g1", name:"Design Team", members:6, time:"9:30 AM",
+    messages:[ {id:1,text:"Hey team! 👋 Are we still on track for the design review tomorrow?",isMe:false,sender:"Alice Johnson",time:"10:30 AM"},
+               {id:2,text:"Yes, I've updated the latest changes in Figma.",isMe:true,time:"10:32 AM"},
+               {id:3,text:"Great! I'll add my feedback by end of day.",isMe:false,sender:"Mark Smith",time:"10:33 AM"},
+               {id:4,text:"Perfect, thanks! 👍",isMe:true,time:"10:34 AM"},
+               {id:5,text:"Can you also share the presentation slides?",isMe:false,sender:"Sophia Miller",time:"10:35 AM"},
+               {id:6,isMe:true,time:"10:36 AM",file:{name:"Design_Review.pptx",size:"2.4 MB · PPTX"},text:"Here you go."},
+               {id:7,text:"Thanks! Looks good. 🙌",isMe:false,sender:"David Wilson",time:"10:37 AM"},
+               {id:8,text:"Let me know if anything else is needed.",isMe:true,time:"10:38 AM"} ] },
+  { id:"g2", name:"Friends Forever", members:8, time:"9:00 AM", messages:[{id:1,text:"See you all tonight!",isMe:false,sender:"David Wilson",time:"9:00 AM"}] },
+  { id:"g3", name:"Project Updates", members:12, time:"Yesterday", messages:[{id:1,text:"Shared a file",isMe:true,time:"Yesterday"}] },
+];
+const INITIAL_CONTACTS = ["Alice Johnson","Mark Smith","David Wilson","Emma Watson","Sophia Miller"].map((n,i)=>({id:"c"+i,name:n}));
+const REPLIES = ["Got it 👍","Sounds good.","Thanks for the update!","Noted, will check.","Perfect, appreciate it."];
+
+/* ---------- API layer ----------
+   Swap BASE_URL / callApi() for real endpoints. Payload shapes below follow
+   the spec exactly. Each call is logged to the console so you can see the
+   request that would be sent. GET calls simulate a short network delay and
+   resolve with the seed data (swap for a real fetch when the backend exists). */
+const BASE_URL = "/api"; // placeholder, no live backend wired up
+async function callApi(method, path, payload){
+  console.log(`[API] ${method} ${BASE_URL}${path}`, payload || "");
+  // Real usage:
+  // const res = await fetch(BASE_URL+path, { method, headers:{'Content-Type':'application/json'}, body: payload ? JSON.stringify(payload) : undefined });
+  // return res.json();
+  return new Promise(resolve => setTimeout(() => resolve({ ok:true }), 250));
+}
+
+/* ---------- small building blocks ---------- */
+function Avatar({ name, size=44, colorIndex=0 }){
+  return <div className="avatar" style={{width:size,height:size,fontSize:size*0.36,background:colorFor(colorIndex)}}>{initials(name)}</div>;
+}
+function PermissionList({ perms, onToggle }){
+  return (
+    <div>
+      {PERMISSION_DEFS.map(p=>{
+        const val = perms[p.key];
+        return (
+          <div className="perm-row" key={p.key}>
+            <span className="perm-icon"><i className={"bi "+p.icon}></i></span>
+            <span className="perm-label">{p.label}</span>
+            <span className={"perm-bool"+(val?" true":"")}>{val?"True":"False"}</span>
+            <div className="form-check form-switch m-0">
+              <input className="form-check-input" type="checkbox" role="switch" checked={val} onChange={()=>onToggle(p.key)} style={{width:"2.4em",height:"1.3em"}}/>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+function Toast({ msg }){
+  if(!msg) return null;
+  return (
+    <div className="toast-fixed">
+      <div className="bg-dark text-white px-4 py-2 rounded-pill shadow">{msg}</div>
+    </div>
+  );
+}
+
+/* ---------- main app ---------- */
+function App(){
+  const [hubCreated, setHubCreated] = useState(false);
+  const [section, setSection] = useState("accounts"); // accounts | chats | contacts | profile
+  const [profileSub, setProfileSub] = useState(null); // account | privacy | help | about
+
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+  const showToast = (m)=>{ setToast(m); clearTimeout(toastTimer.current); toastTimer.current = setTimeout(()=>setToast(null), 2200); };
+
+  // hub creation
+  const [email, setEmail] = useState("john.doe@email.com");
+  const [password, setPassword] = useState("supersecret1");
+  const [showPw, setShowPw] = useState(false);
+
+  // accounts
+  const [accounts, setAccounts] = useState([]);
+  const [activeAccountId, setActiveAccountId] = useState(null);
+  const activeAccount = accounts.find(a=>a.id===activeAccountId) || accounts[0];
+
+  // access + permissions modals
+  const [accessOpen, setAccessOpen] = useState(false);
+  const [accessSource, setAccessSource] = useState(null);
+  const [permsOpen, setPermsOpen] = useState(false);
+  const [permsTarget, setPermsTarget] = useState(null);
+  const [permsDraft, setPermsDraft] = useState(DEFAULT_PERMS);
+  const [permsMap, setPermsMap] = useState({});
+
+  // create account modal
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newAcc, setNewAcc] = useState({ countryCode:"", username:"", email:"", phone:"", password:"", about:"" });
+  const [newAccShowPw, setNewAccShowPw] = useState(false);
+  const [newAccPerms, setNewAccPerms] = useState(DEFAULT_PERMS);
+
+  // chats
+  const [chatsTab, setChatsTab] = useState("dm");
+  const [dms, setDms] = useState(INITIAL_DMS);
+  const [groups, setGroups] = useState(INITIAL_GROUPS);
+  const [activeConvo, setActiveConvo] = useState(null);
+  const [draftMsg, setDraftMsg] = useState("");
+  const [mobileShowConvo, setMobileShowConvo] = useState(false);
+
+  // contacts
+  const [contacts, setContacts] = useState(INITIAL_CONTACTS);
+  const [addContactOpen, setAddContactOpen] = useState(false);
+  const [newContact, setNewContact] = useState({ name:"", phone:"", email:"" });
+
+  const convo = activeConvo?.type==="dm" ? dms.find(d=>d.id===activeConvo.id)
+              : activeConvo?.type==="group" ? groups.find(g=>g.id===activeConvo.id) : null;
+
+  // GET calls fired when their screen is first shown (per spec's "load using GET API" events)
+  useEffect(()=>{ if(hubCreated && section==="accounts") callApi("GET","/accounts"); }, [hubCreated, section]);
+  useEffect(()=>{ if(section==="chats") callApi("GET", chatsTab==="dm" ? "/conversations/dm" : "/conversations/groups"); }, [section, chatsTab]);
+  useEffect(()=>{ if(section==="contacts") callApi("GET","/contacts"); }, [section]);
+  useEffect(()=>{ if(activeConvo) callApi("GET", `/conversations/${activeConvo.id}/messages`); }, [activeConvo]);
+
+  const messagesEndRef = useRef(null);
+  useEffect(()=>{ messagesEndRef.current?.scrollIntoView({behavior:"smooth"}); }, [convo?.messages?.length]);
+
+  async function createHub(){
+    if(!email.trim() || !password.trim()){ showToast("Enter an email and password"); return; }
+    const username = email.split("@")[0] || "john.doe";
+    await callApi("POST", "/hub", { Username: username, Password: password });
+    const acc = { id:"acc-"+Date.now(), username, about:"Main hub account" };
+    setAccounts([acc]); setActiveAccountId(acc.id);
+    setHubCreated(true); setSection("accounts");
+    showToast("Hub created");
+  }
+  function goToLogin(){ showToast("Redirecting to login…"); /* real usage: window.location.href = "/login"; */ }
+  function openAccessModal(acc){ setAccessSource(acc); setAccessOpen(true); }
+  function chooseAccessTarget(target){
+    const key = `${accessSource.id}:${target.id}`;
+    setPermsTarget({ source:accessSource, target });
+    setPermsDraft(permsMap[key] || DEFAULT_PERMS);
+    setAccessOpen(false); setPermsOpen(true);
+  }
+  async function savePermissions(){
+    const key = `${permsTarget.source.id}:${permsTarget.target.id}`;
+    const grantedKeys = Object.keys(permsDraft).filter(k=>permsDraft[k]);
+    await callApi("POST", "/accounts/access", {
+      Account_id: permsTarget.source.id,
+      Account_list: [{ Account_id: permsTarget.target.id, Permission: grantedKeys }],
+    });
+    setPermsMap(prev=>({ ...prev, [key]: permsDraft }));
+    setPermsOpen(false); showToast("Permissions saved");
+  }
+  async function addAccount(){
+    if(!newAcc.username.trim()){ showToast("Enter a username"); return; }
+    const grantedKeys = Object.keys(newAccPerms).filter(k=>newAccPerms[k]);
+    await callApi("POST", "/accounts", {
+      Country_code: newAcc.countryCode,
+      account_name: newAcc.username.trim(),
+      Email: newAcc.email,
+      Phone: newAcc.phone,
+      Password: newAcc.password,
+      Permission: grantedKeys,
+    });
+    const acc = { id:"acc-"+Date.now(), username:newAcc.username.trim(), about:newAcc.about, email:newAcc.email, phone:newAcc.phone, countryCode:newAcc.countryCode };
+    setAccounts(prev=>[...prev, acc]);
+    setNewAcc({ countryCode:"", username:"", email:"", phone:"", password:"", about:"" });
+    setNewAccPerms(DEFAULT_PERMS);
+    setCreateOpen(false);
+    showToast("Account added");
+  }
+  function selectAccount(acc){ setActiveAccountId(acc.id); setSection("chats"); }
+  function openConversation(type, id){ setActiveConvo({type,id}); setMobileShowConvo(true); }
+  function sendMessage(){
+    const text = draftMsg.trim();
+    if(!text || !activeConvo) return;
+    callApi("POST", "/messages", { Conversation_id: activeConvo.id, Message: text });
+    const newMsg = { id:Date.now(), text, isMe:true, time:"Now" };
+    if(activeConvo.type==="dm"){
+      setDms(prev=>prev.map(d=> d.id===activeConvo.id ? {...d, messages:[...d.messages,newMsg], preview:text, time:"Now"} : d));
+      setDraftMsg("");
+      setTimeout(()=>{
+        const reply = { id:Date.now()+1, text:REPLIES[Math.floor(Math.random()*REPLIES.length)], isMe:false, time:"Now" };
+        setDms(prev=>prev.map(d=> d.id===activeConvo.id ? {...d, messages:[...d.messages,reply], preview:reply.text} : d));
+      }, 1100);
+    } else {
+      setGroups(prev=>prev.map(g=> g.id===activeConvo.id ? {...g, messages:[...g.messages,newMsg]} : g));
+      setDraftMsg("");
+    }
+  }
+  function startDmWithContact(contact){
+    const existing = dms.find(d=>d.name===contact.name);
+    if(existing){ openConversation("dm", existing.id); setSection("chats"); return; }
+    const dm = { id:"dm-"+Date.now(), name:contact.name, time:"Now", preview:"", messages:[] };
+    setDms(prev=>[dm, ...prev]);
+    setSection("chats");
+    openConversation("dm", dm.id);
+  }
+  async function addContact(){
+    if(!newContact.name.trim()){ showToast("Enter a name"); return; }
+    await callApi("POST", "/contacts", {
+      contact_name: newContact.name.trim(),
+      Account_id: activeAccount?.id,
+      Phone: newContact.phone,
+      email: newContact.email,
+    });
+    setContacts(prev=>[...prev, {id:"c-"+Date.now(), ...newContact}]);
+    setNewContact({name:"",phone:"",email:""});
+    setAddContactOpen(false);
+    showToast("Contact added");
+  }
+
+  /* ---------- hub creation screen ---------- */
+  if(!hubCreated){
+    return (
+      <div className="hub-hero">
+        <div className="card border-0 shadow-lg p-4 p-md-5" style={{maxWidth:440, width:"100%"}}>
+          <div className="orbit-wrap">
+            <div className="orbit-ring">
+              {["JW","JP","JS","JD"].map((label,i)=>(
+                <div className="orbit-pos" key={label} style={{transform:`rotate(${i*90}deg) translate(78px)`}}>
+                  <div className="orbit-counter"><div className="orbit-dot" style={{background:colorFor(i)}}>{label}</div></div>
+                </div>
+              ))}
+            </div>
+            <div className="orbit-core">H</div>
+          </div>
+          <h1 className="font-display fw-bold text-center fs-3 mb-2">Create Your Hub</h1>
+          <p className="text-muted-2 text-center mb-4">This will be your main account. You can create multiple sub accounts with username, email or phone number.</p>
+
+          <div className="mb-3">
+            <label className="form-label font-mono text-muted-2 small text-uppercase">Email</label>
+            <input type="email" className="form-control" value={email} onChange={e=>setEmail(e.target.value)} />
+          </div>
+          <div className="mb-4">
+            <label className="form-label font-mono text-muted-2 small text-uppercase">Password</label>
+            <div className="input-group">
+              <input type={showPw?"text":"password"} className="form-control" value={password} onChange={e=>setPassword(e.target.value)} />
+              <button className="btn btn-outline-secondary" type="button" onClick={()=>setShowPw(v=>!v)}>
+                <i className={"bi "+(showPw?"bi-eye-slash":"bi-eye")}></i>
+              </button>
+            </div>
+          </div>
+          <button className="btn btn-primary w-100 py-2 fw-bold" onClick={createHub}>Create Account</button>
+          <p className="text-center text-muted-2 small mt-3 mb-0">
+            Already have an account? <span className="link fw-semibold" onClick={goToLogin}>Login</span>
+          </p>
+        </div>
+        <Toast msg={toast} />
+      </div>
+    );
+  }
+
+  /* ---------- sidebar nav items ---------- */
+  const navItems = [
+    { id:"accounts", label:"Accounts", icon:"bi-diagram-2" },
+    { id:"chats", label:"Chats", icon:"bi-chat-dots" },
+    { id:"contacts", label:"Contacts", icon:"bi-people" },
+    { id:"profile", label:"Profile", icon:"bi-person-circle" },
+  ];
+
+  function goSection(id){ setSection(id); setProfileSub(null); setMobileShowConvo(false);
+    const offc = bootstrap.Offcanvas.getInstance(document.getElementById('mobileSidebar'));
+    if(offc) offc.hide();
+  }
+
+  const SidebarNav = ({ compact }) => (
+    <>
+      <div className="d-flex align-items-center gap-2 px-2 py-3 mb-2">
+        <div className="brand-mark">H</div>
+        <div>
+          <div className="font-display fw-bold">Hub</div>
+          <div className="text-muted-2 small">{activeAccount?.username}</div>
+        </div>
+      </div>
+      <div className="nav nav-pills flex-column gap-1 px-2">
+        {navItems.map(it=>(
+          <a key={it.id} className={"nav-link"+(section===it.id?" active":"")} onClick={()=>goSection(it.id)}>
+            <i className={"bi "+it.icon}></i> {it.label}
+          </a>
+        ))}
+      </div>
+    </>
+  );
+
+  /* ---------- section renderers ---------- */
+  function renderAccounts(){
+    return (
+      <div className="p-3 p-md-4" style={{maxWidth:720}}>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h2 className="font-display fw-bold h4 mb-1">Your Accounts</h2>
+            <p className="text-muted-2 mb-0">Create multiple accounts and switch between them easily.</p>
+          </div>
+          <button className="btn btn-primary" onClick={()=>setCreateOpen(true)}><i className="bi bi-plus-lg me-1"></i>Add Account</button>
+        </div>
+        <div className="card border-0 shadow-sm">
+          <div className="list-group list-group-flush">
+            {accounts.map((a,i)=>(
+              <div className="list-group-item d-flex align-items-center gap-3" key={a.id}>
+                <div className="list-row flex-grow-1 p-0" onClick={()=>selectAccount(a)}>
+                  <Avatar name={a.username} colorIndex={i} size={40}/>
+                  <span className="fw-semibold">{a.username}</span>
+                </div>
+                <button className="btn btn-sm btn-outline-secondary" onClick={()=>openAccessModal(a)}><i className="bi bi-gear"></i></button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function renderChatList(){
+    const list = chatsTab==="dm" ? dms : groups;
+    return (
+      <div className="h-100 d-flex flex-column border-end" style={{minWidth:0}}>
+        <div className="p-3 border-bottom bg-white">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="font-display fw-bold mb-0">Chats</h5>
+            <button className="btn btn-sm btn-light" onClick={()=>showToast("More options")}><i className="bi bi-three-dots-vertical"></i></button>
+          </div>
+          <div className="input-group mb-3">
+            <span className="input-group-text bg-white"><i className="bi bi-search"></i></span>
+            <input className="form-control" placeholder="Search" />
+          </div>
+          <div className="btn-group w-100" role="group">
+            <button className={"btn btn-sm "+(chatsTab==="dm"?"btn-primary":"btn-outline-secondary")} onClick={()=>setChatsTab("dm")}>DM</button>
+            <button className={"btn btn-sm "+(chatsTab==="groups"?"btn-primary":"btn-outline-secondary")} onClick={()=>setChatsTab("groups")}>Groups</button>
+          </div>
+        </div>
+        <div className="overflow-auto flex-grow-1 p-2">
+          {list.map((item,i)=>(
+            <div className={"list-row"+(activeConvo && activeConvo.id===item.id?" active":"")} key={item.id}
+              onClick={()=>openConversation(chatsTab==="dm"?"dm":"group", item.id)}>
+              <Avatar name={item.name} colorIndex={i}/>
+              <div className="flex-grow-1 min-w-0">
+                <div className="d-flex justify-content-between">
+                  <span className="fw-semibold">{item.name}</span>
+                  <span className="time-sm">{item.time}</span>
+                </div>
+                <div className="chat-preview">{chatsTab==="dm" ? item.preview : `${item.members} members`}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  function renderConversation(){
+    if(!convo) return (
+      <div className="d-flex align-items-center justify-content-center h-100 text-muted-2">
+        <div className="text-center">
+          <i className="bi bi-chat-square-text fs-1 d-block mb-2"></i>
+          Select a conversation to start chatting
+        </div>
+      </div>
+    );
+    const isGroup = activeConvo.type==="group";
+    return (
+      <div className="chat-window">
+        <div className="d-flex align-items-center gap-2 p-3 border-bottom bg-white">
+          <button className="btn btn-sm btn-outline-secondary d-md-none" onClick={()=>setMobileShowConvo(false)}><i className="bi bi-arrow-left"></i></button>
+          <Avatar name={convo.name} size={38} colorIndex={1}/>
+          <div>
+            <div className="fw-bold">{convo.name}</div>
+            <div className="text-muted-2 small">{isGroup ? `${convo.members} members` : "online"}</div>
+          </div>
+        </div>
+        <div className="messages">
+          <div className="day-chip">Today</div>
+          {convo.messages.map(m=>(
+            <div key={m.id} className={"bubble-row"+(m.isMe?" me":"")}>
+              <div className="bubble">
+                {!m.isMe && isGroup && <div className="bubble-sender">{m.sender}</div>}
+                {m.file && (
+                  <div className="d-flex align-items-center gap-2 p-2 mb-2 rounded-3" style={{background: m.isMe ? "rgba(255,255,255,.15)" : "#00000008"}}>
+                    <i className="bi bi-file-earmark-slides fs-4"></i>
+                    <div>
+                      <div className="fw-semibold small">{m.file.name}</div>
+                      <div className="small" style={{opacity:.8}}>{m.file.size}</div>
+                    </div>
+                  </div>
+                )}
+                {m.text && <div>{m.text}</div>}
+                <div className="bubble-time">{m.time}{m.isMe?" ✓✓":""}</div>
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef}/>
+        </div>
+        <div className="composer">
+          <button className="btn btn-light"><i className="bi bi-paperclip"></i></button>
+          <input className="form-control rounded-pill" placeholder="Type a message..." value={draftMsg}
+            onChange={e=>setDraftMsg(e.target.value)} onKeyDown={e=>e.key==="Enter" && sendMessage()} />
+          <button className="btn btn-light"><i className="bi bi-emoji-smile"></i></button>
+          <button className="btn btn-primary rounded-circle" style={{width:40,height:40}} onClick={sendMessage}><i className="bi bi-send"></i></button>
+        </div>
+      </div>
+    );
+  }
+
+  function renderChats(){
+    return (
+      <div className="d-flex h-100" style={{height:"calc(100vh - 0px)"}}>
+        <div className={(mobileShowConvo ? "d-none d-md-flex" : "d-flex") + " flex-column"} style={{width:"100%", maxWidth:360, flexShrink:0}}>
+          {renderChatList()}
+        </div>
+        <div className={(mobileShowConvo ? "d-flex" : "d-none d-md-flex") + " flex-column flex-grow-1"} style={{minWidth:0}}>
+          {renderConversation()}
+        </div>
+      </div>
+    );
+  }
+
+  function renderContacts(){
+    return (
+      <div className="p-3 p-md-4" style={{maxWidth:640}}>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h2 className="font-display fw-bold h4 mb-0">Contacts</h2>
+          <button className="btn btn-primary" onClick={()=>setAddContactOpen(true)}><i className="bi bi-plus-lg me-1"></i>Add</button>
+        </div>
+        <div className="input-group mb-3">
+          <span className="input-group-text bg-white"><i className="bi bi-search"></i></span>
+          <input className="form-control" placeholder="Search contacts" />
+        </div>
+        <div className="card border-0 shadow-sm">
+          <div className="list-group list-group-flush">
+            {contacts.map((c,i)=>(
+              <div className="list-group-item list-row" key={c.id} onClick={()=>startDmWithContact(c)}>
+                <Avatar name={c.name} colorIndex={i} size={40}/>
+                <span className="fw-semibold">{c.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function renderProfileHome(){
+    const items = [
+      { id:"account", label:"Account Settings", icon:"bi-gear" },
+      { id:"privacy", label:"Privacy", icon:"bi-lock" },
+      { id:"help", label:"Help & Support", icon:"bi-question-circle" },
+      { id:"about", label:"About", icon:"bi-info-circle" },
+    ];
+    return (
+      <div className="p-3 p-md-4" style={{maxWidth:640}}>
+        <div className="d-flex flex-column align-items-center py-3 mb-3">
+          <Avatar name={activeAccount?.username || "John Doe"} size={80}/>
+          <div className="font-display fw-bold h5 mt-2 mb-0">{activeAccount?.username || "john.doe"}</div>
+        </div>
+        <div className="card border-0 shadow-sm">
+          <div className="list-group list-group-flush">
+            {items.map(it=>(
+              <div className="list-group-item d-flex align-items-center gap-3" key={it.id} onClick={()=>setProfileSub(it.id)} style={{cursor:"pointer"}}>
+                <span className="perm-icon"><i className={"bi "+it.icon}></i></span>
+                <span className="flex-grow-1 fw-semibold">{it.label}</span>
+                <i className="bi bi-chevron-right text-muted-2"></i>
+              </div>
+            ))}
+            <div className="list-group-item d-flex align-items-center gap-3 text-danger" onClick={()=>goSection("accounts")} style={{cursor:"pointer"}}>
+              <span className="perm-icon text-danger" style={{background:"#dc354514"}}><i className="bi bi-box-arrow-right"></i></span>
+              <span className="flex-grow-1 fw-semibold">Switch Account</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function renderProfileSub(){
+    const back = <button className="btn btn-sm btn-outline-secondary mb-3" onClick={()=>setProfileSub(null)}><i className="bi bi-arrow-left me-1"></i>Back</button>;
+    if(profileSub==="account"){
+      const a = activeAccount || {};
+      return (
+        <div className="p-3 p-md-4" style={{maxWidth:640}}>
+          {back}
+          <h4 className="font-display fw-bold mb-3">Account Settings</h4>
+          <div className="card border-0 shadow-sm">
+            <div className="list-group list-group-flush">
+              <div className="list-group-item d-flex justify-content-between"><span className="text-muted-2">Username</span><span>{a.username||"john.doe"}</span></div>
+              <div className="list-group-item d-flex justify-content-between"><span className="text-muted-2">Email</span><span>{a.email||"john.doe@email.com"}</span></div>
+              <div className="list-group-item d-flex justify-content-between"><span className="text-muted-2">Phone</span><span>{a.phone||"Not set"}</span></div>
+              <div className="list-group-item d-flex justify-content-between"><span className="text-muted-2">About</span><span>{a.about||"Main hub account"}</span></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if(profileSub==="privacy"){
+      return <PrivacyScreen back={back} />;
+    }
+    if(profileSub==="help"){
+      const topics = ["Getting started with your Hub","Managing sub-accounts & permissions","Sending your first message","Reporting an issue"];
+      return (
+        <div className="p-3 p-md-4" style={{maxWidth:640}}>
+          {back}
+          <h4 className="font-display fw-bold mb-3">Help & Support</h4>
+          <div className="card border-0 shadow-sm">
+            <div className="list-group list-group-flush">
+              {topics.map(t=>(
+                <div className="list-group-item d-flex align-items-center gap-3" key={t}>
+                  <span className="perm-icon"><i className="bi bi-question-circle"></i></span>
+                  <span className="flex-grow-1">{t}</span>
+                  <i className="bi bi-chevron-right text-muted-2"></i>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if(profileSub==="about"){
+      return (
+        <div className="p-3 p-md-4 text-center" style={{maxWidth:640}}>
+          {back}
+          <div className="orbit-core mx-auto" style={{position:"static"}}>H</div>
+          <h4 className="font-display fw-bold mt-3">Hub</h4>
+          <p className="text-muted-2 mb-1">Version 1.0.0 (demo build)</p>
+          <p className="text-muted-2 small">One hub, every account you manage — messaging, groups and granular permissions in a single place.</p>
+        </div>
+      );
+    }
+    return null;
+  }
+
+  function renderMain(){
+    switch(section){
+      case "accounts": return renderAccounts();
+      case "chats": return renderChats();
+      case "contacts": return renderContacts();
+      case "profile": return profileSub ? renderProfileSub() : renderProfileHome();
+      default: return null;
+    }
+  }
+
+  return (
+    <div className="d-flex">
+      {/* Desktop sidebar */}
+      <div className="sidebar d-none d-md-block" style={{width:240, flexShrink:0}}>
+        <SidebarNav />
+      </div>
+
+      {/* Mobile offcanvas sidebar */}
+      <div className="offcanvas offcanvas-start" tabIndex="-1" id="mobileSidebar">
+        <div className="offcanvas-header">
+          <span className="font-display fw-bold">Hub</span>
+          <button type="button" className="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div className="offcanvas-body p-0">
+          <SidebarNav compact />
+        </div>
+      </div>
+
+      <div className="flex-grow-1" style={{minWidth:0}}>
+        {/* Mobile topbar */}
+        <div className="topbar d-flex d-md-none align-items-center gap-2 p-2 sticky-top">
+          <button className="btn btn-light" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar"><i className="bi bi-list fs-5"></i></button>
+          <span className="font-display fw-bold text-capitalize">{profileSub || section}</span>
+        </div>
+
+        <div style={{minHeight: "calc(100vh - 56px)"}}>
+          {renderMain()}
+        </div>
+
+        {/* Mobile bottom nav */}
+        <div className="d-flex d-md-none border-top bg-white sticky-bottom">
+          {navItems.map(it=>(
+            <button key={it.id} className="btn btn-link text-decoration-none flex-fill py-2"
+              style={{color: section===it.id ? "var(--bs-primary)" : "var(--muted)"}}
+              onClick={()=>goSection(it.id)}>
+              <i className={"bi "+it.icon+" d-block fs-5"}></i>
+              <span className="small">{it.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ----- Modals ----- */}
+      <Modal show={accessOpen} onClose={()=>setAccessOpen(false)} title="Select account to access">
+        {accounts.filter(a=>a.id!==accessSource?.id).length===0 && <p className="text-muted-2">Add another account to grant it access.</p>}
+        {accounts.filter(a=>a.id!==accessSource?.id).map((a,i)=>(
+          <div className="list-row" key={a.id} onClick={()=>chooseAccessTarget(a)}>
+            <Avatar name={a.username} colorIndex={i+1} size={38}/>
+            <span className="flex-grow-1 fw-semibold">{a.username}</span>
+            <i className="bi bi-chevron-right text-muted-2"></i>
+          </div>
+        ))}
+      </Modal>
+
+      <Modal show={permsOpen} onClose={()=>setPermsOpen(false)}
+        title={permsTarget ? `Access rights for ${permsTarget.source.username} on ${permsTarget.target.username}` : ""}>
+        <PermissionList perms={permsDraft} onToggle={k=>setPermsDraft(p=>({...p,[k]:!p[k]}))} />
+        <button className="btn btn-primary w-100 mt-3" onClick={savePermissions}><i className="bi bi-check-lg me-1"></i>Save Permissions</button>
+      </Modal>
+
+      <Modal show={createOpen} onClose={()=>setCreateOpen(false)} title="Create Account" size="lg">
+        <div className="row g-3">
+          <div className="col-md-6">
+            <label className="form-label font-mono text-muted-2 small text-uppercase">Country Code</label>
+            <input className="form-control" placeholder="Enter your country code" value={newAcc.countryCode} onChange={e=>setNewAcc({...newAcc,countryCode:e.target.value})}/>
+          </div>
+          <div className="col-md-6">
+            <label className="form-label font-mono text-muted-2 small text-uppercase">Username</label>
+            <input className="form-control" placeholder="Enter username" value={newAcc.username} onChange={e=>setNewAcc({...newAcc,username:e.target.value})}/>
+          </div>
+          <div className="col-md-6">
+            <label className="form-label font-mono text-muted-2 small text-uppercase">Email</label>
+            <input className="form-control" type="email" placeholder="Enter email address" value={newAcc.email} onChange={e=>setNewAcc({...newAcc,email:e.target.value})}/>
+          </div>
+          <div className="col-md-6">
+            <label className="form-label font-mono text-muted-2 small text-uppercase">Phone Number</label>
+            <input className="form-control" placeholder="Enter Phone Number" value={newAcc.phone} onChange={e=>setNewAcc({...newAcc,phone:e.target.value})}/>
+          </div>
+          <div className="col-md-6">
+            <label className="form-label font-mono text-muted-2 small text-uppercase">Password</label>
+            <div className="input-group">
+              <input type={newAccShowPw?"text":"password"} className="form-control" placeholder="Enter password" value={newAcc.password} onChange={e=>setNewAcc({...newAcc,password:e.target.value})}/>
+              <button className="btn btn-outline-secondary" type="button" onClick={()=>setNewAccShowPw(v=>!v)}>
+                <i className={"bi "+(newAccShowPw?"bi-eye-slash":"bi-eye")}></i>
+              </button>
+            </div>
+          </div>
+          <div className="col-md-6">
+            <label className="form-label font-mono text-muted-2 small text-uppercase">About</label>
+            <input className="form-control" placeholder="Add about..." value={newAcc.about} onChange={e=>setNewAcc({...newAcc,about:e.target.value})}/>
+          </div>
+        </div>
+        <div className="font-mono text-muted-2 small text-uppercase mt-4 mb-2">Permissions</div>
+        <PermissionList perms={newAccPerms} onToggle={k=>setNewAccPerms(p=>({...p,[k]:!p[k]}))} />
+        <button className="btn btn-primary w-100 mt-3" onClick={addAccount}>Add Account</button>
+      </Modal>
+
+      <Modal show={addContactOpen} onClose={()=>setAddContactOpen(false)} title="Add contact">
+        <div className="mb-3">
+          <label className="form-label font-mono text-muted-2 small text-uppercase">Name</label>
+          <input className="form-control" placeholder="Contact name" value={newContact.name} onChange={e=>setNewContact({...newContact,name:e.target.value})}/>
+        </div>
+        <div className="mb-3">
+          <label className="form-label font-mono text-muted-2 small text-uppercase">Phone</label>
+          <input className="form-control" placeholder="Phone number" value={newContact.phone} onChange={e=>setNewContact({...newContact,phone:e.target.value})}/>
+        </div>
+        <div className="mb-3">
+          <label className="form-label font-mono text-muted-2 small text-uppercase">Email</label>
+          <input className="form-control" placeholder="Email address" value={newContact.email} onChange={e=>setNewContact({...newContact,email:e.target.value})}/>
+        </div>
+        <button className="btn btn-primary w-100" onClick={addContact}>Save Contact</button>
+      </Modal>
+
+      <Toast msg={toast} />
+    </div>
+  );
+}
+
+function PrivacyScreen({ back }){
+  const [prefs, setPrefs] = useState({ readReceipts:true, lastSeen:true, photoVisible:false });
+  const rows = [["readReceipts","Read Receipts"],["lastSeen","Show Last Seen"],["photoVisible","Public Profile Photo"]];
+  return (
+    <div className="p-3 p-md-4" style={{maxWidth:640}}>
+      {back}
+      <h4 className="font-display fw-bold mb-3">Privacy</h4>
+      <div className="card border-0 shadow-sm p-3">
+        {rows.map(([key,label])=>(
+          <div className="perm-row" key={key}>
+            <span className="perm-icon"><i className="bi bi-lock"></i></span>
+            <span className="perm-label">{label}</span>
+            <span className={"perm-bool"+(prefs[key]?" true":"")}>{prefs[key]?"On":"Off"}</span>
+            <div className="form-check form-switch m-0">
+              <input className="form-check-input" type="checkbox" role="switch" checked={prefs[key]} onChange={()=>setPrefs(p=>({...p,[key]:!p[key]}))} style={{width:"2.4em",height:"1.3em"}}/>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Modal wrapper (Bootstrap-styled, controlled by React state) ---------- */
+function Modal({ show, onClose, title, children, size }){
+  if(!show) return null;
+  return (
+    <div className="modal d-block" tabIndex="-1" style={{background:"rgba(15,10,35,.45)"}} onClick={onClose}>
+      <div className={"modal-dialog modal-dialog-centered modal-dialog-scrollable"+(size==="lg"?" modal-lg":"")} onClick={e=>e.stopPropagation()}>
+        <div className="modal-content border-0 shadow-lg" style={{borderRadius:20}}>
+          <div className="modal-header">
+            <h5 className="modal-title font-display fw-bold">{title}</h5>
+            <button type="button" className="btn-close" onClick={onClose}></button>
+          </div>
+          <div className="modal-body">{children}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App/>);
+</script>
+</body>
+</html>
