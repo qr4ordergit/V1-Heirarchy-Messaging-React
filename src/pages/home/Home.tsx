@@ -1,5 +1,7 @@
-import { Button, Container, Overlay, Text, Title } from '@mantine/core';
-import classes from './Home.module.css';
+import { Link } from "react-router";
+import { Button, Container, Overlay, Text, Title } from "@mantine/core";
+import { ROUTES } from "../../router/routes";
+import classes from "./Home.module.css";
 
 export default function Home() {
   return (
@@ -10,15 +12,37 @@ export default function Home() {
         zIndex={0}
       />
       <Container className={classes.container} size="md">
-        <Title className={classes.title}>A fully featured React components library</Title>
+        <Title className={classes.title}>
+          A fully featured React components library
+        </Title>
         <Text className={classes.description} size="xl" mt="xl">
-          Build fully functional accessible web applications faster than ever – Mantine includes
-          more than 120 customizable components and hooks to cover you in any situation
+          Build fully functional accessible web applications faster than ever –
+          Mantine includes more than 120 customizable components and hooks to
+          cover you in any situation
         </Text>
 
-        <Button variant="gradient" size="xl" radius="xl" className={classes.control}>
-          Get started
-        </Button>
+        <div className="flex gap-4 ">
+          <Button
+            component={Link}
+            to={ROUTES.REGISTER}
+            variant="gradient"
+            size="xl"
+            radius="xl"
+            className={classes.control}
+          >
+            Sign Up!!
+          </Button>
+          <Button
+            component={Link}
+            to={ROUTES.LOGIN}
+            variant="gradient"
+            size="xl"
+            radius="xl"
+            className={classes.control}
+          >
+            Login
+          </Button>
+        </div>
       </Container>
     </div>
   );

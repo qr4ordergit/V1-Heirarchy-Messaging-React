@@ -1,0 +1,13 @@
+.wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  background: var(--mantine-color-body);
+}
+
+.title {
+  font-family:
+    Greycliff CF,
+    var(--mantine-font-family);
+  font-weight: 900;
+}
