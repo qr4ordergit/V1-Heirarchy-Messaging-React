@@ -16,6 +16,7 @@ import { fetchAccounts, type Account } from "../../api/accountApi";
 //mport { COGNITO_LOGOUT_URL } from "../../config/cognito";
 import Avatar from "../../component/avatar/Avatar";
 import classes from "./Dashboard.module.css";
+import Navbar from "../../component/navbar/Navbar";
 
 export default function Dashboard() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -46,26 +47,7 @@ export default function Dashboard() {
 
   return (
     <div className={classes.wrapper}>
-      <header className={classes.header}>
-        <Container size="lg">
-          <Group justify="space-between" py="md">
-            <Group gap="sm">
-              <div className={classes.brandMark}>H</div>
-              <Title order={4} className={classes.brandTitle}>
-                Chat-Hub
-              </Title>
-            </Group>
-            {/* <Button
-              variant="subtle"
-              color="red"
-              leftSection={<LogOut size={16} />}
-              onClick={handleLogout}
-            >
-              Logout
-            </Button> */}
-          </Group>
-        </Container>
-      </header>
+      <Navbar />
 
       <Container size="md" py="xl">
         <Group justify="space-between" align="flex-start" mb="md">
