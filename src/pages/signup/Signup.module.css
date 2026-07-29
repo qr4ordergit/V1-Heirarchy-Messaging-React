@@ -2,12 +2,21 @@
   min-height: 100vh;
   display: flex;
   align-items: center;
-  background: var(--mantine-color-body);
+  justify-content: center;
+  background: radial-gradient(circle at 30% 20%, #efecfc, #e3e0f7 60%, #dad5f5);
+  padding: 24px;
 }
-
+.card {
+  max-width: 440px;
+  width: 100%;
+}
 .title {
-  font-family:
-    Greycliff CF,
-    var(--mantine-font-family);
-  font-weight: 900;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+}
+.fieldLabel {
+  font-family: "IBM Plex Mono", monospace;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: #7a7791;
 }

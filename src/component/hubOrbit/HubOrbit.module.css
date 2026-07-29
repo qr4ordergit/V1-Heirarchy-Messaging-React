@@ -1,0 +1,61 @@
+.orbitWrap {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin: 8px auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.orbitRing {
+  position: absolute;
+  inset: 0;
+  animation: spin 16s linear infinite;
+}
+.orbitPos {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+}
+.orbitCounter {
+  animation: spin 16s linear infinite reverse;
+}
+.orbitDot {
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: "IBM Plex Mono", monospace;
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.35);
+}
+.orbitCore {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4b3ff2, #2e23b0);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  z-index: 2;
+  box-shadow: 0 12px 26px -8px rgba(75, 63, 242, 0.6);
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

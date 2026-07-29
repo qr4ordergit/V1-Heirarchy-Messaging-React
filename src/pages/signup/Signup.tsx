@@ -1,10 +1,8 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
 import {
   Alert,
   Anchor,
   Button,
-  Container,
   Paper,
   PasswordInput,
   PinInput,
@@ -14,8 +12,9 @@ import {
   Title,
 } from "@mantine/core";
 
-import { signup, verifyOtp } from "../../config/authApi";
-import { ROUTES } from "../../router/routes";
+import { signup, verifyOtp } from "../../api/authApi";
+import { COGNITO_LOGIN_URL } from "../../config/cognito";
+import HubOrbit from "../../component/hubOrbit/HubOrbit";
 import classes from "./Signup.module.css";
 
 const GROUP_NAME = "Hub";
@@ -35,8 +34,6 @@ interface SignupFormErrors {
 type Step = "signup" | "verify";
 
 export default function Signup() {
-  const navigate = useNavigate();
-
   const [step, setStep] = useState<Step>("signup");
   const [values, setValues] = useState<SignupFormValues>({
     email: "",
@@ -93,13 +90,15 @@ export default function Signup() {
       const response = await signup({
         email: values.email.trim(),
         password: values.password,
-        // group_name: GROUP_NAME,
+        group_name: GROUP_NAME,
       });
-
-      setInfoMessage(
-        `${response.message} to your email via ${response.delivery_medium.toLowerCase()}.`,
-      );
-      setStep("verify");
+      console.log("response", response);
+      //   setInfoMessage(
+      //     `${response.message} to your email via ${response.delivery_medium.toLowerCase()}.`,
+      //   );
+      //ssetInfoMessage(`Otp has been sent to your email`);
+      //setStep("verify");
+      window.location.href = COGNITO_LOGIN_URL;
     } catch (err) {
       setApiError(
         err instanceof Error ? err.message : "Signup failed. Please try again.",
@@ -121,7 +120,7 @@ export default function Signup() {
     try {
       setSubmitting(true);
       await verifyOtp({ email: values.email.trim(), otp });
-      navigate(ROUTES.LOGIN);
+      window.location.href = COGNITO_LOGIN_URL;
     } catch (err) {
       setOtpError(
         err instanceof Error
@@ -135,119 +134,127 @@ export default function Signup() {
 
   return (
     <div className={classes.wrapper}>
-      <Container size={460} my={80}>
-        <Title className={classes.title} ta="center">
-          {step === "signup" ? "Create your account" : "Verify your email"}
+      <Paper withBorder shadow="lg" radius="lg" p="xl" className={classes.card}>
+        <HubOrbit />
+
+        <Title order={2} ta="center" className={classes.title} mb={8}>
+          {step === "signup" ? "Create Your Hub" : "Verify your email"}
         </Title>
 
         {step === "signup" ? (
-          <Text c="dimmed" size="sm" ta="center" mt={5}>
-            Already have an account?{" "}
-            <Anchor component={Link} to={ROUTES.LOGIN} size="sm">
-              Login
-            </Anchor>
+          <Text c="dimmed" ta="center" size="sm" mb="lg">
+            This will be your main account. You can create multiple sub accounts
+            with username, email or phone number.
           </Text>
         ) : (
-          <Text c="dimmed" size="sm" ta="center" mt={5}>
+          <Text c="dimmed" ta="center" size="sm" mb="lg">
             We sent a code to <strong>{values.email}</strong>
           </Text>
         )}
 
-        <Paper withBorder shadow="md" p={30} radius="md" mt="xl">
-          {step === "signup" ? (
-            <form onSubmit={handleSubmit} noValidate>
-              <Stack gap="md">
-                {apiError && (
-                  <Alert color="red" title="Signup failed">
-                    {apiError}
-                  </Alert>
-                )}
+        {step === "signup" ? (
+          <form onSubmit={handleSubmit} noValidate>
+            <Stack gap="md">
+              {apiError && (
+                <Alert color="red" title="Signup failed">
+                  {apiError}
+                </Alert>
+              )}
 
-                <TextInput
-                  label="Email"
-                  placeholder="you@example.com"
-                  value={values.email}
-                  onChange={handleChange("email")}
-                  error={errors.email}
-                  required
-                />
-                <PasswordInput
-                  label="Password"
-                  placeholder="Your password"
-                  value={values.password}
-                  onChange={handleChange("password")}
-                  error={errors.password}
-                  required
-                />
-                <PasswordInput
-                  label="Confirm password"
-                  placeholder="Confirm your password"
-                  value={values.confirmPassword}
-                  onChange={handleChange("confirmPassword")}
-                  error={errors.confirmPassword}
-                  required
-                />
+              <TextInput
+                label="Email"
+                classNames={{ label: classes.fieldLabel }}
+                placeholder="you@example.com"
+                value={values.email}
+                onChange={handleChange("email")}
+                error={errors.email}
+                required
+              />
+              <PasswordInput
+                label="Password"
+                classNames={{ label: classes.fieldLabel }}
+                placeholder="Your password"
+                value={values.password}
+                onChange={handleChange("password")}
+                error={errors.password}
+                required
+              />
+              <PasswordInput
+                label="Confirm password"
+                classNames={{ label: classes.fieldLabel }}
+                placeholder="Confirm your password"
+                value={values.confirmPassword}
+                onChange={handleChange("confirmPassword")}
+                error={errors.confirmPassword}
+                required
+              />
 
-                <Button
-                  type="submit"
-                  fullWidth
-                  mt="md"
-                  radius="xl"
-                  variant="gradient"
-                  loading={submitting}
-                >
-                  Sign up
-                </Button>
-              </Stack>
-            </form>
-          ) : (
-            <form onSubmit={handleVerify} noValidate>
-              <Stack gap="md" align="center">
-                {infoMessage && (
-                  <Alert color="blue" title="Check your inbox" w="100%">
-                    {infoMessage}
-                  </Alert>
-                )}
-                {otpError && (
-                  <Alert color="red" title="Verification failed" w="100%">
-                    {otpError}
-                  </Alert>
-                )}
+              <Button
+                type="submit"
+                fullWidth
+                mt="xs"
+                radius="xl"
+                variant="gradient"
+                loading={submitting}
+              >
+                Create Account
+              </Button>
 
-                <PinInput
-                  length={6}
-                  value={otp}
-                  onChange={setOtp}
-                  type="number"
-                />
-
-                <Button
-                  type="submit"
-                  fullWidth
-                  mt="md"
-                  radius="xl"
-                  variant="gradient"
-                  loading={submitting}
-                >
-                  Verify OTP
-                </Button>
-
-                <Anchor
-                  size="sm"
-                  onClick={() => {
-                    setStep("signup");
-                    setOtp("");
-                    setOtpError(null);
-                  }}
-                  style={{ cursor: "pointer" }}
-                >
-                  Back to signup
+              <Text ta="center" c="dimmed" size="sm">
+                Already have an account?{" "}
+                <Anchor href={COGNITO_LOGIN_URL} size="sm" fw={600}>
+                  Login
                 </Anchor>
-              </Stack>
-            </form>
-          )}
-        </Paper>
-      </Container>
+              </Text>
+            </Stack>
+          </form>
+        ) : (
+          <form onSubmit={handleVerify} noValidate>
+            <Stack gap="md" align="center">
+              {infoMessage && (
+                <Alert color="blue" title="Check your inbox" w="100%">
+                  {infoMessage}
+                </Alert>
+              )}
+              {otpError && (
+                <Alert color="red" title="Verification failed" w="100%">
+                  {otpError}
+                </Alert>
+              )}
+
+              <PinInput
+                length={6}
+                value={otp}
+                onChange={setOtp}
+                type="number"
+              />
+
+              <Button
+                type="submit"
+                fullWidth
+                mt="md"
+                radius="xl"
+                variant="gradient"
+                loading={submitting}
+              >
+                Verify OTP
+              </Button>
+
+              <Anchor
+                size="sm"
+                onClick={() => {
+                  setStep("signup");
+                  setOtp("");
+                  setOtpError(null);
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                Back to signup
+              </Anchor>
+            </Stack>
+          </form>
+        )}
+      </Paper>
     </div>
   );
 }

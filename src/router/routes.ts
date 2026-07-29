@@ -4,4 +4,6 @@ export const ROUTES = {
   REGISTER: "/register",
   CHAT: "/chat",
   PROFILE: "/profile",
+  DASHBOARD: "/dashboard",
+  AUTH_CALLBACK: "/auth/callback",
 } as const;

@@ -1,8 +1,9 @@
 import { Link } from "react-router";
-import { Button, Container, Overlay, Text, Title } from "@mantine/core";
-import { ROUTES } from "../../router/routes";
-import classes from "./Home.module.css";
+import { Button, Container, Overlay, Text, Title, Group } from "@mantine/core";
 
+import classes from "./Home.module.css";
+import { ROUTES } from "../../router/routes";
+import { COGNITO_LOGIN_URL } from "../../config/cognito";
 export default function Home() {
   return (
     <div className={classes.hero}>
@@ -21,7 +22,7 @@ export default function Home() {
           cover you in any situation
         </Text>
 
-        <div className="flex gap-4 ">
+        <Group mt="xl" gap="md">
           <Button
             component={Link}
             to={ROUTES.REGISTER}
@@ -30,11 +31,11 @@ export default function Home() {
             radius="xl"
             className={classes.control}
           >
-            Sign Up!!
+            Sign Up
           </Button>
           <Button
-            component={Link}
-            to={ROUTES.LOGIN}
+            component="a"
+            href={COGNITO_LOGIN_URL}
             variant="gradient"
             size="xl"
             radius="xl"
@@ -42,7 +43,7 @@ export default function Home() {
           >
             Login
           </Button>
-        </div>
+        </Group>
       </Container>
     </div>
   );

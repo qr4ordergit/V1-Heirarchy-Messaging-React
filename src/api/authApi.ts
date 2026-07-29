@@ -1,9 +1,10 @@
-import { AUTH_API_URL } from "../config/api";
+const AUTH_API_URL =
+  "https://io85vyk8x6.execute-api.ap-south-1.amazonaws.com/dev/api/auth";
 
 export interface SignupPayload {
   email: string;
   password: string;
-  //   group_name: string;
+  group_name: string;
 }
 
 export interface SignupResponse {
@@ -20,9 +21,12 @@ export interface VerifyOtpResponse {
   message: string;
 }
 
-interface ApiErrorBody {
-  message?: string;
-  error?: string;
+async function parseJson(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
 }
 
 async function postAuth<TResponse>(
@@ -30,21 +34,14 @@ async function postAuth<TResponse>(
 ): Promise<TResponse> {
   const response = await fetch(AUTH_API_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 
-  let data: unknown = null;
-  try {
-    data = await response.json();
-  } catch {
-    // response had no JSON body
-  }
+  const data = await parseJson(response);
 
   if (!response.ok) {
-    const errorBody = data as ApiErrorBody | null;
+    const errorBody = data as { message?: string; error?: string } | null;
     const message =
       errorBody?.message ||
       errorBody?.error ||
