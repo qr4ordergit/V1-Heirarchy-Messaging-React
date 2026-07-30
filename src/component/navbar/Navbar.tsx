@@ -1,4 +1,4 @@
-import { Container, Group, Title } from "@mantine/core";
+import { Container, Group } from "@mantine/core";
 
 function Navbar() {
   return (
@@ -6,7 +6,7 @@ function Navbar() {
       <Container size="lg">
         <Group justify="space-between" py="xs">
           <Group gap="sm">
-            <Title order={4}>Chat-Hub</Title>
+            <div className="text-lg font-bold">Chat-hub</div>
           </Group>
         </Group>
       </Container>
