@@ -15,10 +15,10 @@ import {
 import { fetchAccounts, type Account } from "../../api/accountApi";
 //mport { COGNITO_LOGOUT_URL } from "../../config/cognito";
 import Avatar from "../../component/avatar/Avatar";
-import classes from "./Dashboard.module.css";
+import classes from "./Accounts.module.css";
 import Navbar from "../../component/navbar/Navbar";
 
-export default function Dashboard() {
+export default function Accounts() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

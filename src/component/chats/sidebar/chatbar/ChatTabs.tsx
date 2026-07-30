@@ -5,6 +5,7 @@ function ChatTabs() {
     <SegmentedControl
       fullWidth
       color="blue"
+      size="md"
       defaultValue="Direct messages"
       data={["Direct messages", "Groups"]}
     />

@@ -3,14 +3,15 @@ import { HashRouter, Route, Routes } from "react-router";
 
 import { ROUTES } from "./routes";
 import LazyLoader from "../component/lazyLoader/LazyLoader";
-import Layout from "../pages/chats/Layout";
+import DashboardLayout from "../layouts/DashboardLayout";
 import Conversation from "../component/chats/conversation/Conversation";
+import { ChatSection } from "../pages/chats/ChatSection";
 
 const Home = lazy(() => import("../pages/home/Home"));
 const NotFound = lazy(() => import("../pages/notFound/NotFound"));
 const Signup = lazy(() => import("../pages/signup/Signup"));
 
-const Dashboard = lazy(() => import("../pages/dashboard/Dashboard"));
+const Accounts = lazy(() => import("../pages/accounts/Accounts"));
 const AuthCallback = lazy(() => import("../pages/authCallback/AuthCallback"));
 
 export default function AppRouter() {
@@ -21,10 +22,12 @@ export default function AppRouter() {
           <Route path={ROUTES.HOME} element={<Home />} />
           <Route path={ROUTES.REGISTER} element={<Signup />} />
 
-          <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
+          <Route path={ROUTES.ACCOUNTS} element={<Accounts />} />
           <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
-          <Route path={ROUTES.CHATS} element={<Layout />}>
-            <Route path={ROUTES.CONVERSATION_ID} element={<Conversation />} />
+          <Route path={ROUTES.DASHBOARD} element={<DashboardLayout />}>
+            <Route path={ROUTES.CHATS} element={<ChatSection />}>
+              <Route path={ROUTES.CONVERSATION_ID} element={<Conversation />} />
+            </Route>
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
