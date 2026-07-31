@@ -1,7 +1,10 @@
-const ACCOUNT_API_URL = "";
+import { useAuthStore } from "../store/auth/auth.store";
+
+const ACCOUNT_API_URL =
+  "https://io85vyk8x6.execute-api.ap-south-1.amazonaws.com/dev/api/users";
 
 function authHeaders(): Record<string, string> {
-  const token = sessionStorage.getItem("access_token");
+  const token = useAuthStore.getState().accessToken;
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -39,6 +42,9 @@ export async function fetchAccounts(): Promise<Account[]> {
   if (Array.isArray(data)) return data as Account[];
   if (data && Array.isArray((data as { accounts?: unknown }).accounts)) {
     return (data as { accounts: Account[] }).accounts;
+  }
+  if (data && Array.isArray((data as { users?: unknown }).users)) {
+    return (data as { users: Account[] }).users;
   }
   return [];
 }

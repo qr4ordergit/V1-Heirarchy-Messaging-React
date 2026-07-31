@@ -12,6 +12,7 @@ export default function AuthCallback() {
     const idToken = searchParams.get("id_token");
     const refreshToken = searchParams.get("refresh_token");
 
+    console.log("accessToken", accessToken);
     if (accessToken) {
       sessionStorage.setItem("access_token", accessToken);
       sessionStorage.setItem("id_token", idToken ?? "");
