@@ -1,4 +1,4 @@
-import { Avatar, Group, Paper, ScrollArea, Stack, Text } from "@mantine/core";
+import { Group, Paper, ScrollArea, Stack, Text } from "@mantine/core";
 import { IconCheck, IconChecks } from "@tabler/icons-react";
 
 const messages = [
@@ -38,7 +38,7 @@ const messages = [
 
 export default function Chatting() {
   return (
-    <ScrollArea h="100%">
+    <ScrollArea h="100%" scrollbarSize={8} offsetScrollbars>
       <Stack py="md" gap="sm">
         {messages.map((msg) => {
           const isMe = msg.sender === "me";
@@ -50,8 +50,6 @@ export default function Chatting() {
               align="flex-end"
               wrap="nowrap"
             >
-              {!isMe && <Avatar src={msg.avatar} radius="xl" size="md" />}
-
               <Paper
                 shadow="xs"
                 radius="lg"
@@ -86,14 +84,6 @@ export default function Chatting() {
                     ))}
                 </Group>
               </Paper>
-
-              {isMe && (
-                <Avatar
-                  src="https://i.pravatar.cc/150?img=8"
-                  radius="xl"
-                  size="md"
-                />
-              )}
             </Group>
           );
         })}
