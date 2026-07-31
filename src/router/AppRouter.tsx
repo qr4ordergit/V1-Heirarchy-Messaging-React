@@ -10,6 +10,8 @@ import { ChatSection } from "../pages/chats/ChatSection";
 const Home = lazy(() => import("../pages/home/Home"));
 const NotFound = lazy(() => import("../pages/notFound/NotFound"));
 const Signup = lazy(() => import("../pages/signup/Signup"));
+const Contact = lazy(() => import("../pages/contact/Contact"));
+const Profile = lazy(() => import("../pages/profile/Profile"));
 
 const Accounts = lazy(() => import("../pages/accounts/Accounts"));
 const AuthCallback = lazy(() => import("../pages/authCallback/AuthCallback"));
@@ -28,6 +30,8 @@ export default function AppRouter() {
             <Route path={ROUTES.CHATS} element={<ChatSection />}>
               <Route path={ROUTES.CONVERSATION_ID} element={<Conversation />} />
             </Route>
+            <Route path={ROUTES.CONTACT} element={<Contact />} />
+            <Route path={ROUTES.PROFILE} element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
