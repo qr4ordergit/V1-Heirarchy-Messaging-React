@@ -1,6 +1,5 @@
-const AUTH_API_URL =
-  "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev/api/auth";
-
+import { API_ENDPOINTS } from "../utils/constant";
+import { useAuthStore } from "../store/auth/auth.store";
 export interface SignupPayload {
   email: string;
   password: string;
@@ -27,6 +26,10 @@ export interface UsernameSuggestResponse {
   suggestions: string[];
 }
 
+export interface LogoutResponse {
+  message: string;
+}
+
 async function parseJson(response: Response): Promise<unknown> {
   try {
     return await response.json();
@@ -38,7 +41,7 @@ async function parseJson(response: Response): Promise<unknown> {
 async function postAuth<TResponse>(
   body: Record<string, unknown>,
 ): Promise<TResponse> {
-  const response = await fetch(AUTH_API_URL, {
+  const response = await fetch(API_ENDPOINTS.AUTH, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -69,7 +72,7 @@ export function verifyOtp(payload: VerifyOtpPayload) {
 export async function suggestUsername(
   username: string,
 ): Promise<UsernameSuggestResponse> {
-  const response = await fetch(`${AUTH_API_URL}/username-suggest`, {
+  const response = await fetch(API_ENDPOINTS.AUTH_USERNAME_SUGGEST, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username }),
@@ -85,4 +88,26 @@ export async function suggestUsername(
   }
 
   return data as UsernameSuggestResponse;
+}
+export async function logout(): Promise<LogoutResponse> {
+  const { accessToken } = useAuthStore.getState();
+
+  const response = await fetch(API_ENDPOINTS.AUTH_LOGOUT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
+  });
+
+  const data = await parseJson(response);
+
+  if (!response.ok) {
+    const message =
+      (data as { message?: string } | null)?.message ||
+      "Could not log out. Please try again.";
+    throw new Error(message);
+  }
+
+  return data as LogoutResponse;
 }

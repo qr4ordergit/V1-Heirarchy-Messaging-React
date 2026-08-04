@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { devtools } from "zustand/middleware";
 
 interface AuthTokens {
   accessToken: string;
@@ -28,7 +28,7 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>()(
-  persist(
+  devtools(
     (set) => ({
       accessToken: null,
       idToken: null,
@@ -36,31 +36,34 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       userDetails: null,
 
-      setTokens: ({ accessToken, idToken, refreshToken }) =>
-        set({ accessToken, idToken, refreshToken, isAuthenticated: true }),
+      setTokens: (tokens) =>
+        set(
+          {
+            accessToken: tokens.accessToken,
+            idToken: tokens.idToken,
+            refreshToken: tokens.refreshToken,
+            isAuthenticated: true,
+          },
+          false,
+          "auth/setTokens",
+        ),
 
-      setUserDetails: (details) => set({ userDetails: details }),
+      setUserDetails: (details) =>
+        set({ userDetails: details }, false, "auth/setUserDetails"),
 
       clearTokens: () =>
-        set({
-          accessToken: null,
-          idToken: null,
-          refreshToken: null,
-          isAuthenticated: false,
-          userDetails: null,
-        }),
+        set(
+          {
+            accessToken: null,
+            idToken: null,
+            refreshToken: null,
+            isAuthenticated: false,
+            userDetails: null,
+          },
+          false,
+          "auth/clearTokens",
+        ),
     }),
-    {
-      name: "auth-storage",
-      storage: {
-        getItem: (name) => {
-          const value = sessionStorage.getItem(name);
-          return value ? JSON.parse(value) : null;
-        },
-        setItem: (name, value) =>
-          sessionStorage.setItem(name, JSON.stringify(value)),
-        removeItem: (name) => sessionStorage.removeItem(name),
-      },
-    },
+    { name: "AuthStore", enabled: import.meta.env.DEV },
   ),
 );

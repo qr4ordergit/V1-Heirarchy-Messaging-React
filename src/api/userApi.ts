@@ -1,12 +1,10 @@
 import { useAuthStore, type UserDetails } from "../store/auth/auth.store";
-
-const USER_DETAILS_URL =
-  "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev/api/user-details";
+import { API_ENDPOINTS } from "../utils/constant";
 
 export async function fetchUserDetails(): Promise<UserDetails> {
   const token = useAuthStore.getState().accessToken;
 
-  const response = await fetch(USER_DETAILS_URL, {
+  const response = await fetch(API_ENDPOINTS.USER_DETAILS, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
