@@ -7,11 +7,13 @@ import BottomBar from "../../component/bottomBar/BottomBar";
 export default function MainLayout() {
   return (
     <AppShell
+    h='100dvh'
       padding="md"
       navbar={{
         width: 70,
-        breakpoint: "md",
+        breakpoint: "lg",
       }}
+      bg="#f8f9fa"
     >
       <AppShell.Navbar visibleFrom="lg">
         <Sidebar />
@@ -21,7 +23,7 @@ export default function MainLayout() {
         <BottomBar />
       </AppShell.Footer>
 
-      <AppShell.Main>
+      <AppShell.Main className="h-full">
         <Outlet />
       </AppShell.Main>
     </AppShell>
