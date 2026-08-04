@@ -1,7 +1,10 @@
 import { useAuthStore } from "../store/auth/auth.store";
 
-const ACCOUNT_API_URL =
-  "https://io85vyk8x6.execute-api.ap-south-1.amazonaws.com/dev/api/users";
+const ACCOUNTS_LIST_URL =
+  "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev/api/user-access/sub-users";
+
+const SUB_USER_URL =
+  "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev/api/auth/sub-users";
 
 function authHeaders(): Record<string, string> {
   const token = useAuthStore.getState().accessToken;
@@ -16,6 +19,19 @@ export interface Account {
   about?: string;
 }
 
+export interface CreateAccountPayload {
+  identifierType: "username" | "email" | "phone";
+  username: string;
+  email: string;
+  phone: string;
+  password: string;
+}
+
+export interface CreateAccountResponse {
+  message: string;
+  id?: string;
+}
+
 async function parseJson(response: Response): Promise<unknown> {
   try {
     return await response.json();
@@ -25,7 +41,7 @@ async function parseJson(response: Response): Promise<unknown> {
 }
 
 export async function fetchAccounts(): Promise<Account[]> {
-  const response = await fetch(ACCOUNT_API_URL, {
+  const response = await fetch(ACCOUNTS_LIST_URL, {
     method: "GET",
     headers: { "Content-Type": "application/json", ...authHeaders() },
   });
@@ -47,4 +63,44 @@ export async function fetchAccounts(): Promise<Account[]> {
     return (data as { users: Account[] }).users;
   }
   return [];
+}
+
+export async function createAccount(
+  payload: CreateAccountPayload,
+): Promise<CreateAccountResponse> {
+  const body: Record<string, unknown> = {
+    operation: "signup",
+    password: payload.password,
+  };
+
+  if (payload.identifierType === "username") {
+    body.username = payload.username;
+  } else if (payload.identifierType === "phone") {
+    body.phone = payload.phone;
+  }
+
+  if (payload.identifierType === "email") {
+    body.email = payload.email;
+  } else {
+    const userDetail = useAuthStore.getState().userDetails;
+    console.log("userDetail", userDetail);
+    body.email = userDetail?.email;
+  }
+
+  const response = await fetch(SUB_USER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(body),
+  });
+
+  const data = await parseJson(response);
+
+  if (!response.ok) {
+    const message =
+      (data as { message?: string } | null)?.message ||
+      "Could not create account.";
+    throw new Error(message);
+  }
+
+  return data as CreateAccountResponse;
 }

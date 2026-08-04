@@ -2,33 +2,22 @@
   min-height: 100vh;
   background: #f6f5fb;
 }
-.header {
-  border-bottom: 1px solid #e7e5f3;
-  background: #fff;
-}
-.brandMark {
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
-  background: linear-gradient(135deg, #4b3ff2, #2e23b0);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: "Space Grotesk", sans-serif;
-  font-weight: 700;
-  font-size: 17px;
-}
-.brandTitle {
-  font-family: "Space Grotesk", sans-serif;
-}
+
 .title {
   font-family: "Space Grotesk", sans-serif;
   font-weight: 700;
 }
+
 .row {
   border-bottom: 1px solid #e7e5f3;
 }
 .row:last-child {
   border-bottom: none;
+}
+
+.fieldLabel {
+  font-family: "IBM Plex Mono", monospace;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: #7a7791;
 }

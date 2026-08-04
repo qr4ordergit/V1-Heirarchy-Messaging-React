@@ -13,6 +13,7 @@ export interface UserDetails {
   groups: string[];
   token_use: string;
   client_id: string;
+  email: string;
 }
 
 interface AuthState {

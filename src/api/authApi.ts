@@ -21,6 +21,12 @@ export interface VerifyOtpResponse {
   message: string;
 }
 
+export interface UsernameSuggestResponse {
+  success: boolean;
+  message: string;
+  suggestions: string[];
+}
+
 async function parseJson(response: Response): Promise<unknown> {
   try {
     return await response.json();
@@ -58,4 +64,25 @@ export function signup(payload: SignupPayload) {
 
 export function verifyOtp(payload: VerifyOtpPayload) {
   return postAuth<VerifyOtpResponse>({ operation: "verify", ...payload });
+}
+
+export async function suggestUsername(
+  username: string,
+): Promise<UsernameSuggestResponse> {
+  const response = await fetch(`${AUTH_API_URL}/username-suggest`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username }),
+  });
+
+  const data = await parseJson(response);
+
+  if (!response.ok) {
+    const message =
+      (data as { message?: string } | null)?.message ||
+      "Could not check username.";
+    throw new Error(message);
+  }
+
+  return data as UsernameSuggestResponse;
 }
