@@ -31,6 +31,7 @@ export default function AuthCallback() {
     (async () => {
       try {
         const details = await fetchUserDetails();
+        console.log("Fetched user details:", details);
         setUserDetails(details);
 
         if (details.groups.includes("hub")) {

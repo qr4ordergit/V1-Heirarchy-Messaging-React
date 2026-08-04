@@ -21,3 +21,13 @@
   font-size: 11px;
   color: #7a7791;
 }
+.accountCard {
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.accountCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
