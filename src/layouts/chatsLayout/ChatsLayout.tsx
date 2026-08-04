@@ -12,7 +12,7 @@ export default function ChatsLayout() {
   }
 
   return (
-    <div className="grid h-full min-h-0 grid-cols-[320px_1fr]">
+    <div className="grid h-full min-h-0 grid-cols-[320px_1fr] gap-3">
       <ConversationPanel />
 
       <Outlet />
