@@ -1,27 +1,73 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  ActionIcon,
   Alert,
-  //Button,
+  Button,
   Card,
   Center,
   Container,
   Group,
   Loader,
+  Modal,
+  PasswordInput,
+  SegmentedControl,
   Stack,
   Text,
+  TextInput,
   Title,
 } from "@mantine/core";
-//import { LogOut } from "lucide-react";
-import { fetchAccounts, type Account } from "../../api/accountApi";
-//mport { COGNITO_LOGOUT_URL } from "../../config/cognito";
+import { Plus, Wand2 } from "lucide-react";
+import {
+  fetchAccounts,
+  createAccount,
+  type Account,
+} from "../../api/accountApi";
+import { suggestUsername } from "../../api/authApi";
 import Avatar from "../../component/avatar/Avatar";
 import classes from "./Accounts.module.css";
 import Navbar from "../../component/navbar/Navbar";
+
+type IdentifierType = "username" | "email" | "phone";
+
+interface NewAccountForm {
+  identifierType: IdentifierType;
+  username: string;
+  email: string;
+  phone: string;
+  password: string;
+}
+
+const EMPTY_FORM: NewAccountForm = {
+  identifierType: "username",
+  username: "",
+  email: "",
+  phone: "",
+  password: "",
+};
+
+interface NewAccountErrors {
+  username?: string;
+  email?: string;
+  phone?: string;
+  password?: string;
+}
 
 export default function Accounts() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState<NewAccountForm>(EMPTY_FORM);
+  const [formErrors, setFormErrors] = useState<NewAccountErrors>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const [usernameChecking, setUsernameChecking] = useState(false);
+  const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
+  const [usernameMessage, setUsernameMessage] = useState<string | null>(null);
+
+  const suggestedForRef = useRef<string | null>(null);
 
   const loadAccounts = async () => {
     setLoading(true);
@@ -40,10 +86,115 @@ export default function Accounts() {
     loadAccounts();
   }, []);
 
-  //   const handleLogout = () => {
-  //     sessionStorage.clear();
-  //     window.location.href = COGNITO_LOGOUT_URL;
-  //   };
+  const fetchUsernameSuggestionsOnce = async (rawUsername: string) => {
+    const trimmed = rawUsername.trim();
+
+    if (trimmed.length < 3) return;
+
+    if (suggestedForRef.current === trimmed) return;
+
+    suggestedForRef.current = trimmed;
+    setUsernameChecking(true);
+    try {
+      const result = await suggestUsername(trimmed);
+      setUsernameSuggestions(result.suggestions ?? []);
+      setUsernameMessage(result.message ?? null);
+    } catch {
+      setUsernameSuggestions([]);
+      setUsernameMessage(null);
+    } finally {
+      setUsernameChecking(false);
+    }
+  };
+
+  const setField = (field: keyof NewAccountForm) => (value: string) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
+
+  const handleIdentifierChange = (value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      identifierType: value as IdentifierType,
+      username: "",
+      email: "",
+      phone: "",
+    }));
+    setFormErrors({});
+    setUsernameSuggestions([]);
+    setUsernameMessage(null);
+    suggestedForRef.current = null;
+  };
+
+  const handleUsernameChange = (value: string) => {
+    const sanitized = value.replace(/[#\s]/g, "");
+    setField("username")(sanitized);
+
+    if (suggestedForRef.current !== sanitized.trim()) {
+      setUsernameSuggestions([]);
+      setUsernameMessage(null);
+    }
+  };
+  const validate = (): boolean => {
+    const errors: NewAccountErrors = {};
+
+    if (form.identifierType === "username" && !form.username.trim()) {
+      errors.username = "Username is required";
+    }
+
+    if (form.identifierType === "email") {
+      if (!form.email.trim()) {
+        errors.email = "Email is required";
+      } else if (!/^\S+@\S+\.\S+$/.test(form.email)) {
+        errors.email = "Enter a valid email";
+      }
+    }
+
+    if (form.identifierType === "phone" && !form.phone.trim()) {
+      errors.phone = "Phone number is required";
+    }
+
+    if (!form.password) {
+      errors.password = "Password is required";
+    } else if (form.password.length < 8) {
+      errors.password = "Password must be at least 8 characters";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleClose = () => {
+    setModalOpen(false);
+    setForm(EMPTY_FORM);
+    setFormErrors({});
+    setSubmitError(null);
+    setUsernameSuggestions([]);
+    setUsernameMessage(null);
+    suggestedForRef.current = null;
+  };
+
+  const handleSubmit = async () => {
+    setSubmitError(null);
+    if (!validate()) return;
+
+    try {
+      setSubmitting(true);
+      await createAccount({
+        identifierType: form.identifierType,
+        username: form.username.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        password: form.password,
+      });
+      handleClose();
+      await loadAccounts();
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Could not create account.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className={classes.wrapper}>
@@ -56,9 +207,17 @@ export default function Accounts() {
               Your Accounts
             </Title>
             <Text c="dimmed" size="sm">
-              All accounts under your hub.
+              Create multiple accounts and switch between them easily.
             </Text>
           </div>
+          <Button
+            leftSection={<Plus size={16} />}
+            radius="xl"
+            variant="gradient"
+            onClick={() => setModalOpen(true)}
+          >
+            Add Account
+          </Button>
         </Group>
 
         {error && (
@@ -104,6 +263,141 @@ export default function Accounts() {
           )}
         </Card>
       </Container>
+
+      <Modal
+        opened={modalOpen}
+        onClose={handleClose}
+        title="Create Account"
+        centered
+        radius="md"
+        size="lg"
+      >
+        <Stack gap="md">
+          {submitError && (
+            <Alert color="red" title="Couldn't add account">
+              {submitError}
+            </Alert>
+          )}
+
+          <div>
+            <Text size="xs" fw={600} tt="uppercase" c="dimmed" mb={6}>
+              Add via
+            </Text>
+            <SegmentedControl
+              fullWidth
+              value={form.identifierType}
+              onChange={handleIdentifierChange}
+              data={[
+                { label: "Username", value: "username" },
+                { label: "Email", value: "email" },
+                { label: "Phone", value: "phone" },
+              ]}
+            />
+          </div>
+
+          {form.identifierType === "username" && (
+            <div>
+              <TextInput
+                label="Username"
+                classNames={{ label: classes.fieldLabel }}
+                placeholder="Enter username"
+                value={form.username}
+                onChange={(e) => handleUsernameChange(e.target.value)}
+                error={formErrors.username}
+                rightSection={
+                  usernameChecking ? (
+                    <Loader size={14} />
+                  ) : (
+                    <ActionIcon
+                      variant="subtle"
+                      radius="xl"
+                      aria-label="Get username suggestions"
+                      disabled={form.username.trim().length < 3}
+                      onClick={() =>
+                        fetchUsernameSuggestionsOnce(form.username)
+                      }
+                    >
+                      <Wand2 size={16} />
+                    </ActionIcon>
+                  )
+                }
+              />
+              {usernameSuggestions.length > 0 && (
+                <Stack gap={4} mt={6}>
+                  {usernameMessage && (
+                    <Text size="xs" c="dimmed">
+                      {usernameMessage}
+                    </Text>
+                  )}
+                  <Group gap={6}>
+                    {usernameSuggestions.map((suggestion) => (
+                      <Button
+                        key={suggestion}
+                        size="compact-xs"
+                        variant="light"
+                        radius="xl"
+                        onClick={() => {
+                          setField("username")(suggestion);
+
+                          suggestedForRef.current = suggestion;
+                        }}
+                      >
+                        {suggestion}
+                      </Button>
+                    ))}
+                  </Group>
+                </Stack>
+              )}
+            </div>
+          )}
+
+          {form.identifierType === "email" && (
+            <TextInput
+              label="Email"
+              classNames={{ label: classes.fieldLabel }}
+              placeholder="Enter email address"
+              type="email"
+              value={form.email}
+              onChange={(e) => setField("email")(e.target.value)}
+              error={formErrors.email}
+            />
+          )}
+
+          {form.identifierType === "phone" && (
+            <TextInput
+              label="Phone Number"
+              classNames={{ label: classes.fieldLabel }}
+              placeholder="Enter phone number"
+              value={form.phone}
+              onChange={(e) => setField("phone")(e.target.value)}
+              error={formErrors.phone}
+            />
+          )}
+
+          <PasswordInput
+            label="Password"
+            classNames={{ label: classes.fieldLabel }}
+            placeholder="Enter password"
+            value={form.password}
+            onChange={(e) => setField("password")(e.target.value)}
+            error={formErrors.password}
+          />
+
+          <Group justify="flex-end" mt="xs">
+            <Button variant="subtle" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button
+              radius="xl"
+              variant="gradient"
+              loading={submitting}
+              onClick={handleSubmit}
+            >
+              Add Account
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </div>
   );
 }
