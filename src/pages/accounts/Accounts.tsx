@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 import {
   ActionIcon,
   Alert,
@@ -16,16 +17,18 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { Plus, Wand2 } from "lucide-react";
+import { LogOut, Plus, Wand2 } from "lucide-react";
 import {
   fetchAccounts,
   createAccount,
   type Account,
 } from "../../api/accountApi";
-import { suggestUsername } from "../../api/authApi";
+import { suggestUsername, logout } from "../../api/authApi";
+import { useAuthStore } from "../../store/auth/auth.store";
+import { ROUTES } from "../../router/routes";
 import Avatar from "../../component/avatar/Avatar";
 import classes from "./Accounts.module.css";
-import Navbar from "../../component/navbar/Navbar";
+// import Navbar from "../../component/navbar/Navbar";
 
 type IdentifierType = "username" | "email" | "phone";
 
@@ -53,6 +56,9 @@ interface NewAccountErrors {
 }
 
 export default function Accounts() {
+  const navigate = useNavigate();
+  const clearTokens = useAuthStore((state) => state.clearTokens);
+
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +72,8 @@ export default function Accounts() {
   const [usernameChecking, setUsernameChecking] = useState(false);
   const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
   const [usernameMessage, setUsernameMessage] = useState<string | null>(null);
+
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const suggestedForRef = useRef<string | null>(null);
 
@@ -133,6 +141,7 @@ export default function Accounts() {
       setUsernameMessage(null);
     }
   };
+
   const validate = (): boolean => {
     const errors: NewAccountErrors = {};
 
@@ -196,9 +205,22 @@ export default function Accounts() {
     }
   };
 
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+    } catch (err) {
+      console.error("Logout request failed:", err);
+    } finally {
+      clearTokens();
+      setLoggingOut(false);
+      navigate(ROUTES.HOME, { replace: true });
+    }
+  };
+
   return (
     <div className={classes.wrapper}>
-      <Navbar />
+      {/* <Navbar /> */}
 
       <Container size="md" py="xl">
         <Group justify="space-between" align="flex-start" mb="md">
@@ -210,14 +232,26 @@ export default function Accounts() {
               Create multiple accounts and switch between them easily.
             </Text>
           </div>
-          <Button
-            leftSection={<Plus size={16} />}
-            radius="xl"
-            variant="gradient"
-            onClick={() => setModalOpen(true)}
-          >
-            Add Account
-          </Button>
+          <Group gap="sm">
+            <Button
+              leftSection={<Plus size={16} />}
+              radius="xl"
+              variant="gradient"
+              onClick={() => setModalOpen(true)}
+            >
+              Add Account
+            </Button>
+            <Button
+              leftSection={<LogOut size={16} />}
+              radius="xl"
+              variant="subtle"
+              color="red"
+              loading={loggingOut}
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+          </Group>
         </Group>
 
         {error && (
@@ -338,7 +372,6 @@ export default function Accounts() {
                         radius="xl"
                         onClick={() => {
                           setField("username")(suggestion);
-
                           suggestedForRef.current = suggestion;
                         }}
                       >

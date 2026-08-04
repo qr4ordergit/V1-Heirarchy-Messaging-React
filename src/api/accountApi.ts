@@ -1,10 +1,5 @@
 import { useAuthStore } from "../store/auth/auth.store";
-
-const ACCOUNTS_LIST_URL =
-  "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev/api/user-access/sub-users";
-
-const SUB_USER_URL =
-  "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev/api/auth/sub-users";
+import { API_ENDPOINTS } from "../utils/constant";
 
 function authHeaders(): Record<string, string> {
   const token = useAuthStore.getState().accessToken;
@@ -41,7 +36,7 @@ async function parseJson(response: Response): Promise<unknown> {
 }
 
 export async function fetchAccounts(): Promise<Account[]> {
-  const response = await fetch(ACCOUNTS_LIST_URL, {
+  const response = await fetch(API_ENDPOINTS.ACCOUNTS_LIST, {
     method: "GET",
     headers: { "Content-Type": "application/json", ...authHeaders() },
   });
@@ -83,11 +78,10 @@ export async function createAccount(
     body.email = payload.email;
   } else {
     const userDetail = useAuthStore.getState().userDetails;
-    console.log("userDetail", userDetail);
     body.email = userDetail?.email;
   }
 
-  const response = await fetch(SUB_USER_URL, {
+  const response = await fetch(API_ENDPOINTS.AUTH_SUB_USERS, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify(body),
