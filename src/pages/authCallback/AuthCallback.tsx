@@ -27,13 +27,19 @@ export default function AuthCallback() {
       idToken: idToken ?? "",
       refreshToken: refreshToken ?? "",
     });
-
+    console.log(
+      "accessToken",
+      accessToken,
+      "   <<<<<<<<<idToken>>>>",
+      idToken,
+      "   <<<<<<<<<refreshToken>>>>>>>",
+      refreshToken,
+    );
     (async () => {
       try {
         const details = await fetchUserDetails();
-        console.log("Fetched user details:", details);
-        setUserDetails(details);
 
+        setUserDetails(details);
         if (details.groups.includes("hub")) {
           navigate(ROUTES.ACCOUNTS, { replace: true });
         } else {
@@ -48,7 +54,6 @@ export default function AuthCallback() {
       }
     })();
   }, [searchParams, navigate, setTokens, setUserDetails]);
-
   if (error) {
     return (
       <Center h="100vh">
