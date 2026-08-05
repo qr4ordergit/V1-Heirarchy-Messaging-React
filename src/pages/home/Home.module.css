@@ -1,7 +1,7 @@
 .hero {
   height: 100dvh;
   position: relative;
-  background-image: url(https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80);
+  background-image: url("../../../src/assets/chatting.jpg");
   background-size: cover;
   background-position: center;
 }
@@ -29,6 +29,15 @@
   max-width: 600px;
 }
 
+.controls {
+  position: absolute;
+  top: var(--mantine-spacing-xl);
+  right: var(--mantine-spacing-xl);
+  z-index: 2;
+  display: flex;
+  gap: 16px;
+}
+
 .control {
-  margin-top: calc(var(--mantine-spacing-xl) * 1.5);
+  margin: 0;
 }
