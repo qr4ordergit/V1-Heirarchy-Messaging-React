@@ -6,6 +6,8 @@ export const API_ENDPOINTS = {
   AUTH_USERNAME_SUGGEST: `${API_BASE_URL}/auth/username-suggest`,
   AUTH_SUB_USERS: `${API_BASE_URL}/auth/sub-users`,
   USER_DETAILS: `${API_BASE_URL}/user-details`,
-  ACCOUNTS_LIST: `${API_BASE_URL}/user-access/sub-users`,
+  ACCOUNTS_LIST: `${API_BASE_URL}/user-access/sub-users-detail`,
   AUTH_LOGOUT: `${API_BASE_URL}/auth/logout`,
+  CONTACTS: `${API_BASE_URL}/contacts`,
+  START_CONVERSATION: `${API_BASE_URL}/start-conversation`
 } as const;

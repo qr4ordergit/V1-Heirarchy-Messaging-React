@@ -7,11 +7,11 @@ function authHeaders(): Record<string, string> {
 }
 
 export interface Account {
-  id: string;
-  username: string;
-  email?: string;
-  phone?: string;
-  about?: string;
+  user_id: string;
+  display_name: string | null;
+  email: string | null;
+  profile_picture: string | null;
+  status: string | null;
 }
 
 export interface CreateAccountPayload {
@@ -51,6 +51,9 @@ export async function fetchAccounts(): Promise<Account[]> {
   }
 
   if (Array.isArray(data)) return data as Account[];
+  if (data && Array.isArray((data as { sub_users?: unknown }).sub_users)) {
+    return (data as { sub_users: Account[] }).sub_users;
+  }
   if (data && Array.isArray((data as { accounts?: unknown }).accounts)) {
     return (data as { accounts: Account[] }).accounts;
   }

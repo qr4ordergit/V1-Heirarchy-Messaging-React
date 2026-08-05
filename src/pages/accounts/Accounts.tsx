@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import {
-  ActionIcon,
   Alert,
+  Badge,
   Button,
   Card,
   Center,
@@ -12,6 +12,7 @@ import {
   Modal,
   PasswordInput,
   SegmentedControl,
+  SimpleGrid,
   Stack,
   Text,
   TextInput,
@@ -28,7 +29,6 @@ import { useAuthStore } from "../../store/auth/auth.store";
 import { ROUTES } from "../../router/routes";
 import Avatar from "../../component/avatar/Avatar";
 import classes from "./Accounts.module.css";
-// import Navbar from "../../component/navbar/Navbar";
 
 type IdentifierType = "username" | "email" | "phone";
 
@@ -55,6 +55,27 @@ interface NewAccountErrors {
   password?: string;
 }
 
+const getDisplayName = (account: Account) =>
+  account.display_name?.trim() ||
+  account.email?.split("@")[0] ||
+  account.user_id;
+
+const getInitialsSource = (account: Account) => getDisplayName(account);
+
+const statusColor = (status: string | null) => {
+  switch (status?.toLowerCase()) {
+    case "active":
+      return "teal";
+    case "pending":
+      return "yellow";
+    case "suspended":
+    case "inactive":
+      return "red";
+    default:
+      return "gray";
+  }
+};
+
 export default function Accounts() {
   const navigate = useNavigate();
   const clearTokens = useAuthStore((state) => state.clearTokens);
@@ -75,8 +96,6 @@ export default function Accounts() {
 
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const suggestedForRef = useRef<string | null>(null);
-
   const loadAccounts = async () => {
     setLoading(true);
     setError(null);
@@ -90,18 +109,9 @@ export default function Accounts() {
     }
   };
 
-  useEffect(() => {
-    loadAccounts();
-  }, []);
-
   const fetchUsernameSuggestionsOnce = async (rawUsername: string) => {
     const trimmed = rawUsername.trim();
-
     if (trimmed.length < 3) return;
-
-    if (suggestedForRef.current === trimmed) return;
-
-    suggestedForRef.current = trimmed;
     setUsernameChecking(true);
     try {
       const result = await suggestUsername(trimmed);
@@ -129,26 +139,20 @@ export default function Accounts() {
     setFormErrors({});
     setUsernameSuggestions([]);
     setUsernameMessage(null);
-    suggestedForRef.current = null;
   };
 
   const handleUsernameChange = (value: string) => {
     const sanitized = value.replace(/[#\s]/g, "");
     setField("username")(sanitized);
-
-    if (suggestedForRef.current !== sanitized.trim()) {
-      setUsernameSuggestions([]);
-      setUsernameMessage(null);
-    }
+    setUsernameSuggestions([]);
+    setUsernameMessage(null);
   };
 
   const validate = (): boolean => {
     const errors: NewAccountErrors = {};
-
     if (form.identifierType === "username" && !form.username.trim()) {
       errors.username = "Username is required";
     }
-
     if (form.identifierType === "email") {
       if (!form.email.trim()) {
         errors.email = "Email is required";
@@ -156,17 +160,14 @@ export default function Accounts() {
         errors.email = "Enter a valid email";
       }
     }
-
     if (form.identifierType === "phone" && !form.phone.trim()) {
       errors.phone = "Phone number is required";
     }
-
     if (!form.password) {
       errors.password = "Password is required";
     } else if (form.password.length < 8) {
       errors.password = "Password must be at least 8 characters";
     }
-
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -178,13 +179,11 @@ export default function Accounts() {
     setSubmitError(null);
     setUsernameSuggestions([]);
     setUsernameMessage(null);
-    suggestedForRef.current = null;
   };
 
   const handleSubmit = async () => {
     setSubmitError(null);
     if (!validate()) return;
-
     try {
       setSubmitting(true);
       await createAccount({
@@ -217,13 +216,13 @@ export default function Accounts() {
       navigate(ROUTES.HOME, { replace: true });
     }
   };
-
+  useEffect(() => {
+    loadAccounts();
+  }, []);
   return (
     <div className={classes.wrapper}>
-      {/* <Navbar /> */}
-
       <Container size="md" py="xl">
-        <Group justify="space-between" align="flex-start" mb="md">
+        <Group justify="space-between" align="flex-start" mb="lg">
           <div>
             <Title order={2} className={classes.title} mb={4}>
               Your Accounts
@@ -260,42 +259,59 @@ export default function Accounts() {
           </Alert>
         )}
 
-        <Card withBorder radius="md" padding={0}>
-          {loading ? (
-            <Center py="xl">
-              <Loader />
-            </Center>
-          ) : accounts.length === 0 ? (
-            <Center py="xl">
+        {loading ? (
+          <Center py="xl">
+            <Loader />
+          </Center>
+        ) : accounts.length === 0 ? (
+          <Card withBorder radius="md" py="xl">
+            <Center>
               <Text c="dimmed" size="sm">
                 No accounts found.
               </Text>
             </Center>
-          ) : (
-            <Stack gap={0}>
-              {accounts.map((account, i) => (
-                <Group
-                  key={account.id}
-                  gap="sm"
-                  wrap="nowrap"
-                  className={classes.row}
-                  px="md"
-                  py="sm"
-                >
-                  <Avatar name={account.username} colorIndex={i} size={40} />
-                  <div>
-                    <Text fw={600}>{account.username}</Text>
+          </Card>
+        ) : (
+          <SimpleGrid cols={{ base: 1, xs: 2, sm: 3 }} spacing="md">
+            {accounts?.map((account, i) => (
+              <Card
+                key={account.user_id}
+                withBorder
+                radius="md"
+                padding="lg"
+                className={classes.accountCard}
+              >
+                <Stack gap="sm" align="center">
+                  <Avatar
+                    name={getInitialsSource(account)}
+                    colorIndex={i}
+                    size={56}
+                  />
+                  <div style={{ textAlign: "center", width: "100%" }}>
+                    <Text fw={600} truncate="end">
+                      {getDisplayName(account)}
+                    </Text>
                     {account.email && (
-                      <Text size="xs" c="dimmed">
+                      <Text size="xs" c="dimmed" truncate="end">
                         {account.email}
                       </Text>
                     )}
                   </div>
-                </Group>
-              ))}
-            </Stack>
-          )}
-        </Card>
+                  {account.status && (
+                    <Badge
+                      size="sm"
+                      variant="light"
+                      color={statusColor(account.status)}
+                      radius="sm"
+                    >
+                      {account.status}
+                    </Badge>
+                  )}
+                </Stack>
+              </Card>
+            ))}
+          </SimpleGrid>
+        )}
       </Container>
 
       <Modal
@@ -342,17 +358,20 @@ export default function Accounts() {
                   usernameChecking ? (
                     <Loader size={14} />
                   ) : (
-                    <ActionIcon
-                      variant="subtle"
-                      radius="xl"
-                      aria-label="Get username suggestions"
-                      disabled={form.username.trim().length < 3}
+                    <Wand2
+                      size={16}
+                      style={{
+                        cursor:
+                          form.username.trim().length < 3
+                            ? "not-allowed"
+                            : "pointer",
+                        opacity: form.username.trim().length < 3 ? 0.4 : 1,
+                      }}
                       onClick={() =>
+                        form.username.trim().length >= 3 &&
                         fetchUsernameSuggestionsOnce(form.username)
                       }
-                    >
-                      <Wand2 size={16} />
-                    </ActionIcon>
+                    />
                   )
                 }
               />
@@ -370,10 +389,7 @@ export default function Accounts() {
                         size="compact-xs"
                         variant="light"
                         radius="xl"
-                        onClick={() => {
-                          setField("username")(suggestion);
-                          suggestedForRef.current = suggestion;
-                        }}
+                        onClick={() => setField("username")(suggestion)}
                       >
                         {suggestion}
                       </Button>

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import type { ChangeEvent } from "react";
 import { Button, Grid, Modal, Stack, TextInput } from "@mantine/core";
 import type { Contact, ContactFormValues } from "./Contact";
+import { notifications } from "@mantine/notifications";
+import { IconCheck, IconX } from "@tabler/icons-react";
 
 interface ContactModalProps {
   opened: boolean;
@@ -51,8 +53,21 @@ const ContactModal = ({
   };
 
   const handleSubmit = () => {
-    if (!form.username || !form.name || !form.phone || !form.email) {
-      alert("Please fill all fields");
+    if (!form.username.trim()) {
+      notifications.show({
+        title: "",
+        message: "Username is required.",
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+      return;
+    } else if (!form.name.trim()) {
+      notifications.show({
+        title: "",
+        message: "Name is required.",
+        color: "red",
+        icon: <IconX size={18} />,
+      });
       return;
     }
 

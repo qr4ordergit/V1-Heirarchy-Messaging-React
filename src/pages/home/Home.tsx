@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Button, Container, Overlay, Text, Title, Group } from "@mantine/core";
+import { Button, Container, Overlay, Group } from "@mantine/core";
 
 import classes from "./Home.module.css";
 import { ROUTES } from "../../router/routes";
@@ -12,17 +12,17 @@ export default function Home() {
         opacity={1}
         zIndex={0}
       />
-      <Container className={classes.container} size="md">
-        <Title className={classes.title}>
+      <Container size="md">
+        {/* <Title className={classes.title}>
           A fully featured React components library
         </Title>
         <Text className={classes.description} size="xl" mt="xl">
           Build fully functional accessible web applications faster than ever –
           Mantine includes more than 120 customizable components and hooks to
           cover you in any situation
-        </Text>
+        </Text> */}
 
-        <Group mt="xl" gap="md">
+        <Group className={classes.controls}>
           <Button
             component={Link}
             to={ROUTES.REGISTER}
