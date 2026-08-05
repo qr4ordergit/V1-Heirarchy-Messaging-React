@@ -52,6 +52,7 @@ const Contact = () => {
   const token = useAuthStore.getState().accessToken;
   const userDetails = useAuthStore.getState().userDetails;
 
+  // Authorization Function
   const getHeaders = (): Record<string, string> => ({
     Authorization: token ?? "",
     "Content-Type": "application/json",
