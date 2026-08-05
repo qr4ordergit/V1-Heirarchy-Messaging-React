@@ -19,7 +19,7 @@ export default function MainLayout() {
         <Sidebar />
       </AppShell.Navbar>
 
-      <AppShell.Main pb={{ base: 70, lg: 15 }} className="h-full">
+      <AppShell.Main pb={{ base: 70, lg: 15 }} h={"100%"}>
         <Outlet />
       </AppShell.Main>
 

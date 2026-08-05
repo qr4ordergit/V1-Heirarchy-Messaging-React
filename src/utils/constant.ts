@@ -11,3 +11,28 @@ export const API_ENDPOINTS = {
   CONTACTS: `${API_BASE_URL}/contacts`,
   START_CONVERSATION: `${API_BASE_URL}/start-conversation`
 } as const;
+
+const avatarColors = [
+  "red",
+  "pink",
+  "grape",
+  "violet",
+  "indigo",
+  "blue",
+  "cyan",
+  "teal",
+  "green",
+  "lime",
+  "yellow",
+  "orange",
+];
+
+export function getAvatarColor(name: string) {
+  let hash = 0;
+
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  return avatarColors[Math.abs(hash) % avatarColors.length];
+}
