@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { devtools } from "zustand/middleware";
+import { devtools, persist, createJSONStorage } from "zustand/middleware";
 
 interface AuthTokens {
   accessToken: string;
@@ -29,41 +29,54 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   devtools(
-    (set) => ({
-      accessToken: null,
-      idToken: null,
-      refreshToken: null,
-      isAuthenticated: false,
-      userDetails: null,
+    persist(
+      (set) => ({
+        accessToken: null,
+        idToken: null,
+        refreshToken: null,
+        isAuthenticated: false,
+        userDetails: null,
 
-      setTokens: (tokens) =>
-        set(
-          {
-            accessToken: tokens.accessToken,
-            idToken: tokens.idToken,
-            refreshToken: tokens.refreshToken,
-            isAuthenticated: true,
-          },
-          false,
-          "auth/setTokens",
-        ),
+        setTokens: (tokens) =>
+          set(
+            {
+              accessToken: tokens.accessToken,
+              idToken: tokens.idToken,
+              refreshToken: tokens.refreshToken,
+              isAuthenticated: true,
+            },
+            false,
+            "auth/setTokens",
+          ),
 
-      setUserDetails: (details) =>
-        set({ userDetails: details }, false, "auth/setUserDetails"),
+        setUserDetails: (details) =>
+          set({ userDetails: details }, false, "auth/setUserDetails"),
 
-      clearTokens: () =>
-        set(
-          {
-            accessToken: null,
-            idToken: null,
-            refreshToken: null,
-            isAuthenticated: false,
-            userDetails: null,
-          },
-          false,
-          "auth/clearTokens",
-        ),
-    }),
+        clearTokens: () =>
+          set(
+            {
+              accessToken: null,
+              idToken: null,
+              refreshToken: null,
+              isAuthenticated: false,
+              userDetails: null,
+            },
+            false,
+            "auth/clearTokens",
+          ),
+      }),
+      {
+        name: "auth-storage",
+        storage: createJSONStorage(() => localStorage),
+        partialize: (state) => ({
+          accessToken: state.accessToken,
+          idToken: state.idToken,
+          refreshToken: state.refreshToken,
+          isAuthenticated: state.isAuthenticated,
+          userDetails: state.userDetails,
+        }),
+      },
+    ),
     { name: "AuthStore", enabled: import.meta.env.DEV },
   ),
 );

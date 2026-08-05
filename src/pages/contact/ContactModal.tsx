@@ -3,7 +3,7 @@ import type { ChangeEvent } from "react";
 import { Button, Grid, Modal, Stack, TextInput } from "@mantine/core";
 import type { Contact, ContactFormValues } from "./Contact";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { IconX } from "@tabler/icons-react";
 
 interface ContactModalProps {
   opened: boolean;
