@@ -1,51 +1,48 @@
 import { Group, Paper, ScrollArea, Stack, Text } from "@mantine/core";
 import { IconCheck, IconChecks } from "@tabler/icons-react";
+import { api } from "../../../api/axios";
+import { ENDPOINTS } from "../../../api/endpoints";
+import { useEffect, useState, useTransition } from "react";
+import dayjs from "dayjs";
+import { ConversationShimmer } from "../../loaders/shimmers/ConversationShimmer";
 
-const messages = [
-  {
-    id: 1,
-    sender: "other",
-    name: "John",
-    avatar: "https://i.pravatar.cc/150?img=3",
-    message: "Hey! How's the React project going?",
-    time: "10:24 AM",
-  },
-  {
-    id: 2,
-    sender: "me",
-    message:
-      "Going great! I'm currently building the chat interface using Mantine UI.",
-    time: "10:25 AM",
-    read: true,
-  },
-  {
-    id: 3,
-    sender: "other",
-    name: "John",
-    avatar: "https://i.pravatar.cc/150?img=3",
-    message:
-      "Nice! Mantine has some really good components. Don't forget to use ScrollArea.",
-    time: "10:26 AM",
-  },
-  {
-    id: 4,
-    sender: "me",
-    message: "Yep 😄 Almost done.",
-    time: "10:27 AM",
-    read: false,
-  },
-];
+interface MESSAGE {
+  _id: string;
+  created_by: string;
+  created_on: string;
+  body: {
+    text: string;
+  };
+}
 
 export default function Chatting() {
+  const [messages, setMessages] = useState([]);
+
+  const [fetchLoader, FetchFn] = useTransition();
+
+  const fetchChats = async () => {
+    const response = await api.get(`${ENDPOINTS.CHAT.GET}${"sup-aveer02"}`);
+
+    if (!response.data?.success) return;
+
+    setMessages(response.data?.data?.messages ?? []);
+  };
+
+  useEffect(() => {
+    FetchFn(fetchChats);
+  }, []);
+
+  if (fetchLoader) return <ConversationShimmer />;
+
   return (
-    <ScrollArea h="100%" scrollbarSize={8} offsetScrollbars>
-      <Stack py="md" gap="sm">
-        {messages.map((msg) => {
-          const isMe = msg.sender === "me";
+    <ScrollArea h={"100%"} scrollbarSize={8} offsetScrollbars className="py-2">
+      <Stack py="md" gap="sm" className="h-100">
+        {messages.map((msg: MESSAGE) => {
+          const isMe = "me";
 
           return (
             <Group
-              key={msg.id}
+              key={msg._id}
               justify={isMe ? "flex-end" : "flex-start"}
               align="flex-end"
               wrap="nowrap"
@@ -60,7 +57,7 @@ export default function Chatting() {
               >
                 {!isMe && (
                   <Text size="xs" fw={600} c="blue" mb={4}>
-                    {msg.name}
+                    {msg.created_by}
                   </Text>
                 )}
 
@@ -68,16 +65,16 @@ export default function Chatting() {
                   c={isMe ? "white" : "dark"}
                   style={{ whiteSpace: "pre-wrap" }}
                 >
-                  {msg.message}
+                  {msg.body?.text}
                 </Text>
 
                 <Group justify="flex-end" gap={4} mt={6}>
                   <Text size="xs" c={isMe ? "gray.2" : "dimmed"}>
-                    {msg.time}
+                    {dayjs(msg.created_on).format("hh:mm A")}
                   </Text>
 
                   {isMe &&
-                    (msg.read ? (
+                    (true ? (
                       <IconChecks size={14} color="#9be7ff" />
                     ) : (
                       <IconCheck size={14} color="white" />

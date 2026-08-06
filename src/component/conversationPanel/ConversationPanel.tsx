@@ -25,7 +25,7 @@ export default function ConversationPanel() {
   ] as const;
 
   return (
-    <Paper radius="md" className="h-full overflow-hidden" bg="white" p={10}>
+    <Paper radius="md" className="h-full" bg="white" p={10}>
       <Stack gap={15} h={"100%"}>
         <Heading c="var(--mantine-color-blue-4">Chat Hub</Heading>
         <Input

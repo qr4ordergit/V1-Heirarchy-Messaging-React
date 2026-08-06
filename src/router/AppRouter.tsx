@@ -6,6 +6,7 @@ import LazyLoader from "../component/lazyLoader/LazyLoader";
 import RequireAuth from "./guards/RequireAuth";
 import RequireHub from "./guards/RequireHub";
 import { useAuthStore } from "../store/auth/auth.store";
+import Conversation from "../component/chats/conversation/Conversation";
 
 const Home = lazy(() => import("../pages/home/Home"));
 const NotFound = lazy(() => import("../pages/notFound/NotFound"));
@@ -17,8 +18,6 @@ const Accounts = lazy(() => import("../pages/accounts/Accounts"));
 const AuthCallback = lazy(() => import("../pages/authCallback/AuthCallback"));
 const MainLayout = lazy(() => import("../layouts/mainLayout/MainLayout"));
 const ChatsLayout = lazy(() => import("../layouts/chatsLayout/ChatsLayout"));
-const EmptyChat = lazy(() => import("../pages/chats/EmptyChat"));
-const Chats = lazy(() => import("../pages/chats/Chats"));
 
 function useCaptureTokensAnywhere() {
   const setTokens = useAuthStore((state) => state.setTokens);
@@ -62,8 +61,7 @@ export default function AppRouter() {
 
             <Route element={<MainLayout />}>
               <Route path={ROUTES.CHATS} element={<ChatsLayout />}>
-                <Route index element={<EmptyChat />} />
-                <Route path=":chatId" element={<Chats />} />
+                <Route path=":chatId" element={<Conversation />} />
               </Route>
               <Route path={ROUTES.CONTACT} element={<Contact />} />
               <Route path={ROUTES.PROFILE} element={<Profile />} />

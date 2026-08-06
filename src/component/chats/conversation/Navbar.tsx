@@ -4,13 +4,25 @@ import {
   IconTrash,
   IconUserCircle,
 } from "@tabler/icons-react";
+import { useDMListStore } from "../../../store/dm/dm.list.store";
+import { useParams } from "react-router";
 
 function Navbar() {
+  const dms = useDMListStore((state) => state.dms ?? []);
+
+  const { chatId } = useParams<{ chatId: string }>();
+
+  const displayName =
+    dms.find((userDoc) => userDoc._id === decodeURIComponent(chatId ?? ""))
+      ?.display_name ?? "";
+
   return (
     <div className="bg-white rounded-full p-2 shadow">
       <div className="flex gap-3 items-center">
-        <Avatar src="https://i.pravatar.cc/150?img=1" radius="xl" size={32} />
-        <div className="font-medium">John Doe</div>
+        <Avatar color="cyan" radius="xl">
+          {displayName[0]}
+        </Avatar>
+        <div className="font-medium">{displayName}</div>
         <div className="ms-auto">
           <Menu width={200} position="bottom-end">
             <Menu.Target>

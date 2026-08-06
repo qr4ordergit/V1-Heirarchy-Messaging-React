@@ -10,7 +10,7 @@ function Conversation() {
           <div className="w-8/12">
             <div className="flex flex-col h-full">
               <Navbar />
-              <div className="grow min-h-0">
+              <div className="flex-1 min-h-0">
                 <Chatting />
               </div>
               <div>
