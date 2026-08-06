@@ -1,13 +1,11 @@
-import { ActionIcon, Avatar, Stack } from "@mantine/core";
+import { ActionIcon, Stack } from "@mantine/core";
 import SidebarItem from "./SidebarItem";
 import { navigationItems } from "../../utils/navigation";
-import { Button } from "@mantine/core";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { ROUTES } from "../../router/routes";
 import { useNavigate } from "react-router";
 import { useState } from "react";
 import { logout } from "../../api/authApi";
-import { LogOut } from "lucide-react";
 import { IconLogout } from "@tabler/icons-react";
 export default function Sidebar() {
   const navigate = useNavigate();
