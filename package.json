@@ -15,9 +15,12 @@
     "@mantine/notifications": "^9.5.1",
     "@tabler/icons-react": "^3.45.0",
     "@tailwindcss/vite": "^4.3.3",
+<<<<<<< Updated upstream
     "axios": "^1.19.0",
     "dayjs": "^1.11.21",
     "lucide-react": "^1.28.0",
+=======
+>>>>>>> Stashed changes
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router": "^7.18.1",

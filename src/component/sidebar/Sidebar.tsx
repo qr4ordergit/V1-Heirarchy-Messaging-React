@@ -48,7 +48,7 @@ export default function Sidebar() {
         onClick={handleLogout}
         color="red"
       >
-        <IconLogout size={18}/>
+        <IconLogout size={18} />
       </ActionIcon>
     </Stack>
   );

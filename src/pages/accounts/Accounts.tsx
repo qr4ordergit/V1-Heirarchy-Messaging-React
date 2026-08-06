@@ -19,7 +19,13 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { LogOut, Plus, Settings, Wand2 } from "lucide-react";
+import {
+  IconLogout,
+  IconPlus,
+  IconSettings,
+  IconWand,
+} from "@tabler/icons-react";
+
 import {
   fetchAccounts,
   createAccount,
@@ -240,7 +246,7 @@ export default function Accounts() {
           </div>
           <Group gap="sm">
             <Button
-              leftSection={<Plus size={16} />}
+              leftSection={<IconPlus size={16} />}
               radius="xl"
               variant="gradient"
               onClick={() => setModalOpen(true)}
@@ -248,7 +254,7 @@ export default function Accounts() {
               Add Account
             </Button>
             <Button
-              leftSection={<LogOut size={16} />}
+              leftSection={<IconLogout size={16} />}
               radius="xl"
               variant="subtle"
               color="red"
@@ -297,7 +303,7 @@ export default function Accounts() {
                   aria-label="Edit permissions"
                   onClick={() => setPermissionsUserId(account.user_id)}
                 >
-                  <Settings size={16} />
+                  <IconSettings size={16} />
                 </ActionIcon>
 
                 <Stack gap="sm" align="center">
@@ -377,7 +383,7 @@ export default function Accounts() {
                   usernameChecking ? (
                     <Loader size={14} />
                   ) : (
-                    <Wand2
+                    <IconWand
                       size={16}
                       style={{
                         cursor:
