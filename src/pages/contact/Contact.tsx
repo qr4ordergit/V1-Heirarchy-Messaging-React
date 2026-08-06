@@ -39,6 +39,9 @@ const Contact = () => {
   
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [fetchingDetailsId, setFetchingDetailsId] = useState<string | null>(
+    null,
+  );
   const [startingChatId, setStartingChatId] = useState<string | number | null>(
     null,
   );
@@ -75,7 +78,7 @@ const Contact = () => {
         const formattedContacts = (data.contacts || data || []).map(
           (item: any, index: number) => ({
             id: item._id || index,
-            username: item.username || item.contact_user_id || "",
+            username: item.contact_user_id || item.username || "",
             name: item.display_name || item.name || "Unknown",
             phone: item.phone || "",
             email: item.email || "",
@@ -86,7 +89,7 @@ const Contact = () => {
       } else {
         notifications.show({
           title: "",
-          message: `"Failed to fetch contacts.`,
+          message: "Failed to fetch contacts.",
           color: "red",
           icon: <IconX size={18} />,
         });
@@ -94,7 +97,7 @@ const Contact = () => {
     } catch (error) {
       notifications.show({
         title: "",
-        message: `"Error fetching contacts:", ${error}`,
+        message: `Error fetching contacts: ${error}`,
         color: "red",
         icon: <IconX size={18} />,
       });
@@ -151,7 +154,7 @@ const Contact = () => {
     } catch (error) {
       notifications.show({
         title: "",
-        message: `"Error starting conversation:", ${error}`,
+        message: `Error starting conversation: ${error}`,
         color: "red",
         icon: <IconX size={18} />,
       });
@@ -212,7 +215,7 @@ const Contact = () => {
     } catch (error) {
       notifications.show({
         title: "",
-        message: `"Error deleting contact:", ${error}`,
+        message: `Error deleting contact: ${error}`,
         color: "red",
         icon: <IconX size={18} />,
       });
@@ -236,9 +239,64 @@ const Contact = () => {
     setOpened(true);
   };
 
-  const handleEdit = (contact: Contact) => {
-    setSelectedContact(contact);
-    setOpened(true);
+  const handleEdit = async (contact: Contact) => {
+    const contactUserId = contact.username || contact.id.split("#")[1];
+
+    if (!contactUserId) {
+      notifications.show({
+        title: "",
+        message: "Unable to find valid contact ID.",
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+      return;
+    }
+
+    setFetchingDetailsId(contact.id);
+
+    try {
+      const response = await fetch(
+        `${API_ENDPOINTS.CONTACTS}/${contactUserId}`,
+        {
+          method: "GET",
+          headers: getHeaders(),
+        },
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.success && data.contact) {
+        const fetched = data.contact;
+
+        const updatedContact: Contact = {
+          id: fetched._id || contact.id,
+          username: fetched.contact_user_id || "", // Mapping contact_user_id to username
+          name: fetched.display_name || "",
+          phone: fetched.phone || "",
+          email: fetched.email || "",
+          color: contact.color || "indigo",
+        };
+
+        setSelectedContact(updatedContact);
+        setOpened(true);
+      } else {
+        notifications.show({
+          title: "",
+          message: data.message || "Failed to fetch contact details.",
+          color: "red",
+          icon: <IconX size={18} />,
+        });
+      }
+    } catch (error) {
+      notifications.show({
+        title: "",
+        message: `Error fetching contact details: ${error}`,
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+    } finally {
+      setFetchingDetailsId(null);
+    }
   };
 
   const handleSave = async (values: ContactFormValues) => {
@@ -301,18 +359,53 @@ const Contact = () => {
       } catch (error) {
         notifications.show({
           title: "",
-          message: `"Error adding contact:", ${error}`,
+          message: `Error adding contact: ${error}`,
           color: "red",
           icon: <IconX size={18} />,
         });
       }
     } else {
-      setContacts((prev) =>
-        prev.map((item) =>
-          item.id === selectedContact.id ? { ...item, ...values } : item,
-        ),
-      );
-      setOpened(false);
+      try {
+        const payload = {
+          owner_user_id: userDetails?.username,
+          contact_user_id: contactUserId,
+          display_name: values.name.trim(),
+          phone: values.phone,
+          email: values.email,
+        };
+
+        const response = await fetch(API_ENDPOINTS.CONTACTS, {
+          method: "PUT",
+          headers: getHeaders(),
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+
+        if (data.success || response.ok) {
+          notifications.show({
+            title: "",
+            message: data.message || "Contact updated successfully",
+            color: "green",
+            icon: <IconCheck size={18} />,
+          });
+          await fetchContacts();
+          setOpened(false);
+        } else {
+          notifications.show({
+            title: "",
+            message: data.message || "Failed to update contact.",
+            color: "red",
+            icon: <IconX size={18} />,
+          });
+        }
+      } catch (error) {
+        notifications.show({
+          title: "",
+          message: `Error updating contact: ${error}`,
+          color: "red",
+          icon: <IconX size={18} />,
+        });
+      }
     }
   };
 
@@ -378,12 +471,14 @@ const Contact = () => {
                       transition: "0.2s",
                       cursor:
                         startingChatId === contact.id ||
-                        deletingContactId === contact.id
+                        deletingContactId === contact.id ||
+                        fetchingDetailsId === contact.id
                           ? "wait"
                           : "pointer",
                       opacity:
                         startingChatId === contact.id ||
-                        deletingContactId === contact.id
+                        deletingContactId === contact.id ||
+                        fetchingDetailsId === contact.id
                           ? 0.6
                           : 1,
                     }}
@@ -415,6 +510,7 @@ const Contact = () => {
                         variant="subtle"
                         size="md"
                         radius="md"
+                        loading={fetchingDetailsId === contact.id}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEdit(contact);
@@ -428,6 +524,7 @@ const Contact = () => {
                         color="red"
                         size="md"
                         radius="md"
+                        loading={deletingContactId === contact.id}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDelete(contact);
