@@ -1,4 +1,4 @@
-import { Avatar, Stack } from "@mantine/core";
+import { ActionIcon, Avatar, Stack } from "@mantine/core";
 import SidebarItem from "./SidebarItem";
 import { navigationItems } from "../../utils/navigation";
 import { Button } from "@mantine/core";
@@ -8,6 +8,7 @@ import { useNavigate } from "react-router";
 import { useState } from "react";
 import { logout } from "../../api/authApi";
 import { LogOut } from "lucide-react";
+import { IconLogout } from "@tabler/icons-react";
 export default function Sidebar() {
   const navigate = useNavigate();
   const clearTokens = useAuthStore((state) => state.clearTokens);
@@ -42,20 +43,15 @@ export default function Sidebar() {
           />
         ))}
       </Stack>
-      <Button
-        leftSection={<LogOut size={16} />}
-        radius="xl"
-        variant="subtle"
-        color="red"
+      <ActionIcon
+        variant="transparent"
+        size="md"
         loading={loggingOut}
         onClick={handleLogout}
+        color="red"
       >
-        Logout
-      </Button>
-
-      <Avatar radius="xl" size={46}>
-        KC
-      </Avatar>
+        <IconLogout size={18}/>
+      </ActionIcon>
     </Stack>
   );
 }

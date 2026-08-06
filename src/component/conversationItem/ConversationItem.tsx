@@ -1,6 +1,7 @@
 import { Avatar, Badge, Group, Stack, Text } from "@mantine/core";
 import dayjs from "dayjs";
 import { getAvatarColor } from "../../utils/constant";
+import { useNavigate, useParams } from "react-router";
 
 export interface Conversation {
   _id: string;
@@ -16,8 +17,14 @@ interface ConversationItemProps {
 
 export default function ConversationItem({
   conversation,
-  onClick,
+  //   onClick,
 }: ConversationItemProps) {
+  const { chatId } = useParams();
+  const navigate = useNavigate();
+
+//   const getcConversationId = (id:string) => {
+//     return id.split("#")[1]
+//   }
   return (
     <Group
       justify="space-between"
@@ -28,10 +35,17 @@ export default function ConversationItem({
         borderRadius: 12,
         cursor: "pointer",
       }}
-      onClick={onClick}
+      onClick={() => {
+        navigate(encodeURIComponent(conversation._id));
+      }}
+      bg={chatId === conversation._id ? "#edf2ff" : "white"}
     >
       <Group gap="sm" wrap="nowrap">
-        <Avatar radius="xl" size={45} color={getAvatarColor(conversation.display_name)}>
+        <Avatar
+          radius="xl"
+          size={45}
+          color={getAvatarColor(conversation.display_name)}
+        >
           {conversation.display_name.charAt(0).toUpperCase()}
         </Avatar>
 

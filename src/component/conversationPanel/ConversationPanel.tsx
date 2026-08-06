@@ -52,12 +52,6 @@ export default function ConversationPanel() {
           <ScrollArea style={{ height: "100%" }} offsetScrollbars scrollbarSize={3}>
             {type === "dm" && <DmList />}
           </ScrollArea> 
-
-          {/* {type === "groups" && (
-            <ActionIcon pos="absolute" bottom={10} right={10} size={30}>
-              <IconUsersPlus size={15} />
-            </ActionIcon>
-          )} */}
         </Box>
       </Stack>
     </Paper>

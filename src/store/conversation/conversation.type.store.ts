@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export type ConversationType = "dm" | "groups";
 
@@ -10,7 +11,8 @@ interface ConversationTypeState {
   reset: () => void;
 }
 
-export const useConversationTypeStore = create<ConversationTypeState>(
+export const useConversationTypeStore = create<ConversationTypeState>()(
+  persist(
   (set) => ({
     type: "dm",
 
@@ -18,4 +20,8 @@ export const useConversationTypeStore = create<ConversationTypeState>(
 
     reset: () => set({ type: "dm" }),
   }),
+  {
+      name: "conversation-type-storage",
+    }
+  )
 );

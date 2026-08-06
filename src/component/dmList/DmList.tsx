@@ -1,19 +1,22 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { DmService } from "../../api/services/dm.service";
 import { useDMListStore } from "../../store/dm/dm.list.store";
 import { Notification } from "../../utils/notification";
-import { Center, Stack, Text } from "@mantine/core";
+import { ActionIcon, Center, Loader, Stack, Text } from "@mantine/core";
 import ConversationItem from "../conversationItem/ConversationItem";
+import { IconRefresh } from "@tabler/icons-react";
 
 const DmList = () => {
   const dms = useDMListStore((state) => state.dms);
   const setDMs = useDMListStore((state) => state.setDMs);
   const reset = useDMListStore((state) => state.reset);
 
+  const [loading, setLoading] = useState<boolean>(false);
   const loadDMs = async () => {
     try {
+      setLoading(true);
       const dms = await DmService.getDMs({
-        limit: 20,
+        limit: 50,
       });
 
       setDMs(dms.data);
@@ -22,24 +25,47 @@ const DmList = () => {
         Notification.error(error.message);
       }
       reset();
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadDMs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  return dms.length > 0 ? (
-    <Stack gap={4}>
-      {dms.map((conversation) => (
-        <ConversationItem key={conversation._id} conversation={conversation} />
-      ))}
-    </Stack>
+  return !loading ? (
+    dms.length > 0 ? (
+      <>
+        <Stack gap={4} pb={50}>
+          {dms.map((conversation) => (
+            <ConversationItem
+              key={conversation._id}
+              conversation={conversation}
+            />
+          ))}
+        </Stack>
+        <ActionIcon
+          pos="absolute"
+          bottom={10}
+          right={10}
+          size={30}
+          onClick={loadDMs}
+        >
+          <IconRefresh size={15} />
+        </ActionIcon>
+      </>
+    ) : (
+      <Center>
+        <Text c="red.6" size="xs">
+          No direct messages found
+        </Text>
+      </Center>
+    )
   ) : (
     <Center>
-      <Text c="red.6" size="xs">
-        No direct messages found
-      </Text>
+      <Loader size={20} />
     </Center>
   );
 };

@@ -18,6 +18,7 @@ import { useAuthStore } from "../../store/auth/auth.store";
 import { API_ENDPOINTS } from "../../utils/constant";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
+import { useConversationTypeStore } from "../../store/conversation/conversation.type.store";
 
 export interface Contact {
   id: string;
@@ -33,6 +34,9 @@ export type ContactFormValues = Omit<Contact, "id" | "color"> & {
 };
 
 const Contact = () => {
+
+    const setType = useConversationTypeStore((state) => state.setType);
+  
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [startingChatId, setStartingChatId] = useState<string | number | null>(
@@ -134,7 +138,8 @@ const Contact = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        navigate(`/chats/${targetUserId}`);
+        setType("dm")
+        navigate(`/chats/${encodeURIComponent(contact.id)}`);
       } else {
         notifications.show({
           title: "",
