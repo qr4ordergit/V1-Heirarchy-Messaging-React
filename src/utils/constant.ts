@@ -9,7 +9,8 @@ export const API_ENDPOINTS = {
   ACCOUNTS_LIST: `${API_BASE_URL}/user-access/sub-users-detail`,
   AUTH_LOGOUT: `${API_BASE_URL}/auth/logout`,
   CONTACTS: `${API_BASE_URL}/contacts`,
-  START_CONVERSATION: `${API_BASE_URL}/start-conversation`
+  START_CONVERSATION: `${API_BASE_URL}/start-conversation`,
+  PERMISSIONS: `${API_BASE_URL}/permissions`,
 } as const;
 
 const avatarColors = [

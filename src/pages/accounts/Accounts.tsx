@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import {
+  ActionIcon,
   Alert,
   Badge,
   Button,
@@ -18,7 +19,7 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { LogOut, Plus, Wand2 } from "lucide-react";
+import { LogOut, Plus, Settings, Wand2 } from "lucide-react";
 import {
   fetchAccounts,
   createAccount,
@@ -28,6 +29,7 @@ import { suggestUsername, logout } from "../../api/authApi";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { ROUTES } from "../../router/routes";
 import Avatar from "../../component/avatar/Avatar";
+import PermissionsModal from "../../component/permissions/PermissionsModal";
 import classes from "./Accounts.module.css";
 
 type IdentifierType = "username" | "email" | "phone";
@@ -96,6 +98,12 @@ export default function Accounts() {
 
   const [loggingOut, setLoggingOut] = useState(false);
 
+  const [permissionsUserId, setPermissionsUserId] = useState<string | null>(
+    null,
+  );
+  const setField = (field: keyof NewAccountForm) => (value: string) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
+
   const loadAccounts = async () => {
     setLoading(true);
     setError(null);
@@ -124,9 +132,6 @@ export default function Accounts() {
       setUsernameChecking(false);
     }
   };
-
-  const setField = (field: keyof NewAccountForm) => (value: string) =>
-    setForm((prev) => ({ ...prev, [field]: value }));
 
   const handleIdentifierChange = (value: string) => {
     setForm((prev) => ({
@@ -216,9 +221,11 @@ export default function Accounts() {
       navigate(ROUTES.HOME, { replace: true });
     }
   };
+
   useEffect(() => {
     loadAccounts();
   }, []);
+
   return (
     <div className={classes.wrapper}>
       <Container size="md" py="xl">
@@ -280,7 +287,19 @@ export default function Accounts() {
                 radius="md"
                 padding="lg"
                 className={classes.accountCard}
+                style={{ position: "relative" }}
               >
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  radius="xl"
+                  style={{ position: "absolute", top: 10, right: 10 }}
+                  aria-label="Edit permissions"
+                  onClick={() => setPermissionsUserId(account.user_id)}
+                >
+                  <Settings size={16} />
+                </ActionIcon>
+
                 <Stack gap="sm" align="center">
                   <Avatar
                     name={getInitialsSource(account)}
@@ -447,6 +466,13 @@ export default function Accounts() {
           </Group>
         </Stack>
       </Modal>
+
+      <PermissionsModal
+        opened={permissionsUserId !== null}
+        userId={permissionsUserId}
+        onClose={() => setPermissionsUserId(null)}
+        onSaved={loadAccounts}
+      />
     </div>
   );
 }
