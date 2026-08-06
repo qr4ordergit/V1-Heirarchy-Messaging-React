@@ -10,8 +10,14 @@ const DmList = () => {
   const dms = useDMListStore((state) => state.dms);
   const setDMs = useDMListStore((state) => state.setDMs);
   const reset = useDMListStore((state) => state.reset);
+  const search = useDMListStore((state) => state.search);
+
+  const filteredDMs = dms.filter((dm) =>
+    dm.display_name.toLowerCase().includes(search.trim().toLowerCase()),
+  );
 
   const [loading, setLoading] = useState<boolean>(false);
+  
   const loadDMs = async () => {
     try {
       setLoading(true);
@@ -36,10 +42,10 @@ const DmList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return !loading ? (
-    dms.length > 0 ? (
+    filteredDMs.length > 0 ? (
       <>
         <Stack gap={4} pb={50}>
-          {dms.map((conversation) => (
+          {filteredDMs.map((conversation) => (
             <ConversationItem
               key={conversation._id}
               conversation={conversation}
