@@ -102,6 +102,7 @@ const ContactModal = ({
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange("username", e.target.value)
               }
+              disabled
             />
           </Grid.Col>
 
