@@ -2,34 +2,43 @@ import { Group, Paper, ScrollArea, Stack, Text } from "@mantine/core";
 import { IconCheck, IconChecks } from "@tabler/icons-react";
 import { api } from "../../../api/axios";
 import { ENDPOINTS } from "../../../api/endpoints";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useTransition } from "react";
 import dayjs from "dayjs";
 import { ConversationShimmer } from "../../loaders/shimmers/ConversationShimmer";
-
-interface MESSAGE {
-  _id: string;
-  created_by: string;
-  created_on: string;
-  body: {
-    text: string;
-  };
-}
+import { Notification } from "../../../utils/notification";
+import { useChatStore } from "../../../store/chats/chats.store";
+import { useParams } from "react-router";
+import { useNextPerson } from "../../../hooks/useNextPerson";
 
 export default function Chatting() {
-  const [messages, setMessages] = useState([]);
+  const messages = useChatStore((state) => state.chats);
+  const addChats = useChatStore((state) => state.addChats);
+  const { chatId } = useParams<{ chatId: string }>();
+  const nextPerson = useNextPerson();
 
   const [fetchLoader, FetchFn] = useTransition();
 
-  const fetchChats = async () => {
-    const response = await api.get(`${ENDPOINTS.CHAT.GET}${"sup-aveer02"}`);
+  const fetchOneToOneChats = async () => {
+    if (!chatId) return;
 
-    if (!response.data?.success) return;
+    const response = await api.get(
+      `${ENDPOINTS.CHAT.GET}${nextPerson(chatId)}`,
+    );
 
-    setMessages(response.data?.data?.messages ?? []);
+    if (!response.data?.success) {
+      Notification.error("Something went wrong");
+      return;
+    }
+
+    addChats(response.data?.data?.messages ?? []);
+  };
+
+  const fetchChats = () => {
+    FetchFn(fetchOneToOneChats);
   };
 
   useEffect(() => {
-    FetchFn(fetchChats);
+    fetchChats();
   }, []);
 
   if (fetchLoader) return <ConversationShimmer />;
@@ -37,7 +46,7 @@ export default function Chatting() {
   return (
     <ScrollArea h={"100%"} scrollbarSize={8} offsetScrollbars className="py-2">
       <Stack py="md" gap="sm" className="h-100">
-        {messages.map((msg: MESSAGE) => {
+        {messages.map((msg) => {
           const isMe = "me";
 
           return (
