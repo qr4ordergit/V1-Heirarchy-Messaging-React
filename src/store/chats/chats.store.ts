@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-interface Message {
+export interface MESSAGE {
     _id: string;
     created_by: string;
     created_on: string;
@@ -12,9 +12,9 @@ interface Message {
 }
 
 interface ChatsStore {
-    chats: Message[];
-    addChats: (messages: Message[]) => void;
-    appendChats: (messages: Message[]) => void;
+    chats: MESSAGE[];
+    addChats: (messages: MESSAGE[]) => void;
+    appendChats: (messages: MESSAGE[]) => void;
 }
 
 export const useChatStore = create<ChatsStore>((set) => ({
