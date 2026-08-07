@@ -354,11 +354,11 @@ export default function Accounts() {
                     <Text fw={600} truncate="end">
                       {getDisplayName(account)}
                     </Text>
-                    {account.email && (
+                    {/* {account.email && (
                       <Text size="xs" c="dimmed" truncate="end">
                         {account.email}
                       </Text>
-                    )}
+                    )} */}
                   </div>
                   {account.status && (
                     <Badge
