@@ -27,14 +27,7 @@ export default function AuthCallback() {
       idToken: idToken ?? "",
       refreshToken: refreshToken ?? "",
     });
-    console.log(
-      "accessToken",
-      accessToken,
-      "   <<<<<<<<<idToken>>>>",
-      idToken,
-      "   <<<<<<<<<refreshToken>>>>>>>",
-      refreshToken,
-    );
+
     (async () => {
       try {
         const details = await fetchUserDetails();
