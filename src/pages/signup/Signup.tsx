@@ -92,13 +92,11 @@ export default function Signup() {
         password: values.password,
         group_name: GROUP_NAME,
       });
-      console.log("response", response);
-      //   setInfoMessage(
-      //     `${response.message} to your email via ${response.delivery_medium.toLowerCase()}.`,
-      //   );
+
+      setInfoMessage(`${response.message} to your email ${values.email}.`);
       //ssetInfoMessage(`Otp has been sent to your email`);
-      //setStep("verify");
-      window.location.href = COGNITO_LOGIN_URL;
+      setStep("verify");
+      // window.location.href = COGNITO_LOGIN_URL;
     } catch (err) {
       setApiError(
         err instanceof Error ? err.message : "Signup failed. Please try again.",
@@ -119,8 +117,15 @@ export default function Signup() {
 
     try {
       setSubmitting(true);
-      await verifyOtp({ email: values.email.trim(), otp });
-      window.location.href = COGNITO_LOGIN_URL;
+      const response = await verifyOtp({ email: values.email.trim(), otp });
+
+      if (response.success) {
+        window.location.href = COGNITO_LOGIN_URL;
+      } else {
+        setOtpError(
+          response.message || "Verification failed. Please try again.",
+        );
+      }
     } catch (err) {
       setOtpError(
         err instanceof Error
@@ -131,7 +136,6 @@ export default function Signup() {
       setSubmitting(false);
     }
   };
-
   return (
     <div className={classes.wrapper}>
       <Paper withBorder shadow="lg" radius="lg" p="xl" className={classes.card}>

@@ -17,6 +17,7 @@ export interface VerifyOtpPayload {
 }
 
 export interface VerifyOtpResponse {
+  success: boolean;
   message: string;
 }
 
