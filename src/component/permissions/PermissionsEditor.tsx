@@ -5,58 +5,224 @@ import classes from "./PermissionsEditor.module.css";
 interface PermissionsEditorProps {
   tree: PermissionsTree;
   onToggle: (path: string[]) => void;
-  path?: string[];
-  depth?: number;
 }
 
-function toLabel(key: string): string {
-  return key.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <Text
+      size="xs"
+      fw={700}
+      tt="uppercase"
+      c="dimmed"
+      className={classes.sectionLabel}
+      mb="xs"
+    >
+      {children}
+    </Text>
+  );
+}
+
+function ToggleRow({
+  label,
+  value,
+  onClick,
+}: {
+  label: string;
+  value: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Group justify="space-between" wrap="nowrap">
+      <Text size="sm">{label}</Text>
+      <Switch checked={value} onChange={onClick} />
+    </Group>
+  );
 }
 
 export default function PermissionsEditor({
   tree,
   onToggle,
-  path = [],
-  depth = 0,
 }: PermissionsEditorProps) {
-  const entries = Object.entries(tree);
+  const messages = tree.messages as PermissionsTree | undefined;
+  const chat = messages?.chat as PermissionsTree | undefined;
+  const groupChat = messages?.group as PermissionsTree | undefined;
+  const group = tree.group as PermissionsTree | undefined;
+  const contacts = tree.contacts as PermissionsTree | undefined;
+  const users = tree.users as PermissionsTree | undefined;
+  const accessTree = users?.["access-tree"] as PermissionsTree | undefined;
+  const permissions = users?.permissions as PermissionsTree | undefined;
 
   return (
-    <Stack gap={depth === 0 ? "lg" : "xs"} pl={depth > 0 ? "md" : 0}>
-      {entries.map(([key, value]) => {
-        const currentPath = [...path, key];
+    <Stack gap="lg">
+      {(chat || groupChat) && (
+        <div>
+          <Stack gap="md">
+            {chat && (
+              <div>
+                <SectionLabel>One to One Chat</SectionLabel>
+                <Stack gap={6}>
+                  <ToggleRow
+                    label="Write"
+                    value={Boolean(chat.create)}
+                    onClick={() => onToggle(["messages", "chat", "create"])}
+                  />
+                  <ToggleRow
+                    label="View"
+                    value={Boolean(chat.read)}
+                    onClick={() => onToggle(["messages", "chat", "read"])}
+                  />
+                  <ToggleRow
+                    label="Update"
+                    value={Boolean(chat.update)}
+                    onClick={() => onToggle(["messages", "chat", "update"])}
+                  />
+                  <ToggleRow
+                    label="Delete"
+                    value={Boolean(chat.delete)}
+                    onClick={() => onToggle(["messages", "chat", "delete"])}
+                  />
+                </Stack>
+              </div>
+            )}
 
-        if (typeof value === "boolean") {
-          return (
-            <Group key={key} justify="space-between" wrap="nowrap">
-              <Text size="sm">{toLabel(key)}</Text>
-              <Switch checked={value} onChange={() => onToggle(currentPath)} />
-            </Group>
-          );
-        }
+            {groupChat && (
+              <div>
+                <SectionLabel>Group Chat</SectionLabel>
+                <Stack gap={6}>
+                  <ToggleRow
+                    label="Write"
+                    value={Boolean(groupChat.create)}
+                    onClick={() => onToggle(["messages", "group", "create"])}
+                  />
+                  <ToggleRow
+                    label="View"
+                    value={Boolean(groupChat.read)}
+                    onClick={() => onToggle(["messages", "group", "read"])}
+                  />
+                  <ToggleRow
+                    label="Update"
+                    value={Boolean(groupChat.update)}
+                    onClick={() => onToggle(["messages", "group", "update"])}
+                  />
+                  <ToggleRow
+                    label="Delete"
+                    value={Boolean(groupChat.delete)}
+                    onClick={() => onToggle(["messages", "group", "delete"])}
+                  />
+                </Stack>
+              </div>
+            )}
+          </Stack>
+          <Divider mt="lg" />
+        </div>
+      )}
 
-        return (
-          <div key={key}>
-            <Text
-              size={depth === 0 ? "sm" : "xs"}
-              fw={700}
-              tt="uppercase"
-              c="dimmed"
-              className={classes.groupLabel}
-              mb={6}
-            >
-              {toLabel(key)}
-            </Text>
-            <PermissionsEditor
-              tree={value}
-              onToggle={onToggle}
-              path={currentPath}
-              depth={depth + 1}
+      {group && (
+        <div>
+          <SectionLabel>Group</SectionLabel>
+          <Stack gap={6}>
+            <ToggleRow
+              label="Create"
+              value={Boolean(group.create)}
+              onClick={() => onToggle(["group", "create"])}
             />
-            {depth === 0 && <Divider mt="md" />}
-          </div>
-        );
-      })}
+            <ToggleRow
+              label="View"
+              value={Boolean(group.read)}
+              onClick={() => onToggle(["group", "read"])}
+            />
+            <ToggleRow
+              label="Update"
+              value={Boolean(group.update)}
+              onClick={() => onToggle(["group", "update"])}
+            />
+            <ToggleRow
+              label="Delete"
+              value={Boolean(group.delete)}
+              onClick={() => onToggle(["group", "delete"])}
+            />
+          </Stack>
+          <Divider mt="lg" />
+        </div>
+      )}
+
+      {contacts && (
+        <div>
+          <SectionLabel>Contacts</SectionLabel>
+          <Stack gap={6}>
+            <ToggleRow
+              label="Create"
+              value={Boolean(contacts.create)}
+              onClick={() => onToggle(["contacts", "create"])}
+            />
+            <ToggleRow
+              label="View"
+              value={Boolean(contacts.read)}
+              onClick={() => onToggle(["contacts", "read"])}
+            />
+            <ToggleRow
+              label="Update"
+              value={Boolean(contacts.update)}
+              onClick={() => onToggle(["contacts", "update"])}
+            />
+            <ToggleRow
+              label="Delete"
+              value={Boolean(contacts.delete)}
+              onClick={() => onToggle(["contacts", "delete"])}
+            />
+          </Stack>
+          <Divider mt="lg" />
+        </div>
+      )}
+
+      {users && (
+        <div>
+          <SectionLabel>Users</SectionLabel>
+          <Stack gap="md">
+            <Stack gap={6}>
+              <ToggleRow
+                label="Create"
+                value={Boolean(users.create)}
+                onClick={() => onToggle(["users", "create"])}
+              />
+              <ToggleRow
+                label="View"
+                value={Boolean(users.read)}
+                onClick={() => onToggle(["users", "read"])}
+              />
+              <ToggleRow
+                label="Update"
+                value={Boolean(users.update)}
+                onClick={() => onToggle(["users", "update"])}
+              />
+              <ToggleRow
+                label="Delete"
+                value={Boolean(users.delete)}
+                onClick={() => onToggle(["users", "delete"])}
+              />
+            </Stack>
+
+            {accessTree && (
+              <>
+                <Divider />
+                <ToggleRow
+                  label="Sub Account Access"
+                  value={Boolean(accessTree.read)}
+                  onClick={() => onToggle(["users", "access-tree", "read"])}
+                />
+              </>
+            )}
+            <Divider />
+            {permissions && (
+              <ToggleRow
+                label="Update Permissions"
+                value={Boolean(permissions.update)}
+                onClick={() => onToggle(["users", "permissions", "update"])}
+              />
+            )}
+          </Stack>
+        </div>
+      )}
     </Stack>
   );
 }

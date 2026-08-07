@@ -23,12 +23,14 @@ import {
   IconLogout,
   IconPlus,
   IconSettings,
+  IconTrash,
   IconWand,
 } from "@tabler/icons-react";
 
 import {
   fetchAccounts,
   createAccount,
+  deleteAccount,
   type Account,
 } from "../../api/accountApi";
 import { suggestUsername, logout } from "../../api/authApi";
@@ -107,6 +109,11 @@ export default function Accounts() {
   const [permissionsUserId, setPermissionsUserId] = useState<string | null>(
     null,
   );
+
+  const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const setField = (field: keyof NewAccountForm) => (value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -228,6 +235,24 @@ export default function Accounts() {
     }
   };
 
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteAccount(deleteTarget.user_id);
+      setDeleteTarget(null);
+      await loadAccounts();
+    } catch (err) {
+      setDeleteError(
+        err instanceof Error ? err.message : "Could not remove account.",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   useEffect(() => {
     loadAccounts();
   }, []);
@@ -295,16 +320,29 @@ export default function Accounts() {
                 className={classes.accountCard}
                 style={{ position: "relative" }}
               >
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  radius="xl"
+                <Group
+                  gap={4}
                   style={{ position: "absolute", top: 10, right: 10 }}
-                  aria-label="Edit permissions"
-                  onClick={() => setPermissionsUserId(account.user_id)}
                 >
-                  <IconSettings size={16} />
-                </ActionIcon>
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    radius="xl"
+                    aria-label="Edit permissions"
+                    onClick={() => setPermissionsUserId(account.user_id)}
+                  >
+                    <IconSettings size={16} />
+                  </ActionIcon>
+                  <ActionIcon
+                    variant="subtle"
+                    color="red"
+                    radius="xl"
+                    aria-label="Remove account"
+                    onClick={() => setDeleteTarget(account)}
+                  >
+                    <IconTrash size={16} />
+                  </ActionIcon>
+                </Group>
 
                 <Stack gap="sm" align="center">
                   <Avatar
@@ -364,7 +402,7 @@ export default function Accounts() {
               onChange={handleIdentifierChange}
               data={[
                 { label: "Username", value: "username" },
-                { label: "Email", value: "email" },
+                // { label: "Email", value: "email" },
                 { label: "Phone", value: "phone" },
               ]}
             />
@@ -468,6 +506,51 @@ export default function Accounts() {
               onClick={handleSubmit}
             >
               Add Account
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={deleteTarget !== null}
+        onClose={() => {
+          setDeleteTarget(null);
+          setDeleteError(null);
+        }}
+        title="Remove Account"
+        centered
+        radius="md"
+      >
+        <Stack gap="md">
+          {deleteError && (
+            <Alert color="red" title="Couldn't remove account">
+              {deleteError}
+            </Alert>
+          )}
+
+          <Text size="sm">
+            Are you sure you want to remove{" "}
+            <strong>{deleteTarget ? getDisplayName(deleteTarget) : ""}</strong>{" "}
+            from your hub? This can't be undone.
+          </Text>
+
+          <Group justify="flex-end" mt="xs">
+            <Button
+              variant="subtle"
+              onClick={() => {
+                setDeleteTarget(null);
+                setDeleteError(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              radius="xl"
+              loading={deleting}
+              onClick={handleDeleteConfirm}
+            >
+              Remove Account
             </Button>
           </Group>
         </Stack>

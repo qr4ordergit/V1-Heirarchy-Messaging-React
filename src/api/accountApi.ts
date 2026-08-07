@@ -27,6 +27,10 @@ export interface CreateAccountResponse {
   id?: string;
 }
 
+export interface DeleteAccountResponse {
+  message: string;
+}
+
 async function parseJson(response: Response): Promise<unknown> {
   try {
     return await response.json();
@@ -100,4 +104,25 @@ export async function createAccount(
   }
 
   return data as CreateAccountResponse;
+}
+
+export async function deleteAccount(
+  subUserId: string,
+): Promise<DeleteAccountResponse> {
+  const response = await fetch(API_ENDPOINTS.USER_ACCESS, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ sub_user_id: subUserId }),
+  });
+
+  const data = await parseJson(response);
+
+  if (!response.ok) {
+    const message =
+      (data as { message?: string } | null)?.message ||
+      "Could not remove account.";
+    throw new Error(message);
+  }
+
+  return data as DeleteAccountResponse;
 }

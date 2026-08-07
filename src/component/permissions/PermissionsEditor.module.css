@@ -1,4 +1,10 @@
-.groupLabel {
+.sectionLabel {
   font-family: "IBM Plex Mono", monospace;
   letter-spacing: 0.02em;
+}
+
+.subgroupLabel {
+  font-family: "IBM Plex Mono", monospace;
+  letter-spacing: 0.02em;
+  opacity: 0.75;
 }
