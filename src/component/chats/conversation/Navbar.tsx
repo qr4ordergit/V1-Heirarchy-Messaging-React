@@ -20,7 +20,7 @@ function Navbar() {
     <div className="bg-white rounded-full p-2 shadow">
       <div className="flex gap-3 items-center">
         <Avatar color="cyan" radius="xl">
-          {displayName[0].toUpperCase()}
+          {displayName[0]?.toUpperCase()}
         </Avatar>
         <div className="font-medium">{displayName}</div>
         <div className="ms-auto">
