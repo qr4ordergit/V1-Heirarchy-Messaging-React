@@ -12,6 +12,7 @@ export const API_ENDPOINTS = {
   START_CONVERSATION: `${API_BASE_URL}/start-conversation`,
   PERMISSIONS: `${API_BASE_URL}/permissions`,
   USER_ACCESS: `${API_BASE_URL}/user-access`,
+  CREATE_GROUP: `${API_BASE_URL}/group`
 } as const;
 
 const avatarColors = [

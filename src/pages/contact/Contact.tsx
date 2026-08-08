@@ -25,6 +25,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import ContactModal from "./ContactModal";
+import CreateGroupModal from "./CreateGroupModal";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { API_ENDPOINTS } from "../../utils/constant";
@@ -63,6 +64,9 @@ const Contact = () => {
   const [selectedGroupContacts, setSelectedGroupContacts] = useState<Contact[]>(
     [],
   );
+  const [groupModalOpened, setGroupModalOpened] = useState<boolean>(false);
+  const [creatingGroupLoading, setCreatingGroupLoading] =
+    useState<boolean>(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -147,16 +151,58 @@ const Contact = () => {
       return;
     }
 
-    notifications.show({
-      title: "Group Mode",
-      message: `Creating group with ${selectedGroupContacts.length} contacts.`,
-      color: "green",
-      icon: <IconCheck size={18} />,
-    });
+    setGroupModalOpened(true);
+  };
 
-    // Reset mode
-    setIsCreatingGroup(false);
-    setSelectedGroupContacts([]);
+  const handleSaveGroupPayload = async (payload: {
+    group_name: string;
+    description: string;
+    admin: string[];
+    members: string[];
+    group_image: string;
+    only_admins_can_message: boolean;
+  }) => {
+    setCreatingGroupLoading(true);
+    try {
+      const endpoint = API_ENDPOINTS.CREATE_GROUP;
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && (data.success || response.status === 201)) {
+        notifications.show({
+          title: "",
+          message: data.message || "Group created successfully!",
+          color: "green",
+          icon: <IconCheck size={18} />,
+        });
+
+        setGroupModalOpened(false);
+        setIsCreatingGroup(false);
+        setSelectedGroupContacts([]);
+      } else {
+        notifications.show({
+          title: "",
+          message: data.message || "Failed to create group.",
+          color: "red",
+          icon: <IconX size={18} />,
+        });
+      }
+    } catch (error) {
+      notifications.show({
+        title: "",
+        message: `Error creating group: ${error}`,
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+    } finally {
+      setCreatingGroupLoading(false);
+    }
   };
 
   const handleContactClick = async (contact: Contact) => {
@@ -463,7 +509,7 @@ const Contact = () => {
   };
 
   return (
-    <div className="w-full px-1 md:w-11/12">
+    <div className="w-full h-full px-1">
       <div className="flex flex-col md:flex-row h-full min-h-[calc(100vh-100px)] overflow-hidden bg-white">
         <div
           className={`w-full md:w-7/12 bg-white ${
@@ -685,6 +731,14 @@ const Contact = () => {
         onClose={() => setOpened(false)}
         contact={selectedContact}
         onSave={handleSave}
+      />
+
+      <CreateGroupModal
+        opened={groupModalOpened}
+        onClose={() => setGroupModalOpened(false)}
+        selectedContacts={selectedGroupContacts}
+        onSaveGroup={handleSaveGroupPayload}
+        loading={creatingGroupLoading}
       />
     </div>
   );
