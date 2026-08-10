@@ -31,6 +31,10 @@ export interface DeleteAccountResponse {
   message: string;
 }
 
+export interface ChangePasswordResponse {
+  message: string;
+}
+
 async function parseJson(response: Response): Promise<unknown> {
   try {
     return await response.json();
@@ -125,4 +129,35 @@ export async function deleteAccount(
   }
 
   return data as DeleteAccountResponse;
+}
+
+export async function changePassword(
+  userId: string,
+  newPassword: string,
+  confirmNewPassword: string,
+): Promise<ChangePasswordResponse> {
+  const response = await fetch(
+    `${API_ENDPOINTS.SECONDARY_USER_PASSWORD_CHANGE}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({
+        operation: "reset_password",
+        username: userId,
+        new_password: newPassword,
+        confirm_password: confirmNewPassword,
+      }),
+    },
+  );
+
+  const data = await parseJson(response);
+
+  if (!response.ok) {
+    const message =
+      (data as { message?: string } | null)?.message ||
+      "Could not change password.";
+    throw new Error(message);
+  }
+
+  return data as ChangePasswordResponse;
 }

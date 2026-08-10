@@ -10,6 +10,7 @@ import {
   Container,
   Group,
   Loader,
+  Menu,
   Modal,
   PasswordInput,
   SegmentedControl,
@@ -20,17 +21,20 @@ import {
   Title,
 } from "@mantine/core";
 import {
+  IconDotsVertical,
+  IconKey,
   IconLogout,
   IconPlus,
-  IconSettings,
   IconTrash,
   IconWand,
+  IconEdit,
 } from "@tabler/icons-react";
 
 import {
   fetchAccounts,
   createAccount,
   deleteAccount,
+  changePassword,
   type Account,
 } from "../../api/accountApi";
 import { suggestUsername, logout } from "../../api/authApi";
@@ -113,6 +117,12 @@ export default function Accounts() {
   const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const [passwordTarget, setPasswordTarget] = useState<Account | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const setField = (field: keyof NewAccountForm) => (value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -253,6 +263,44 @@ export default function Accounts() {
     }
   };
 
+  const closePasswordModal = () => {
+    setPasswordTarget(null);
+    setNewPassword("");
+    setConfirmNewPassword("");
+    setPasswordError(null);
+  };
+
+  const handleChangePasswordConfirm = async () => {
+    if (!passwordTarget) return;
+
+    setPasswordError(null);
+
+    if (newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters");
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      await changePassword(
+        passwordTarget.user_id,
+        newPassword,
+        confirmNewPassword,
+      );
+      closePasswordModal();
+    } catch (err) {
+      setPasswordError(
+        err instanceof Error ? err.message : "Could not change password.",
+      );
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   useEffect(() => {
     loadAccounts();
   }, []);
@@ -320,29 +368,47 @@ export default function Accounts() {
                 className={classes.accountCard}
                 style={{ position: "relative" }}
               >
-                <Group
-                  gap={4}
-                  style={{ position: "absolute", top: 10, right: 10 }}
+                <Menu
+                  position="bottom-end"
+                  withinPortal
+                  shadow="md"
+                  radius="md"
                 >
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    radius="xl"
-                    aria-label="Edit permissions"
-                    onClick={() => setPermissionsUserId(account.user_id)}
-                  >
-                    <IconSettings size={16} />
-                  </ActionIcon>
-                  <ActionIcon
-                    variant="subtle"
-                    color="red"
-                    radius="xl"
-                    aria-label="Remove account"
-                    onClick={() => setDeleteTarget(account)}
-                  >
-                    <IconTrash size={16} />
-                  </ActionIcon>
-                </Group>
+                  <Menu.Target>
+                    <ActionIcon
+                      variant="subtle"
+                      color="gray"
+                      radius="xl"
+                      style={{ position: "absolute", top: 10, right: 10 }}
+                      aria-label="Account options"
+                    >
+                      <IconDotsVertical size={16} />
+                    </ActionIcon>
+                  </Menu.Target>
+
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      leftSection={<IconEdit size={14} />}
+                      onClick={() => setPermissionsUserId(account.user_id)}
+                    >
+                      Edit Permissions
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconKey size={14} />}
+                      onClick={() => setPasswordTarget(account)}
+                    >
+                      Change Password
+                    </Menu.Item>
+                    <Menu.Divider />
+                    <Menu.Item
+                      color="red"
+                      leftSection={<IconTrash size={14} />}
+                      onClick={() => setDeleteTarget(account)}
+                    >
+                      Remove Account
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
 
                 <Stack gap="sm" align="center">
                   <Avatar
@@ -354,11 +420,6 @@ export default function Accounts() {
                     <Text fw={600} truncate="end">
                       {getDisplayName(account)}
                     </Text>
-                    {/* {account.email && (
-                      <Text size="xs" c="dimmed" truncate="end">
-                        {account.email}
-                      </Text>
-                    )} */}
                   </div>
                   {account.status && (
                     <Badge
@@ -402,7 +463,6 @@ export default function Accounts() {
               onChange={handleIdentifierChange}
               data={[
                 { label: "Username", value: "username" },
-                // { label: "Email", value: "email" },
                 { label: "Phone", value: "phone" },
               ]}
             />
@@ -461,18 +521,6 @@ export default function Accounts() {
                 </Stack>
               )}
             </div>
-          )}
-
-          {form.identifierType === "email" && (
-            <TextInput
-              label="Email"
-              classNames={{ label: classes.fieldLabel }}
-              placeholder="Enter email address"
-              type="email"
-              value={form.email}
-              onChange={(e) => setField("email")(e.target.value)}
-              error={formErrors.email}
-            />
           )}
 
           {form.identifierType === "phone" && (
@@ -551,6 +599,59 @@ export default function Accounts() {
               onClick={handleDeleteConfirm}
             >
               Remove Account
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={passwordTarget !== null}
+        onClose={closePasswordModal}
+        title="Change Password"
+        centered
+        radius="md"
+      >
+        <Stack gap="md">
+          {passwordError && (
+            <Alert color="red" title="Couldn't change password">
+              {passwordError}
+            </Alert>
+          )}
+
+          <Text size="sm" c="dimmed">
+            Set a new password for{" "}
+            <strong>
+              {passwordTarget ? getDisplayName(passwordTarget) : ""}
+            </strong>
+            .
+          </Text>
+
+          <PasswordInput
+            label="New Password"
+            classNames={{ label: classes.fieldLabel }}
+            placeholder="Enter new password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+          <PasswordInput
+            label="Confirm New Password"
+            classNames={{ label: classes.fieldLabel }}
+            placeholder="Confirm new password"
+            value={confirmNewPassword}
+            onChange={(e) => setConfirmNewPassword(e.target.value)}
+          />
+
+          <Group justify="flex-end" mt="xs">
+            <Button variant="subtle" onClick={closePasswordModal}>
+              Cancel
+            </Button>
+            <Button
+              radius="xl"
+              variant="gradient"
+              loading={changingPassword}
+              onClick={handleChangePasswordConfirm}
+            >
+              Update Password
             </Button>
           </Group>
         </Stack>
