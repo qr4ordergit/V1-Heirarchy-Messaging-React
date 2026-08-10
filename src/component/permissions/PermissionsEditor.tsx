@@ -39,6 +39,31 @@ function ToggleRow({
   );
 }
 
+function EmphasizedToggleRow({
+  label,
+  value,
+  onClick,
+}: {
+  label: string;
+  value: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Group justify="space-between" wrap="nowrap">
+      <Text
+        size="xs"
+        fw={700}
+        tt="uppercase"
+        c="dimmed"
+        className={classes.sectionLabel}
+      >
+        {label}
+      </Text>
+      <Switch checked={value} onChange={onClick} />
+    </Group>
+  );
+}
+
 export default function PermissionsEditor({
   tree,
   onToggle,
@@ -80,6 +105,13 @@ export default function PermissionsEditor({
                     label="Delete"
                     value={Boolean(chat.delete)}
                     onClick={() => onToggle(["messages", "chat", "delete"])}
+                  />
+                  <ToggleRow
+                    label="Delete Chat History"
+                    value={Boolean(chat.history_delete)}
+                    onClick={() =>
+                      onToggle(["messages", "chat", "history_delete"])
+                    }
                   />
                 </Stack>
               </div>
@@ -205,7 +237,7 @@ export default function PermissionsEditor({
             {accessTree && (
               <>
                 <Divider />
-                <ToggleRow
+                <EmphasizedToggleRow
                   label="Sub Account Access"
                   value={Boolean(accessTree.read)}
                   onClick={() => onToggle(["users", "access-tree", "read"])}
@@ -214,7 +246,7 @@ export default function PermissionsEditor({
             )}
             <Divider />
             {permissions && (
-              <ToggleRow
+              <EmphasizedToggleRow
                 label="Update Permissions"
                 value={Boolean(permissions.update)}
                 onClick={() => onToggle(["users", "permissions", "update"])}

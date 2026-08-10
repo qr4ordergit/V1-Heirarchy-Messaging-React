@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { notifications } from "@mantine/notifications";
 import {
   ActionIcon,
   Alert,
@@ -108,6 +109,8 @@ export default function Accounts() {
   const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
   const [usernameMessage, setUsernameMessage] = useState<string | null>(null);
 
+  const [usernameVerified, setUsernameVerified] = useState(false);
+
   const [loggingOut, setLoggingOut] = useState(false);
 
   const [permissionsUserId, setPermissionsUserId] = useState<string | null>(
@@ -134,14 +137,21 @@ export default function Accounts() {
       const data = await fetchAccounts();
       setAccounts(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load accounts.");
+      const message =
+        err instanceof Error ? err.message : "Could not load accounts.";
+      setError(message);
+      notifications.show({
+        color: "red",
+        title: "Couldn't load accounts",
+        message,
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const fetchUsernameSuggestionsOnce = async (rawUsername: string) => {
-    const trimmed = rawUsername.trim();
+    const trimmed = rawUsername.trim().replace(/-/g, "");
     if (trimmed.length < 3) return;
     setUsernameChecking(true);
     try {
@@ -167,19 +177,32 @@ export default function Accounts() {
     setFormErrors({});
     setUsernameSuggestions([]);
     setUsernameMessage(null);
+    setUsernameVerified(false);
   };
 
   const handleUsernameChange = (value: string) => {
-    const sanitized = value.replace(/[#\s]/g, "");
+    const sanitized = value.replace(/[#\s-]/g, "");
     setField("username")(sanitized);
+
+    setUsernameVerified(false);
     setUsernameSuggestions([]);
     setUsernameMessage(null);
   };
 
+  const handleSelectSuggestion = (suggestion: string) => {
+    const sanitized = suggestion.replace(/[#\s-]/g, "");
+    setField("username")(sanitized);
+    setUsernameVerified(true);
+  };
+
   const validate = (): boolean => {
     const errors: NewAccountErrors = {};
-    if (form.identifierType === "username" && !form.username.trim()) {
-      errors.username = "Username is required";
+    if (form.identifierType === "username") {
+      if (!form.username.trim()) {
+        errors.username = "Username is required";
+      } else if (!usernameVerified) {
+        errors.username = "Please select a suggested username";
+      }
     }
     if (form.identifierType === "email") {
       if (!form.email.trim()) {
@@ -207,6 +230,7 @@ export default function Accounts() {
     setSubmitError(null);
     setUsernameSuggestions([]);
     setUsernameMessage(null);
+    setUsernameVerified(false);
   };
 
   const handleSubmit = async () => {
@@ -223,10 +247,20 @@ export default function Accounts() {
       });
       handleClose();
       await loadAccounts();
+      notifications.show({
+        color: "teal",
+        title: "Account added",
+        message: "The new account was created successfully.",
+      });
     } catch (err) {
-      setSubmitError(
-        err instanceof Error ? err.message : "Could not create account.",
-      );
+      const message =
+        err instanceof Error ? err.message : "Could not create account.";
+      setSubmitError(message);
+      notifications.show({
+        color: "red",
+        title: "Couldn't add account",
+        message,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -238,6 +272,12 @@ export default function Accounts() {
       await logout();
     } catch (err) {
       console.error("Logout request failed:", err);
+      notifications.show({
+        color: "red",
+        title: "Logout issue",
+        message:
+          "You've been signed out locally, but the server logout failed.",
+      });
     } finally {
       clearTokens();
       setLoggingOut(false);
@@ -254,10 +294,20 @@ export default function Accounts() {
       await deleteAccount(deleteTarget.user_id);
       setDeleteTarget(null);
       await loadAccounts();
+      notifications.show({
+        color: "teal",
+        title: "Account removed",
+        message: "The account was removed successfully.",
+      });
     } catch (err) {
-      setDeleteError(
-        err instanceof Error ? err.message : "Could not remove account.",
-      );
+      const message =
+        err instanceof Error ? err.message : "Could not remove account.";
+      setDeleteError(message);
+      notifications.show({
+        color: "red",
+        title: "Couldn't remove account",
+        message,
+      });
     } finally {
       setDeleting(false);
     }
@@ -292,10 +342,20 @@ export default function Accounts() {
         confirmNewPassword,
       );
       closePasswordModal();
+      notifications.show({
+        color: "teal",
+        title: "Password updated",
+        message: "The password was changed successfully.",
+      });
     } catch (err) {
-      setPasswordError(
-        err instanceof Error ? err.message : "Could not change password.",
-      );
+      const message =
+        err instanceof Error ? err.message : "Could not change password.";
+      setPasswordError(message);
+      notifications.show({
+        color: "red",
+        title: "Couldn't change password",
+        message,
+      });
     } finally {
       setChangingPassword(false);
     }
@@ -304,6 +364,9 @@ export default function Accounts() {
   useEffect(() => {
     loadAccounts();
   }, []);
+
+  const usernameTrimmedLength = form.username.trim().length;
+  const wandDisabled = usernameTrimmedLength < 3 || usernameVerified;
 
   return (
     <div className={classes.wrapper}>
@@ -484,20 +547,22 @@ export default function Accounts() {
                     <IconWand
                       size={16}
                       style={{
-                        cursor:
-                          form.username.trim().length < 3
-                            ? "not-allowed"
-                            : "pointer",
-                        opacity: form.username.trim().length < 3 ? 0.4 : 1,
+                        cursor: wandDisabled ? "not-allowed" : "pointer",
+                        opacity: wandDisabled ? 0.4 : 1,
                       }}
                       onClick={() =>
-                        form.username.trim().length >= 3 &&
+                        !wandDisabled &&
                         fetchUsernameSuggestionsOnce(form.username)
                       }
                     />
                   )
                 }
               />
+              {usernameVerified && !formErrors.username && (
+                <Text size="xs" c="teal" mt={4}>
+                  Username verified
+                </Text>
+              )}
               {usernameSuggestions.length > 0 && (
                 <Stack gap={4} mt={6}>
                   {usernameMessage && (
@@ -510,9 +575,14 @@ export default function Accounts() {
                       <Button
                         key={suggestion}
                         size="compact-xs"
-                        variant="light"
+                        variant={
+                          form.username === suggestion.replace(/[#\s-]/g, "") &&
+                          usernameVerified
+                            ? "filled"
+                            : "light"
+                        }
                         radius="xl"
-                        onClick={() => setField("username")(suggestion)}
+                        onClick={() => handleSelectSuggestion(suggestion)}
                       >
                         {suggestion}
                       </Button>
@@ -551,6 +621,7 @@ export default function Accounts() {
               radius="xl"
               variant="gradient"
               loading={submitting}
+              disabled={form.identifierType === "username" && !usernameVerified}
               onClick={handleSubmit}
             >
               Add Account
