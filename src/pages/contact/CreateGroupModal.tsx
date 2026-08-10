@@ -15,20 +15,25 @@ import {
   Textarea,
 } from "@mantine/core";
 import { IconUpload } from "@tabler/icons-react";
-import type { Contact } from "./Contact";
+import type { Contact, GroupItem } from "./Contact";
 
 interface CreateGroupModalProps {
   opened: boolean;
   onClose: () => void;
   selectedContacts: Contact[];
-  onSaveGroup: (payload: {
-    group_name: string;
-    description: string;
-    admin: string[];
-    members: string[];
-    group_image: string;
-    only_admins_can_message: boolean;
-  }) => Promise<void>;
+  initialGroup?: GroupItem | null;
+  onSaveGroup: (
+    payload: {
+      group_name: string;
+      description: string;
+      admin: string[];
+      members: string[];
+      group_image: string;
+      group_image_file: File | null;
+      only_admins_can_message: boolean;
+    },
+    isEdit: boolean,
+  ) => Promise<void>;
   loading?: boolean;
 }
 
@@ -36,6 +41,7 @@ const CreateGroupModal = ({
   opened,
   onClose,
   selectedContacts,
+  initialGroup = null,
   onSaveGroup,
   loading = false,
 }: CreateGroupModalProps) => {
@@ -51,20 +57,45 @@ const CreateGroupModal = ({
 
   useEffect(() => {
     if (opened) {
-      setMembers(selectedContacts);
-      setGroupName("");
-      setDescription("");
-      setGroupImage(null);
-      setOnlyAdminsCanMessage(false);
+      if (initialGroup) {
+        setGroupName(initialGroup.group_name || "");
+        setDescription(initialGroup.group_description || "");
+        setOnlyAdminsCanMessage(initialGroup.only_admins_can_message || false);
+        setAdmins(initialGroup.admins || []);
+        setGroupImage(null);
+
+        const mappedMembers: Contact[] = (initialGroup.members || []).map(
+          (mId) => {
+            const found = selectedContacts.find((c) => getUserId(c) === mId);
+            return (
+              found || {
+                id: mId,
+                username: mId,
+                name: mId,
+                phone: "",
+                email: "",
+                color: "indigo",
+              }
+            );
+          },
+        );
+        setMembers(mappedMembers);
+      } else {
+        setMembers(selectedContacts);
+        setGroupName("");
+        setDescription("");
+        setGroupImage(null);
+        setOnlyAdminsCanMessage(false);
+        setAdmins([]);
+      }
     }
-  }, [opened, selectedContacts]);
+  }, [opened, selectedContacts, initialGroup]);
 
   const handleRemoveMember = (memberId: string) => {
     const memberToRemove = members.find((m) => m.id === memberId);
     if (!memberToRemove) return;
 
     const removedUserId = getUserId(memberToRemove);
-
     const updatedMembers = members.filter((m) => m.id !== memberId);
     setMembers(updatedMembers);
 
@@ -78,7 +109,7 @@ const CreateGroupModal = ({
     }
 
     if (members.length === 0) {
-      alert("At least one member is required to create a group.");
+      alert("At least one member is required.");
       return;
     }
 
@@ -89,11 +120,14 @@ const CreateGroupModal = ({
       description: description.trim(),
       admin: admins,
       members: memberIds,
-      group_image: groupImage ? groupImage.name : "",
+      group_image: groupImage
+        ? groupImage.name
+        : initialGroup?.group_image || "",
+      group_image_file: groupImage,
       only_admins_can_message: onlyAdminsCanMessage,
     };
 
-    await onSaveGroup(payload);
+    await onSaveGroup(payload, Boolean(initialGroup));
   };
 
   const adminOptions = members.map((m) => ({
@@ -111,10 +145,10 @@ const CreateGroupModal = ({
       styles={{
         inner: {
           paddingTop: 10,
-          paddingBottom: 20, // Adds extra clearance above mobile bottom navbars
+          paddingBottom: 20,
         },
         content: {
-          maxHeight: "75vh", // Keeps modal well within mobile viewports
+          maxHeight: "75vh",
           display: "flex",
           flexDirection: "column",
         },
@@ -125,18 +159,17 @@ const CreateGroupModal = ({
           display: "flex",
           flexDirection: "column",
           flex: 1,
-          overflow: "hidden", // Allows body flexbox layout to pin action button at the bottom
+          overflow: "hidden",
           padding: "12px 16px 16px 16px",
         },
       }}
       title={
         <Text fw={700} size="lg">
-          Create New Group
+          {initialGroup ? "Edit Group" : "Create New Group"}
         </Text>
       }
     >
       <div className="flex flex-col h-full overflow-hidden">
-        {/* Scrollable Form Fields */}
         <div className="flex-1 overflow-y-auto pr-1">
           <Stack gap="xs">
             <TextInput
@@ -163,7 +196,7 @@ const CreateGroupModal = ({
 
             <FileInput
               label="Group Image"
-              placeholder="Upload picture"
+              placeholder={initialGroup?.group_image || "Upload picture"}
               size="sm"
               leftSection={<IconUpload size={16} />}
               accept="image/png,image/jpeg,image/jpg"
@@ -225,7 +258,6 @@ const CreateGroupModal = ({
           </Stack>
         </div>
 
-        {/* Sticky Action Button Pinning at Bottom */}
         <div className="pt-3 mt-2 border-t border-gray-100 bg-white">
           <Button
             fullWidth
@@ -234,7 +266,7 @@ const CreateGroupModal = ({
             loading={loading}
             onClick={handleSubmit}
           >
-            Create Group
+            {initialGroup ? "Update Group" : "Create Group"}
           </Button>
         </div>
       </div>

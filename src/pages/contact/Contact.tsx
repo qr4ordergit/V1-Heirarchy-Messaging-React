@@ -10,9 +10,9 @@ import {
   Menu,
   Pill,
   Stack,
+  Tabs,
   Text,
   TextInput,
-  Title,
 } from "@mantine/core";
 import {
   IconCheck,
@@ -21,6 +21,7 @@ import {
   IconSearch,
   IconSettings,
   IconTrash,
+  IconUser,
   IconUsersGroup,
   IconX,
 } from "@tabler/icons-react";
@@ -40,6 +41,19 @@ export interface Contact {
   color: string;
 }
 
+export interface GroupItem {
+  _id: string;
+  group_name: string;
+  group_description?: string;
+  admins: string[];
+  members: string[];
+  group_image?: string;
+  created_by: string;
+  member_count: number;
+  only_admins_can_message: boolean;
+  soft_deleted?: boolean;
+}
+
 export type ContactFormValues = Omit<Contact, "id" | "color"> & {
   color?: string;
 };
@@ -47,6 +61,12 @@ export type ContactFormValues = Omit<Contact, "id" | "color"> & {
 const Contact = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+
+  const [groups, setGroups] = useState<GroupItem[]>([]);
+  const [groupsLoading, setGroupsLoading] = useState<boolean>(false);
+  const [selectedGroup, setSelectedGroup] = useState<GroupItem | null>(null);
+  const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
+
   const [fetchingDetailsId, setFetchingDetailsId] = useState<string | null>(
     null,
   );
@@ -57,6 +77,7 @@ const Contact = () => {
     null,
   );
 
+  const [activeTab, setActiveTab] = useState<string | null>("contacts");
   const [search, setSearch] = useState<string>("");
   const [opened, setOpened] = useState<boolean>(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
@@ -121,9 +142,48 @@ const Contact = () => {
     }
   };
 
+  const fetchGroups = async () => {
+    setGroupsLoading(true);
+    try {
+      const endpoint = API_ENDPOINTS.CREATE_GROUP;
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: getHeaders(),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setGroups(result.data || []);
+      } else {
+        notifications.show({
+          title: "",
+          message: "Failed to fetch groups.",
+          color: "red",
+          icon: <IconX size={18} />,
+        });
+      }
+    } catch (error) {
+      notifications.show({
+        title: "",
+        message: `Error fetching groups: ${error}`,
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+    } finally {
+      setGroupsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchContacts();
   }, []);
+
+  const handleTabChange = (value: string | null) => {
+    setActiveTab(value);
+    if (value === "groups") {
+      fetchGroups();
+    }
+  };
 
   const handleToggleSelectContact = (contact: Contact) => {
     setSelectedGroupContacts((prev) => {
@@ -151,33 +211,74 @@ const Contact = () => {
       return;
     }
 
+    setSelectedGroup(null);
     setGroupModalOpened(true);
   };
 
-  const handleSaveGroupPayload = async (payload: {
-    group_name: string;
-    description: string;
-    admin: string[];
-    members: string[];
-    group_image: string;
-    only_admins_can_message: boolean;
-  }) => {
+  const handleSaveGroupPayload = async (
+    payload: {
+      group_name: string;
+      description: string;
+      admin: string[];
+      members: string[];
+      group_image: string;
+      group_image_file: File | null;
+      only_admins_can_message: boolean;
+    },
+    isEdit: boolean,
+  ) => {
     setCreatingGroupLoading(true);
+
+    const { group_image_file, ...apiPayload } = payload;
+
     try {
       const endpoint = API_ENDPOINTS.CREATE_GROUP;
+      const method = isEdit ? "PUT" : "POST";
+
+      const finalBody =
+        isEdit && selectedGroup
+          ? { ...apiPayload, group_id: selectedGroup._id }
+          : apiPayload;
 
       const response = await fetch(endpoint, {
-        method: "POST",
+        method,
         headers: getHeaders(),
-        body: JSON.stringify(payload),
+        body: JSON.stringify(finalBody),
       });
 
       const data = await response.json();
 
-      if (response.ok && (data.success || response.status === 201)) {
+      if (
+        response.ok &&
+        (data.success || response.status === 200 || response.status === 201)
+      ) {
+        const presignedUrl = data.upload_url || data.group?.upload_url;
+
+        if (presignedUrl && group_image_file) {
+          try {
+            await fetch(presignedUrl, {
+              method: "PUT",
+              headers: {
+                "Content-Type": group_image_file.type || "image/png",
+              },
+              body: group_image_file,
+            });
+          } catch (uploadError) {
+            console.error("Presigned URL Upload Error:", uploadError);
+            notifications.show({
+              title: "Warning",
+              message: "Group saved, but failed to upload group image.",
+              color: "orange",
+              icon: <IconX size={18} />,
+            });
+          }
+        }
+
         notifications.show({
           title: "",
-          message: data.message || "Group created successfully!",
+          message:
+            data.message ||
+            `Group ${isEdit ? "updated" : "created"} successfully!`,
           color: "green",
           icon: <IconCheck size={18} />,
         });
@@ -185,10 +286,14 @@ const Contact = () => {
         setGroupModalOpened(false);
         setIsCreatingGroup(false);
         setSelectedGroupContacts([]);
+        setSelectedGroup(null);
+
+        fetchGroups();
       } else {
         notifications.show({
           title: "",
-          message: data.message || "Failed to create group.",
+          message:
+            data.message || `Failed to ${isEdit ? "update" : "create"} group.`,
           color: "red",
           icon: <IconX size={18} />,
         });
@@ -196,12 +301,64 @@ const Contact = () => {
     } catch (error) {
       notifications.show({
         title: "",
-        message: `Error creating group: ${error}`,
+        message: `Error ${isEdit ? "updating" : "creating"} group: ${error}`,
         color: "red",
         icon: <IconX size={18} />,
       });
     } finally {
       setCreatingGroupLoading(false);
+    }
+  };
+
+  const handleEditGroup = (group: GroupItem) => {
+    setSelectedGroup(group);
+    setGroupModalOpened(true);
+  };
+
+  const handleDeleteGroup = async (group: GroupItem) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete group "${group.group_name}"?`,
+    );
+    if (!confirmDelete) return;
+
+    setDeletingGroupId(group._id);
+
+    try {
+      const response = await fetch(API_ENDPOINTS.CREATE_GROUP, {
+        method: "DELETE",
+        headers: getHeaders(),
+        body: JSON.stringify({
+          group_id: group._id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        notifications.show({
+          title: "",
+          message: data.message || "Group deleted successfully",
+          color: "green",
+          icon: <IconCheck size={18} />,
+        });
+        await fetchGroups();
+      } else {
+        notifications.show({
+          title: "",
+          message: data.message || "Failed to delete group",
+          color: "red",
+          icon: <IconX size={18} />,
+        });
+      }
+    } catch (error) {
+      notifications.show({
+        title: "",
+        message: `Error deleting group: ${error}`,
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+    } finally {
+      setDeletingGroupId(null);
     }
   };
 
@@ -260,6 +417,13 @@ const Contact = () => {
     } finally {
       setStartingChatId(null);
     }
+  };
+
+  const handleGroupClick = (group: GroupItem) => {
+    const groupId = group._id.includes("#")
+      ? group._id.split("#")[1]
+      : group._id;
+    navigate(`/chats/${groupId}`);
   };
 
   const handleDelete = async (contact: Contact) => {
@@ -330,6 +494,15 @@ const Contact = () => {
       item.username.toLowerCase().includes(value) ||
       item.phone.includes(value) ||
       item.email.toLowerCase().includes(value)
+    );
+  });
+
+  const filteredGroups = groups.filter((group) => {
+    const value = search.toLowerCase();
+    return (
+      group.group_name.toLowerCase().includes(value) ||
+      (group.group_description &&
+        group.group_description.toLowerCase().includes(value))
     );
   });
 
@@ -517,10 +690,29 @@ const Contact = () => {
           }`}
         >
           <Stack p={{ base: "xs", sm: "md" }}>
-            <Group justify="space-between">
-              <Title order={3} size="h2">
-                Contact List
-              </Title>
+            <Group justify="space-between" align="center">
+              <Tabs
+                value={activeTab}
+                onChange={handleTabChange}
+                color="indigo"
+                variant="outline"
+                radius="md"
+              >
+                <Tabs.List>
+                  <Tabs.Tab
+                    value="contacts"
+                    leftSection={<IconUser size={16} />}
+                  >
+                    Contact List
+                  </Tabs.Tab>
+                  <Tabs.Tab
+                    value="groups"
+                    leftSection={<IconUsersGroup size={16} />}
+                  >
+                    Group List
+                  </Tabs.Tab>
+                </Tabs.List>
+              </Tabs>
 
               <Menu shadow="md" width={200} position="bottom-end">
                 <Menu.Target>
@@ -538,7 +730,10 @@ const Contact = () => {
                   </Menu.Item>
                   <Menu.Item
                     leftSection={<IconUsersGroup size={16} />}
-                    onClick={() => setIsCreatingGroup(true)}
+                    onClick={() => {
+                      setActiveTab("contacts");
+                      setIsCreatingGroup(true);
+                    }}
                   >
                     Create Group
                   </Menu.Item>
@@ -546,145 +741,255 @@ const Contact = () => {
               </Menu>
             </Group>
 
-            <Stack gap="xs">
-              {isCreatingGroup && (
-                <Group justify="space-between">
-                  <Text size="xs" fw={600} c="indigo">
-                    Select members for group
-                  </Text>
-                  <Group gap="xs">
-                    <Button
-                      size="xs"
-                      color="indigo"
-                      onClick={handleCreateGroupSubmit}
-                    >
-                      Create Group ({selectedGroupContacts.length})
-                    </Button>
-                    <ActionIcon
-                      variant="subtle"
-                      color="gray"
-                      size="sm"
-                      onClick={() => {
-                        setIsCreatingGroup(false);
-                        setSelectedGroupContacts([]);
-                      }}
-                    >
-                      <IconX size={16} />
-                    </ActionIcon>
-                  </Group>
-                </Group>
-              )}
-
-              {isCreatingGroup && selectedGroupContacts.length > 0 && (
-                <div className="flex flex-wrap gap-1 p-2 bg-gray-50 rounded-md border border-gray-200 max-h-24 overflow-y-auto">
-                  {selectedGroupContacts.map((c) => (
-                    <Pill
-                      key={c.id}
-                      withRemoveButton
-                      onRemove={() => handleRemoveGroupContact(c.id)}
-                      color="indigo"
-                    >
-                      {c.name}
-                    </Pill>
-                  ))}
-                </div>
-              )}
-
-              <TextInput
-                radius="md"
-                size="md"
-                leftSection={<IconSearch size={18} />}
-                placeholder="Search contacts"
-                value={search}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setSearch(e.target.value)
-                }
-              />
-            </Stack>
-
-            <Card
-              withBorder
-              radius="md"
-              p={0}
-              style={{
-                height: "calc(100vh - 220px)",
-                overflowY: "auto",
-                width: "100%",
-              }}
-            >
-              {loading ? (
-                <Text ta="center" py={60} c="dimmed">
-                  Loading contacts...
-                </Text>
-              ) : filteredContacts.length > 0 ? (
-                filteredContacts.map((contact) => {
-                  const isSelectedForGroup = selectedGroupContacts.some(
-                    (c) => c.id === contact.id,
-                  );
-
-                  return (
-                    <Group
-                      key={contact.id}
-                      justify="space-between"
-                      px="md"
-                      py="sm"
-                      style={{
-                        borderBottom: "1px solid #ececec",
-                        transition: "0.2s",
-                        cursor:
-                          startingChatId === contact.id ||
-                          deletingContactId === contact.id ||
-                          fetchingDetailsId === contact.id
-                            ? "wait"
-                            : "pointer",
-                        opacity:
-                          startingChatId === contact.id ||
-                          deletingContactId === contact.id ||
-                          fetchingDetailsId === contact.id
-                            ? 0.6
-                            : 1,
-                      }}
-                      className="contact-row hover:bg-gray-50"
-                      onClick={() => handleContactClick(contact)}
-                    >
-                      <Group gap="md">
-                        {isCreatingGroup && (
-                          <Checkbox
-                            checked={isSelectedForGroup}
-                            onChange={() => handleToggleSelectContact(contact)}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        )}
-
-                        <Avatar color={contact.color} radius="xl" size={42}>
-                          {contact.name
-                            .split(" ")
-                            .map((x) => x[0])
-                            .join("")}
-                        </Avatar>
-
-                        <div>
-                          <Text fw={700} size="sm">
-                            {contact.name}
-                          </Text>
-
-                          <Text size="xs" c="dimmed">
-                            {contact.username ? "@" : ""}
-                            {contact.username}
-                          </Text>
-                        </div>
+            {activeTab === "contacts" && (
+              <>
+                <Stack gap="xs">
+                  {isCreatingGroup && (
+                    <Group justify="space-between">
+                      <Text size="xs" fw={600} c="indigo">
+                        Select members for group
+                      </Text>
+                      <Group gap="xs">
+                        <Button
+                          size="xs"
+                          color="indigo"
+                          onClick={handleCreateGroupSubmit}
+                        >
+                          Create Group ({selectedGroupContacts.length})
+                        </Button>
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          size="sm"
+                          onClick={() => {
+                            setIsCreatingGroup(false);
+                            setSelectedGroupContacts([]);
+                          }}
+                        >
+                          <IconX size={16} />
+                        </ActionIcon>
                       </Group>
+                    </Group>
+                  )}
 
-                      {!isCreatingGroup && (
+                  {isCreatingGroup && selectedGroupContacts.length > 0 && (
+                    <div className="flex flex-wrap gap-1 p-2 bg-gray-50 rounded-md border border-gray-200 max-h-24 overflow-y-auto">
+                      {selectedGroupContacts.map((c) => (
+                        <Pill
+                          key={c.id}
+                          withRemoveButton
+                          onRemove={() => handleRemoveGroupContact(c.id)}
+                          color="indigo"
+                        >
+                          {c.name}
+                        </Pill>
+                      ))}
+                    </div>
+                  )}
+
+                  <TextInput
+                    radius="md"
+                    size="md"
+                    leftSection={<IconSearch size={18} />}
+                    placeholder="Search contacts"
+                    value={search}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setSearch(e.target.value)
+                    }
+                  />
+                </Stack>
+
+                <Card
+                  withBorder
+                  radius="md"
+                  p={0}
+                  style={{
+                    height: "calc(100vh - 220px)",
+                    overflowY: "auto",
+                    width: "100%",
+                  }}
+                >
+                  {loading ? (
+                    <Text ta="center" py={60} c="dimmed">
+                      Loading contacts...
+                    </Text>
+                  ) : filteredContacts.length > 0 ? (
+                    filteredContacts.map((contact) => {
+                      const isSelectedForGroup = selectedGroupContacts.some(
+                        (c) => c.id === contact.id,
+                      );
+
+                      return (
+                        <Group
+                          key={contact.id}
+                          justify="space-between"
+                          px="md"
+                          py="sm"
+                          style={{
+                            borderBottom: "1px solid #ececec",
+                            transition: "0.2s",
+                            cursor:
+                              startingChatId === contact.id ||
+                              deletingContactId === contact.id ||
+                              fetchingDetailsId === contact.id
+                                ? "wait"
+                                : "pointer",
+                            opacity:
+                              startingChatId === contact.id ||
+                              deletingContactId === contact.id ||
+                              fetchingDetailsId === contact.id
+                                ? 0.6
+                                : 1,
+                          }}
+                          className="contact-row hover:bg-gray-50"
+                          onClick={() => handleContactClick(contact)}
+                        >
+                          <Group gap="md">
+                            {isCreatingGroup && (
+                              <Checkbox
+                                checked={isSelectedForGroup}
+                                onChange={() =>
+                                  handleToggleSelectContact(contact)
+                                }
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            )}
+
+                            <Avatar color={contact.color} radius="xl" size={42}>
+                              {contact.name
+                                .split(" ")
+                                .map((x) => x[0])
+                                .join("")}
+                            </Avatar>
+
+                            <div>
+                              <Text fw={700} size="sm">
+                                {contact.name}
+                              </Text>
+
+                              <Text size="xs" c="dimmed">
+                                {contact.username ? "@" : ""}
+                                {contact.username}
+                              </Text>
+                            </div>
+                          </Group>
+
+                          {!isCreatingGroup && (
+                            <Group gap="xs">
+                              <ActionIcon
+                                variant="subtle"
+                                size="md"
+                                radius="md"
+                                loading={fetchingDetailsId === contact.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEdit(contact);
+                                }}
+                              >
+                                <IconEdit size={18} />
+                              </ActionIcon>
+
+                              <ActionIcon
+                                variant="subtle"
+                                color="red"
+                                size="md"
+                                radius="md"
+                                loading={deletingContactId === contact.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(contact);
+                                }}
+                              >
+                                <IconTrash size={18} />
+                              </ActionIcon>
+                            </Group>
+                          )}
+                        </Group>
+                      );
+                    })
+                  ) : (
+                    <Text ta="center" py={60} c="dimmed">
+                      No contacts found
+                    </Text>
+                  )}
+                </Card>
+              </>
+            )}
+
+            {activeTab === "groups" && (
+              <>
+                <TextInput
+                  radius="md"
+                  size="md"
+                  leftSection={<IconSearch size={18} />}
+                  placeholder="Search groups"
+                  value={search}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setSearch(e.target.value)
+                  }
+                />
+
+                <Card
+                  withBorder
+                  radius="md"
+                  p={0}
+                  style={{
+                    height: "calc(100vh - 220px)",
+                    overflowY: "auto",
+                    width: "100%",
+                  }}
+                >
+                  {groupsLoading ? (
+                    <Text ta="center" py={60} c="dimmed">
+                      Loading groups...
+                    </Text>
+                  ) : filteredGroups.length > 0 ? (
+                    filteredGroups.map((group) => (
+                      <Group
+                        key={group._id}
+                        justify="space-between"
+                        px="md"
+                        py="sm"
+                        style={{
+                          borderBottom: "1px solid #ececec",
+                          transition: "0.2s",
+                          cursor:
+                            deletingGroupId === group._id ? "wait" : "pointer",
+                          opacity: deletingGroupId === group._id ? 0.6 : 1,
+                        }}
+                        className="group-row hover:bg-gray-50"
+                        onClick={() => handleGroupClick(group)}
+                      >
+                        <Group gap="md">
+                          <Avatar color="blue" radius="xl" size={42}>
+                            {group.group_name
+                              .split(" ")
+                              .map((x) => x[0])
+                              .join("")
+                              .slice(0, 2)
+                              .toUpperCase()}
+                          </Avatar>
+
+                          <div>
+                            <Text fw={700} size="sm">
+                              {group.group_name}
+                            </Text>
+
+                            <Text size="xs" c="dimmed">
+                              {group.member_count}{" "}
+                              {group.member_count === 1 ? "member" : "members"}
+                            </Text>
+                          </div>
+                        </Group>
+
                         <Group gap="xs">
                           <ActionIcon
                             variant="subtle"
                             size="md"
                             radius="md"
-                            loading={fetchingDetailsId === contact.id}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleEdit(contact);
+                              handleEditGroup(group);
                             }}
                           >
                             <IconEdit size={18} />
@@ -695,25 +1000,25 @@ const Contact = () => {
                             color="red"
                             size="md"
                             radius="md"
-                            loading={deletingContactId === contact.id}
+                            loading={deletingGroupId === group._id}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDelete(contact);
+                              handleDeleteGroup(group);
                             }}
                           >
                             <IconTrash size={18} />
                           </ActionIcon>
                         </Group>
-                      )}
-                    </Group>
-                  );
-                })
-              ) : (
-                <Text ta="center" py={60} c="dimmed">
-                  No contacts found
-                </Text>
-              )}
-            </Card>
+                      </Group>
+                    ))
+                  ) : (
+                    <Text ta="center" py={60} c="dimmed">
+                      No groups found
+                    </Text>
+                  )}
+                </Card>
+              </>
+            )}
           </Stack>
         </div>
 
@@ -735,8 +1040,12 @@ const Contact = () => {
 
       <CreateGroupModal
         opened={groupModalOpened}
-        onClose={() => setGroupModalOpened(false)}
-        selectedContacts={selectedGroupContacts}
+        onClose={() => {
+          setGroupModalOpened(false);
+          setSelectedGroup(null);
+        }}
+        selectedContacts={contacts}
+        initialGroup={selectedGroup}
         onSaveGroup={handleSaveGroupPayload}
         loading={creatingGroupLoading}
       />
