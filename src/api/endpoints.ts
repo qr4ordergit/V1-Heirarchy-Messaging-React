@@ -5,6 +5,8 @@ export const ENDPOINTS = {
   },
   CHAT: {
     SEND: "/message",
-    GET: "/message?other_user="
+    GET: "/message?other_user=",
+    DELETE: "/message",
+    PUT: "/message"
   }
 } as const;

@@ -41,3 +41,9 @@ export function getAvatarColor(name: string) {
 
   return avatarColors[Math.abs(hash) % avatarColors.length];
 }
+
+export const TRIGGERS = {
+  deleteConfirmationDialouge: "deleteConfirmationDialouge",
+  editChatDialog: "editChatDialog",
+  reply: "reply"
+}

@@ -37,6 +37,25 @@ export default function Chatting() {
     FetchFn(fetchOneToOneChats);
   };
 
+  const scrollToMessage = (messageId: string) => {
+    const element = viewport.current?.querySelector(
+      `[data-message-id="${messageId}"]`,
+    );
+
+    if (!element) return;
+
+    element.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+
+    element.classList.add("bg-gray-200");
+
+    setTimeout(() => {
+      element.classList.remove("bg-gray-200");
+    }, 1500);
+  };
+
   useEffect(() => {
     fetchChats();
   }, []);
@@ -62,7 +81,13 @@ export default function Chatting() {
     >
       <Stack py="md" gap="sm" className="h-100">
         {messages.map((msg) => {
-          return <MessageChat key={msg._id} msg={msg} />;
+          return (
+            <MessageChat
+              key={msg._id}
+              msg={msg}
+              onReplyClick={scrollToMessage}
+            />
+          );
         })}
       </Stack>
     </ScrollArea>
