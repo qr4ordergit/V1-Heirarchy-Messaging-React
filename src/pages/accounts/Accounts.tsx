@@ -183,15 +183,13 @@ export default function Accounts() {
   const handleUsernameChange = (value: string) => {
     const sanitized = value.replace(/[#\s-]/g, "");
     setField("username")(sanitized);
-
     setUsernameVerified(false);
     setUsernameSuggestions([]);
     setUsernameMessage(null);
   };
 
   const handleSelectSuggestion = (suggestion: string) => {
-    const sanitized = suggestion.replace(/[#\s-]/g, "");
-    setField("username")(sanitized);
+    setField("username")(suggestion);
     setUsernameVerified(true);
   };
 
