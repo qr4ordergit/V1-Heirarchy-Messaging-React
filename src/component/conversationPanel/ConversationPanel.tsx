@@ -44,6 +44,7 @@ export default function ConversationPanel() {
               variant={type === value ? "filled" : "outline"}
               onClick={() => {
                 setType(value);
+                setSearch("")
               }}
             >
               {label}

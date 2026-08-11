@@ -1,7 +1,20 @@
-import { Avatar, Badge, Group, Stack, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Avatar,
+  Badge,
+  Flex,
+  Group,
+  Menu,
+  Stack,
+  Text,
+} from "@mantine/core";
+
+import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
+
 import dayjs from "dayjs";
 import { getAvatarColor } from "../../utils/constant";
 import { useNavigate, useParams } from "react-router";
+import { ROUTES } from "../../router/routes";
 
 export interface Conversation {
   _id: string;
@@ -12,33 +25,29 @@ export interface Conversation {
 
 interface ConversationItemProps {
   conversation: Conversation;
-  onClick?: () => void;
+  onDelete : () => void
 }
 
 export default function ConversationItem({
   conversation,
-  //   onClick,
+  onDelete
 }: ConversationItemProps) {
   const { chatId } = useParams();
   const navigate = useNavigate();
 
-//   const getcConversationId = (id:string) => {
-//     return id.split("#")[1]
-//   }
   return (
     <Group
       justify="space-between"
-      align="flex-start"
       wrap="nowrap"
-      p="xs"
+      p={"xs"}
+      bg={chatId === conversation._id ? "#edf2ff" : "white"}
       style={{
         borderRadius: 12,
         cursor: "pointer",
       }}
       onClick={() => {
-        navigate(encodeURIComponent(conversation._id));
+        navigate(`/chats/${encodeURIComponent(conversation._id)}`);
       }}
-      bg={chatId === conversation._id ? "#edf2ff" : "white"}
     >
       <Group gap="sm" wrap="nowrap">
         <Avatar
@@ -53,27 +62,52 @@ export default function ConversationItem({
           <Text fw={600} size="sm">
             {conversation.display_name}
           </Text>
-
-          {/* <Text
-            size="xs"
-            c="dimmed"
-          >
-            Tap to start chatting
-          </Text> */}
         </Stack>
       </Group>
 
-      <Stack gap={6} align="flex-end">
-        <Text size="xs" c="dimmed">
-          {dayjs(conversation.last_message_timestamp).format("hh:mm A")}
-        </Text>
+      <Group gap={6} wrap="nowrap">
+        <Stack gap={6} align="flex-end">
+          <Text size="xs" c="dimmed">
+            {dayjs(conversation.last_message_timestamp).format("hh:mm A")}
+          </Text>
+        <Flex gap={6} align={"center"}>
+          {conversation.unread_count == 0 && (
+            <Badge color="green" radius="lg" variant="filled" size="xs">
+              {conversation.unread_count}
+            </Badge>
+          )}
+        <Menu position="bottom-start" withArrow>
+          <Menu.Target>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="sm"
+              onClick={(event) => {
+                event.stopPropagation();
+                navigate(`/${ROUTES.CHATS}`)
+              }}
+            >
+              <IconDotsVertical size={13} />
+            </ActionIcon>
+          </Menu.Target>
 
-        {conversation.unread_count > 0 && (
-          <Badge color="green" radius="lg" variant="filled" size="xs">
-            {conversation.unread_count}
-          </Badge>
-        )}
-      </Stack>
+          <Menu.Dropdown>
+            <Menu.Item
+              color="red"
+              leftSection={<IconTrash size={13} />}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete()
+              }}
+            >
+              <Text size="xs">Delete conversation</Text>
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+        </Flex>
+        </Stack>
+
+      </Group>
     </Group>
   );
 }
