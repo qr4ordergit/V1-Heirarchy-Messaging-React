@@ -14,7 +14,7 @@ import {
   TextInput,
   Textarea,
 } from "@mantine/core";
-import { IconUpload } from "@tabler/icons-react";
+import { IconUpload, IconUserPlus } from "@tabler/icons-react";
 import type { Contact, GroupItem } from "./Contact";
 
 interface CreateGroupModalProps {
@@ -89,7 +89,7 @@ const CreateGroupModal = ({
         setAdmins([]);
       }
     }
-  }, [opened, selectedContacts, initialGroup]);
+  }, [opened, initialGroup]);
 
   const handleRemoveMember = (memberId: string) => {
     const memberToRemove = members.find((m) => m.id === memberId);
@@ -100,6 +100,21 @@ const CreateGroupModal = ({
     setMembers(updatedMembers);
 
     setAdmins((prev) => prev.filter((a) => a !== removedUserId));
+  };
+
+  const handleAddNewMembers = (selectedUserIds: string[]) => {
+    const newlyAddedContacts: Contact[] = [];
+
+    selectedUserIds.forEach((userId) => {
+      const contactObj = selectedContacts.find((c) => getUserId(c) === userId);
+      if (contactObj && !members.some((m) => getUserId(m) === userId)) {
+        newlyAddedContacts.push(contactObj);
+      }
+    });
+
+    if (newlyAddedContacts.length > 0) {
+      setMembers((prev) => [...prev, ...newlyAddedContacts]);
+    }
   };
 
   const handleSubmit = async () => {
@@ -135,6 +150,13 @@ const CreateGroupModal = ({
     label: `${m.name} (${getUserId(m)})`,
   }));
 
+  const availableContactsToAdd = selectedContacts
+    .filter((c) => !members.some((m) => getUserId(m) === getUserId(c)))
+    .map((c) => ({
+      value: getUserId(c),
+      label: `${c.name} (${getUserId(c)})`,
+    }));
+
   return (
     <Modal
       opened={opened}
@@ -148,7 +170,7 @@ const CreateGroupModal = ({
           paddingBottom: 20,
         },
         content: {
-          maxHeight: "75vh",
+          maxHeight: "80vh",
           display: "flex",
           flexDirection: "column",
         },
@@ -206,9 +228,9 @@ const CreateGroupModal = ({
 
             <div>
               <Text size="xs" fw={500} mb={2}>
-                Members ({members.length})
+                Group Members ({members.length})
               </Text>
-              <div className="flex flex-wrap gap-1.5 p-2 bg-gray-50 rounded-lg border border-gray-200 max-h-20 overflow-y-auto">
+              <div className="flex flex-wrap gap-1.5 p-2 bg-gray-50 rounded-lg border border-gray-200 max-h-24 overflow-y-auto">
                 {members.length > 0 ? (
                   members.map((member) => (
                     <Pill
@@ -235,6 +257,22 @@ const CreateGroupModal = ({
                 )}
               </div>
             </div>
+
+            {availableContactsToAdd.length > 0 && (
+              <MultiSelect
+                label="Add New Members"
+                placeholder="Select contacts to add..."
+                size="sm"
+                data={availableContactsToAdd}
+                value={[]}
+                onChange={handleAddNewMembers}
+                leftSection={<IconUserPlus size={16} />}
+                searchable={false}
+                comboboxProps={{
+                  withinPortal: true,
+                }}
+              />
+            )}
 
             <MultiSelect
               label="Group Admins"

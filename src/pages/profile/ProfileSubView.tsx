@@ -2,7 +2,12 @@ import { Button, Card, Stack, Text, Title } from "@mantine/core";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useAuthStore } from "../../store/auth/auth.store";
 
-export type ProfileSectionType = "account" | "privacy" | "help" | "about";
+export type ProfileSectionType =
+  | "account"
+  | "privacy"
+  | "help"
+  | "about"
+  | "switch-account";
 
 interface ProfileSubViewProps {
   activeSection: ProfileSectionType;
@@ -35,14 +40,14 @@ const ProfileSubView = ({ activeSection, onBack }: ProfileSubViewProps) => {
                     {userDetails?.username || "john.doe"}
                   </Text>
                 </div>
-                <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100">
+                {/* <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100">
                   <Text size="sm" c="dimmed" fw={500}>
                     Email
                   </Text>
                   <Text size="sm" fw={600} className="text-gray-800">
                     {userDetails?.email || "john.doe@email.com"}
                   </Text>
-                </div>
+                </div> */}
                 <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100">
                   <Text size="sm" c="dimmed" fw={500}>
                     Phone

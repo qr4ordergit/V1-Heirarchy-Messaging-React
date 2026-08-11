@@ -14,10 +14,13 @@ import {
   IconLock,
   IconLogout,
   IconSettings,
+  IconSwitch3,
 } from "@tabler/icons-react";
 import { useNavigate } from "react-router";
 import { useAuthStore } from "../../store/auth/auth.store";
 import ProfileSubView, { type ProfileSectionType } from "./ProfileSubView";
+import { logout } from "../../api/authApi";
+import { ROUTES } from "../../router/routes";
 
 export interface ProfileOption {
   id: ProfileSectionType;
@@ -27,8 +30,8 @@ export interface ProfileOption {
 
 const Profile = () => {
   const navigate = useNavigate();
+  const clearTokens = useAuthStore((state) => state.clearTokens);
   const userDetails = useAuthStore((state) => state.userDetails);
-  //   const logout = useAuthStore((state) => state.logout);
 
   const [activeSection, setActiveSection] = useState<ProfileSectionType | null>(
     null,
@@ -55,11 +58,27 @@ const Profile = () => {
       label: "About",
       icon: <IconInfoCircle size={20} className="text-indigo-600" />,
     },
+    {
+      id: "switch-account",
+      label: "Switch Account",
+      icon: <IconSwitch3 size={20} className="text-indigo-600" />,
+    },
   ];
 
-  const handleSwitchAccount = () => {
-    // logout();
-    navigate("/login");
+  //   const handleSwitchAccount = () => {
+  //     // logout();
+  //     navigate("/login");
+  //   };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.error("Logout request failed:", err);
+    } finally {
+      clearTokens();
+      navigate(ROUTES.HOME, { replace: true });
+    }
   };
 
   const username = userDetails?.username || "mbr-default-581";
@@ -140,7 +159,7 @@ const Profile = () => {
                     className="w-full border-gray-200/90 shadow-xs bg-white hover:bg-red-50/40 hover:border-red-200 transition-all duration-200"
                   >
                     <UnstyledButton
-                      onClick={handleSwitchAccount}
+                      onClick={handleLogout}
                       className="w-full px-5 py-4"
                     >
                       <Group justify="space-between">
@@ -149,7 +168,7 @@ const Profile = () => {
                             <IconLogout size={20} />
                           </div>
                           <Text fw={600} size="md" className="text-red-500">
-                            Switch Account
+                            Logout
                           </Text>
                         </Group>
                       </Group>

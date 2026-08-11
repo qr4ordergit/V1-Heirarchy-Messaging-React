@@ -48,6 +48,7 @@ export interface GroupItem {
   admins: string[];
   members: string[];
   group_image?: string;
+  profile_url?: string;
   created_by: string;
   member_count: number;
   only_admins_can_message: boolean;
@@ -248,10 +249,7 @@ const Contact = () => {
 
       const data = await response.json();
 
-      if (
-        response.ok &&
-        (data.success || response.status === 200 || response.status === 201)
-      ) {
+      if (response.ok || data.success) {
         const presignedUrl = data.upload_url || data.group?.upload_url;
 
         if (presignedUrl && group_image_file) {
@@ -324,17 +322,18 @@ const Contact = () => {
     setDeletingGroupId(group._id);
 
     try {
-      const response = await fetch(API_ENDPOINTS.CREATE_GROUP, {
-        method: "DELETE",
-        headers: getHeaders(),
-        body: JSON.stringify({
-          group_id: group._id,
-        }),
-      });
+      const response = await fetch(
+        API_ENDPOINTS.CREATE_GROUP +
+          `?group_id=${encodeURIComponent(group._id)}`,
+        {
+          method: "DELETE",
+          headers: getHeaders(),
+        },
+      );
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (response.ok || data.success) {
         notifications.show({
           title: "",
           message: data.message || "Group deleted successfully",
@@ -397,7 +396,7 @@ const Contact = () => {
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (response.ok || data.success) {
         navigate(`/chats/${targetUserId}`);
       } else {
         notifications.show({
@@ -459,7 +458,7 @@ const Contact = () => {
       });
       const data = await response.json();
 
-      if (data.success) {
+      if (data.success || response.ok) {
         notifications.show({
           title: "",
           message: data.message,
@@ -537,7 +536,7 @@ const Contact = () => {
 
       const data = await response.json();
 
-      if (response.ok && data.success && data.contact) {
+      if ((response.ok || data.success) && data.contact) {
         const fetched = data.contact;
 
         const updatedContact: Contact = {
@@ -590,7 +589,7 @@ const Contact = () => {
           body: JSON.stringify(payload),
         });
         const data = await response.json();
-        if (data.success) {
+        if (data.success || response.ok) {
           notifications.show({
             title: "",
             message: data.message,
@@ -702,12 +701,22 @@ const Contact = () => {
                   <Tabs.Tab
                     value="contacts"
                     leftSection={<IconUser size={16} />}
+                    bg={
+                      activeTab === "contacts"
+                        ? "var(--mantine-color-blue-1)"
+                        : undefined
+                    }
                   >
                     Contact List
                   </Tabs.Tab>
                   <Tabs.Tab
                     value="groups"
                     leftSection={<IconUsersGroup size={16} />}
+                    bg={
+                      activeTab === "groups"
+                        ? "var(--mantine-color-blue-1)"
+                        : undefined
+                    }
                   >
                     Group List
                   </Tabs.Tab>
@@ -961,7 +970,12 @@ const Contact = () => {
                         onClick={() => handleGroupClick(group)}
                       >
                         <Group gap="md">
-                          <Avatar color="blue" radius="xl" size={42}>
+                          <Avatar
+                            src={group.profile_url}
+                            color="blue"
+                            radius="xl"
+                            size={42}
+                          >
                             {group.group_name
                               .split(" ")
                               .map((x) => x[0])
