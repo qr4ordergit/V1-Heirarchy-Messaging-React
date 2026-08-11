@@ -71,7 +71,7 @@ export default function ConversationItem({
             {dayjs(conversation.last_message_timestamp).format("hh:mm A")}
           </Text>
         <Flex gap={6} align={"center"}>
-          {conversation.unread_count == 0 && (
+          {conversation.unread_count > 0 && (
             <Badge color="green" radius="lg" variant="filled" size="xs">
               {conversation.unread_count}
             </Badge>
