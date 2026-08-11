@@ -57,6 +57,7 @@ export interface GroupItem {
 
 export type ContactFormValues = Omit<Contact, "id" | "color"> & {
   color?: string;
+  passKey?: string;
 };
 
 const Contact = () => {
@@ -570,12 +571,13 @@ const Contact = () => {
     }
   };
 
-  const handleSave = async (values: ContactFormValues) => {
-    const contactUserId = values.username.split("#")[1] || values.username;
+  const handleSave = async (values: ContactFormValues, passNeeded: boolean) => {
+    const contactUserId =
+      values.username.split("#")[1] || values.username.trim();
 
     if (!selectedContact) {
       try {
-        const payload = {
+        const contactData = {
           owner_user_id: userDetails?.username,
           contact_user_id: contactUserId,
           display_name: values.name.trim(),
@@ -583,46 +585,35 @@ const Contact = () => {
           email: values.email,
         };
 
+        const payload: Record<string, any> = {
+          contact_data: contactData,
+        };
+
+        if (passNeeded && values.passKey?.trim()) {
+          payload.pass = values.passKey.trim();
+        }
+
         const response = await fetch(API_ENDPOINTS.CONTACTS, {
           method: "POST",
           headers: getHeaders(),
           body: JSON.stringify(payload),
         });
+
         const data = await response.json();
+
         if (data.success || response.ok) {
           notifications.show({
             title: "",
-            message: data.message,
+            message: data.message || "Contact added successfully",
             color: "green",
             icon: <IconCheck size={18} />,
           });
           await fetchContacts();
           setOpened(false);
-        } else if (data.status === 409) {
-          notifications.show({
-            title: "",
-            message: "This contact is already added.",
-            color: "red",
-            icon: <IconX size={18} />,
-          });
-        } else if (data.status === 400) {
-          notifications.show({
-            title: "",
-            message: "You cannot add yourself as a contact.",
-            color: "red",
-            icon: <IconX size={18} />,
-          });
-        } else if (data.status === 404) {
-          notifications.show({
-            title: "",
-            message: "The specified contact user does not exist.",
-            color: "red",
-            icon: <IconX size={18} />,
-          });
         } else {
           notifications.show({
             title: "",
-            message: data.message,
+            message: data.message || "Failed to add contact.",
             color: "red",
             icon: <IconX size={18} />,
           });
@@ -650,6 +641,7 @@ const Contact = () => {
           headers: getHeaders(),
           body: JSON.stringify(payload),
         });
+
         const data = await response.json();
 
         if (data.success || response.ok) {
