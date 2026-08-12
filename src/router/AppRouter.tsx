@@ -13,6 +13,9 @@ const NotFound = lazy(() => import("../pages/notFound/NotFound"));
 const Signup = lazy(() => import("../pages/signup/Signup"));
 const Contact = lazy(() => import("../pages/contact/Contact"));
 const Profile = lazy(() => import("../pages/profile/Profile"));
+const Privacy = lazy(() => import("../pages/profile/Privacy"));
+const About = lazy(() => import("../pages/profile/About"));
+const HelpAndSupport = lazy(() => import("../pages/profile/HelpAndSupport"));
 
 const Accounts = lazy(() => import("../pages/accounts/Accounts"));
 const AuthCallback = lazy(() => import("../pages/authCallback/AuthCallback"));
@@ -65,6 +68,12 @@ export default function AppRouter() {
               </Route>
               <Route path={ROUTES.CONTACT} element={<Contact />} />
               <Route path={ROUTES.PROFILE} element={<Profile />} />
+              <Route path={ROUTES.PRIVACY} element={<Privacy />} />
+              <Route path={ROUTES.ABOUT} element={<About />} />
+              <Route
+                path={ROUTES.HELPANDSUPPORT}
+                element={<HelpAndSupport />}
+              />
             </Route>
           </Route>
 
