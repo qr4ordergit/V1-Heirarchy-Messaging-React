@@ -20,6 +20,12 @@ function DeleteChatDialog() {
   };
 
   const onDelete = async () => {
+    const messageId = triggerPayload?._id;
+
+    if (!messageId) {
+      Notification.error("Unable to delete chat");
+      return;
+    }
     const payload = {
       data: {
         message_id: triggerPayload._id,
