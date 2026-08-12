@@ -14,6 +14,7 @@ import {
 } from "@mantine/core";
 import ConversationItem from "../conversationItem/ConversationItem";
 import { IconRefresh } from "@tabler/icons-react";
+import { useConversationTypeStore } from "../../store/conversation/conversation.type.store";
 
 interface SelectedDMState {
   chatID: string;
@@ -24,7 +25,7 @@ const DmList = () => {
   const dms = useDMListStore((state) => state.dms);
   const setDMs = useDMListStore((state) => state.setDMs);
   const reset = useDMListStore((state) => state.reset);
-  const search = useDMListStore((state) => state.search);
+  const search = useConversationTypeStore((state) => state.search);
 
   const filteredDMs = dms.filter((dm) =>
     dm.display_name.toLowerCase().includes(search.trim().toLowerCase()),
@@ -74,12 +75,12 @@ const DmList = () => {
     try {
       setLoading(true);
       const res = await DmService.deleteDM({
-        chatID : selectedDM.chatID,
-        action : action 
+        chatID: selectedDM.chatID,
+        action: action,
       });
       setDeleteOpened(false);
-      resetSelectedDM()
-      Notification.success(res.message)
+      resetSelectedDM();
+      Notification.success(res.message);
       await loadDMs();
     } catch (error) {
       if (error instanceof Error) {

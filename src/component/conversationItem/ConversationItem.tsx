@@ -11,20 +11,12 @@ import {
 
 import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
 
-import dayjs from "dayjs";
-import { getAvatarColor } from "../../utils/constant";
+import { formatConversationTime, getAvatarColor } from "../../utils/constant";
 import { useNavigate, useParams } from "react-router";
 import { ROUTES } from "../../router/routes";
-
-export interface Conversation {
-  _id: string;
-  display_name: string;
-  unread_count: number;
-  last_message_timestamp: string;
-}
-
+import type { DM } from "../../store/dm/dm.list.store";
 interface ConversationItemProps {
-  conversation: Conversation;
+  conversation: DM;
   onDelete : () => void
 }
 
@@ -68,7 +60,7 @@ export default function ConversationItem({
       <Group gap={6} wrap="nowrap">
         <Stack gap={6} align="flex-end">
           <Text size="xs" c="dimmed">
-            {dayjs(conversation.last_message_timestamp).format("hh:mm A")}
+            {formatConversationTime(conversation.last_message_timestamp)}
           </Text>
         <Flex gap={6} align={"center"}>
           {conversation.unread_count > 0 && (

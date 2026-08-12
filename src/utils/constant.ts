@@ -1,3 +1,10 @@
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 export const API_BASE_URL =
   "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev/api";
 
@@ -42,6 +49,20 @@ export function getAvatarColor(name: string) {
 
   return avatarColors[Math.abs(hash) % avatarColors.length];
 }
+
+export const formatConversationTime = (timestamp: string) => {
+  const date = dayjs.utc(timestamp).local();
+
+  if (date.isSame(dayjs(), "day")) {
+    return date.format("hh:mm A");
+  }
+
+  if (date.isSame(dayjs().subtract(1, "day"), "day")) {
+    return "Yesterday";
+  }
+
+  return date.format("DD/MM/YYYY");
+};
 
 export const TRIGGERS = {
   deleteConfirmationDialouge: "deleteConfirmationDialouge",

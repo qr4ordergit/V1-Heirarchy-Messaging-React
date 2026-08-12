@@ -11,13 +11,17 @@ import Heading from "../heading/Heading";
 import { IconSearch } from "@tabler/icons-react";
 import { useConversationTypeStore } from "../../store/conversation/conversation.type.store";
 import DmList from "../dmList/DmList";
-import { useDMListStore } from "../../store/dm/dm.list.store";
+import GroupList from "../groupList/GroupList";
+import { useNavigate } from "react-router";
+import { ROUTES } from "../../router/routes";
 
 export default function ConversationPanel() {
   const type = useConversationTypeStore((state) => state.type);
   const setType = useConversationTypeStore((state) => state.setType);
-  const search = useDMListStore((state) => state.search);
-  const setSearch = useDMListStore((state) => state.setSearch);
+  const search = useConversationTypeStore((state) => state.search);
+  const setSearch = useConversationTypeStore((state) => state.setSearch);
+
+  const navigate = useNavigate();
 
   const conversationTypes = [
     { label: "DM", value: "dm" },
@@ -43,6 +47,7 @@ export default function ConversationPanel() {
               radius="xl"
               variant={type === value ? "filled" : "outline"}
               onClick={() => {
+                navigate(`/${ROUTES.CHATS}`)
                 setType(value);
                 setSearch("")
               }}
@@ -57,7 +62,7 @@ export default function ConversationPanel() {
             offsetScrollbars
             scrollbarSize={3}
           >
-            {type === "dm" && <DmList />}
+            {type === "dm" ? <DmList /> : <GroupList/>}
           </ScrollArea>
         </Box>
       </Stack>
