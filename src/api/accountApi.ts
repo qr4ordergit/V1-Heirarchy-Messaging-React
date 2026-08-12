@@ -12,6 +12,8 @@ export interface Account {
   email: string | null;
   profile_picture: string | null;
   status: string | null;
+  isLocked: boolean;
+  passkey_hash?: string;
 }
 
 export interface CreateAccountPayload {
@@ -32,6 +34,10 @@ export interface DeleteAccountResponse {
 }
 
 export interface ChangePasswordResponse {
+  message: string;
+}
+
+export interface UpdateUserLockResponse {
   message: string;
 }
 
@@ -160,4 +166,34 @@ export async function changePassword(
   }
 
   return data as ChangePasswordResponse;
+}
+
+export async function updateUserLock(
+  userId: string,
+  isLocked: boolean,
+  passkeyHash: string | null,
+  existingHashFallback?: string,
+): Promise<UpdateUserLockResponse> {
+  const hashToSend = passkeyHash ?? existingHashFallback ?? "";
+
+  const response = await fetch(`${API_ENDPOINTS.USER_HOME}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({
+      isLocked,
+      passkey_hash: hashToSend,
+      target_user: userId,
+    }),
+  });
+
+  const data = await parseJson(response);
+
+  if (!response.ok) {
+    const message =
+      (data as { message?: string } | null)?.message ||
+      "Could not update lock settings.";
+    throw new Error(message);
+  }
+
+  return data as UpdateUserLockResponse;
 }

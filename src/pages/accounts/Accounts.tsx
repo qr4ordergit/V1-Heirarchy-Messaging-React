@@ -20,6 +20,7 @@ import {
   Text,
   TextInput,
   Title,
+  Switch,
 } from "@mantine/core";
 import {
   IconDotsVertical,
@@ -29,6 +30,8 @@ import {
   IconTrash,
   IconWand,
   IconEdit,
+  IconLock,
+  IconLockOpen,
 } from "@tabler/icons-react";
 
 import {
@@ -36,6 +39,7 @@ import {
   createAccount,
   deleteAccount,
   changePassword,
+  updateUserLock,
   type Account,
 } from "../../api/accountApi";
 import { suggestUsername, logout } from "../../api/authApi";
@@ -43,6 +47,7 @@ import { useAuthStore } from "../../store/auth/auth.store";
 import { ROUTES } from "../../router/routes";
 import Avatar from "../../component/avatar/Avatar";
 import PermissionsModal from "../../component/permissions/PermissionsModal";
+import { hashPasskey } from "../../utils/hashPasskey";
 import classes from "./Accounts.module.css";
 
 type IdentifierType = "username" | "email" | "phone";
@@ -69,6 +74,9 @@ interface NewAccountErrors {
   phone?: string;
   password?: string;
 }
+
+const PASSKEY_PATTERN = /^[a-zA-Z0-9]{4,12}$/;
+const PASSKEY_PLACEHOLDER = "••••••••";
 
 const getDisplayName = (account: Account) =>
   account.display_name?.trim() ||
@@ -127,6 +135,13 @@ export default function Accounts() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [changingPassword, setChangingPassword] = useState(false);
 
+  const [lockTarget, setLockTarget] = useState<Account | null>(null);
+  const [lockEnabled, setLockEnabled] = useState(false);
+  const [passkey, setPasskey] = useState("");
+  const [passkeyPrefilled, setPasskeyPrefilled] = useState(false);
+  const [lockError, setLockError] = useState<string | null>(null);
+  const [savingLock, setSavingLock] = useState(false);
+
   const setField = (field: keyof NewAccountForm) => (value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -153,14 +168,24 @@ export default function Accounts() {
   const fetchUsernameSuggestionsOnce = async (rawUsername: string) => {
     const trimmed = rawUsername.trim().replace(/-/g, "");
     if (trimmed.length < 3) return;
+
     setUsernameChecking(true);
     try {
       const result = await suggestUsername(trimmed);
       setUsernameSuggestions(result.suggestions ?? []);
       setUsernameMessage(result.message ?? null);
-    } catch {
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not check username.";
+
       setUsernameSuggestions([]);
       setUsernameMessage(null);
+
+      notifications.show({
+        color: "red",
+        title: "Username unavailable",
+        message,
+      });
     } finally {
       setUsernameChecking(false);
     }
@@ -229,6 +254,25 @@ export default function Accounts() {
     setUsernameSuggestions([]);
     setUsernameMessage(null);
     setUsernameVerified(false);
+  };
+
+  const openLockModal = (account: Account) => {
+    setLockTarget(account);
+    setLockEnabled(account.isLocked);
+
+    const hasExistingPasskey = Boolean(account.passkey_hash);
+    setPasskey(hasExistingPasskey ? PASSKEY_PLACEHOLDER : "");
+    setPasskeyPrefilled(hasExistingPasskey);
+
+    setLockError(null);
+  };
+
+  const closeLockModal = () => {
+    setLockTarget(null);
+    setLockEnabled(false);
+    setPasskey("");
+    setPasskeyPrefilled(false);
+    setLockError(null);
   };
 
   const handleSubmit = async () => {
@@ -359,6 +403,65 @@ export default function Accounts() {
     }
   };
 
+  const handleSaveLock = async () => {
+    if (!lockTarget) return;
+
+    setLockError(null);
+
+    let passkeyHash: string | null = null;
+
+    if (lockEnabled) {
+      if (passkeyPrefilled) {
+        passkeyHash = null;
+      } else {
+        const trimmed = passkey.trim();
+
+        if (!trimmed) {
+          setLockError("Enter a passkey to enable locking.");
+          return;
+        }
+        if (!PASSKEY_PATTERN.test(trimmed)) {
+          setLockError("Passkey must be 4–12 letters and/or numbers only.");
+          return;
+        }
+
+        passkeyHash = await hashPasskey(trimmed, lockTarget.user_id);
+      }
+    } else {
+      passkeyHash = "";
+    }
+
+    setSavingLock(true);
+    try {
+      await updateUserLock(
+        lockTarget.user_id,
+        lockEnabled,
+        passkeyHash,
+        lockTarget.passkey_hash,
+      );
+      closeLockModal();
+      await loadAccounts();
+      notifications.show({
+        color: "teal",
+        title: lockEnabled ? "Account locked" : "Account unlocked",
+        message: lockEnabled
+          ? "This account now requires a passkey."
+          : "The passkey requirement was removed.",
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not update lock settings.";
+      setLockError(message);
+      notifications.show({
+        color: "red",
+        title: "Couldn't update lock",
+        message,
+      });
+    } finally {
+      setSavingLock(false);
+    }
+  };
+
   useEffect(() => {
     loadAccounts();
   }, []);
@@ -460,6 +563,18 @@ export default function Accounts() {
                     >
                       Change Password
                     </Menu.Item>
+                    <Menu.Item
+                      leftSection={
+                        account.isLocked ? (
+                          <IconLock size={14} />
+                        ) : (
+                          <IconLockOpen size={14} />
+                        )
+                      }
+                      onClick={() => openLockModal(account)}
+                    >
+                      Passkey & Lock
+                    </Menu.Item>
                     <Menu.Divider />
                     <Menu.Item
                       color="red"
@@ -477,21 +592,40 @@ export default function Accounts() {
                     colorIndex={i}
                     size={56}
                   />
+
                   <div style={{ textAlign: "center", width: "100%" }}>
                     <Text fw={600} truncate="end">
                       {getDisplayName(account)}
                     </Text>
                   </div>
-                  {account.status && (
+
+                  <Group gap={6}>
+                    {account.status && (
+                      <Badge
+                        size="sm"
+                        variant="light"
+                        color={statusColor(account.status)}
+                        radius="sm"
+                      >
+                        {account.status}
+                      </Badge>
+                    )}
                     <Badge
                       size="sm"
                       variant="light"
-                      color={statusColor(account.status)}
+                      color={account.isLocked ? "dark" : "gray"}
                       radius="sm"
+                      leftSection={
+                        account.isLocked ? (
+                          <IconLock size={10} />
+                        ) : (
+                          <IconLockOpen size={10} />
+                        )
+                      }
                     >
-                      {account.status}
+                      {account.isLocked ? "Locked" : "Unlocked"}
                     </Badge>
-                  )}
+                  </Group>
                 </Stack>
               </Card>
             ))}
@@ -721,6 +855,79 @@ export default function Accounts() {
               onClick={handleChangePasswordConfirm}
             >
               Update Password
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={lockTarget !== null}
+        onClose={closeLockModal}
+        title="Passkey & Lock"
+        centered
+        radius="md"
+      >
+        <Stack gap="md">
+          {lockError && (
+            <Alert color="red" title="Couldn't update lock">
+              {lockError}
+            </Alert>
+          )}
+
+          <Text size="sm" c="dimmed">
+            Restrict{" "}
+            <strong>{lockTarget ? getDisplayName(lockTarget) : ""}</strong> to
+            only known contacts with a passkey.
+          </Text>
+
+          <Group justify="space-between">
+            <Text size="sm" fw={600}>
+              Lock this account
+            </Text>
+            <Switch
+              checked={lockEnabled}
+              onChange={(e) => setLockEnabled(e.currentTarget.checked)}
+            />
+          </Group>
+
+          {/* {lockEnabled && ( */}
+          <PasswordInput
+            label="Passkey"
+            classNames={{ label: classes.fieldLabel }}
+            placeholder="4-12 letters or numbers"
+            value={passkey}
+            onChange={(e) => {
+              const sanitized = e.target.value
+                .replace(/[^a-zA-Z0-9]/g, "")
+                .slice(0, 12);
+              setPasskey(sanitized);
+              setPasskeyPrefilled(false);
+            }}
+            onFocus={() => {
+              if (passkeyPrefilled) {
+                setPasskey("");
+                setPasskeyPrefilled(false);
+              }
+            }}
+            description={
+              passkeyPrefilled
+                ? "A passkey is already set. Click to enter a new one, or leave as-is to keep it."
+                : "Letters and numbers only, 4–12 characters."
+            }
+          />
+          {/* )} */}
+
+          <Group justify="flex-end" mt="xs">
+            <Button variant="subtle" onClick={closeLockModal}>
+              Cancel
+            </Button>
+            <Button
+              radius="xl"
+              variant="gradient"
+              loading={savingLock}
+              onClick={handleSaveLock}
+            >
+              Save
             </Button>
           </Group>
         </Stack>

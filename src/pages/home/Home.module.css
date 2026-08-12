@@ -1,32 +1,20 @@
+.page {
+  background: #ffffff;
+}
+
 .hero {
   height: 100dvh;
   position: relative;
   background-image: url("../../../src/assets/chatting.jpg");
   background-size: cover;
   background-position: center;
-}
-
-.container {
-  height: 100dvh;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  padding-bottom: calc(var(--mantine-spacing-xl) * 6);
-  z-index: 1;
+  align-items: center;
+}
+
+.heroContent {
   position: relative;
-}
-
-.title {
-  color: var(--mantine-color-white);
-  font-size: 60px;
-  font-weight: 500;
-  line-height: 1.1;
-}
-
-.description {
-  color: var(--mantine-color-white);
-  max-width: 600px;
+  z-index: 1;
 }
 
 .controls {
@@ -34,10 +22,79 @@
   top: var(--mantine-spacing-xl);
   right: var(--mantine-spacing-xl);
   z-index: 2;
-  display: flex;
-  gap: 16px;
 }
 
 .control {
   margin: 0;
+}
+
+.eyebrow {
+  color: #f5c451;
+  font-family: "IBM Plex Mono", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 13px;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+}
+
+.title {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-top: 12px;
+}
+
+.description {
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 620px;
+}
+
+.section {
+  padding: 96px 0;
+}
+
+.altSection {
+  background: #f6f5fb;
+  padding: 96px 0;
+}
+
+.sectionTitle {
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+}
+
+.featureCard {
+  height: 100%;
+}
+
+.featureIcon {
+  background: #4b3ff214 !important;
+  color: #4b3ff2 !important;
+}
+
+.ctaSection {
+  background: linear-gradient(135deg, #4b3ff2, #2e23b0);
+  padding: 96px 0;
+}
+
+.ctaContent {
+  text-align: center;
+}
+
+.ctaTitle {
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ctaSection :global(.mantine-Text-root) {
+  color: rgba(255, 255, 255, 0.85);
 }
