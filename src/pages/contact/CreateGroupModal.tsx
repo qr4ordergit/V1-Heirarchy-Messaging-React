@@ -64,6 +64,7 @@ const CreateGroupModal = ({
         setAdmins(initialGroup.admins || []);
         setGroupImage(null);
 
+        // Map existing member IDs back to Contact objects
         const mappedMembers: Contact[] = (initialGroup.members || []).map(
           (mId) => {
             const found = selectedContacts.find((c) => getUserId(c) === mId);
@@ -81,6 +82,7 @@ const CreateGroupModal = ({
         );
         setMembers(mappedMembers);
       } else {
+        // Create Mode: set members ONLY to selected contacts passed from parent
         setMembers(selectedContacts);
         setGroupName("");
         setDescription("");
@@ -89,7 +91,7 @@ const CreateGroupModal = ({
         setAdmins([]);
       }
     }
-  }, [opened, initialGroup]);
+  }, [opened, initialGroup, selectedContacts]);
 
   const handleRemoveMember = (memberId: string) => {
     const memberToRemove = members.find((m) => m.id === memberId);

@@ -1050,7 +1050,7 @@ const Contact = () => {
           setGroupModalOpened(false);
           setSelectedGroup(null);
         }}
-        selectedContacts={contacts}
+        selectedContacts={selectedGroup ? contacts : selectedGroupContacts}
         initialGroup={selectedGroup}
         onSaveGroup={handleSaveGroupPayload}
         loading={creatingGroupLoading}
