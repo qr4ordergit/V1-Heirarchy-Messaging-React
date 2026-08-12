@@ -573,7 +573,7 @@ export default function Accounts() {
                       }
                       onClick={() => openLockModal(account)}
                     >
-                      Passkey & Lock
+                      Set Passkey
                     </Menu.Item>
                     <Menu.Divider />
                     <Menu.Item
@@ -622,6 +622,8 @@ export default function Accounts() {
                           <IconLockOpen size={10} />
                         )
                       }
+                      onClick={() => openLockModal(account)}
+                      style={{ cursor: "pointer" }}
                     >
                       {account.isLocked ? "Locked" : "Unlocked"}
                     </Badge>
@@ -882,7 +884,7 @@ export default function Accounts() {
 
           <Group justify="space-between">
             <Text size="sm" fw={600}>
-              Lock this account
+              Lock this account with a passkey
             </Text>
             <Switch
               checked={lockEnabled}
