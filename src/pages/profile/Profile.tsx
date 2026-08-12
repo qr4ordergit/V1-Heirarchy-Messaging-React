@@ -1,74 +1,95 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Avatar,
   Card,
   Group,
+  Loader,
   Stack,
   Text,
   UnstyledButton,
 } from "@mantine/core";
 import {
+  IconChevronDown,
   IconChevronRight,
-  IconCircle,
-  IconInfoCircle,
-  IconLock,
   IconLogout,
-  IconSettings,
   IconSwitch3,
+  IconX,
 } from "@tabler/icons-react";
-import { useNavigate } from "react-router";
+import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/auth/auth.store";
-import ProfileSubView, { type ProfileSectionType } from "./ProfileSubView";
 import { logout } from "../../api/authApi";
 import { ROUTES } from "../../router/routes";
-
-export interface ProfileOption {
-  id: ProfileSectionType;
-  label: string;
-  icon: React.ReactNode;
-}
+import { API_ENDPOINTS } from "../../utils/constant";
+import { notifications } from "@mantine/notifications";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const clearTokens = useAuthStore((state) => state.clearTokens);
   const userDetails = useAuthStore((state) => state.userDetails);
+  const token = useAuthStore((state) => state.accessToken);
 
-  const [activeSection, setActiveSection] = useState<ProfileSectionType | null>(
-    null,
+  const [switchAccountOpen, setSwitchAccountOpen] = useState(false);
+  const [adjacencyList, setAdjacencyList] = useState<string[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
+
+  const isSubRoute = ["/privacy", "/help", "/about"].includes(
+    location.pathname,
   );
 
-  const profileOptions: ProfileOption[] = [
-    {
-      id: "account",
-      label: "Account Settings",
-      icon: <IconSettings size={20} className="text-indigo-600" />,
-    },
-    {
-      id: "privacy",
-      label: "Privacy",
-      icon: <IconLock size={20} className="text-indigo-600" />,
-    },
-    {
-      id: "help",
-      label: "Help & Support",
-      icon: <IconCircle size={20} className="text-indigo-600" />,
-    },
-    {
-      id: "about",
-      label: "About",
-      icon: <IconInfoCircle size={20} className="text-indigo-600" />,
-    },
-    {
-      id: "switch-account",
-      label: "Switch Account",
-      icon: <IconSwitch3 size={20} className="text-indigo-600" />,
-    },
-  ];
+  const getHeaders = (): Record<string, string> => ({
+    Authorization: token ?? "",
+    "Content-Type": "application/json",
+  });
 
-  //   const handleSwitchAccount = () => {
-  //     // logout();
-  //     navigate("/login");
-  //   };
+  const fetchAdjacencyList = async () => {
+    setLoadingAccounts(true);
+    try {
+      const response = await fetch(API_ENDPOINTS.ADJACENCY_LIST, {
+        method: "GET",
+        headers: getHeaders(),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && (data.adjacencylist || data.data)) {
+        const list = data.adjacencylist || data.data || [];
+        setAdjacencyList(list);
+      } else {
+        notifications.show({
+          title: "",
+          message: data.message || "Failed to fetch accounts list.",
+          color: "red",
+          icon: <IconX size={18} />,
+        });
+      }
+    } catch (error) {
+      notifications.show({
+        title: "",
+        message: `Error fetching account list: ${error}`,
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdjacencyList();
+  }, []);
+
+  const handleToggleSwitchAccount = () => {
+    setSwitchAccountOpen((prev) => !prev);
+  };
+
+  const handleSwitchToAccount = (selectedUsername: string) => {
+    notifications.show({
+      title: "Switching Account",
+      message: `Initiating switch to ${selectedUsername}...`,
+      color: "indigo",
+    });
+  };
 
   const handleLogout = async () => {
     try {
@@ -89,95 +110,206 @@ const Profile = () => {
       .join("")
       .slice(0, 2) || "M";
 
+  const otherAccounts = adjacencyList.filter(
+    (accUsername) => accUsername !== username,
+  );
+
+  if (isSubRoute) {
+    return (
+      <div className="w-full px-1 h-full">
+        <div className="w-full md:w-7/12 bg-white p-4 sm:p-6">
+          <Outlet />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full px-1 h-full">
       <div className="flex flex-col md:flex-row h-full min-h-[calc(100vh-100px)] overflow-hidden bg-white">
-        {/* Main Content Area (7/12 Width) */}
-        <div className="w-full md:w-7/12 bg-white">
-          <Stack p={{ base: "md", sm: "xl" }} gap="md" className="h-full">
-            {activeSection !== null ? (
-              <ProfileSubView
-                activeSection={activeSection}
-                onBack={() => setActiveSection(null)}
-              />
-            ) : (
-              <>
-                <div className="flex flex-col items-center justify-center pt-2 pb-4 gap-2">
-                  <Avatar
-                    color="indigo"
-                    radius="xl"
-                    size={84}
-                    className="text-2xl font-bold shadow-sm"
-                  >
-                    {userInitials}
-                  </Avatar>
+        <div className="w-full md:w-7/12 bg-white flex flex-col justify-between px-4 pt-4 sm:px-6 sm:pt-6 sm:pb-1 relative">
+          <Stack gap="md" className="w-full">
+            <div className="flex flex-col items-center justify-center pt-2 pb-2 gap-2">
+              <Avatar
+                color="indigo"
+                radius="xl"
+                size={84}
+                className="text-2xl font-bold shadow-sm"
+              >
+                {userInitials}
+              </Avatar>
 
-                  <Text
-                    fw={700}
-                    size="lg"
-                    className="mt-3 text-gray-800 tracking-wide"
-                  >
-                    {username}
-                  </Text>
-                </div>
+              <Text
+                fw={700}
+                size="lg"
+                className="mt-2 text-gray-800 tracking-wide"
+              >
+                {username}
+              </Text>
+            </div>
 
-                <div className="w-full space-y-3">
-                  {profileOptions.map((option) => (
-                    <Card
-                      key={option.id}
-                      withBorder
-                      radius="lg"
-                      p={0}
-                      className="w-full transition-all duration-200 border-gray-200/90 shadow-xs hover:shadow-sm bg-white hover:bg-gray-50/80"
-                    >
-                      <UnstyledButton
-                        onClick={() => setActiveSection(option.id)}
-                        className="w-full px-5 py-4"
-                      >
-                        <Group justify="space-between">
-                          <Group gap="md">
-                            <div className="p-2 rounded-lg bg-indigo-50 flex items-center justify-center">
-                              {option.icon}
-                            </div>
-                            <Text fw={600} size="md" className="text-gray-800">
-                              {option.label}
-                            </Text>
-                          </Group>
-                          <IconChevronRight
-                            size={18}
-                            className="text-gray-400"
-                          />
-                        </Group>
-                      </UnstyledButton>
-                    </Card>
-                  ))}
+            <div className="w-full space-y-3">
+              <Card
+                withBorder
+                radius="lg"
+                p={0}
+                className="w-full transition-all duration-200 border-gray-200/90 shadow-xs hover:shadow-sm bg-white"
+              >
+                <UnstyledButton
+                  onClick={handleToggleSwitchAccount}
+                  className="w-full px-5 py-4 cursor-pointer"
+                >
+                  <Group justify="space-between">
+                    <Group gap="md">
+                      <div className="p-2 rounded-lg bg-indigo-50 flex items-center justify-center">
+                        <IconSwitch3 size={20} className="text-indigo-600" />
+                      </div>
+                      <Text fw={600} size="md" className="text-gray-800">
+                        Switch Account
+                      </Text>
+                    </Group>
+                    {switchAccountOpen ? (
+                      <IconChevronDown size={18} className="text-gray-400" />
+                    ) : (
+                      <IconChevronRight size={18} className="text-gray-400" />
+                    )}
+                  </Group>
+                </UnstyledButton>
 
-                  <Card
-                    withBorder
-                    radius="lg"
-                    p={0}
-                    className="w-full border-gray-200/90 shadow-xs bg-white hover:bg-red-50/40 hover:border-red-200 transition-all duration-200"
-                  >
-                    <UnstyledButton
-                      onClick={handleLogout}
-                      className="w-full px-5 py-4"
-                    >
-                      <Group justify="space-between">
-                        <Group gap="md">
-                          <div className="p-2 rounded-lg bg-red-50 flex items-center justify-center text-red-500">
-                            <IconLogout size={20} />
-                          </div>
-                          <Text fw={600} size="md" className="text-red-500">
-                            Logout
+                {switchAccountOpen && (
+                  <div className="px-5 pb-4 pt-2 border-t border-gray-100 space-y-2 animate-fadeIn">
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-indigo-50/60 border border-indigo-200">
+                      <Group gap="sm">
+                        <Avatar color="indigo" radius="xl" size={32}>
+                          {userInitials}
+                        </Avatar>
+                        <div>
+                          <Text size="sm" fw={600} className="text-indigo-900">
+                            {username}
                           </Text>
-                        </Group>
+                          <Text size="xs" c="dimmed">
+                            Active Account
+                          </Text>
+                        </div>
                       </Group>
-                    </UnstyledButton>
-                  </Card>
-                </div>
-              </>
-            )}
+                    </div>
+
+                    {loadingAccounts ? (
+                      <div className="flex justify-center items-center py-3">
+                        <Loader size="sm" color="indigo" />
+                      </div>
+                    ) : otherAccounts.length > 0 ? (
+                      otherAccounts.map((accUsername) => {
+                        const initials =
+                          accUsername
+                            .split("-")
+                            .map((p) => p[0]?.toUpperCase() || "")
+                            .join("")
+                            .slice(0, 2) || "U";
+
+                        return (
+                          <UnstyledButton
+                            key={accUsername}
+                            onClick={() => handleSwitchToAccount(accUsername)}
+                            className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200 cursor-pointer"
+                          >
+                            <Group gap="sm">
+                              <Avatar color="gray" radius="xl" size={32}>
+                                {initials}
+                              </Avatar>
+                              <div>
+                                <Text
+                                  size="sm"
+                                  fw={500}
+                                  className="text-gray-700"
+                                >
+                                  {accUsername}
+                                </Text>
+                                <Text size="xs" c="dimmed">
+                                  Tap to switch
+                                </Text>
+                              </div>
+                            </Group>
+                          </UnstyledButton>
+                        );
+                      })
+                    ) : (
+                      <div className="py-2 text-center">
+                        <Text size="xs" c="dimmed" fw={500}>
+                          No other accounts available to switch.
+                        </Text>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
+
+              <Card
+                withBorder
+                radius="lg"
+                p={0}
+                className="w-full border-gray-200/90 shadow-xs bg-white hover:bg-red-50/40 hover:border-red-200 transition-all duration-200"
+              >
+                <UnstyledButton
+                  onClick={handleLogout}
+                  className="w-full px-5 py-4 cursor-pointer"
+                >
+                  <Group justify="space-between">
+                    <Group gap="md">
+                      <div className="p-2 rounded-lg bg-red-50 flex items-center justify-center text-red-500">
+                        <IconLogout size={20} />
+                      </div>
+                      <Text fw={600} size="md" className="text-red-500">
+                        Logout
+                      </Text>
+                    </Group>
+                  </Group>
+                </UnstyledButton>
+              </Card>
+            </div>
           </Stack>
+
+          <div className="mt-auto pt-6 hidden md:flex justify-center items-center gap-6">
+            <button
+              onClick={() => navigate("/privacy")}
+              className="text-sm font-medium text-gray-500 hover:text-indigo-600 underline underline-offset-4 transition-colors cursor-pointer"
+            >
+              Privacy
+            </button>
+            <button
+              onClick={() => navigate("/help")}
+              className="text-sm font-medium text-gray-500 hover:text-indigo-600 underline underline-offset-4 transition-colors cursor-pointer"
+            >
+              Help & Support
+            </button>
+            <button
+              onClick={() => navigate("/about")}
+              className="text-sm font-medium text-gray-500 hover:text-indigo-600 underline underline-offset-4 transition-colors cursor-pointer"
+            >
+              About
+            </button>
+          </div>
+
+          <div className="md:hidden fixed bottom-16.25 left-0 right-0 bg-white py-2 flex justify-center items-center gap-6 z-10 shadow-xs">
+            <button
+              onClick={() => navigate("/privacy")}
+              className="text-sm font-medium text-gray-500 hover:text-indigo-600 underline underline-offset-4 transition-colors cursor-pointer"
+            >
+              Privacy
+            </button>
+            <button
+              onClick={() => navigate("/help")}
+              className="text-sm font-medium text-gray-500 hover:text-indigo-600 underline underline-offset-4 transition-colors cursor-pointer"
+            >
+              Help & Support
+            </button>
+            <button
+              onClick={() => navigate("/about")}
+              className="text-sm font-medium text-gray-500 hover:text-indigo-600 underline underline-offset-4 transition-colors cursor-pointer"
+            >
+              About
+            </button>
+          </div>
         </div>
       </div>
     </div>

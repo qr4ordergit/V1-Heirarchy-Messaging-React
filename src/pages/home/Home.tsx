@@ -47,9 +47,9 @@ export default function Home() {
         <Container size="md" className={classes.heroContent}>
           <Text className={classes.eyebrow}>Messenger for warriors!</Text>
           <Title className={classes.title}>
-            All your messenger accounts.
-            <br />
-            One secure Hub.
+            All your messenger accounts in one secure Hub. <br />
+            {/* <br />
+            One secure Hub. */}
           </Title>
           <Text className={classes.description} size="xl" mt="lg">
             Tired of carrying multiple phones? Create all your messenger

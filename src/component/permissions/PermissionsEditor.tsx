@@ -87,24 +87,36 @@ export default function PermissionsEditor({
                 <SectionLabel>One to One Chat</SectionLabel>
                 <Stack gap={6}>
                   <ToggleRow
-                    label="Write"
+                    label="Write Message"
                     value={Boolean(chat.create)}
                     onClick={() => onToggle(["messages", "chat", "create"])}
                   />
                   <ToggleRow
-                    label="View"
+                    label="Initiate Chat"
+                    value={Boolean(chat?.start)}
+                    onClick={() => onToggle(["messages", "chat", "start"])}
+                  />
+                  <ToggleRow
+                    label="View Message"
                     value={Boolean(chat.read)}
                     onClick={() => onToggle(["messages", "chat", "read"])}
                   />
                   <ToggleRow
-                    label="Update"
+                    label="Update Message"
                     value={Boolean(chat.update)}
                     onClick={() => onToggle(["messages", "chat", "update"])}
                   />
                   <ToggleRow
-                    label="Delete"
+                    label="Delete Message"
                     value={Boolean(chat.delete)}
                     onClick={() => onToggle(["messages", "chat", "delete"])}
+                  />
+                  <ToggleRow
+                    label="View Chat History"
+                    value={Boolean(chat?.history_view)}
+                    onClick={() =>
+                      onToggle(["messages", "chat", "history_view"])
+                    }
                   />
                   <ToggleRow
                     label="Delete Chat History"
@@ -122,22 +134,22 @@ export default function PermissionsEditor({
                 <SectionLabel>Group Chat</SectionLabel>
                 <Stack gap={6}>
                   <ToggleRow
-                    label="Write"
+                    label="Write Message"
                     value={Boolean(groupChat.create)}
                     onClick={() => onToggle(["messages", "group", "create"])}
                   />
                   <ToggleRow
-                    label="View"
+                    label="View Message"
                     value={Boolean(groupChat.read)}
                     onClick={() => onToggle(["messages", "group", "read"])}
                   />
                   <ToggleRow
-                    label="Update"
+                    label="Update Message"
                     value={Boolean(groupChat.update)}
                     onClick={() => onToggle(["messages", "group", "update"])}
                   />
                   <ToggleRow
-                    label="Delete"
+                    label="Delete Message"
                     value={Boolean(groupChat.delete)}
                     onClick={() => onToggle(["messages", "group", "delete"])}
                   />

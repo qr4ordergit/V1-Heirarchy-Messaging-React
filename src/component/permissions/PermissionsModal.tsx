@@ -101,7 +101,7 @@ export default function PermissionsModal({
     <Modal
       opened={opened}
       onClose={onClose}
-      title="Upate Permissions"
+      title={`Update Permissions ~ ${userId}`}
       centered
       radius="md"
       size="lg"
