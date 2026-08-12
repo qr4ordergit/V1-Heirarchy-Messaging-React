@@ -533,8 +533,11 @@ export default function Accounts() {
                 radius="md"
                 padding="lg"
                 className={classes.accountCard}
-                style={{ position: "relative", cursor : 'pointer' }}
-                onClick={()=>{setTargetUser(account.user_id);navigate(`/${ROUTES.CHATS}`)}}
+                style={{ position: "relative", cursor: "pointer" }}
+                onClick={() => {
+                  setTargetUser(account.user_id);
+                  navigate(`/${ROUTES.CHATS}`);
+                }}
               >
                 <Menu
                   position="bottom-end"
@@ -549,7 +552,9 @@ export default function Accounts() {
                       radius="xl"
                       style={{ position: "absolute", top: 10, right: 10 }}
                       aria-label="Account options"
-                      onClick={(e)=>{e.stopPropagation()}}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
                     >
                       <IconDotsVertical size={16} />
                     </ActionIcon>
@@ -627,7 +632,10 @@ export default function Accounts() {
                           <IconLockOpen size={10} />
                         )
                       }
-                      onClick={() => openLockModal(account)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openLockModal(account);
+                      }}
                       style={{ cursor: "pointer" }}
                     >
                       {account.isLocked ? "Locked" : "Unlocked"}
