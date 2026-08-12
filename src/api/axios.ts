@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useAuthStore } from "../store/auth/auth.store";
+import { ClearStore } from "../store/clear.store";
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -8,7 +9,6 @@ export const api = axios.create({
     "Content-Type": "application/json",
   },
 });
-
 
 api.interceptors.request.use(
   (config) => {
@@ -20,7 +20,7 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 api.interceptors.response.use(
@@ -29,8 +29,9 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       useAuthStore.getState().clearTokens();
+      ClearStore();
     }
 
     return Promise.reject(error);
-  }
+  },
 );

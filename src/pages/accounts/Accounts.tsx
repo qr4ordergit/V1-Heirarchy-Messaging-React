@@ -49,6 +49,7 @@ import Avatar from "../../component/avatar/Avatar";
 import PermissionsModal from "../../component/permissions/PermissionsModal";
 import { hashPasskey } from "../../utils/hashPasskey";
 import classes from "./Accounts.module.css";
+import { ClearStore } from "../../store/clear.store";
 
 type IdentifierType = "username" | "email" | "phone";
 
@@ -102,6 +103,7 @@ const statusColor = (status: string | null) => {
 export default function Accounts() {
   const navigate = useNavigate();
   const clearTokens = useAuthStore((state) => state.clearTokens);
+  const setTargetUser = useAuthStore((state) => state.setTargetUser);
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
@@ -322,6 +324,7 @@ export default function Accounts() {
       });
     } finally {
       clearTokens();
+      ClearStore();
       setLoggingOut(false);
       navigate(ROUTES.HOME, { replace: true });
     }
@@ -530,7 +533,8 @@ export default function Accounts() {
                 radius="md"
                 padding="lg"
                 className={classes.accountCard}
-                style={{ position: "relative" }}
+                style={{ position: "relative", cursor : 'pointer' }}
+                onClick={()=>{setTargetUser(account.user_id);navigate(`/${ROUTES.CHATS}`)}}
               >
                 <Menu
                   position="bottom-end"
@@ -545,6 +549,7 @@ export default function Accounts() {
                       radius="xl"
                       style={{ position: "absolute", top: 10, right: 10 }}
                       aria-label="Account options"
+                      onClick={(e)=>{e.stopPropagation()}}
                     >
                       <IconDotsVertical size={16} />
                     </ActionIcon>

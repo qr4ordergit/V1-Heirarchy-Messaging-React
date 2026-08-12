@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { useAuthStore } from "../store/auth/auth.store";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -62,6 +63,16 @@ export const formatConversationTime = (timestamp: string) => {
   }
 
   return date.format("DD/MM/YYYY");
+};
+
+export const withTargetUser = (path: string) => {
+  const targetUser = useAuthStore.getState().target_user;
+
+  if (targetUser === "") {
+    return path;
+  }
+
+  return `${path}?target_user=${targetUser}`;
 };
 
 export const TRIGGERS = {

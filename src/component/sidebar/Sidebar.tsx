@@ -7,6 +7,7 @@ import { useNavigate } from "react-router";
 import { useState } from "react";
 import { logout } from "../../api/authApi";
 import { IconLogout } from "@tabler/icons-react";
+import { ClearStore } from "../../store/clear.store";
 export default function Sidebar() {
   const navigate = useNavigate();
   const clearTokens = useAuthStore((state) => state.clearTokens);
@@ -19,6 +20,7 @@ export default function Sidebar() {
       console.error("Logout request failed:", err);
     } finally {
       clearTokens();
+      ClearStore();
       setLoggingOut(false);
       navigate(ROUTES.HOME, { replace: true });
     }

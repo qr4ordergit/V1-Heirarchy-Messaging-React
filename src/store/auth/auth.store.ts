@@ -22,8 +22,10 @@ interface AuthState {
   refreshToken: string | null;
   isAuthenticated: boolean;
   userDetails: UserDetails | null;
+  target_user : string;
   setTokens: (tokens: AuthTokens) => void;
   setUserDetails: (details: UserDetails) => void;
+  setTargetUser: (target_user: string) => void;
   clearTokens: () => void;
 }
 
@@ -36,6 +38,7 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: null,
         isAuthenticated: false,
         userDetails: null,
+        target_user: "",
 
         setTokens: (tokens) =>
           set(
@@ -52,6 +55,8 @@ export const useAuthStore = create<AuthState>()(
         setUserDetails: (details) =>
           set({ userDetails: details }, false, "auth/setUserDetails"),
 
+        setTargetUser: (target_user) => set({target_user},false,"auth/traget_user"),
+
         clearTokens: () =>
           set(
             {
@@ -60,6 +65,7 @@ export const useAuthStore = create<AuthState>()(
               refreshToken: null,
               isAuthenticated: false,
               userDetails: null,
+              target_user : ""
             },
             false,
             "auth/clearTokens",
@@ -74,6 +80,7 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: state.refreshToken,
           isAuthenticated: state.isAuthenticated,
           userDetails: state.userDetails,
+          target_user : state.target_user
         }),
       },
     ),

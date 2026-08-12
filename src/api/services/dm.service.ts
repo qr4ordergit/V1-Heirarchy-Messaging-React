@@ -1,3 +1,4 @@
+import { withTargetUser } from "../../utils/constant";
 import { api } from "../axios";
 import { ENDPOINTS } from "../endpoints";
 
@@ -16,11 +17,11 @@ interface DeleteDM {
 
 export const DmService = {
   getDMs: async (data: GetDMs) => {
-    const response = await api.post(ENDPOINTS.DM.LIST,data);
+    const response = await api.post(withTargetUser(ENDPOINTS.DM.LIST),data);
     return response.data;
   },
   deleteDM: async (data: DeleteDM) => {
-    const response = await api.post(ENDPOINTS.DM.DELETE,data);
+    const response = await api.post(withTargetUser(ENDPOINTS.DM.DELETE),data);
     return response.data;
   },
 };
