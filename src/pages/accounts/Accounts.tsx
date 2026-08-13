@@ -31,6 +31,7 @@ import {
   IconEdit,
   IconLock,
   IconLockOpen,
+  IconUsersGroup,
 } from "@tabler/icons-react";
 
 import {
@@ -46,6 +47,7 @@ import { useAuthStore } from "../../store/auth/auth.store";
 import { ROUTES } from "../../router/routes";
 import Avatar from "../../component/avatar/Avatar";
 import PermissionsModal from "../../component/permissions/PermissionsModal";
+import ManageSubUsersModal from "../../component/manageSubUsers/ManageSubUsersModal";
 import { hashPasskey } from "../../utils/hashPasskey";
 import classes from "./Accounts.module.css";
 import { ClearStore } from "../../store/clear.store";
@@ -141,7 +143,8 @@ export default function Accounts() {
   const [passkeyPrefilled, setPasskeyPrefilled] = useState(false);
   const [lockError, setLockError] = useState<string | null>(null);
   const [savingLock, setSavingLock] = useState(false);
-
+  const [manageSubUsersTarget, setManageSubUsersTarget] =
+    useState<Account | null>(null);
   const setField = (field: keyof NewAccountForm) => (value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -589,6 +592,15 @@ export default function Accounts() {
                     >
                       Set Passkey
                     </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconUsersGroup size={14} />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setManageSubUsersTarget(account);
+                      }}
+                    >
+                      Manage Sub Users
+                    </Menu.Item>
                     <Menu.Divider />
                     <Menu.Item
                       color="red"
@@ -956,6 +968,11 @@ export default function Accounts() {
         userId={permissionsUserId}
         onClose={() => setPermissionsUserId(null)}
         onSaved={loadAccounts}
+      />
+      <ManageSubUsersModal
+        opened={manageSubUsersTarget !== null}
+        targetUser={manageSubUsersTarget}
+        onClose={() => setManageSubUsersTarget(null)}
       />
     </div>
   );

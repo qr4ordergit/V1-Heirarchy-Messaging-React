@@ -40,7 +40,10 @@ export interface ChangePasswordResponse {
 export interface UpdateUserLockResponse {
   message: string;
 }
-
+export interface SubUserAccessDetail {
+  user_id: string;
+  sub_users: Account[];
+}
 async function parseJson(response: Response): Promise<unknown> {
   try {
     return await response.json();
@@ -196,4 +199,57 @@ export async function updateUserLock(
   }
 
   return data as UpdateUserLockResponse;
+}
+export async function fetchSubUserAccessDetail(
+  targetUserId: string,
+): Promise<SubUserAccessDetail> {
+  const response = await fetch(
+    `${API_ENDPOINTS.ACCOUNTS_LIST}?target_user=${encodeURIComponent(targetUserId)}`,
+    {
+      method: "GET",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+    },
+  );
+
+  const data = await parseJson(response);
+
+  if (!response.ok) {
+    const message =
+      (data as { message?: string } | null)?.message ||
+      "Could not load sub-account access.";
+    throw new Error(message);
+  }
+
+  return data as SubUserAccessDetail;
+}
+
+export interface UpdateUserAccessResponse {
+  message?: string;
+}
+
+export async function updateUserAccess(
+  targetUserId: string,
+  operation: "add" | "remove",
+  subUserIds: string[],
+): Promise<UpdateUserAccessResponse> {
+  const response = await fetch(API_ENDPOINTS.USER_ACCESS, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({
+      operation,
+      target_user: targetUserId,
+      sub_users: subUserIds,
+    }),
+  });
+
+  const data = await parseJson(response);
+
+  if (!response.ok) {
+    const message =
+      (data as { message?: string } | null)?.message ||
+      "Could not update sub-account access.";
+    throw new Error(message);
+  }
+
+  return data as UpdateUserAccessResponse;
 }

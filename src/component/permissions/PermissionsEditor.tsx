@@ -74,9 +74,6 @@ export default function PermissionsEditor({
   const groupChat = messages?.group as PermissionsTree | undefined;
   const group = tree.group as PermissionsTree | undefined;
   const contacts = tree.contacts as PermissionsTree | undefined;
-  const users = tree.users as PermissionsTree | undefined;
-  const accessTree = users?.["access-tree"] as PermissionsTree | undefined;
-  // const permissions = users?.permissions as PermissionsTree | undefined;
 
   return (
     <Stack gap="lg">
@@ -217,55 +214,6 @@ export default function PermissionsEditor({
             />
           </Stack>
           <Divider mt="lg" />
-        </div>
-      )}
-
-      {users && (
-        <div>
-          <SectionLabel>Users</SectionLabel>
-          <Stack gap="md">
-            <Stack gap={6}>
-              <ToggleRow
-                label="Create"
-                value={Boolean(users.create)}
-                onClick={() => onToggle(["users", "create"])}
-              />
-              <ToggleRow
-                label="View"
-                value={Boolean(users.read)}
-                onClick={() => onToggle(["users", "read"])}
-              />
-              <ToggleRow
-                label="Update"
-                value={Boolean(users.update)}
-                onClick={() => onToggle(["users", "update"])}
-              />
-              <ToggleRow
-                label="Delete"
-                value={Boolean(users.delete)}
-                onClick={() => onToggle(["users", "delete"])}
-              />
-            </Stack>
-
-            {accessTree && (
-              <>
-                <Divider />
-                <EmphasizedToggleRow
-                  label="Sub Account Access"
-                  value={Boolean(accessTree.read)}
-                  onClick={() => onToggle(["users", "access-tree", "read"])}
-                />
-              </>
-            )}
-            {/* <Divider />
-            {permissions && (
-              <EmphasizedToggleRow
-                label="Update Permissions"
-                value={Boolean(permissions.update)}
-                onClick={() => onToggle(["users", "permissions", "update"])}
-              />
-            )} */}
-          </Stack>
         </div>
       )}
     </Stack>
