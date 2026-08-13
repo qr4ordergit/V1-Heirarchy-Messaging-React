@@ -76,7 +76,7 @@ export default function PermissionsEditor({
   const contacts = tree.contacts as PermissionsTree | undefined;
   const users = tree.users as PermissionsTree | undefined;
   const accessTree = users?.["access-tree"] as PermissionsTree | undefined;
-  const permissions = users?.permissions as PermissionsTree | undefined;
+  // const permissions = users?.permissions as PermissionsTree | undefined;
 
   return (
     <Stack gap="lg">
@@ -257,14 +257,14 @@ export default function PermissionsEditor({
                 />
               </>
             )}
-            <Divider />
+            {/* <Divider />
             {permissions && (
               <EmphasizedToggleRow
                 label="Update Permissions"
                 value={Boolean(permissions.update)}
                 onClick={() => onToggle(["users", "permissions", "update"])}
               />
-            )}
+            )} */}
           </Stack>
         </div>
       )}

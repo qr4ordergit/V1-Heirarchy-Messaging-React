@@ -28,7 +28,6 @@ import {
   IconLogout,
   IconPlus,
   IconTrash,
-  IconWand,
   IconEdit,
   IconLock,
   IconLockOpen,
@@ -117,7 +116,6 @@ export default function Accounts() {
 
   const [usernameChecking, setUsernameChecking] = useState(false);
   const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
-  const [usernameMessage, setUsernameMessage] = useState<string | null>(null);
 
   const [usernameVerified, setUsernameVerified] = useState(false);
 
@@ -175,13 +173,11 @@ export default function Accounts() {
     try {
       const result = await suggestUsername(trimmed);
       setUsernameSuggestions(result.suggestions ?? []);
-      setUsernameMessage(result.message ?? null);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Could not check username.";
 
       setUsernameSuggestions([]);
-      setUsernameMessage(null);
 
       notifications.show({
         color: "red",
@@ -203,7 +199,7 @@ export default function Accounts() {
     }));
     setFormErrors({});
     setUsernameSuggestions([]);
-    setUsernameMessage(null);
+
     setUsernameVerified(false);
   };
 
@@ -212,7 +208,6 @@ export default function Accounts() {
     setField("username")(sanitized);
     setUsernameVerified(false);
     setUsernameSuggestions([]);
-    setUsernameMessage(null);
   };
 
   const handleSelectSuggestion = (suggestion: string) => {
@@ -254,7 +249,7 @@ export default function Accounts() {
     setFormErrors({});
     setSubmitError(null);
     setUsernameSuggestions([]);
-    setUsernameMessage(null);
+
     setUsernameVerified(false);
   };
 
@@ -703,30 +698,26 @@ export default function Accounts() {
                   usernameChecking ? (
                     <Loader size={14} />
                   ) : (
-                    <IconWand
-                      size={16}
-                      style={{
-                        cursor: wandDisabled ? "not-allowed" : "pointer",
-                        opacity: wandDisabled ? 0.4 : 1,
-                      }}
+                    <Button
+                      size="xs"
+                      variant="subtle"
+                      disabled={wandDisabled}
                       onClick={() =>
-                        !wandDisabled &&
                         fetchUsernameSuggestionsOnce(form.username)
                       }
-                    />
+                    >
+                      Verify
+                    </Button>
                   )
                 }
+                rightSectionWidth={70}
               />
-              {usernameVerified && !formErrors.username && (
-                <Text size="xs" c="teal" mt={4}>
-                  Username verified
-                </Text>
-              )}
+
               {usernameSuggestions.length > 0 && (
                 <Stack gap={4} mt={6}>
-                  {usernameMessage && (
+                  {usernameSuggestions && (
                     <Text size="xs" c="dimmed">
-                      {usernameMessage}
+                      {"Choose one of the suggested usernames below"}
                     </Text>
                   )}
                   <Group gap={6}>
