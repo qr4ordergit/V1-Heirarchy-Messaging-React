@@ -51,7 +51,7 @@ function Navbar() {
             <IconRefresh />
           </ActionIcon>
         </div>
-        {/* <div>
+        <div>
           <Menu width={200} position="bottom-end">
             <Menu.Target>
               <ActionIcon variant="light" radius="xl" size={36}>
@@ -68,7 +68,7 @@ function Navbar() {
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
-        </div> */}
+        </div>
       </div>
     </div>
   );
