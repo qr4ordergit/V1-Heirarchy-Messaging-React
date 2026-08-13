@@ -39,31 +39,6 @@ function ToggleRow({
   );
 }
 
-function EmphasizedToggleRow({
-  label,
-  value,
-  onClick,
-}: {
-  label: string;
-  value: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <Group justify="space-between" wrap="nowrap">
-      <Text
-        size="xs"
-        fw={700}
-        tt="uppercase"
-        c="dimmed"
-        className={classes.sectionLabel}
-      >
-        {label}
-      </Text>
-      <Switch checked={value} onChange={onClick} />
-    </Group>
-  );
-}
-
 export default function PermissionsEditor({
   tree,
   onToggle,
