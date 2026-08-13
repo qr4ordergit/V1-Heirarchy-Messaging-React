@@ -70,6 +70,7 @@ export default function PermissionsEditor({
 }: PermissionsEditorProps) {
   const messages = tree.messages as PermissionsTree | undefined;
   const chat = messages?.chat as PermissionsTree | undefined;
+  const chatHistory = chat?.history as PermissionsTree | undefined;
   const groupChat = messages?.group as PermissionsTree | undefined;
   const group = tree.group as PermissionsTree | undefined;
   const contacts = tree.contacts as PermissionsTree | undefined;
@@ -113,16 +114,16 @@ export default function PermissionsEditor({
                   />
                   <ToggleRow
                     label="View Chat History"
-                    value={Boolean(chat?.history_view)}
+                    value={Boolean(chatHistory?.get)}
                     onClick={() =>
-                      onToggle(["messages", "chat", "history_view"])
+                      onToggle(["messages", "chat", "history", "get"])
                     }
                   />
                   <ToggleRow
                     label="Delete Chat History"
-                    value={Boolean(chat.history_delete)}
+                    value={Boolean(chatHistory?.delete)}
                     onClick={() =>
-                      onToggle(["messages", "chat", "history_delete"])
+                      onToggle(["messages", "chat", "history", "delete"])
                     }
                   />
                 </Stack>

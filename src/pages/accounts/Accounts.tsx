@@ -563,13 +563,19 @@ export default function Accounts() {
                   <Menu.Dropdown>
                     <Menu.Item
                       leftSection={<IconEdit size={14} />}
-                      onClick={() => setPermissionsUserId(account.user_id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPermissionsUserId(account.user_id);
+                      }}
                     >
                       Edit Permissions
                     </Menu.Item>
                     <Menu.Item
                       leftSection={<IconKey size={14} />}
-                      onClick={() => setPasswordTarget(account)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPasswordTarget(account);
+                      }}
                     >
                       Change Password
                     </Menu.Item>
@@ -581,7 +587,10 @@ export default function Accounts() {
                           <IconLockOpen size={14} />
                         )
                       }
-                      onClick={() => openLockModal(account)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openLockModal(account);
+                      }}
                     >
                       Set Passkey
                     </Menu.Item>
@@ -589,7 +598,10 @@ export default function Accounts() {
                     <Menu.Item
                       color="red"
                       leftSection={<IconTrash size={14} />}
-                      onClick={() => setDeleteTarget(account)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTarget(account);
+                      }}
                     >
                       Remove Account
                     </Menu.Item>
