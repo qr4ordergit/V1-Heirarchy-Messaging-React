@@ -8,7 +8,6 @@ export default function MainLayout() {
   return (
     <AppShell
       h="100dvh"
-      padding="md"
       navbar={{
         width: 70,
         breakpoint: "lg",
@@ -19,7 +18,7 @@ export default function MainLayout() {
         <Sidebar />
       </AppShell.Navbar>
 
-      <AppShell.Main pb={{ base: 70, lg: 15 }} h={"100%"}>
+      <AppShell.Main pb={{ base: 50, lg: 0 }} style={{height : "100%", minHeight : 0,overflow : "hidden"}}>
         <Outlet />
       </AppShell.Main>
 
