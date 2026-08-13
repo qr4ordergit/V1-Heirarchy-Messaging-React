@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { MESSAGE } from "../chats/chats.store";
 interface PAYLOAD {
     toTrigger: string,
-    payload: MESSAGE
+    payload?: MESSAGE
 }
 interface TRIGGERSTORE {
     trigger: string,

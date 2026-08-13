@@ -6,12 +6,16 @@ import { ENDPOINTS } from "../../../../api/endpoints";
 import { Notification } from "../../../../utils/notification";
 import { useTransition } from "react";
 import { useChatStore } from "../../../../store/chats/chats.store";
+import { useParams } from "react-router";
 
 function DeleteChatDialog() {
   const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
     (state) => state,
   );
   const { popChat } = useChatStore((state) => state);
+  const { chatId } = useParams<{ chatId: string }>();
+
+  const isGroup = chatId?.includes("group");
 
   const [deleteLoader, DeleteFn] = useTransition();
 
@@ -33,7 +37,10 @@ function DeleteChatDialog() {
       },
     };
 
-    const res = await api.delete(ENDPOINTS.CHAT.DELETE, payload);
+    const endpoint = isGroup
+      ? ENDPOINTS.GROUP_CHAT.DELETE
+      : ENDPOINTS.CHAT.DELETE;
+    const res = await api.delete(endpoint, payload);
 
     if (!res.data?.success) {
       return Notification.error("Unable to delete chat");

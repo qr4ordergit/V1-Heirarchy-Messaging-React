@@ -17,6 +17,8 @@ function EditChatDialog() {
   const { chatId } = useParams<{ chatId: string }>();
   const nextPerson = useNextPerson();
 
+  const isGroup = chatId?.includes("group");
+
   const [message, setMessage] = useState<string>("");
 
   const [editLoader, EditFn] = useTransition();
@@ -34,12 +36,13 @@ function EditChatDialog() {
     if (!chatId) return;
 
     const payload = {
-      user: nextPerson(chatId),
+      user: isGroup ? undefined : nextPerson(chatId),
       body: { text: message },
       message_id: triggerPayload?._id,
     };
 
-    const res = await api.put(ENDPOINTS.CHAT.PUT, payload);
+    const endpoint = isGroup ? ENDPOINTS.GROUP_CHAT.PUT : ENDPOINTS.CHAT.PUT;
+    const res = await api.put(endpoint, payload);
 
     if (!res.data?.success) {
       return Notification.error("Unable to edit chat");

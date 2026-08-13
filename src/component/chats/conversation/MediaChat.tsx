@@ -7,13 +7,18 @@ import {
   IconFileTypeXls,
   IconJson,
 } from "@tabler/icons-react";
+import type { MESSAGE } from "../../../store/chats/chats.store";
+import { useTriggerStore } from "../../../store/trigger/trigger.store";
+import { TRIGGERS } from "../../../utils/constant";
 
 interface MEDIACHAT {
   url: string;
+  msg: MESSAGE;
 }
 
-export function MediaChat({ url }: MEDIACHAT) {
+export function MediaChat({ url, msg }: MEDIACHAT) {
   const getMediaType = useExtentionMediaProvider();
+  const { setTrigger } = useTriggerStore();
 
   const mediaType = getMediaType(url);
 
@@ -29,20 +34,36 @@ export function MediaChat({ url }: MEDIACHAT) {
 
   const DocumentIcon = mediaIcons[mediaType as keyof typeof mediaIcons];
 
+  const onPreview = () => {
+    setTrigger({
+      toTrigger: TRIGGERS.previewMedia,
+      payload: msg,
+    });
+  };
+
   return (
     <div className="mb-1">
-      {/* Image */}
-      {mediaType === "image" && (
-        <Image key={url} radius="md" h={"30vh"} src={url} />
-      )}
+      <div>
+        {/* Image */}
+        {mediaType === "image" && (
+          <Image
+            key={url}
+            radius="md"
+            h={"30vh"}
+            src={url}
+            onClick={onPreview}
+          />
+        )}
 
-      {mediaType === "video" && (
-        <video
-          src={url}
-          className="w-52 object-cover rounded-lg"
-          preload="metadata"
-        />
-      )}
+        {mediaType === "video" && (
+          <video
+            src={url}
+            className="w-52 object-cover rounded-lg"
+            preload="metadata"
+            onClick={onPreview}
+          />
+        )}
+      </div>
 
       {/* documents */}
       {DocumentIcon && (

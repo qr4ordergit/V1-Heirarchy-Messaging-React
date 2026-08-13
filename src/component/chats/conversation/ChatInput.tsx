@@ -28,6 +28,7 @@ export default function ChatInput() {
   const { trigger, triggerPayload, resetTrigger } = useTriggerStore();
 
   const isReply = trigger === TRIGGERS.reply;
+  const isGroup = chatId?.includes("group");
 
   const [message, setMessage] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
@@ -46,13 +47,16 @@ export default function ChatInput() {
     if (!chatId) return;
 
     const payload = {
-      user: nextPerson(chatId),
+      user: isGroup ? undefined : nextPerson(chatId),
+      group_id: isGroup ? chatId : undefined,
       type: isReply ? "replay" : "message",
       parent_message_id: triggerPayload?._id ?? undefined,
       text: message,
     };
 
-    const response = await api.post(ENDPOINTS.CHAT.SEND, payload);
+    const endpoint = isGroup ? ENDPOINTS.GROUP_CHAT.POST : ENDPOINTS.CHAT.SEND;
+
+    const response = await api.post(endpoint, payload);
 
     if (!response.data?.success) {
       Notification.error("Something went wrong");
@@ -70,14 +74,16 @@ export default function ChatInput() {
     if (!chatId) return;
 
     const payload = {
-      user: nextPerson(chatId),
+      user: isGroup ? undefined : nextPerson(chatId),
+      group_id: isGroup ? chatId : undefined,
       type: isReply ? "replay" : "message",
       parent_message_id: triggerPayload?._id ?? undefined,
       text: message,
       files: files.map((file) => file.name),
     };
 
-    const response = await api.post(ENDPOINTS.CHAT.SEND, payload);
+    const endpoint = isGroup ? ENDPOINTS.GROUP_CHAT.POST : ENDPOINTS.CHAT.SEND;
+    const response = await api.post(endpoint, payload);
 
     if (!response.data?.success) {
       Notification.error("Something went wrong");

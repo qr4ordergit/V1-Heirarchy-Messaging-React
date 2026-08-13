@@ -2,6 +2,7 @@ import ChatInput from "./ChatInput";
 import Chatting from "./Chatting";
 import DeleteChatDialog from "./dialouges/DeleteChatDialog";
 import EditChatDialog from "./dialouges/EditChatDialog";
+import Previewer from "./modals/Previewer";
 import Navbar from "./Navbar";
 
 function Conversation() {
@@ -24,6 +25,7 @@ function Conversation() {
       </div>
       <DeleteChatDialog />
       <EditChatDialog />
+      <Previewer />
     </div>
   );
 }

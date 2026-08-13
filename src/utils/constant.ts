@@ -80,5 +80,7 @@ export const withTargetUser = (path: string) => {
 export const TRIGGERS = {
   deleteConfirmationDialouge: "deleteConfirmationDialouge",
   editChatDialog: "editChatDialog",
-  reply: "reply"
+  reply: "reply",
+  refreshChat: "refresh_chat",
+  previewMedia: "preview_media"
 }
