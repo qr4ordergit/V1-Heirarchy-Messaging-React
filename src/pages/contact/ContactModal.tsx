@@ -4,7 +4,7 @@ import { Button, Grid, Modal, Stack, TextInput } from "@mantine/core";
 import type { Contact, ContactFormValues } from "./Contact";
 import { notifications } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
-import { API_ENDPOINTS } from "../../utils/constant";
+import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
 import { useAuthStore } from "../../store/auth/auth.store";
 
 interface ContactModalProps {
@@ -97,16 +97,19 @@ const ContactModal = ({
     if (!showPassKeyField) {
       setVerifying(true);
       try {
-        const response = await fetch(API_ENDPOINTS.VERIFY_USER, {
-          method: "POST",
-          headers: {
-            Authorization: token ?? "",
-            "Content-Type": "application/json",
+        const response = await fetch(
+          withTargetUser(API_ENDPOINTS.VERIFY_USER),
+          {
+            method: "POST",
+            headers: {
+              Authorization: token ?? "",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contact_user_id: contactUserId,
+            }),
           },
-          body: JSON.stringify({
-            contact_user_id: contactUserId,
-          }),
-        });
+        );
 
         const data = await response.json();
 

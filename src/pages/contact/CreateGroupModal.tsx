@@ -64,7 +64,6 @@ const CreateGroupModal = ({
         setAdmins(initialGroup.admins || []);
         setGroupImage(null);
 
-        // Map existing member IDs back to Contact objects
         const mappedMembers: Contact[] = (initialGroup.members || []).map(
           (mId) => {
             const found = selectedContacts.find((c) => getUserId(c) === mId);

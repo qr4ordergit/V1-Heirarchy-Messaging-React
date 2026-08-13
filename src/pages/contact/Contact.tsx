@@ -29,7 +29,7 @@ import ContactModal from "./ContactModal";
 import CreateGroupModal from "./CreateGroupModal";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/auth/auth.store";
-import { API_ENDPOINTS } from "../../utils/constant";
+import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
 import { notifications } from "@mantine/notifications";
 
 export interface Contact {
@@ -97,6 +97,7 @@ const Contact = () => {
 
   const token = useAuthStore.getState().accessToken;
   const userDetails = useAuthStore.getState().userDetails;
+  const target_user = useAuthStore((state) => state.target_user);
 
   const getHeaders = (): Record<string, string> => ({
     Authorization: token ?? "",
@@ -106,7 +107,7 @@ const Contact = () => {
   const fetchContacts = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_ENDPOINTS.CONTACTS}`, {
+      const response = await fetch(withTargetUser(API_ENDPOINTS.CONTACTS), {
         method: "GET",
         headers: getHeaders(),
       });
@@ -147,7 +148,7 @@ const Contact = () => {
   const fetchGroups = async () => {
     setGroupsLoading(true);
     try {
-      const endpoint = API_ENDPOINTS.CREATE_GROUP;
+      const endpoint = withTargetUser(API_ENDPOINTS.CREATE_GROUP);
       const response = await fetch(endpoint, {
         method: "GET",
         headers: getHeaders(),
@@ -234,7 +235,7 @@ const Contact = () => {
     const { group_image_file, ...apiPayload } = payload;
 
     try {
-      const endpoint = API_ENDPOINTS.CREATE_GROUP;
+      const endpoint = withTargetUser(API_ENDPOINTS.CREATE_GROUP);
       const method = isEdit ? "PUT" : "POST";
 
       const finalBody =
@@ -324,8 +325,9 @@ const Contact = () => {
 
     try {
       const response = await fetch(
-        API_ENDPOINTS.CREATE_GROUP +
+        withTargetUser(API_ENDPOINTS.CREATE_GROUP) +
           `?group_id=${encodeURIComponent(group._id)}`,
+
         {
           method: "DELETE",
           headers: getHeaders(),
@@ -383,9 +385,7 @@ const Contact = () => {
     setStartingChatId(contact.id);
 
     try {
-      const endpoint =
-        API_ENDPOINTS.START_CONVERSATION ||
-        "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev/api/start-conversation";
+      const endpoint = withTargetUser(API_ENDPOINTS.START_CONVERSATION);
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -429,7 +429,7 @@ const Contact = () => {
   const handleDelete = async (contact: Contact) => {
     const contactUserId = contact.username || contact.id.split("#")[1];
 
-    if (!userDetails?.username || !contactUserId) {
+    if (!target_user || !userDetails?.username || !contactUserId) {
       notifications.show({
         title: "",
         message: "User details or contact user ID missing.",
@@ -448,11 +448,11 @@ const Contact = () => {
 
     try {
       const payload = {
-        owner_user_id: userDetails.username,
+        owner_user_id: target_user || userDetails?.username,
         contact_user_id: contactUserId,
       };
 
-      const response = await fetch(API_ENDPOINTS.CONTACTS, {
+      const response = await fetch(withTargetUser(API_ENDPOINTS.CONTACTS), {
         method: "DELETE",
         headers: getHeaders(),
         body: JSON.stringify(payload),
@@ -528,7 +528,7 @@ const Contact = () => {
 
     try {
       const response = await fetch(
-        `${API_ENDPOINTS.CONTACTS}/${contactUserId}`,
+        withTargetUser(API_ENDPOINTS.CONTACTS) + `/${contactUserId}`,
         {
           method: "GET",
           headers: getHeaders(),
@@ -578,7 +578,7 @@ const Contact = () => {
     if (!selectedContact) {
       try {
         const contactData = {
-          owner_user_id: userDetails?.username,
+          owner_user_id: target_user || userDetails?.username,
           contact_user_id: contactUserId,
           display_name: values.name.trim(),
           phone: values.phone,
@@ -593,7 +593,7 @@ const Contact = () => {
           payload.pass = values.passKey.trim();
         }
 
-        const response = await fetch(API_ENDPOINTS.CONTACTS, {
+        const response = await fetch(withTargetUser(API_ENDPOINTS.CONTACTS), {
           method: "POST",
           headers: getHeaders(),
           body: JSON.stringify(payload),
@@ -629,14 +629,14 @@ const Contact = () => {
     } else {
       try {
         const payload = {
-          owner_user_id: userDetails?.username,
+          owner_user_id: target_user || userDetails?.username,
           contact_user_id: contactUserId,
           display_name: values.name.trim(),
           phone: values.phone,
           email: values.email,
         };
 
-        const response = await fetch(API_ENDPOINTS.CONTACTS, {
+        const response = await fetch(withTargetUser(API_ENDPOINTS.CONTACTS), {
           method: "PUT",
           headers: getHeaders(),
           body: JSON.stringify(payload),

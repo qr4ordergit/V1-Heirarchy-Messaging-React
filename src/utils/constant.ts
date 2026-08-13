@@ -73,7 +73,8 @@ export const withTargetUser = (path: string) => {
     return path;
   }
 
-  return `${path}?target_user=${targetUser}`;
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}target_user=${targetUser}`;
 };
 
 export const TRIGGERS = {

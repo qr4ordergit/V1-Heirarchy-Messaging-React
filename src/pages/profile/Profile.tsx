@@ -19,7 +19,7 @@ import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { logout } from "../../api/authApi";
 import { ROUTES } from "../../router/routes";
-import { API_ENDPOINTS } from "../../utils/constant";
+import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
 import { notifications } from "@mantine/notifications";
 
 const Profile = () => {
@@ -27,6 +27,8 @@ const Profile = () => {
   const location = useLocation();
   const clearTokens = useAuthStore((state) => state.clearTokens);
   const userDetails = useAuthStore((state) => state.userDetails);
+  const setTargetUser = useAuthStore((state) => state.setTargetUser);
+  const target_user = useAuthStore((state) => state.target_user);
   const token = useAuthStore((state) => state.accessToken);
 
   const [switchAccountOpen, setSwitchAccountOpen] = useState(false);
@@ -45,10 +47,13 @@ const Profile = () => {
   const fetchAdjacencyList = async () => {
     setLoadingAccounts(true);
     try {
-      const response = await fetch(API_ENDPOINTS.ADJACENCY_LIST, {
-        method: "GET",
-        headers: getHeaders(),
-      });
+      const response = await fetch(
+        withTargetUser(API_ENDPOINTS.ADJACENCY_LIST),
+        {
+          method: "GET",
+          headers: getHeaders(),
+        },
+      );
 
       const data = await response.json();
 
@@ -84,11 +89,8 @@ const Profile = () => {
   };
 
   const handleSwitchToAccount = (selectedUsername: string) => {
-    notifications.show({
-      title: "Switching Account",
-      message: `Initiating switch to ${selectedUsername}...`,
-      color: "indigo",
-    });
+    setTargetUser(selectedUsername);
+    navigate(`/${ROUTES.CHATS}`);
   };
 
   const handleLogout = async () => {
@@ -102,7 +104,7 @@ const Profile = () => {
     }
   };
 
-  const username = userDetails?.username || "mbr-default-581";
+  const username = target_user || userDetails?.username || "";
   const userInitials =
     username
       .split("-")
@@ -178,22 +180,6 @@ const Profile = () => {
 
                 {switchAccountOpen && (
                   <div className="px-5 pb-4 pt-2 border-t border-gray-100 space-y-2 animate-fadeIn">
-                    <div className="flex items-center justify-between p-2 rounded-lg bg-indigo-50/60 border border-indigo-200">
-                      <Group gap="sm">
-                        <Avatar color="indigo" radius="xl" size={32}>
-                          {userInitials}
-                        </Avatar>
-                        <div>
-                          <Text size="sm" fw={600} className="text-indigo-900">
-                            {username}
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            Active Account
-                          </Text>
-                        </div>
-                      </Group>
-                    </div>
-
                     {loadingAccounts ? (
                       <div className="flex justify-center items-center py-3">
                         <Loader size="sm" color="indigo" />
