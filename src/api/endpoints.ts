@@ -4,7 +4,8 @@ export const ENDPOINTS = {
     DELETE: "/delete-chat-history"
   },
   GROUPS: {
-    LIST: "/group/chat-history"
+    LIST: "/group/chat-history",
+    LEAVE : "/group/manage-members"
   },
   CHAT: {
     SEND: "/message",

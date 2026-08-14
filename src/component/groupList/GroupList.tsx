@@ -3,9 +3,23 @@ import { GroupService } from "../../api/services/groups.service";
 import { Notification } from "../../utils/notification";
 import { useGroupListStore } from "../../store/groups/group.list.store";
 import { useConversationTypeStore } from "../../store/conversation/conversation.type.store";
-import { ActionIcon, Center, Loader, Stack, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Center,
+  Group,
+  Loader,
+  Modal,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import GroupsItem from "../groupsItem/GroupsItem";
+
+interface SelectedGrouptate {
+  group_id: string;
+  group_name: string;
+}
 
 const GroupList = () => {
   const groups = useGroupListStore((state) => state.groups);
@@ -18,12 +32,47 @@ const GroupList = () => {
   );
 
   const [loading, setLoading] = useState<boolean>(false);
+  const [leaveOpened, setLeaveOpened] = useState(false);
+
+  const [selectedGroup, setSelectedGroup] = useState<SelectedGrouptate>({
+    group_id: "",
+    group_name: "",
+  });
+
+  const resetSelectedGroup = () => {
+    setSelectedGroup({ group_id: "", group_name: "" });
+  };
+
+  const handleClickLeave = (id: string, group_name: string) => {
+    setSelectedGroup({ group_id: id, group_name: group_name });
+  };
 
   const loadGroups = async () => {
     try {
       setLoading(true);
       const groups = await GroupService.getGroups();
       setGroups(groups.data);
+    } catch (error) {
+      if (error instanceof Error) {
+        Notification.error(error.message);
+      }
+      reset();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const leaveGroup = async () => {
+    try {
+      setLoading(true);
+      const res = await GroupService.leaveGroup({
+        group_id: selectedGroup.group_id,
+        operation: "remove-members",
+      });
+      setLeaveOpened(false);
+      resetSelectedGroup();
+      Notification.success(res.message);
+      await loadGroups();
     } catch (error) {
       if (error instanceof Error) {
         Notification.error(error.message);
@@ -48,6 +97,7 @@ const GroupList = () => {
             <GroupsItem
               key={groups._id}
               groups={groups}
+              onLeave={() => handleClickLeave(groups._id, groups.group_name)}
             />
           ))}
         </Stack>
@@ -60,18 +110,45 @@ const GroupList = () => {
         >
           <IconRefresh size={15} />
         </ActionIcon>
-        </>
-        ) : (
-              <Center>
-                <Text c="red.6" size="xs">
-                  No Group found
-                </Text>
-              </Center>
-            )
-          ) : (
-            <Center>
-              <Loader size={20} />
-            </Center>
-          );
+        <Modal
+          opened={leaveOpened}
+          onClose={() => {
+            setLeaveOpened(false);
+            resetSelectedGroup();
+          }}
+          title="Leave Group"
+          centered
+        >
+          <Text size="xs">
+            Are you sure you want to leave the group{" "}
+            <b>{selectedGroup?.group_name}</b>?
+          </Text>
+
+          <Group justify="flex-end" mt="lg">
+            <Button
+              color="red"
+              size="compact-xs"
+              loading={loading}
+              onClick={() => {
+                leaveGroup();
+              }}
+            >
+              Leave
+            </Button>
+          </Group>
+        </Modal>
+      </>
+    ) : (
+      <Center>
+        <Text c="red.6" size="xs">
+          No Group found
+        </Text>
+      </Center>
+    )
+  ) : (
+    <Center>
+      <Loader size={20} />
+    </Center>
+  );
 };
 export default GroupList;

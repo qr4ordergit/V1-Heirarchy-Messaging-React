@@ -1,13 +1,25 @@
 import { useNavigate, useParams } from "react-router";
 import type { Groups } from "../../store/groups/group.list.store";
-import { Avatar, Badge, Flex, Group, Stack, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Avatar,
+  Badge,
+  Flex,
+  Group,
+  Menu,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { formatConversationTime, getAvatarColor } from "../../utils/constant";
+import { ROUTES } from "../../router/routes";
+import { IconDotsVertical, IconLogout2 } from "@tabler/icons-react";
 
 interface GroupItemProps {
   groups: Groups;
+  onLeave: () => void;
 }
 
-const GroupsItem = ({ groups }: GroupItemProps) => {
+const GroupsItem = ({ groups, onLeave }: GroupItemProps) => {
   const { chatId } = useParams();
   const navigate = useNavigate();
 
@@ -39,12 +51,11 @@ const GroupsItem = ({ groups }: GroupItemProps) => {
           <Text fw={600} size="sm">
             {groups.group_name}
           </Text>
-          {
-            groups.only_admins_can_message &&
-          <Text c={"dimmed"} size="xs">
-            Channel
-          </Text>
-          }
+          {groups.only_admins_can_message && (
+            <Text c={"dimmed"} size="xs">
+              Channel
+            </Text>
+          )}
         </Stack>
       </Group>
 
@@ -59,6 +70,34 @@ const GroupsItem = ({ groups }: GroupItemProps) => {
                 {groups.unread_count}
               </Badge>
             )}
+            <Menu position="bottom-start" withArrow>
+              <Menu.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    navigate(`/${ROUTES.CHATS}`);
+                  }}
+                >
+                  <IconDotsVertical size={13} />
+                </ActionIcon>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Item
+                  color="red"
+                  leftSection={<IconLogout2 size={13} />}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onLeave();
+                  }}
+                >
+                  <Text size="xs">Leave Group</Text>
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </Flex>
         </Stack>
       </Group>
