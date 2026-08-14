@@ -40,10 +40,16 @@ export interface ChangePasswordResponse {
 export interface UpdateUserLockResponse {
   message: string;
 }
+
 export interface SubUserAccessDetail {
   user_id: string;
   sub_users: Account[];
 }
+
+export interface UpdateUserAccessResponse {
+  message?: string;
+}
+
 async function parseJson(response: Response): Promise<unknown> {
   try {
     return await response.json();
@@ -174,17 +180,14 @@ export async function changePassword(
 export async function updateUserLock(
   userId: string,
   isLocked: boolean,
-  passkeyHash: string | null,
-  existingHashFallback?: string,
+  encryptedPasskey: string,
 ): Promise<UpdateUserLockResponse> {
-  const hashToSend = passkeyHash ?? existingHashFallback ?? "";
-
   const response = await fetch(`${API_ENDPOINTS.USER_HOME}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({
       isLocked,
-      passkey_hash: hashToSend,
+      passkey_hash: encryptedPasskey,
       target_user: userId,
     }),
   });
@@ -200,6 +203,7 @@ export async function updateUserLock(
 
   return data as UpdateUserLockResponse;
 }
+
 export async function fetchSubUserAccessDetail(
   targetUserId: string,
 ): Promise<SubUserAccessDetail> {
@@ -223,20 +227,14 @@ export async function fetchSubUserAccessDetail(
   return data as SubUserAccessDetail;
 }
 
-export interface UpdateUserAccessResponse {
-  message?: string;
-}
-
 export async function updateUserAccess(
   targetUserId: string,
-  operation: "add" | "remove",
   subUserIds: string[],
 ): Promise<UpdateUserAccessResponse> {
   const response = await fetch(API_ENDPOINTS.USER_ACCESS, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({
-      operation,
       target_user: targetUserId,
       sub_users: subUserIds,
     }),

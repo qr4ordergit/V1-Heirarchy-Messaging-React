@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { notifications } from "@mantine/notifications";
 import {
   Alert,
+  Button,
   Group,
   Loader,
   Modal,
@@ -9,11 +11,11 @@ import {
   Text,
 } from "@mantine/core";
 import {
-  fetchAccounts,
   fetchSubUserAccessDetail,
   updateUserAccess,
   type Account,
 } from "../../api/accountApi";
+import { useAccountsStore } from "../../store/accounts/accounts.store";
 
 interface ManageSubUsersModalProps {
   opened: boolean;
@@ -31,63 +33,104 @@ export default function ManageSubUsersModal({
   targetUser,
   onClose,
 }: ManageSubUsersModalProps) {
-  const [siblingAccounts, setSiblingAccounts] = useState<Account[]>([]);
+  const accounts = useAccountsStore((s) => s.accounts);
+  const accountsLoading = useAccountsStore((s) => s.loading);
+  const loadAccountsCached = useAccountsStore((s) => s.fetchAccounts);
+
   const [addedSubUserIds, setAddedSubUserIds] = useState<Set<string>>(
     new Set(),
   );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [togglingUserId, setTogglingUserId] = useState<string | null>(null);
+  const [initialSubUserIds, setInitialSubUserIds] = useState<Set<string>>(
+    new Set(),
+  );
 
-  const handleToggle = async (subUserId: string, shouldAdd: boolean) => {
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const siblingAccounts = useMemo(
+    () =>
+      targetUser
+        ? accounts.filter((a) => a.user_id !== targetUser.user_id)
+        : [],
+    [accounts, targetUser],
+  );
+
+  const isDirty = useMemo(() => {
+    if (addedSubUserIds.size !== initialSubUserIds.size) return true;
+    for (const id of addedSubUserIds) {
+      if (!initialSubUserIds.has(id)) return true;
+    }
+    return false;
+  }, [addedSubUserIds, initialSubUserIds]);
+
+  const handleToggle = (subUserId: string, shouldAdd: boolean) => {
+    setAddedSubUserIds((prev) => {
+      const next = new Set(prev);
+      if (shouldAdd) next.add(subUserId);
+      else next.delete(subUserId);
+      return next;
+    });
+  };
+
+  const handleClose = () => {
+    if (saving) return;
+    onClose();
+  };
+
+  const handleSave = async () => {
     if (!targetUser) return;
 
-    setTogglingUserId(subUserId);
+    setSaving(true);
     setError(null);
     try {
-      await updateUserAccess(targetUser.user_id, shouldAdd ? "add" : "remove", [
-        subUserId,
-      ]);
-
-      setAddedSubUserIds((prev) => {
-        const next = new Set(prev);
-        if (shouldAdd) next.add(subUserId);
-        else next.delete(subUserId);
-        return next;
+      await updateUserAccess(targetUser.user_id, Array.from(addedSubUserIds));
+      setInitialSubUserIds(new Set(addedSubUserIds));
+      notifications.show({
+        color: "teal",
+        title: "Access updated",
+        message: "Sub-user access was saved successfully.",
       });
+      onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update access.");
+      const message =
+        err instanceof Error ? err.message : "Could not update access.";
+      setError(message);
+      notifications.show({
+        color: "red",
+        title: "Couldn't update access",
+        message,
+      });
     } finally {
-      setTogglingUserId(null);
+      setSaving(false);
     }
   };
   useEffect(() => {
     if (!opened || !targetUser) {
-      setSiblingAccounts([]);
       setAddedSubUserIds(new Set());
+      setInitialSubUserIds(new Set());
+      setError(null);
       return;
     }
 
     let cancelled = false;
 
     (async () => {
-      setLoading(true);
+      setDetailLoading(true);
       setError(null);
       try {
-        const [allAccounts, detail] = await Promise.all([
-          fetchAccounts(),
+        const [, detail] = await Promise.all([
+          loadAccountsCached(),
           fetchSubUserAccessDetail(targetUser.user_id),
         ]);
 
         if (cancelled) return;
 
-        setSiblingAccounts(
-          allAccounts.filter((a) => a.user_id !== targetUser.user_id),
+        const ids = new Set(
+          detail.sub_users.map((subUser) => subUser?.user_id),
         );
-
-        setAddedSubUserIds(
-          new Set(detail.sub_users.map((subUser) => subUser?.user_id)),
-        );
+        setAddedSubUserIds(ids);
+        setInitialSubUserIds(ids);
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -95,21 +138,25 @@ export default function ManageSubUsersModal({
           );
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setDetailLoading(false);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [opened, targetUser]);
+  }, [opened, targetUser, loadAccountsCached]);
+  const loading = detailLoading || (accountsLoading && accounts.length === 0);
+
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
+      onClose={handleClose}
       title="Manage Sub Users"
       centered
       radius="md"
+      closeOnClickOutside={!saving}
+      closeOnEscape={!saving}
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
@@ -136,7 +183,6 @@ export default function ManageSubUsersModal({
           <Stack gap={6}>
             {siblingAccounts.map((account) => {
               const isAdded = addedSubUserIds.has(account.user_id);
-              const isToggling = togglingUserId === account.user_id;
 
               return (
                 <Group
@@ -145,21 +191,33 @@ export default function ManageSubUsersModal({
                   wrap="nowrap"
                 >
                   <Text size="sm">{getDisplayName(account)}</Text>
-                  {isToggling ? (
-                    <Loader size={16} />
-                  ) : (
-                    <Switch
-                      checked={isAdded}
-                      onChange={(e) =>
-                        handleToggle(account.user_id, e.currentTarget.checked)
-                      }
-                    />
-                  )}
+                  <Switch
+                    checked={isAdded}
+                    disabled={saving}
+                    onChange={(e) =>
+                      handleToggle(account.user_id, e.currentTarget.checked)
+                    }
+                  />
                 </Group>
               );
             })}
           </Stack>
         )}
+
+        <Group justify="flex-end" mt="xs">
+          <Button variant="subtle" onClick={handleClose} disabled={saving}>
+            Cancel
+          </Button>
+          <Button
+            radius="xl"
+            variant="gradient"
+            loading={saving}
+            disabled={loading || !isDirty}
+            onClick={handleSave}
+          >
+            Save
+          </Button>
+        </Group>
       </Stack>
     </Modal>
   );
