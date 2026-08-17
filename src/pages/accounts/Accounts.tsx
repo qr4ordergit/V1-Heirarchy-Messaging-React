@@ -14,6 +14,7 @@ import {
   Menu,
   Modal,
   PasswordInput,
+  PinInput,
   SegmentedControl,
   Stack,
   Text,
@@ -40,6 +41,7 @@ import {
 import {
   fetchAccounts,
   createAccount,
+  verifySubUserOtp,
   deleteAccount,
   changePassword,
   updateUserLock,
@@ -104,9 +106,11 @@ const statusColor = (status: string | null) => {
 };
 
 export default function Accounts() {
+  // const { suggestUsername, logout } = useAuthApi();
   const navigate = useNavigate();
   const clearTokens = useAuthStore((state) => state.clearTokens);
   const setTargetUser = useAuthStore((state) => state.setTargetUser);
+  const userDetails = useAuthStore((state) => state.userDetails);
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,6 +121,13 @@ export default function Accounts() {
   const [formErrors, setFormErrors] = useState<NewAccountErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const [accountStep, setAccountStep] = useState<"form" | "verify">("form");
+  const [accountOtp, setAccountOtp] = useState("");
+  const [accountOtpError, setAccountOtpError] = useState<string | null>(null);
+  const [verifyingAccountOtp, setVerifyingAccountOtp] = useState(false);
+  const [resendingAccountOtp, setResendingAccountOtp] = useState(false);
+  const [pendingPhone, setPendingPhone] = useState("");
 
   const [usernameChecking, setUsernameChecking] = useState(false);
   const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
@@ -276,6 +287,11 @@ export default function Accounts() {
     setUsernameSuggestions([]);
 
     setUsernameVerified(false);
+
+    setAccountStep("form");
+    setAccountOtp("");
+    setAccountOtpError(null);
+    setPendingPhone("");
   };
 
   const openLockModal = (account: Account) => {
@@ -303,20 +319,33 @@ export default function Accounts() {
     if (!validate()) return;
     try {
       setSubmitting(true);
-      await createAccount({
+      const trimmedPhone = form.phone.trim();
+      const response = await createAccount({
         identifierType: form.identifierType,
         username: form.username.trim(),
         email: form.email.trim(),
-        phone: form.phone.trim(),
+        phone: trimmedPhone,
         password: form.password,
       });
-      handleClose();
-      await loadAccounts();
-      notifications.show({
-        color: "teal",
-        title: "Account added",
-        message: "The new account was created successfully.",
-      });
+
+      if (form.identifierType === "phone") {
+        setPendingPhone(trimmedPhone);
+        setAccountStep("verify");
+        notifications.show({
+          color: "blue",
+          title: "Verification code sent",
+          message:
+            response.message || "Enter the code sent to the phone number.",
+        });
+      } else {
+        handleClose();
+        await loadAccounts();
+        notifications.show({
+          color: "teal",
+          title: "Account added",
+          message: "The new account was created successfully.",
+        });
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Could not create account.";
@@ -328,6 +357,77 @@ export default function Accounts() {
       });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleVerifyAccountOtp = async () => {
+    setAccountOtpError(null);
+
+    if (accountOtp.length < 6) {
+      setAccountOtpError("Enter the 6-digit code sent to the phone number");
+      return;
+    }
+
+    try {
+      setVerifyingAccountOtp(true);
+      const response = await verifySubUserOtp({
+        email: userDetails?.email ?? "",
+        phone: pendingPhone,
+        otp: accountOtp,
+      });
+
+      if (response.success) {
+        handleClose();
+        await loadAccounts();
+        notifications.show({
+          color: "teal",
+          title: "Account added",
+          message: "The new account was verified and created successfully.",
+        });
+      } else {
+        setAccountOtpError(
+          response.message || "Verification failed. Please try again.",
+        );
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Verification failed. Please try again.";
+      setAccountOtpError(message);
+    } finally {
+      setVerifyingAccountOtp(false);
+    }
+  };
+
+  const handleResendAccountOtp = async () => {
+    setAccountOtpError(null);
+    try {
+      setResendingAccountOtp(true);
+      const response = await createAccount({
+        identifierType: "phone",
+        username: form.username.trim(),
+        email: form.email.trim(),
+        phone: pendingPhone,
+        password: form.password,
+      });
+      setAccountOtp("");
+      notifications.show({
+        color: "blue",
+        title: "Verification code resent",
+        message: response.message || "A new code has been sent.",
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not resend the code.";
+      setAccountOtpError(message);
+      notifications.show({
+        color: "red",
+        title: "Couldn't resend code",
+        message,
+      });
+    } finally {
+      setResendingAccountOtp(false);
     }
   };
 
@@ -534,6 +634,10 @@ export default function Accounts() {
             onChange={(e) => setSearchQuery(e.target.value)}
             radius="xl"
             mb="md"
+            name="account-search"
+            autoComplete="off"
+            data-1p-ignore
+            data-lpignore="true"
           />
         )}
 
@@ -741,126 +845,180 @@ export default function Accounts() {
       <Modal
         opened={modalOpen}
         onClose={handleClose}
-        title="Create Account"
+        title={
+          accountStep === "verify" ? "Verify Phone Number" : "Create Account"
+        }
         centered
         radius="md"
         size="lg"
       >
-        <Stack gap="md">
-          {submitError && (
-            <Alert color="red" title="Couldn't add account">
-              {submitError}
-            </Alert>
-          )}
+        {accountStep === "verify" ? (
+          <Stack gap="md" align="center">
+            {accountOtpError && (
+              <Alert color="red" title="Verification failed" w="100%">
+                {accountOtpError}
+              </Alert>
+            )}
 
-          <div>
-            <Text size="xs" fw={600} tt="uppercase" c="dimmed" mb={6}>
-              Add via
+            <Text c="dimmed" ta="center" size="sm">
+              We sent a code to <strong>{pendingPhone}</strong>
             </Text>
-            <SegmentedControl
-              fullWidth
-              value={form.identifierType}
-              onChange={handleIdentifierChange}
-              data={[
-                { label: "Username", value: "username" },
-                { label: "Phone", value: "phone" },
-              ]}
-            />
-          </div>
 
-          {form.identifierType === "username" && (
+            <PinInput
+              length={6}
+              value={accountOtp}
+              onChange={setAccountOtp}
+              type="number"
+            />
+
+            <Group justify="flex-end" mt="xs" w="100%">
+              <Button
+                variant="subtle"
+                onClick={() => {
+                  setAccountStep("form");
+                  setAccountOtp("");
+                  setAccountOtpError(null);
+                }}
+              >
+                Back
+              </Button>
+              <Button
+                variant="subtle"
+                loading={resendingAccountOtp}
+                onClick={handleResendAccountOtp}
+              >
+                Resend Code
+              </Button>
+              <Button
+                radius="xl"
+                variant="gradient"
+                loading={verifyingAccountOtp}
+                onClick={handleVerifyAccountOtp}
+              >
+                Verify & Add Account
+              </Button>
+            </Group>
+          </Stack>
+        ) : (
+          <Stack gap="md">
+            {submitError && (
+              <Alert color="red" title="Couldn't add account">
+                {submitError}
+              </Alert>
+            )}
+
             <div>
-              <TextInput
-                label="Username"
-                classNames={{ label: classes.fieldLabel }}
-                placeholder="Enter username"
-                value={form.username}
-                onChange={(e) => handleUsernameChange(e.target.value)}
-                error={formErrors.username}
-                rightSection={
-                  usernameChecking ? (
-                    <Loader size={14} />
-                  ) : (
-                    <Button
-                      size="xs"
-                      variant="subtle"
-                      disabled={wandDisabled}
-                      onClick={() =>
-                        fetchUsernameSuggestionsOnce(form.username)
-                      }
-                    >
-                      Verify
-                    </Button>
-                  )
-                }
-                rightSectionWidth={70}
+              <Text size="xs" fw={600} tt="uppercase" c="dimmed" mb={6}>
+                Add via
+              </Text>
+              <SegmentedControl
+                fullWidth
+                value={form.identifierType}
+                onChange={handleIdentifierChange}
+                data={[
+                  { label: "Username", value: "username" },
+                  { label: "Phone", value: "phone" },
+                ]}
               />
-
-              {usernameSuggestions.length > 0 && (
-                <Stack gap={4} mt={6}>
-                  {usernameSuggestions && (
-                    <Text size="xs" c="dimmed">
-                      {"Choose one of the suggested usernames below"}
-                    </Text>
-                  )}
-                  <Group gap={6}>
-                    {usernameSuggestions.map((suggestion) => (
-                      <Button
-                        key={suggestion}
-                        size="compact-xs"
-                        variant={
-                          form.username === suggestion.replace(/[#\s-]/g, "") &&
-                          usernameVerified
-                            ? "filled"
-                            : "light"
-                        }
-                        radius="xl"
-                        onClick={() => handleSelectSuggestion(suggestion)}
-                      >
-                        {suggestion}
-                      </Button>
-                    ))}
-                  </Group>
-                </Stack>
-              )}
             </div>
-          )}
 
-          {form.identifierType === "phone" && (
-            <TextInput
-              label="Phone Number"
+            {form.identifierType === "username" && (
+              <div>
+                <TextInput
+                  label="Username"
+                  classNames={{ label: classes.fieldLabel }}
+                  placeholder="Enter username"
+                  value={form.username}
+                  onChange={(e) => handleUsernameChange(e.target.value)}
+                  error={formErrors.username}
+                  rightSection={
+                    usernameChecking ? (
+                      <Loader size={14} />
+                    ) : (
+                      <Button
+                        size="xs"
+                        variant="subtle"
+                        disabled={wandDisabled}
+                        onClick={() =>
+                          fetchUsernameSuggestionsOnce(form.username)
+                        }
+                      >
+                        Verify
+                      </Button>
+                    )
+                  }
+                  rightSectionWidth={70}
+                />
+
+                {usernameSuggestions.length > 0 && (
+                  <Stack gap={4} mt={6}>
+                    {usernameSuggestions && (
+                      <Text size="xs" c="dimmed">
+                        {"Choose one of the suggested usernames below"}
+                      </Text>
+                    )}
+                    <Group gap={6}>
+                      {usernameSuggestions.map((suggestion) => (
+                        <Button
+                          key={suggestion}
+                          size="compact-xs"
+                          variant={
+                            form.username ===
+                              suggestion.replace(/[#\s-]/g, "") &&
+                            usernameVerified
+                              ? "filled"
+                              : "light"
+                          }
+                          radius="xl"
+                          onClick={() => handleSelectSuggestion(suggestion)}
+                        >
+                          {suggestion}
+                        </Button>
+                      ))}
+                    </Group>
+                  </Stack>
+                )}
+              </div>
+            )}
+
+            {form.identifierType === "phone" && (
+              <TextInput
+                label="Phone Number"
+                classNames={{ label: classes.fieldLabel }}
+                placeholder="Enter phone number"
+                value={form.phone}
+                onChange={(e) => setField("phone")(e.target.value)}
+                error={formErrors.phone}
+              />
+            )}
+
+            <PasswordInput
+              label="Password"
               classNames={{ label: classes.fieldLabel }}
-              placeholder="Enter phone number"
-              value={form.phone}
-              onChange={(e) => setField("phone")(e.target.value)}
-              error={formErrors.phone}
+              placeholder="Enter password"
+              value={form.password}
+              onChange={(e) => setField("password")(e.target.value)}
+              error={formErrors.password}
             />
-          )}
 
-          <PasswordInput
-            label="Password"
-            classNames={{ label: classes.fieldLabel }}
-            placeholder="Enter password"
-            value={form.password}
-            onChange={(e) => setField("password")(e.target.value)}
-            error={formErrors.password}
-          />
-
-          <Group justify="flex-end" mt="xs">
-            <Button variant="subtle" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button
-              radius="xl"
-              variant="gradient"
-              loading={submitting}
-              disabled={form.identifierType === "username" && !usernameVerified}
-              onClick={handleSubmit}
-            >
-              Add Account
-            </Button>
-          </Group>
-        </Stack>
+            <Group justify="flex-end" mt="xs">
+              <Button variant="subtle" onClick={handleClose}>
+                Cancel
+              </Button>
+              <Button
+                radius="xl"
+                variant="gradient"
+                loading={submitting}
+                disabled={
+                  form.identifierType === "username" && !usernameVerified
+                }
+                onClick={handleSubmit}
+              >
+                Add Account
+              </Button>
+            </Group>
+          </Stack>
+        )}
       </Modal>
 
       <Modal
@@ -936,6 +1094,10 @@ export default function Accounts() {
             placeholder="Enter new password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
+            name="new-account-password"
+            autoComplete="new-password"
+            data-1p-ignore
+            data-lpignore="true"
           />
           <PasswordInput
             label="Confirm New Password"
@@ -943,6 +1105,10 @@ export default function Accounts() {
             placeholder="Confirm new password"
             value={confirmNewPassword}
             onChange={(e) => setConfirmNewPassword(e.target.value)}
+            name="confirm-new-account-password"
+            autoComplete="new-password"
+            data-1p-ignore
+            data-lpignore="true"
           />
 
           <Group justify="flex-end" mt="xs">
@@ -1015,6 +1181,10 @@ export default function Accounts() {
                   ? "A passkey is already set. Click to enter a new one, or leave as-is to keep it."
                   : "Letters and numbers only, 4–12 characters."
               }
+              name="account-passkey"
+              autoComplete="new-password"
+              data-1p-ignore
+              data-lpignore="true"
             />
           )}
 

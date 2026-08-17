@@ -27,6 +27,18 @@ export interface CreateAccountPayload {
 export interface CreateAccountResponse {
   message: string;
   id?: string;
+  delivery_medium?: string;
+}
+
+export interface VerifySubUserOtpPayload {
+  email: string;
+  phone: string;
+  otp: string;
+}
+
+export interface VerifySubUserOtpResponse {
+  success: boolean;
+  message: string;
 }
 
 export interface DeleteAccountResponse {
@@ -97,7 +109,7 @@ export async function createAccount(
   if (payload.identifierType === "username") {
     body.username = payload.username;
   } else if (payload.identifierType === "phone") {
-    body.phone = payload.phone;
+    body.phone_number = payload.phone;
   }
 
   if (payload.identifierType === "email") {
@@ -123,6 +135,31 @@ export async function createAccount(
   }
 
   return data as CreateAccountResponse;
+}
+
+export async function verifySubUserOtp(
+  payload: VerifySubUserOtpPayload,
+): Promise<VerifySubUserOtpResponse> {
+  const response = await fetch(API_ENDPOINTS.AUTH_SUB_USERS, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({
+      operation: "verify",
+      email: payload.email,
+      phone_number: payload.phone,
+      otp: payload.otp,
+    }),
+  });
+
+  const data = await parseJson(response);
+
+  if (!response.ok) {
+    const message =
+      (data as { message?: string } | null)?.message || "Could not verify OTP.";
+    throw new Error(message);
+  }
+
+  return data as VerifySubUserOtpResponse;
 }
 
 export async function deleteAccount(
