@@ -14,6 +14,7 @@ export interface UserDetails {
   token_use: string;
   client_id: string;
   email: string;
+  profile_url?: string;
 }
 
 interface AuthState {

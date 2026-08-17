@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import {
   Avatar,
   Card,
@@ -12,6 +13,7 @@ import {
   IconChevronDown,
   IconChevronRight,
   IconLogout,
+  IconPencil,
   IconSwitch3,
   IconX,
 } from "@tabler/icons-react";
@@ -25,8 +27,11 @@ import { notifications } from "@mantine/notifications";
 const Profile = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const clearTokens = useAuthStore((state) => state.clearTokens);
   const userDetails = useAuthStore((state) => state.userDetails);
+  const setUserDetails = useAuthStore((state) => state.setUserDetails);
   const setTargetUser = useAuthStore((state) => state.setTargetUser);
   const target_user = useAuthStore((state) => state.target_user);
   const token = useAuthStore((state) => state.accessToken);
@@ -34,6 +39,7 @@ const Profile = () => {
   const [switchAccountOpen, setSwitchAccountOpen] = useState(false);
   const [adjacencyList, setAdjacencyList] = useState<string[]>([]);
   const [loadingAccounts, setLoadingAccounts] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const isSubRoute = ["/privacy", "/help", "/about"].includes(
     location.pathname,
@@ -84,6 +90,88 @@ const Profile = () => {
     fetchAdjacencyList();
   }, []);
 
+  const handlePencilClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const patchUrl = withTargetUser(API_ENDPOINTS.USER_HOME);
+      const patchPayload = {
+        display_name: target_user || userDetails?.username || "",
+        profile_picture: file.name,
+      };
+
+      const response = await fetch(patchUrl, {
+        method: "PATCH",
+        headers: getHeaders(),
+        body: JSON.stringify(patchPayload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        notifications.show({
+          title: "",
+          message: data.message || "Failed to initiate profile update.",
+          color: "red",
+          icon: <IconX size={18} />,
+        });
+        return;
+      }
+
+      const presignedUrl = data.profile_picture_upload_url.upload_url;
+
+      if (presignedUrl) {
+        const s3Response = await fetch(presignedUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": file.type || "image/png",
+          },
+          body: file,
+        });
+
+        if (!s3Response.ok) {
+          notifications.show({
+            title: "",
+            message: "Failed to upload image file to storage.",
+            color: "red",
+            icon: <IconX size={18} />,
+          });
+          return;
+        }
+      }
+
+      const localPreviewUrl = URL.createObjectURL(file);
+      if (userDetails) {
+        setUserDetails({
+          ...userDetails,
+          profile_url: localPreviewUrl,
+        });
+      }
+
+      notifications.show({
+        title: "Success",
+        message: data.message || "Profile picture updated successfully.",
+        color: "green",
+      });
+    } catch (error) {
+      notifications.show({
+        title: "",
+        message: `Error uploading profile picture: ${error}`,
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+    } finally {
+      setUploadingImage(false);
+      if (event.target) event.target.value = "";
+    }
+  };
+
   const handleToggleSwitchAccount = () => {
     setSwitchAccountOpen((prev) => !prev);
   };
@@ -128,18 +216,42 @@ const Profile = () => {
 
   return (
     <div className="w-full px-1 h-full">
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept="image/png,image/jpeg,image/jpg"
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
+
       <div className="flex flex-col md:flex-row h-full min-h-[calc(100vh-100px)] overflow-hidden bg-white">
         <div className="w-full md:w-7/12 bg-white flex flex-col justify-between px-4 pt-4 sm:px-6 sm:pt-6 sm:pb-1 relative">
           <Stack gap="md" className="w-full">
             <div className="flex flex-col items-center justify-center pt-2 pb-2 gap-2">
-              <Avatar
-                color="indigo"
-                radius="xl"
-                size={84}
-                className="text-2xl font-bold shadow-sm"
-              >
-                {userInitials}
-              </Avatar>
+              <div className="relative inline-block">
+                <Avatar
+                  src={userDetails?.profile_url || null}
+                  color="indigo"
+                  radius="xl"
+                  size={84}
+                  className="text-2xl font-bold shadow-sm"
+                >
+                  {!userDetails?.profile_url && userInitials}
+                </Avatar>
+
+                <UnstyledButton
+                  onClick={handlePencilClick}
+                  disabled={uploadingImage}
+                  className="absolute top-0 right-0 p-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-md transition-all cursor-pointer border-2 border-white"
+                  title="Upload new profile picture"
+                >
+                  {uploadingImage ? (
+                    <Loader size={12} color="white" />
+                  ) : (
+                    <IconPencil size={14} />
+                  )}
+                </UnstyledButton>
+              </div>
 
               <Text
                 fw={700}
