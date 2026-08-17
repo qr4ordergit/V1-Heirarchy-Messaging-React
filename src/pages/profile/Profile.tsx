@@ -124,7 +124,7 @@ const Profile = () => {
         return;
       }
 
-      const presignedUrl = data.profile_picture_upload_url.upload_url;
+      const presignedUrl = data.profile_picture_upload_url;
 
       if (presignedUrl) {
         const s3Response = await fetch(presignedUrl, {

@@ -8,20 +8,30 @@ import {
   Group,
   Modal,
   MultiSelect,
+  PasswordInput,
   Pill,
   Stack,
   Text,
   TextInput,
   Textarea,
 } from "@mantine/core";
-import { IconUpload, IconUserPlus } from "@tabler/icons-react";
+import { IconLock, IconUpload, IconUserPlus, IconX } from "@tabler/icons-react";
 import type { Contact, GroupItem } from "./Contact";
+import { useAuthStore } from "../../store/auth/auth.store";
+import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
+import { notifications } from "@mantine/notifications";
 
 interface CreateGroupModalProps {
   opened: boolean;
   onClose: () => void;
   selectedContacts: Contact[];
-  initialGroup?: GroupItem | null;
+  initialGroup?:
+    | (GroupItem & {
+        allow_encryption?: boolean;
+        encryption_password?: string;
+        allow_auto_decryption?: boolean;
+      })
+    | null;
   onSaveGroup: (
     payload: {
       group_name: string;
@@ -31,6 +41,9 @@ interface CreateGroupModalProps {
       group_image: string;
       group_image_file: File | null;
       only_admins_can_message: boolean;
+      allow_encryption: boolean;
+      encryption_password?: string;
+      allow_auto_decryption: boolean;
     },
     isEdit: boolean,
   ) => Promise<void>;
@@ -51,6 +64,17 @@ const CreateGroupModal = ({
   const [admins, setAdmins] = useState<string[]>([]);
   const [groupImage, setGroupImage] = useState<File | null>(null);
   const [onlyAdminsCanMessage, setOnlyAdminsCanMessage] = useState(false);
+  const [allowEncryption, setAllowEncryption] = useState(false);
+  const [encryptionPassword, setEncryptionPassword] = useState("");
+  const [allowAutoDecryption, setAllowAutoDecryption] = useState(false);
+  const [updatingMembers, setUpdatingMembers] = useState(false);
+
+  const token = useAuthStore((state) => state.accessToken);
+
+  const getHeaders = (): Record<string, string> => ({
+    Authorization: token ?? "",
+    "Content-Type": "application/json",
+  });
 
   const getUserId = (c: Contact) =>
     c.username || (c.id.includes("#") ? c.id.split("#")[1] : c.id);
@@ -61,6 +85,9 @@ const CreateGroupModal = ({
         setGroupName(initialGroup.group_name || "");
         setDescription(initialGroup.group_description || "");
         setOnlyAdminsCanMessage(initialGroup.only_admins_can_message || false);
+        setAllowEncryption(initialGroup.allow_encryption || false);
+        setEncryptionPassword(initialGroup.encryption_password || "");
+        setAllowAutoDecryption(initialGroup.allow_auto_decryption || false);
         setAdmins(initialGroup.admins || []);
         setGroupImage(null);
 
@@ -81,51 +108,141 @@ const CreateGroupModal = ({
         );
         setMembers(mappedMembers);
       } else {
-        // Create Mode: set members ONLY to selected contacts passed from parent
         setMembers(selectedContacts);
         setGroupName("");
         setDescription("");
         setGroupImage(null);
         setOnlyAdminsCanMessage(false);
+        setAllowEncryption(false);
+        setEncryptionPassword("");
+        setAllowAutoDecryption(false);
         setAdmins([]);
       }
     }
   }, [opened, initialGroup, selectedContacts]);
 
-  const handleRemoveMember = (memberId: string) => {
+  const callManageMembersApi = async (
+    targetUserIds: string[],
+    operation: "add-members" | "remove-members",
+  ): Promise<boolean> => {
+    if (!initialGroup) return true;
+
+    try {
+      const payload = {
+        group_id: initialGroup._id,
+        new_members: targetUserIds,
+        operation,
+      };
+
+      const response = await fetch(
+        withTargetUser(API_ENDPOINTS.MANAGE_MEMBERS),
+        {
+          method: "POST",
+          headers: getHeaders(),
+          body: JSON.stringify(payload),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || data.success === false) {
+        notifications.show({
+          title: "",
+          message: data.message || "Something went wrong.",
+          color: "red",
+          icon: <IconX size={18} />,
+        });
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      notifications.show({
+        title: "",
+        message: `Failed to update members: ${error}`,
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+      return false;
+    }
+  };
+
+  const handleRemoveMember = async (memberId: string) => {
     const memberToRemove = members.find((m) => m.id === memberId);
     if (!memberToRemove) return;
 
     const removedUserId = getUserId(memberToRemove);
+
+    if (initialGroup) {
+      setUpdatingMembers(true);
+      const success = await callManageMembersApi(
+        [removedUserId],
+        "remove-members",
+      );
+      setUpdatingMembers(false);
+      if (!success) return;
+    }
+
     const updatedMembers = members.filter((m) => m.id !== memberId);
     setMembers(updatedMembers);
-
     setAdmins((prev) => prev.filter((a) => a !== removedUserId));
   };
 
-  const handleAddNewMembers = (selectedUserIds: string[]) => {
+  const handleAddNewMembers = async (selectedUserIds: string[]) => {
     const newlyAddedContacts: Contact[] = [];
+    const validSelectedUserIds: string[] = [];
 
     selectedUserIds.forEach((userId) => {
       const contactObj = selectedContacts.find((c) => getUserId(c) === userId);
       if (contactObj && !members.some((m) => getUserId(m) === userId)) {
         newlyAddedContacts.push(contactObj);
+        validSelectedUserIds.push(userId);
       }
     });
 
-    if (newlyAddedContacts.length > 0) {
-      setMembers((prev) => [...prev, ...newlyAddedContacts]);
+    if (newlyAddedContacts.length === 0) return;
+
+    if (initialGroup) {
+      setUpdatingMembers(true);
+      const success = await callManageMembersApi(
+        validSelectedUserIds,
+        "add-members",
+      );
+      setUpdatingMembers(false);
+      if (!success) return;
     }
+
+    setMembers((prev) => [...prev, ...newlyAddedContacts]);
   };
 
   const handleSubmit = async () => {
     if (!groupName.trim()) {
-      alert("Please enter a group name.");
+      notifications.show({
+        title: "",
+        message: "Please enter a group name.",
+        color: "red",
+        icon: <IconX size={18} />,
+      });
       return;
     }
 
     if (members.length === 0) {
-      alert("At least one member is required.");
+      notifications.show({
+        title: "",
+        message: "At least one member is required.",
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+      return;
+    }
+
+    if (allowEncryption && !encryptionPassword.trim()) {
+      notifications.show({
+        title: "",
+        message: "Please enter an encryption password.",
+        color: "red",
+        icon: <IconX size={18} />,
+      });
       return;
     }
 
@@ -141,6 +258,11 @@ const CreateGroupModal = ({
         : initialGroup?.group_image || "",
       group_image_file: groupImage,
       only_admins_can_message: onlyAdminsCanMessage,
+      allow_encryption: allowEncryption,
+      ...(allowEncryption && {
+        encryption_password: encryptionPassword.trim(),
+      }),
+      allow_auto_decryption: allowEncryption ? allowAutoDecryption : false,
     };
 
     await onSaveGroup(payload, Boolean(initialGroup));
@@ -240,6 +362,7 @@ const CreateGroupModal = ({
                       onRemove={() => handleRemoveMember(member.id)}
                       size="sm"
                       color="indigo"
+                      disabled={updatingMembers}
                     >
                       <Group gap={4} wrap="nowrap">
                         <Avatar color={member.color} radius="xl" size={16}>
@@ -267,6 +390,7 @@ const CreateGroupModal = ({
                 data={availableContactsToAdd}
                 value={[]}
                 onChange={handleAddNewMembers}
+                disabled={updatingMembers}
                 leftSection={<IconUserPlus size={16} />}
                 searchable={false}
                 comboboxProps={{
@@ -294,6 +418,45 @@ const CreateGroupModal = ({
               checked={onlyAdminsCanMessage}
               onChange={(e) => setOnlyAdminsCanMessage(e.currentTarget.checked)}
             />
+
+            <Checkbox
+              label="Allow Encryption"
+              size="xs"
+              checked={allowEncryption}
+              onChange={(e) => {
+                const checked = e.currentTarget.checked;
+                setAllowEncryption(checked);
+                if (!checked) {
+                  setEncryptionPassword("");
+                  setAllowAutoDecryption(false);
+                }
+              }}
+            />
+
+            {allowEncryption && (
+              <Stack gap="xs" pl="sm" className="border-l-2 border-indigo-200">
+                <PasswordInput
+                  label="Encryption Password"
+                  placeholder="Enter group encryption password"
+                  required
+                  size="sm"
+                  leftSection={<IconLock size={16} />}
+                  value={encryptionPassword}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setEncryptionPassword(e.target.value)
+                  }
+                />
+
+                <Checkbox
+                  label="Allow Auto Decryption"
+                  size="xs"
+                  checked={allowAutoDecryption}
+                  onChange={(e) =>
+                    setAllowAutoDecryption(e.currentTarget.checked)
+                  }
+                />
+              </Stack>
+            )}
           </Stack>
         </div>
 
@@ -302,7 +465,7 @@ const CreateGroupModal = ({
             fullWidth
             color="indigo"
             size="sm"
-            loading={loading}
+            loading={loading || updatingMembers}
             onClick={handleSubmit}
           >
             {initialGroup ? "Update Group" : "Create Group"}
