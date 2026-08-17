@@ -48,7 +48,7 @@ import { ROUTES } from "../../router/routes";
 import Avatar from "../../component/avatar/Avatar";
 import PermissionsModal from "../../component/permissions/PermissionsModal";
 import ManageSubUsersModal from "../../component/manageSubUsers/ManageSubUsersModal";
-import { hashPasskey } from "../../utils/hashPasskey";
+import { encryptPasskey, decryptPasskey } from "../../utils/passkeyCipher";
 import classes from "./Accounts.module.css";
 import { ClearStore } from "../../store/clear.store";
 
@@ -78,7 +78,6 @@ interface NewAccountErrors {
 }
 
 const PASSKEY_PATTERN = /^[a-zA-Z0-9]{4,12}$/;
-const PASSKEY_PLACEHOLDER = "••••••••";
 
 const getDisplayName = (account: Account) =>
   account.display_name?.trim() ||
@@ -260,9 +259,10 @@ export default function Accounts() {
     setLockTarget(account);
     setLockEnabled(account.isLocked);
 
-    const hasExistingPasskey = Boolean(account.passkey_hash);
-    setPasskey(hasExistingPasskey ? PASSKEY_PLACEHOLDER : "");
-    setPasskeyPrefilled(hasExistingPasskey);
+    const existingPlaintext = account.passkey_hash
+      ? decryptPasskey(account.passkey_hash, account.user_id)
+      : "";
+    setPasskey(existingPlaintext);
 
     setLockError(null);
   };
@@ -406,63 +406,35 @@ export default function Accounts() {
 
   const handleSaveLock = async () => {
     if (!lockTarget) return;
-
     setLockError(null);
 
-    let passkeyHash: string | null = null;
+    let encryptedPasskey = "";
 
     if (lockEnabled) {
-      if (passkeyPrefilled) {
-        passkeyHash = null;
-      } else {
-        const trimmed = passkey.trim();
-
-        if (!trimmed) {
-          setLockError("Enter a passkey to enable locking.");
-          return;
-        }
-        if (!PASSKEY_PATTERN.test(trimmed)) {
-          setLockError("Passkey must be 4–12 letters and/or numbers only.");
-          return;
-        }
-
-        passkeyHash = await hashPasskey(trimmed, lockTarget.user_id);
+      const trimmed = passkey.trim();
+      if (!trimmed) {
+        setLockError("Enter a passkey to enable locking.");
+        return;
       }
-    } else {
-      passkeyHash = "";
+      if (!PASSKEY_PATTERN.test(trimmed)) {
+        setLockError("Passkey must be 4–12 letters and/or numbers only.");
+        return;
+      }
+      encryptedPasskey = encryptPasskey(trimmed, lockTarget.user_id);
     }
 
     setSavingLock(true);
     try {
-      await updateUserLock(
-        lockTarget.user_id,
-        lockEnabled,
-        passkeyHash,
-        lockTarget.passkey_hash,
-      );
+      await updateUserLock(lockTarget.user_id, lockEnabled, encryptedPasskey);
       closeLockModal();
       await loadAccounts();
-      notifications.show({
-        color: "teal",
-        title: lockEnabled ? "Account locked" : "Account unlocked",
-        message: lockEnabled
-          ? "This account now requires a passkey."
-          : "The passkey requirement was removed.",
-      });
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Could not update lock settings.";
+      const message = err instanceof Error ? err.message : "Could not lock.";
       setLockError(message);
-      notifications.show({
-        color: "red",
-        title: "Couldn't update lock",
-        message,
-      });
     } finally {
       setSavingLock(false);
     }
   };
-
   useEffect(() => {
     loadAccounts();
   }, []);
@@ -920,32 +892,32 @@ export default function Accounts() {
             />
           </Group>
 
-          {/* {lockEnabled && ( */}
-          <PasswordInput
-            label="Passkey"
-            classNames={{ label: classes.fieldLabel }}
-            placeholder="4-12 letters or numbers"
-            value={passkey}
-            onChange={(e) => {
-              const sanitized = e.target.value
-                .replace(/[^a-zA-Z0-9]/g, "")
-                .slice(0, 12);
-              setPasskey(sanitized);
-              setPasskeyPrefilled(false);
-            }}
-            onFocus={() => {
-              if (passkeyPrefilled) {
-                setPasskey("");
+          {lockEnabled && (
+            <PasswordInput
+              label="Passkey"
+              classNames={{ label: classes.fieldLabel }}
+              placeholder="4-12 letters or numbers"
+              value={passkey}
+              onChange={(e) => {
+                const sanitized = e.target.value
+                  .replace(/[^a-zA-Z0-9]/g, "")
+                  .slice(0, 12);
+                setPasskey(sanitized);
                 setPasskeyPrefilled(false);
+              }}
+              onFocus={() => {
+                if (passkeyPrefilled) {
+                  setPasskey("");
+                  setPasskeyPrefilled(false);
+                }
+              }}
+              description={
+                passkeyPrefilled
+                  ? "A passkey is already set. Click to enter a new one, or leave as-is to keep it."
+                  : "Letters and numbers only, 4–12 characters."
               }
-            }}
-            description={
-              passkeyPrefilled
-                ? "A passkey is already set. Click to enter a new one, or leave as-is to keep it."
-                : "Letters and numbers only, 4–12 characters."
-            }
-          />
-          {/* )} */}
+            />
+          )}
 
           <Group justify="flex-end" mt="xs">
             <Button variant="subtle" onClick={closeLockModal}>

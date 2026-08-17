@@ -82,5 +82,8 @@ export const TRIGGERS = {
   editChatDialog: "editChatDialog",
   reply: "reply",
   refreshChat: "refresh_chat",
-  previewMedia: "preview_media"
-}
+  previewMedia: "preview_media",
+};
+
+export const CIPHER_SECRET =
+  "a3f9c81e2d4b7f60918c5e3a2b7d4f9c1e6a8b3d5f2c9e4a7b1d8f3c6e9a2b5d";
