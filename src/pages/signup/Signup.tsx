@@ -12,7 +12,7 @@ import {
   Title,
 } from "@mantine/core";
 
-import { useAuthApi } from "../../api/authApi";
+import { signup, verifyOtp } from "../../api/authApi";
 import { COGNITO_LOGIN_URL } from "../../config/cognito";
 import HubOrbit from "../../component/hubOrbit/HubOrbit";
 import classes from "./Signup.module.css";
@@ -34,7 +34,6 @@ interface SignupFormErrors {
 type Step = "signup" | "verify";
 
 export default function Signup() {
-  const { signup, verifyOtp } = useAuthApi();
   const [step, setStep] = useState<Step>("signup");
   const [values, setValues] = useState<SignupFormValues>({
     email: "",

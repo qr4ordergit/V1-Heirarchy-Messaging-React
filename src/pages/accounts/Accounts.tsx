@@ -45,6 +45,7 @@ import {
   updateUserLock,
   type Account,
 } from "../../api/accountApi";
+import { suggestUsername, logout } from "../../api/authApi";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { ROUTES } from "../../router/routes";
 import Avatar from "../../component/avatar/Avatar";
@@ -53,7 +54,6 @@ import ManageSubUsersModal from "../../component/manageSubUsers/ManageSubUsersMo
 import { encryptPasskey, decryptPasskey } from "../../utils/passkeyCipher";
 import classes from "./Accounts.module.css";
 import { ClearStore } from "../../store/clear.store";
-import { useAuthApi } from "../../api/authApi";
 
 type IdentifierType = "username" | "email" | "phone";
 
@@ -104,7 +104,6 @@ const statusColor = (status: string | null) => {
 };
 
 export default function Accounts() {
-  const { suggestUsername, logout } = useAuthApi();
   const navigate = useNavigate();
   const clearTokens = useAuthStore((state) => state.clearTokens);
   const setTargetUser = useAuthStore((state) => state.setTargetUser);
