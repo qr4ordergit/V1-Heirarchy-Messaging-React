@@ -1,5 +1,6 @@
 import { API_ENDPOINTS } from "../utils/constant";
-import { useAuthStore } from "../store/auth/auth.store";
+import { useApiHandler } from "../hooks/useApiHandler";
+
 export interface SignupPayload {
   email: string;
   password: string;
@@ -31,84 +32,48 @@ export interface LogoutResponse {
   message: string;
 }
 
-async function parseJson(response: Response): Promise<unknown> {
-  try {
-    return await response.json();
-  } catch {
-    return null;
-  }
-}
+export function useAuthApi() {
+  const api = useApiHandler();
 
-async function postAuth<TResponse>(
-  body: Record<string, unknown>,
-): Promise<TResponse> {
-  const response = await fetch(API_ENDPOINTS.AUTH, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  const signup = async (payload: SignupPayload): Promise<SignupResponse> => {
+    const res = await api({
+      method: "post",
+      url: API_ENDPOINTS.AUTH,
+      data: { operation: "signup", ...payload },
+    });
+    return res.data as SignupResponse;
+  };
 
-  const data = await parseJson(response);
+  const verifyOtp = async (
+    payload: VerifyOtpPayload,
+  ): Promise<VerifyOtpResponse> => {
+    const res = await api({
+      method: "post",
+      url: API_ENDPOINTS.AUTH,
+      data: { operation: "verify", ...payload },
+    });
+    return res.data as VerifyOtpResponse;
+  };
 
-  if (!response.ok) {
-    const errorBody = data as { message?: string; error?: string } | null;
-    const message =
-      errorBody?.message ||
-      errorBody?.error ||
-      "Something went wrong. Please try again.";
-    throw new Error(message);
-  }
+  const suggestUsername = async (
+    username: string,
+  ): Promise<UsernameSuggestResponse> => {
+    const res = await api({
+      method: "post",
+      url: API_ENDPOINTS.AUTH_USERNAME_SUGGEST,
+      data: { username },
+    });
+    return res.data as UsernameSuggestResponse;
+  };
 
-  return data as TResponse;
-}
+  const logout = async (): Promise<LogoutResponse> => {
+    const res = await api({
+      method: "post",
+      url: API_ENDPOINTS.AUTH_LOGOUT,
+      showToast: false,
+    });
+    return res.data as LogoutResponse;
+  };
 
-export function signup(payload: SignupPayload) {
-  return postAuth<SignupResponse>({ operation: "signup", ...payload });
-}
-
-export function verifyOtp(payload: VerifyOtpPayload) {
-  return postAuth<VerifyOtpResponse>({ operation: "verify", ...payload });
-}
-
-export async function suggestUsername(
-  username: string,
-): Promise<UsernameSuggestResponse> {
-  const response = await fetch(API_ENDPOINTS.AUTH_USERNAME_SUGGEST, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username }),
-  });
-
-  const data = await parseJson(response);
-
-  if (!response.ok) {
-    const message =
-      (data as { message?: string } | null)?.message ||
-      "Could not check username.";
-    throw new Error(message);
-  }
-
-  return data as UsernameSuggestResponse;
-}
-export async function logout(): Promise<LogoutResponse> {
-  const { accessToken } = useAuthStore.getState();
-
-  const response = await fetch(API_ENDPOINTS.AUTH_LOGOUT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-    },
-  });
-
-  const data = await parseJson(response);
-
-  if (!response.ok) {
-    const message =
-      (data as { message?: string } | null)?.message ||
-      "Could not log out. Please try again.";
-    throw new Error(message);
-  }
-
-  return data as LogoutResponse;
+  return { signup, verifyOtp, suggestUsername, logout };
 }
