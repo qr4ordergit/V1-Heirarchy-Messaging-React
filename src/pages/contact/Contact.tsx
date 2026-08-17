@@ -31,6 +31,7 @@ import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
 import { notifications } from "@mantine/notifications";
+import { encryptPasskey } from "../../utils/passkeyCipher";
 
 export interface Contact {
   id: string;
@@ -429,7 +430,7 @@ const Contact = () => {
   const handleDelete = async (contact: Contact) => {
     const contactUserId = contact.username || contact.id.split("#")[1];
 
-    if (!target_user || !userDetails?.username || !contactUserId) {
+    if (!contactUserId) {
       notifications.show({
         title: "",
         message: "User details or contact user ID missing.",
@@ -590,7 +591,10 @@ const Contact = () => {
         };
 
         if (passNeeded && values.passKey?.trim()) {
-          payload.pass = values.passKey.trim();
+          payload.pass = await encryptPasskey(
+            values.passKey.trim(),
+            contactUserId,
+          );
         }
 
         const response = await fetch(withTargetUser(API_ENDPOINTS.CONTACTS), {
