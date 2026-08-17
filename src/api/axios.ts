@@ -27,10 +27,10 @@ api.interceptors.response.use(
   (response) => response,
 
   (error) => {
-    if (error.response?.status === 401) {
-      useAuthStore.getState().clearTokens();
-      ClearStore();
-    }
+    // if (error.response?.status === 401) {
+    //   useAuthStore.getState().clearTokens();
+    //   ClearStore();
+    // }
 
     return Promise.reject(error);
   },

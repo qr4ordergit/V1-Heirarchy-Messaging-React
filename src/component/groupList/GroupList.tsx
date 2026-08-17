@@ -44,6 +44,7 @@ const GroupList = () => {
   };
 
   const handleClickLeave = (id: string, group_name: string) => {
+    setLeaveOpened(true)
     setSelectedGroup({ group_id: id, group_name: group_name });
   };
 

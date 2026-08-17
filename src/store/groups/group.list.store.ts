@@ -7,6 +7,7 @@ export interface Groups {
   only_admins_can_message : boolean;
   unread_count: number;
   last_message:string
+  admins:string[]
 }
 
 interface GroupListState {
