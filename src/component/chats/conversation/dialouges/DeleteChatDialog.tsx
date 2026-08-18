@@ -47,7 +47,7 @@ function DeleteChatDialog() {
         return Notification.error("Unable to delete chat");
       }
 
-      popChat(triggerPayload._id);
+      popChat(triggerPayload?._id ?? "");
 
       Notification.success("Chat deleted successfully");
       resetTrigger();
