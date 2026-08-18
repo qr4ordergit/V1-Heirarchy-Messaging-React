@@ -228,40 +228,22 @@ const Contact = () => {
       group_image: string;
       group_image_file: File | null;
       only_admins_can_message: boolean;
-      allow_encryption: boolean;
-      encryption_password?: string;
-      allow_auto_decryption: boolean;
     },
     isEdit: boolean,
   ) => {
     setCreatingGroupLoading(true);
 
-    const { group_image_file, encryption_password, ...apiPayload } = payload;
+    const { group_image_file, ...apiPayload } = payload;
 
     try {
       const endpoint = withTargetUser(API_ENDPOINTS.CREATE_GROUP);
+
       const method = isEdit ? "PUT" : "POST";
 
-      const encryptionKeyTarget =
+      const finalBody =
         isEdit && selectedGroup
-          ? selectedGroup._id
-          : target_user || userDetails?.username || apiPayload.group_name;
-
-      let processedEncryptedPassword = "";
-      if (payload.allow_encryption && encryption_password?.trim()) {
-        processedEncryptedPassword = await encryptPasskey(
-          encryption_password.trim(),
-          encryptionKeyTarget,
-        );
-      }
-
-      const finalBody = {
-        ...apiPayload,
-        ...(isEdit && selectedGroup ? { group_id: selectedGroup._id } : {}),
-        ...(payload.allow_encryption && processedEncryptedPassword
-          ? { encryption_password: processedEncryptedPassword }
-          : {}),
-      };
+          ? { ...apiPayload, group_id: selectedGroup._id }
+          : apiPayload;
 
       const response = await fetch(endpoint, {
         method,

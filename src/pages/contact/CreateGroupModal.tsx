@@ -8,14 +8,13 @@ import {
   Group,
   Modal,
   MultiSelect,
-  PasswordInput,
   Pill,
   Stack,
   Text,
   TextInput,
   Textarea,
 } from "@mantine/core";
-import { IconLock, IconUpload, IconUserPlus, IconX } from "@tabler/icons-react";
+import { IconUpload, IconUserPlus, IconX } from "@tabler/icons-react";
 import type { Contact, GroupItem } from "./Contact";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
@@ -25,13 +24,7 @@ interface CreateGroupModalProps {
   opened: boolean;
   onClose: () => void;
   selectedContacts: Contact[];
-  initialGroup?:
-    | (GroupItem & {
-        allow_encryption?: boolean;
-        encryption_password?: string;
-        allow_auto_decryption?: boolean;
-      })
-    | null;
+  initialGroup?: GroupItem | null;
   onSaveGroup: (
     payload: {
       group_name: string;
@@ -41,9 +34,6 @@ interface CreateGroupModalProps {
       group_image: string;
       group_image_file: File | null;
       only_admins_can_message: boolean;
-      allow_encryption: boolean;
-      encryption_password?: string;
-      allow_auto_decryption: boolean;
     },
     isEdit: boolean,
   ) => Promise<void>;
@@ -64,9 +54,6 @@ const CreateGroupModal = ({
   const [admins, setAdmins] = useState<string[]>([]);
   const [groupImage, setGroupImage] = useState<File | null>(null);
   const [onlyAdminsCanMessage, setOnlyAdminsCanMessage] = useState(false);
-  const [allowEncryption, setAllowEncryption] = useState(false);
-  const [encryptionPassword, setEncryptionPassword] = useState("");
-  const [allowAutoDecryption, setAllowAutoDecryption] = useState(false);
   const [updatingMembers, setUpdatingMembers] = useState(false);
 
   const token = useAuthStore((state) => state.accessToken);
@@ -85,9 +72,6 @@ const CreateGroupModal = ({
         setGroupName(initialGroup.group_name || "");
         setDescription(initialGroup.group_description || "");
         setOnlyAdminsCanMessage(initialGroup.only_admins_can_message || false);
-        setAllowEncryption(initialGroup.allow_encryption || false);
-        setEncryptionPassword(initialGroup.encryption_password || "");
-        setAllowAutoDecryption(initialGroup.allow_auto_decryption || false);
         setAdmins(initialGroup.admins || []);
         setGroupImage(null);
 
@@ -113,9 +97,6 @@ const CreateGroupModal = ({
         setDescription("");
         setGroupImage(null);
         setOnlyAdminsCanMessage(false);
-        setAllowEncryption(false);
-        setEncryptionPassword("");
-        setAllowAutoDecryption(false);
         setAdmins([]);
       }
     }
@@ -236,16 +217,6 @@ const CreateGroupModal = ({
       return;
     }
 
-    if (allowEncryption && !encryptionPassword.trim()) {
-      notifications.show({
-        title: "",
-        message: "Please enter an encryption password.",
-        color: "red",
-        icon: <IconX size={18} />,
-      });
-      return;
-    }
-
     const memberIds = members.map((m) => getUserId(m));
 
     const payload = {
@@ -258,11 +229,6 @@ const CreateGroupModal = ({
         : initialGroup?.group_image || "",
       group_image_file: groupImage,
       only_admins_can_message: onlyAdminsCanMessage,
-      allow_encryption: allowEncryption,
-      ...(allowEncryption && {
-        encryption_password: encryptionPassword.trim(),
-      }),
-      allow_auto_decryption: allowEncryption ? allowAutoDecryption : false,
     };
 
     await onSaveGroup(payload, Boolean(initialGroup));
@@ -418,45 +384,6 @@ const CreateGroupModal = ({
               checked={onlyAdminsCanMessage}
               onChange={(e) => setOnlyAdminsCanMessage(e.currentTarget.checked)}
             />
-
-            <Checkbox
-              label="Allow Encryption"
-              size="xs"
-              checked={allowEncryption}
-              onChange={(e) => {
-                const checked = e.currentTarget.checked;
-                setAllowEncryption(checked);
-                if (!checked) {
-                  setEncryptionPassword("");
-                  setAllowAutoDecryption(false);
-                }
-              }}
-            />
-
-            {allowEncryption && (
-              <Stack gap="xs" pl="sm" className="border-l-2 border-indigo-200">
-                <PasswordInput
-                  label="Encryption Password"
-                  placeholder="Enter group encryption password"
-                  required
-                  size="sm"
-                  leftSection={<IconLock size={16} />}
-                  value={encryptionPassword}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setEncryptionPassword(e.target.value)
-                  }
-                />
-
-                <Checkbox
-                  label="Allow Auto Decryption"
-                  size="xs"
-                  checked={allowAutoDecryption}
-                  onChange={(e) =>
-                    setAllowAutoDecryption(e.currentTarget.checked)
-                  }
-                />
-              </Stack>
-            )}
           </Stack>
         </div>
 
