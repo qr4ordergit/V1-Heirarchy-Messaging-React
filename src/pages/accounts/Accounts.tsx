@@ -377,7 +377,7 @@ export default function Accounts() {
         username: pendingUsername,
       });
 
-      if (response.message === "OTP verified successfully") {
+      if (response.success) {
         handleClose();
         await loadAccounts();
         notifications.show({
@@ -617,7 +617,7 @@ export default function Accounts() {
 
         {accounts.length > 0 && (
           <TextInput
-            placeholder="Search accounts by name, email, or ID"
+            placeholder="Search by username"
             leftSection={<IconSearch size={16} />}
             rightSection={
               searchQuery ? (
@@ -695,41 +695,52 @@ export default function Accounts() {
                         name={getInitialsSource(account)}
                         colorIndex={i}
                         size={48}
+                        onClick={() => {
+                          console.log("Avatar clicked:", account.user_id);
+                          setTargetUser(account.user_id);
+                          navigate(`/${ROUTES.CHATS}`);
+                        }}
                       />
 
                       <div style={{ minWidth: 0, flex: 1 }}>
-                        <Text
-                          fw={600}
-                          truncate="end"
-                          className={classes.accountName}
-                          onClick={() => {
-                            setTargetUser(account.user_id);
-                            navigate(`/${ROUTES.CHATS}`);
-                          }}
-                        >
-                          {getDisplayName(account)}
-                        </Text>
+                        <Group gap={6} wrap="nowrap" align="center">
+                          <Text
+                            fw={600}
+                            truncate="end"
+                            className={classes.accountName}
+                            onClick={() => {
+                              setTargetUser(account.user_id);
+                              navigate(`/${ROUTES.CHATS}`);
+                            }}
+                          >
+                            {getDisplayName(account)}
+                          </Text>
+                          <ActionIcon
+                            variant="subtle"
+                            color={account.isLocked ? "dark" : "gray"}
+                            radius="xl"
+                            size="sm"
+                            aria-label={
+                              account.isLocked
+                                ? "Account is locked"
+                                : "Account is unlocked"
+                            }
+                            onClick={() => openLockModal(account)}
+                          >
+                            {account.isLocked ? (
+                              <IconLock size={14} color="red" />
+                            ) : (
+                              <IconLockOpen size={14} />
+                            )}
+                          </ActionIcon>
 
-                        <Group gap={6} mt={4} align="center">
-                          {account.status && (
-                            <Badge
-                              size="sm"
-                              variant="light"
-                              color={statusColor(account.status)}
-                              radius="sm"
-                            >
-                              {account.status}
-                            </Badge>
-                          )}
-
-                          {account.isLocked ? (
+                          {account.isLocked && (
                             <>
                               <Badge
                                 size="sm"
                                 variant="light"
-                                color="dark"
+                                color="red"
                                 radius="sm"
-                                leftSection={<IconLock size={10} />}
                                 onClick={() => openLockModal(account)}
                                 style={{
                                   cursor: "pointer",
@@ -759,20 +770,21 @@ export default function Accounts() {
                                 )}
                               </ActionIcon>
                             </>
-                          ) : (
+                          )}
+                        </Group>
+
+                        {account.status && (
+                          <Group gap={6} mt={4} align="center">
                             <Badge
                               size="sm"
                               variant="light"
-                              color="gray"
+                              color={statusColor(account.status)}
                               radius="sm"
-                              leftSection={<IconLockOpen size={10} />}
-                              onClick={() => openLockModal(account)}
-                              style={{ cursor: "pointer" }}
                             >
-                              Unlocked
+                              {account.status}
                             </Badge>
-                          )}
-                        </Group>
+                          </Group>
+                        )}
                       </div>
                     </Group>
 
@@ -782,18 +794,8 @@ export default function Accounts() {
                         c="dimmed"
                         fw={500}
                         style={{ cursor: "pointer", whiteSpace: "nowrap" }}
-                        onClick={() => setPermissionsUserId(account.user_id)}
                       >
-                        Edit Permissions
-                      </Text>
-                      <Text
-                        size="sm"
-                        c="dimmed"
-                        fw={500}
-                        style={{ cursor: "pointer", whiteSpace: "nowrap" }}
-                        onClick={() => setManageSubUsersTarget(account)}
-                      >
-                        Manage Sub Users
+                        Manage Access & Permissions
                       </Text>
 
                       <Menu
