@@ -35,21 +35,27 @@ function EditChatDialog() {
 
     if (!chatId) return;
 
-    const payload = {
-      user: isGroup ? undefined : nextPerson(chatId),
-      body: { text: message },
-      message_id: triggerPayload?._id,
-    };
+    try {
+      const payload = {
+        user: isGroup ? undefined : nextPerson(chatId),
+        body: { text: message },
+        message_id: triggerPayload?._id,
+      };
 
-    const endpoint = isGroup ? ENDPOINTS.GROUP_CHAT.PUT : ENDPOINTS.CHAT.PUT;
-    const res = await api.put(endpoint, payload);
+      const endpoint = isGroup ? ENDPOINTS.GROUP_CHAT.PUT : ENDPOINTS.CHAT.PUT;
+      const res = await api.put(endpoint, payload);
 
-    if (!res.data?.success) {
-      return Notification.error("Unable to edit chat");
+      if (!res.data?.success) {
+        return Notification.error("Unable to edit chat");
+      }
+
+      alterChat(triggerPayload?._id ?? "", message);
+      resetTrigger();
+    } catch (error) {
+      console.log(error);
+      Notification.error("Something went wrong");
+      resetTrigger();
     }
-
-    alterChat(triggerPayload?._id ?? "", message);
-    resetTrigger();
   };
 
   const dataAssigner = () => {

@@ -5,7 +5,7 @@ export const ENDPOINTS = {
   },
   GROUPS: {
     LIST: "/group/chat-history",
-    LEAVE : "/group/manage-members"
+    LEAVE: "/group/manage-members"
   },
   CHAT: {
     SEND: "/message",
@@ -18,5 +18,9 @@ export const ENDPOINTS = {
     POST: "/groups-message",
     DELETE: "/groups-message",
     PUT: "/groups-message",
+  },
+  TAGS: {
+    POST: "/tags/manage",
+    GET: "/tags/manage"
   }
 } as const;

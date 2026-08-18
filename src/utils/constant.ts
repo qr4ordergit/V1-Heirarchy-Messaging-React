@@ -87,6 +87,9 @@ export const TRIGGERS = {
   reply: "reply",
   refreshChat: "refresh_chat",
   previewMedia: "preview_media",
+  tagList: "tagList",
+  searchByText: "search:text",
+  searchByTag: "search:tag",
 };
 
 export const CIPHER_SECRET =

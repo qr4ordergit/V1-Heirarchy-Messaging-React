@@ -17,7 +17,9 @@ export default function Chatting() {
   const { chatId } = useParams<{ chatId: string }>();
   const nextPerson = useNextPerson();
   const viewport = useRef<HTMLDivElement>(null);
-  const { trigger, resetTrigger } = useTriggerStore((state) => state);
+  const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
+    (state) => state,
+  );
   const navigate = useNavigate();
 
   const [fetchLoader, FetchFn] = useTransition();
@@ -70,6 +72,25 @@ export default function Chatting() {
     }
   };
 
+  const fetchByTags = async () => {
+    try {
+      if (!chatId) return;
+
+      const response = await api.get(
+        `${ENDPOINTS.TAGS.GET}?for=${chatId.includes("group") ? "GROUP" : "DM"}&tag_id=${triggerPayload?.tag}&scope_id=${encodeURIComponent(chatId)}`,
+      );
+
+      if (!response.data?.success) {
+        Notification.error("Something went wrong");
+        return;
+      }
+
+      addChats(response.data?.data?.messages ?? []);
+    } catch (error) {
+      Notification.error("something went wrong");
+    }
+  };
+
   const scrollToMessage = (messageId: string) => {
     const element = viewport.current?.querySelector(
       `[data-message-id="${messageId}"]`,
@@ -94,6 +115,9 @@ export default function Chatting() {
       case TRIGGERS.refreshChat:
         fetchChats();
         resetTrigger();
+        break;
+      case TRIGGERS.searchByTag:
+        FetchFn(fetchByTags);
         break;
     }
   };
