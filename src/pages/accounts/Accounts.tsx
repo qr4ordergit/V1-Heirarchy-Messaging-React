@@ -103,7 +103,6 @@ const statusColor = (status: string | null) => {
 };
 
 export default function Accounts() {
-  //const { suggestUsername, logout } = useAuthApi();
   const navigate = useNavigate();
   const clearTokens = useAuthStore((state) => state.clearTokens);
   const setTargetUser = useAuthStore((state) => state.setTargetUser);
@@ -377,7 +376,7 @@ export default function Accounts() {
         username: pendingUsername,
       });
 
-      if (response.success) {
+      if (response.message === "OTP verified successfully") {
         handleClose();
         await loadAccounts();
         notifications.show({
@@ -713,7 +712,9 @@ export default function Accounts() {
                               navigate(`/${ROUTES.CHATS}`);
                             }}
                           >
-                            {getDisplayName(account)}
+                            {account?.phone_number !== ""
+                              ? account?.phone_number
+                              : getDisplayName(account)}
                           </Text>
                           <ActionIcon
                             variant="subtle"

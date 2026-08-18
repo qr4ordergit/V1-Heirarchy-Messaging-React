@@ -23,6 +23,7 @@ export interface Account {
   status: string | null;
   isLocked: boolean;
   passkey_hash?: string;
+  phone_number: string | null;
 }
 
 export interface CreateAccountPayload {
