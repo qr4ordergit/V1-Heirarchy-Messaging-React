@@ -6,6 +6,15 @@ function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+const DEFAULT_COUNTRY_CODE = "+91";
+
+export function withCountryCode(phone: string): string {
+  const trimmed = phone.trim();
+  return trimmed.startsWith("+")
+    ? trimmed
+    : `${DEFAULT_COUNTRY_CODE}${trimmed}`;
+}
+
 export interface Account {
   user_id: string;
   display_name: string | null;
@@ -27,6 +36,7 @@ export interface CreateAccountPayload {
 export interface CreateAccountResponse {
   message: string;
   id?: string;
+  username?: string;
   delivery_medium?: string;
 }
 
@@ -34,6 +44,7 @@ export interface VerifySubUserOtpPayload {
   email: string;
   phone: string;
   otp: string;
+  username?: string;
 }
 
 export interface VerifySubUserOtpResponse {
@@ -109,7 +120,7 @@ export async function createAccount(
   if (payload.identifierType === "username") {
     body.username = payload.username;
   } else if (payload.identifierType === "phone") {
-    body.phone_number = payload.phone;
+    body.phone_number = withCountryCode(payload.phone);
   }
 
   if (payload.identifierType === "email") {
@@ -146,8 +157,9 @@ export async function verifySubUserOtp(
     body: JSON.stringify({
       operation: "verify",
       email: payload.email,
-      phone_number: payload.phone,
+      phone_number: withCountryCode(payload.phone),
       otp: payload.otp,
+      ...(payload.username ? { username: payload.username } : {}),
     }),
   });
 

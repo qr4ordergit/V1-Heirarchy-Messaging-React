@@ -28,10 +28,8 @@ import {
   IconLogout,
   IconPlus,
   IconTrash,
-  IconEdit,
   IconLock,
   IconLockOpen,
-  IconUsersGroup,
   IconEye,
   IconEyeOff,
   IconSearch,
@@ -42,6 +40,7 @@ import {
   fetchAccounts,
   createAccount,
   verifySubUserOtp,
+  withCountryCode,
   deleteAccount,
   changePassword,
   updateUserLock,
@@ -85,9 +84,7 @@ interface NewAccountErrors {
 const PASSKEY_PATTERN = /^[a-zA-Z0-9]{4,12}$/;
 
 const getDisplayName = (account: Account) =>
-  account.display_name?.trim() ||
-  account.email?.split("@")[0] ||
-  account.user_id;
+  account.display_name?.trim() || account.user_id;
 
 const getInitialsSource = (account: Account) => getDisplayName(account);
 
@@ -106,7 +103,7 @@ const statusColor = (status: string | null) => {
 };
 
 export default function Accounts() {
-  // const { suggestUsername, logout } = useAuthApi();
+  //const { suggestUsername, logout } = useAuthApi();
   const navigate = useNavigate();
   const clearTokens = useAuthStore((state) => state.clearTokens);
   const setTargetUser = useAuthStore((state) => state.setTargetUser);
@@ -128,6 +125,7 @@ export default function Accounts() {
   const [verifyingAccountOtp, setVerifyingAccountOtp] = useState(false);
   const [resendingAccountOtp, setResendingAccountOtp] = useState(false);
   const [pendingPhone, setPendingPhone] = useState("");
+  const [pendingUsername, setPendingUsername] = useState("");
 
   const [usernameChecking, setUsernameChecking] = useState(false);
   const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
@@ -292,6 +290,7 @@ export default function Accounts() {
     setAccountOtp("");
     setAccountOtpError(null);
     setPendingPhone("");
+    setPendingUsername("");
   };
 
   const openLockModal = (account: Account) => {
@@ -330,6 +329,7 @@ export default function Accounts() {
 
       if (form.identifierType === "phone") {
         setPendingPhone(trimmedPhone);
+        setPendingUsername(response.username || response.id || "");
         setAccountStep("verify");
         notifications.show({
           color: "blue",
@@ -374,9 +374,10 @@ export default function Accounts() {
         email: userDetails?.email ?? "",
         phone: pendingPhone,
         otp: accountOtp,
+        username: pendingUsername,
       });
 
-      if (response.success) {
+      if (response.message === "OTP verified successfully") {
         handleClose();
         await loadAccounts();
         notifications.show({
@@ -411,6 +412,7 @@ export default function Accounts() {
         phone: pendingPhone,
         password: form.password,
       });
+      setPendingUsername(response.username || response.id || pendingUsername);
       setAccountOtp("");
       notifications.show({
         color: "blue",
@@ -708,7 +710,7 @@ export default function Accounts() {
                           {getDisplayName(account)}
                         </Text>
 
-                        <Group gap={6} mt={4}>
+                        <Group gap={6} mt={4} align="center">
                           {account.status && (
                             <Badge
                               size="sm"
@@ -719,60 +721,81 @@ export default function Accounts() {
                               {account.status}
                             </Badge>
                           )}
-                          <Badge
-                            size="sm"
-                            variant="light"
-                            color={account.isLocked ? "dark" : "gray"}
-                            radius="sm"
-                            leftSection={
-                              account.isLocked ? (
-                                <IconLock size={10} />
-                              ) : (
-                                <IconLockOpen size={10} />
-                              )
-                            }
-                            onClick={() => openLockModal(account)}
-                            style={{ cursor: "pointer" }}
-                          >
-                            {account.isLocked ? "Locked" : "Unlocked"}
-                          </Badge>
-                          {account.isLocked && (
-                            <ActionIcon
-                              variant="subtle"
-                              color="gray"
-                              radius="xl"
+
+                          {account.isLocked ? (
+                            <>
+                              <Badge
+                                size="sm"
+                                variant="light"
+                                color="dark"
+                                radius="sm"
+                                leftSection={<IconLock size={10} />}
+                                onClick={() => openLockModal(account)}
+                                style={{
+                                  cursor: "pointer",
+                                  fontFamily: "monospace",
+                                }}
+                              >
+                                {isPasskeyVisible
+                                  ? plainPasskey || "—"
+                                  : "••••••"}
+                              </Badge>
+                              <ActionIcon
+                                variant="subtle"
+                                color="gray"
+                                radius="xl"
+                                size="sm"
+                                aria-label={
+                                  isPasskeyVisible
+                                    ? "Hide passkey"
+                                    : "Show passkey"
+                                }
+                                onClick={() => togglePasskeyVisibility(account)}
+                              >
+                                {isPasskeyVisible ? (
+                                  <IconEyeOff size={14} />
+                                ) : (
+                                  <IconEye size={14} />
+                                )}
+                              </ActionIcon>
+                            </>
+                          ) : (
+                            <Badge
                               size="sm"
-                              aria-label={
-                                isPasskeyVisible
-                                  ? "Hide passkey"
-                                  : "Show passkey"
-                              }
-                              onClick={() => togglePasskeyVisibility(account)}
+                              variant="light"
+                              color="gray"
+                              radius="sm"
+                              leftSection={<IconLockOpen size={10} />}
+                              onClick={() => openLockModal(account)}
+                              style={{ cursor: "pointer" }}
                             >
-                              {isPasskeyVisible ? (
-                                <IconEyeOff size={14} />
-                              ) : (
-                                <IconEye size={14} />
-                              )}
-                            </ActionIcon>
+                              Unlocked
+                            </Badge>
                           )}
                         </Group>
-
-                        {isPasskeyVisible && (
-                          <Text
-                            size="xs"
-                            c="dimmed"
-                            mt={4}
-                            ff="monospace"
-                            truncate="end"
-                          >
-                            Passkey: {plainPasskey || "—"}
-                          </Text>
-                        )}
                       </div>
                     </Group>
 
-                    <Group gap={4} wrap="nowrap">
+                    <Group gap="lg" wrap="nowrap">
+                      <Text
+                        size="sm"
+                        c="dimmed"
+                        fw={500}
+                        style={{ cursor: "pointer", whiteSpace: "nowrap" }}
+                        onClick={() => setPermissionsUserId(account.user_id)}
+                      >
+                        Edit Permissions
+                      </Text>
+                      <Text
+                        size="sm"
+                        c="dimmed"
+                        fw={500}
+                        style={{ cursor: "pointer", whiteSpace: "nowrap" }}
+                        onClick={() => setManageSubUsersTarget(account)}
+                      >
+                        Manage Sub Users
+                      </Text>
+
                       <Menu
                         position="bottom-end"
                         withinPortal
@@ -792,37 +815,12 @@ export default function Accounts() {
 
                         <Menu.Dropdown>
                           <Menu.Item
-                            leftSection={<IconEdit size={14} />}
-                            onClick={() =>
-                              setPermissionsUserId(account.user_id)
-                            }
-                          >
-                            Edit Permissions
-                          </Menu.Item>
-                          <Menu.Item
                             leftSection={<IconKey size={14} />}
                             onClick={() => setPasswordTarget(account)}
                           >
                             Change Password
                           </Menu.Item>
-                          <Menu.Item
-                            leftSection={
-                              account.isLocked ? (
-                                <IconLock size={14} />
-                              ) : (
-                                <IconLockOpen size={14} />
-                              )
-                            }
-                            onClick={() => openLockModal(account)}
-                          >
-                            Set Passkey
-                          </Menu.Item>
-                          <Menu.Item
-                            leftSection={<IconUsersGroup size={14} />}
-                            onClick={() => setManageSubUsersTarget(account)}
-                          >
-                            Manage Sub Users
-                          </Menu.Item>
+
                           <Menu.Divider />
                           <Menu.Item
                             color="red"
@@ -861,7 +859,7 @@ export default function Accounts() {
             )}
 
             <Text c="dimmed" ta="center" size="sm">
-              We sent a code to <strong>{pendingPhone}</strong>
+              We sent a code to <strong>{withCountryCode(pendingPhone)}</strong>
             </Text>
 
             <PinInput
