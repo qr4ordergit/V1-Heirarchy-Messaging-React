@@ -1,28 +1,34 @@
 import { create } from "zustand";
 
 export interface MESSAGE {
-    _id: string;
-    created_by: string;
-    created_on: string;
+    _id?: string;
+    created_by?: string;
+    created_on?: string;
     replied_to?: string;
     body?: {
         text?: string;
         media_url?: string[];
     };
+    tag?: string,
 
     [key: string]: unknown;
 }
 
 interface ChatsStore {
     chats: MESSAGE[];
+    ogChats: MESSAGE[];
     addChats: (messages: MESSAGE[]) => void;
     appendChats: (messages: MESSAGE[]) => void;
     popChat: (message_id: string) => void;
-    alterChat: (message_id: string, newMessage: string) => void
+    alterChat: (message_id: string, newMessage: string) => void;
+    updateTagStatus: (message_ids: [string]) => void,
+    filterChatsByText: (text: string) => void,
+    emptyOGList: () => void
 }
 
 export const useChatStore = create<ChatsStore>((set) => ({
     chats: [],
+    ogChats: [],
 
     addChats: (messages) => {
         const alteredChats = [...messages].reverse();
@@ -54,6 +60,37 @@ export const useChatStore = create<ChatsStore>((set) => ({
 
                 return chat
             })
+        }))
+    },
+    updateTagStatus: (message_ids) => {
+        set((state) => ({
+            chats: state.chats.map((chat) => {
+                if (message_ids.includes(chat._id ?? "")) {
+                    chat.is_tagged = true
+                }
+                return chat
+            })
+        }))
+    },
+    filterChatsByText: (text) => {
+
+        set((state) => {
+            if (state.ogChats.length < 1 && text.length > 0) {
+                state.ogChats = state.chats
+            }
+            if (state.ogChats.length === 0) {
+                return {}
+            }
+
+
+            return {
+                chats: state.ogChats.filter((chat) => chat.body?.text?.toLowerCase()?.includes(text.toLowerCase()))
+            }
+        })
+    },
+    emptyOGList: () => {
+        set(() => ({
+            ogChats: []
         }))
     }
 

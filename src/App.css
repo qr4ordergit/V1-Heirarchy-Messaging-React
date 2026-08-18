@@ -4,4 +4,8 @@ body {
   margin: 0;
   overflow-x: hidden;
   font-family: "Inter", sans-serif;
+
+  & ::placeholder {
+    font-family: "Inter", sans-serif;
+  }
 }

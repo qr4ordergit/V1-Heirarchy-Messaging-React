@@ -11,9 +11,17 @@ import App from "./App";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <MantineProvider>
+    <MantineProvider
+      theme={{
+        fontFamily: "Inter, sans-serif",
+        headings: {
+          fontFamily: "Inter, sans-serif",
+        },
+      }}
+    >
       <Notifications position="top-right" zIndex={1000} />
       <App />
     </MantineProvider>
+    ,
   </React.StrictMode>,
 );

@@ -1,5 +1,5 @@
 import { Group, Paper, Text } from "@mantine/core";
-import { IconChecks } from "@tabler/icons-react";
+import { IconChecks, IconStarFilled } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import type { MESSAGE } from "../../../store/chats/chats.store";
 import { useAuthStore } from "../../../store/auth/auth.store";
@@ -29,7 +29,6 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
           radius="lg"
           p="sm"
           maw="70%"
-          withBorder
           bg={isMe ? "blue.6" : "white"}
         >
           {!isMe && (
@@ -37,6 +36,7 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
               {msg.created_by}
             </Text>
           )}
+
           {msg?.replied_to && (
             <ReplyChat
               replied_to={msg.replied_to}
@@ -54,7 +54,9 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
             {msg.body?.text}
           </Text>
 
-          <Group justify="flex-end" gap={4} mt={6}>
+          <Group justify="flex-end" className="items-center" gap={4} mt={6}>
+            {msg?.is_tagged ? <IconStarFilled size={12} color="#e2e2e2" /> : ""}
+
             <Text size="xs" c={isMe ? "gray.2" : "dimmed"}>
               {dayjs(msg.created_on).format("hh:mm A")}
             </Text>
