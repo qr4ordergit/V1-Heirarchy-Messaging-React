@@ -16,8 +16,11 @@ import {
 } from "@mantine/core";
 import { IconUpload, IconUserPlus, IconX } from "@tabler/icons-react";
 import type { Contact, GroupItem } from "./Contact";
-import { useAuthStore } from "../../store/auth/auth.store";
-import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
+import {
+  API_ENDPOINTS,
+  getHeaders,
+  withTargetUser,
+} from "../../utils/constant";
 import { notifications } from "@mantine/notifications";
 
 interface CreateGroupModalProps {
@@ -55,13 +58,6 @@ const CreateGroupModal = ({
   const [groupImage, setGroupImage] = useState<File | null>(null);
   const [onlyAdminsCanMessage, setOnlyAdminsCanMessage] = useState(false);
   const [updatingMembers, setUpdatingMembers] = useState(false);
-
-  const token = useAuthStore((state) => state.accessToken);
-
-  const getHeaders = (): Record<string, string> => ({
-    Authorization: token ?? "",
-    "Content-Type": "application/json",
-  });
 
   const getUserId = (c: Contact) =>
     c.username || (c.id.includes("#") ? c.id.split("#")[1] : c.id);

@@ -29,7 +29,11 @@ import ContactModal from "./ContactModal";
 import CreateGroupModal from "./CreateGroupModal";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/auth/auth.store";
-import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
+import {
+  API_ENDPOINTS,
+  getHeaders,
+  withTargetUser,
+} from "../../utils/constant";
 import { notifications } from "@mantine/notifications";
 import { encryptPasskey } from "../../utils/passkeyCipher";
 
@@ -49,7 +53,7 @@ export interface GroupItem {
   admins: string[];
   members: string[];
   group_image?: string;
-  profile_url?: string;
+  profile_picture?: string;
   created_by: string;
   member_count: number;
   only_admins_can_message: boolean;
@@ -96,14 +100,8 @@ const Contact = () => {
   const navigate = useNavigate();
   const isDetailActive = location.pathname.split("/").length > 3;
 
-  const token = useAuthStore.getState().accessToken;
   const userDetails = useAuthStore.getState().userDetails;
   const target_user = useAuthStore((state) => state.target_user);
-
-  const getHeaders = (): Record<string, string> => ({
-    Authorization: token ?? "",
-    "Content-Type": "application/json",
-  });
 
   const fetchContacts = async () => {
     setLoading(true);
@@ -968,7 +966,7 @@ const Contact = () => {
                       >
                         <Group gap="md">
                           <Avatar
-                            src={group.profile_url}
+                            src={group.profile_picture || null}
                             color="blue"
                             radius="xl"
                             size={42}

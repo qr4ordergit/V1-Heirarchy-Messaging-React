@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
   START_CONVERSATION: `${API_BASE_URL}/start-conversation`,
   PERMISSIONS: `${API_BASE_URL}/permissions`,
   MANAGE_MEMBERS: `${API_BASE_URL}/group/manage-members`,
+  TAGS: `${API_BASE_URL}/tags`,
   USER_ACCESS: `${API_BASE_URL}/user-access`,
   CREATE_GROUP: `${API_BASE_URL}/group`,
   SECONDARY_USER_PASSWORD_CHANGE: `${API_BASE_URL}/auth/secondary-user-password-reset`,
@@ -42,6 +43,8 @@ const avatarColors = [
   "yellow",
   "orange",
 ];
+
+const token = useAuthStore.getState().accessToken;
 
 export function getAvatarColor(name: string) {
   let hash = 0;
@@ -88,3 +91,9 @@ export const TRIGGERS = {
 
 export const CIPHER_SECRET =
   "a3f9c81e2d4b7f60918c5e3a2b7d4f9c1e6a8b3d5f2c9e4a7b1d8f3c6e9a2b5d";
+
+
+ export const getHeaders = (): Record<string, string> => ({
+    Authorization: token ?? "",
+    "Content-Type": "application/json",
+  });

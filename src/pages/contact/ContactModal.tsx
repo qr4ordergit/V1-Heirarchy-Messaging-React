@@ -4,8 +4,11 @@ import { Button, Grid, Modal, Stack, TextInput } from "@mantine/core";
 import type { Contact, ContactFormValues } from "./Contact";
 import { notifications } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
-import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
-import { useAuthStore } from "../../store/auth/auth.store";
+import {
+  API_ENDPOINTS,
+  getHeaders,
+  withTargetUser,
+} from "../../utils/constant";
 
 interface ContactModalProps {
   opened: boolean;
@@ -34,8 +37,6 @@ const ContactModal = ({
 
   const [showPassKeyField, setShowPassKeyField] = useState<boolean>(false);
   const [verifying, setVerifying] = useState<boolean>(false);
-
-  const token = useAuthStore.getState().accessToken;
 
   useEffect(() => {
     if (contact) {
@@ -101,10 +102,7 @@ const ContactModal = ({
           withTargetUser(API_ENDPOINTS.VERIFY_USER),
           {
             method: "POST",
-            headers: {
-              Authorization: token ?? "",
-              "Content-Type": "application/json",
-            },
+            headers: getHeaders(),
             body: JSON.stringify({
               contact_user_id: contactUserId,
             }),
