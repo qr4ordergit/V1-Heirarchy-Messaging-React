@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router";
 import { Center, Loader } from "@mantine/core";
-import { useAuthStore } from "../../store/auth/auth.store";
+import { useAuthStore, isHubAccount } from "../../store/auth/auth.store";
 import { fetchUserDetails } from "../../api/userApi";
 import { ROUTES } from "../routes";
 
@@ -33,7 +33,7 @@ export default function RequireHub() {
     );
   }
 
-  if (!userDetails?.groups?.includes("hub")) {
+  if (!isHubAccount(userDetails)) {
     return <Navigate to={`/${ROUTES.CHATS}`} replace />;
   }
 

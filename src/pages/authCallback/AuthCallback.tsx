@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Alert, Center, Loader, Stack, Text } from "@mantine/core";
-import { useAuthStore } from "../../store/auth/auth.store";
+import { useAuthStore, isHubAccount } from "../../store/auth/auth.store";
 import { fetchUserDetails } from "../../api/userApi";
 import { ROUTES } from "../../router/routes";
 
@@ -33,7 +33,7 @@ export default function AuthCallback() {
         const details = await fetchUserDetails();
 
         setUserDetails(details);
-        if (details.groups.includes("hub")) {
+        if (isHubAccount(details)) {
           navigate(ROUTES.ACCOUNTS, { replace: true });
         } else {
           navigate(`/${ROUTES.CHATS}`, { replace: true });
