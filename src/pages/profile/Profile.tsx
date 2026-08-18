@@ -25,22 +25,18 @@ import {
 } from "@tabler/icons-react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/auth/auth.store";
+import { useTagStore } from "../../store/tags/tags.store";
 import { logout } from "../../api/authApi";
-import { ROUTES } from "../../router/routes";
 import {
-  API_ENDPOINTS,
-  getHeaders,
-  withTargetUser,
-} from "../../utils/constant";
+  createTagApi,
+  deleteTagApi,
+  getAdjacencyListApi,
+  getTagsApi,
+  updateProfileApi,
+  uploadImageToS3Api,
+} from "../../api/profileApi";
+import { ROUTES } from "../../router/routes";
 import { notifications } from "@mantine/notifications";
-
-interface TagItem {
-  tag_id?: string;
-  tag_name?: string;
-  id?: string;
-  name?: string;
-  _id?: string;
-}
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -53,13 +49,17 @@ const Profile = () => {
   const setTargetUser = useAuthStore((state) => state.setTargetUser);
   const target_user = useAuthStore((state) => state.target_user);
 
+  const tagsList = useTagStore((state) => state.tags);
+  const storeTags = useTagStore((state) => state.storeTags);
+  const appendTag = useTagStore((state) => state.appendTag);
+  const removeTag = useTagStore((state) => state.removeTag);
+
   const [switchAccountOpen, setSwitchAccountOpen] = useState(false);
   const [adjacencyList, setAdjacencyList] = useState<string[]>([]);
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const [tagsOpen, setTagsOpen] = useState(false);
-  const [tagsList, setTagsList] = useState<TagItem[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [creatingTag, setCreatingTag] = useState(false);
@@ -72,31 +72,12 @@ const Profile = () => {
   const fetchAdjacencyList = async () => {
     setLoadingAccounts(true);
     try {
-      const response = await fetch(
-        withTargetUser(API_ENDPOINTS.ADJACENCY_LIST),
-        {
-          method: "GET",
-          headers: getHeaders(),
-        },
-      );
-
-      const data = await response.json();
-
-      if (response.ok && (data.adjacencylist || data.data)) {
-        const list = data.adjacencylist || data.data || [];
-        setAdjacencyList(list);
-      } else {
-        notifications.show({
-          title: "",
-          message: data.message || "Failed to fetch accounts list.",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-      }
-    } catch (error) {
+      const list = await getAdjacencyListApi();
+      setAdjacencyList(list);
+    } catch (error: any) {
       notifications.show({
         title: "",
-        message: `Error fetching account list: ${error}`,
+        message: error.message || `Error fetching accounts: ${error}`,
         color: "red",
         icon: <IconX size={18} />,
       });
@@ -108,29 +89,18 @@ const Profile = () => {
   const fetchTagsList = async () => {
     setLoadingTags(true);
     try {
-      const response = await fetch(withTargetUser(API_ENDPOINTS.TAGS), {
-        method: "GET",
-        headers: getHeaders(),
-      });
+      const tags = await getTagsApi();
+      const tagStrings: string[] = (tags || [])
+        .map((t: any) =>
+          typeof t === "string" ? t : t.tag_name || t.tag_id || t.name || "",
+        )
+        .filter(Boolean);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        const tags =
-          data.tags || data.data || (Array.isArray(data) ? data : []);
-        setTagsList(tags);
-      } else {
-        notifications.show({
-          title: "",
-          message: data.message || "Failed to fetch tags list.",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-      }
-    } catch (error) {
+      storeTags(tagStrings);
+    } catch (error: any) {
       notifications.show({
         title: "",
-        message: `Error fetching tags: ${error}`,
+        message: error.message || `Error fetching tags: ${error}`,
         color: "red",
         icon: <IconX size={18} />,
       });
@@ -140,7 +110,8 @@ const Profile = () => {
   };
 
   const handleCreateTag = async () => {
-    if (!newTagName.trim()) {
+    const trimmedTag = newTagName.trim();
+    if (!trimmedTag) {
       notifications.show({
         title: "",
         message: "Please enter a tag name.",
@@ -152,34 +123,19 @@ const Profile = () => {
 
     setCreatingTag(true);
     try {
-      const response = await fetch(withTargetUser(API_ENDPOINTS.TAGS), {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify({ tag_name: newTagName.trim() }),
+      const res = await createTagApi(trimmedTag);
+      notifications.show({
+        title: "Success",
+        message: res.message || "Tag created successfully.",
+        color: "green",
       });
 
-      const data = await response.json();
-
-      if (response.ok || data.success) {
-        notifications.show({
-          title: "Success",
-          message: data.message || "Tag created successfully.",
-          color: "green",
-        });
-        setNewTagName("");
-        fetchTagsList();
-      } else {
-        notifications.show({
-          title: "",
-          message: data.message || "Failed to create tag.",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-      }
-    } catch (error) {
+      appendTag(trimmedTag);
+      setNewTagName("");
+    } catch (error: any) {
       notifications.show({
         title: "",
-        message: `Error creating tag: ${error}`,
+        message: error.message || `Error creating tag: ${error}`,
         color: "red",
         icon: <IconX size={18} />,
       });
@@ -191,33 +147,18 @@ const Profile = () => {
   const handleDeleteTag = async (tagIdentifier: string) => {
     setDeletingTagId(tagIdentifier);
     try {
-      const response = await fetch(withTargetUser(API_ENDPOINTS.TAGS), {
-        method: "DELETE",
-        headers: getHeaders(),
-        body: JSON.stringify({ tag_id: tagIdentifier }),
+      const res = await deleteTagApi(tagIdentifier);
+      notifications.show({
+        title: "Success",
+        message: res.message || "Tag deleted successfully.",
+        color: "green",
       });
 
-      const data = await response.json();
-
-      if (response.ok || data.success) {
-        notifications.show({
-          title: "Success",
-          message: data.message || "Tag deleted successfully.",
-          color: "green",
-        });
-        fetchTagsList();
-      } else {
-        notifications.show({
-          title: "",
-          message: data.message || "Failed to delete tag.",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-      }
-    } catch (error) {
+      removeTag(tagIdentifier);
+    } catch (error: any) {
       notifications.show({
         title: "",
-        message: `Error deleting tag: ${error}`,
+        message: error.message || `Error deleting tag: ${error}`,
         color: "red",
         icon: <IconX size={18} />,
       });
@@ -226,65 +167,19 @@ const Profile = () => {
     }
   };
 
-  useEffect(() => {
-    fetchAdjacencyList();
-    fetchTagsList();
-  }, []);
-
-  const handlePencilClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setUploadingImage(true);
     try {
-      const patchUrl = withTargetUser(API_ENDPOINTS.USER_HOME);
-      const patchPayload = {
+      const patchData = await updateProfileApi({
         display_name: target_user || userDetails?.username || "",
         profile_picture: file.name,
-      };
-
-      const response = await fetch(patchUrl, {
-        method: "PATCH",
-        headers: getHeaders(),
-        body: JSON.stringify(patchPayload),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        notifications.show({
-          title: "",
-          message: data.message || "Failed to initiate profile update.",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-        return;
-      }
-
-      const presignedUrl = data.profile_picture_upload_url;
-
-      if (presignedUrl) {
-        const s3Response = await fetch(presignedUrl, {
-          method: "PUT",
-          headers: {
-            "Content-Type": file.type || "image/png",
-          },
-          body: file,
-        });
-
-        if (!s3Response.ok) {
-          notifications.show({
-            title: "",
-            message: "Failed to upload image file to storage.",
-            color: "red",
-            icon: <IconX size={18} />,
-          });
-          return;
-        }
+      if (patchData.profile_picture_upload_url) {
+        await uploadImageToS3Api(patchData.profile_picture_upload_url, file);
       }
 
       const localPreviewUrl = URL.createObjectURL(file);
@@ -297,13 +192,13 @@ const Profile = () => {
 
       notifications.show({
         title: "Success",
-        message: data.message || "Profile picture updated successfully.",
+        message: patchData.message || "Profile picture updated successfully.",
         color: "green",
       });
-    } catch (error) {
+    } catch (error: any) {
       notifications.show({
         title: "",
-        message: `Error uploading profile picture: ${error}`,
+        message: error.message || `Error uploading profile picture: ${error}`,
         color: "red",
         icon: <IconX size={18} />,
       });
@@ -311,6 +206,15 @@ const Profile = () => {
       setUploadingImage(false);
       if (event.target) event.target.value = "";
     }
+  };
+
+  useEffect(() => {
+    fetchAdjacencyList();
+    fetchTagsList();
+  }, []);
+
+  const handlePencilClick = () => {
+    fileInputRef.current?.click();
   };
 
   const handleToggleSwitchAccount = () => {
@@ -441,7 +345,6 @@ const Profile = () => {
 
                 {switchAccountOpen && (
                   <div className="px-5 pb-4 pt-2 border-t border-gray-100 space-y-2 animate-fadeIn">
-                    {/* Active User Item */}
                     <div className="flex items-center justify-between p-2 rounded-lg bg-indigo-50/60 border border-indigo-200">
                       <Group gap="sm">
                         <Avatar color="indigo" radius="xl" size={32}>
@@ -559,7 +462,9 @@ const Profile = () => {
                         loading={creatingTag}
                         onClick={handleCreateTag}
                         className="cursor-pointer shrink-0"
-                      ></Button>
+                      >
+                        Add
+                      </Button>
                     </div>
 
                     {loadingTags ? (
@@ -568,57 +473,35 @@ const Profile = () => {
                       </div>
                     ) : tagsList.length > 0 ? (
                       <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                        {tagsList.map((tag, idx) => {
-                          const tagLabel =
-                            typeof tag === "string"
-                              ? tag
-                              : tag.tag_name ||
-                                tag.name ||
-                                tag.tag_id ||
-                                `Tag ${idx + 1}`;
-                          const tagId =
-                            typeof tag === "string"
-                              ? tag
-                              : tag.tag_id ||
-                                tag.id ||
-                                tag._id ||
-                                tag.tag_name ||
-                                tag.name ||
-                                "";
-
-                          return (
-                            <div
-                              key={tagId || idx}
-                              className="flex items-center justify-between p-2.5 rounded-lg bg-gray-50/80 border border-gray-100 hover:bg-gray-100/70 transition-colors"
-                            >
-                              <Group gap="xs">
-                                <IconTag
-                                  size={16}
-                                  className="text-indigo-500"
-                                />
-                                <Text
-                                  size="sm"
-                                  fw={500}
-                                  className="text-gray-700"
-                                >
-                                  {tagLabel}
-                                </Text>
-                              </Group>
-
-                              <ActionIcon
-                                variant="subtle"
-                                color="red"
+                        {tagsList.map((tag, idx) => (
+                          <div
+                            key={`${tag}-${idx}`}
+                            className="flex items-center justify-between p-2.5 rounded-lg bg-gray-50/80 border border-gray-100 hover:bg-gray-100/70 transition-colors"
+                          >
+                            <Group gap="xs">
+                              <IconTag size={16} className="text-indigo-500" />
+                              <Text
                                 size="sm"
-                                loading={deletingTagId === tagId}
-                                onClick={() => handleDeleteTag(tagId)}
-                                className="hover:bg-red-50 cursor-pointer"
-                                title="Delete Tag"
+                                fw={500}
+                                className="text-gray-700"
                               >
-                                <IconTrash size={16} />
-                              </ActionIcon>
-                            </div>
-                          );
-                        })}
+                                {tag}
+                              </Text>
+                            </Group>
+
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              size="sm"
+                              loading={deletingTagId === tag}
+                              onClick={() => handleDeleteTag(tag)}
+                              className="hover:bg-red-50 cursor-pointer"
+                              title="Delete Tag"
+                            >
+                              <IconTrash size={16} />
+                            </ActionIcon>
+                          </div>
+                        ))}
                       </div>
                     ) : (
                       <div className="py-3 text-center">
