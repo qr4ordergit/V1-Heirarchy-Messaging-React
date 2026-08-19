@@ -46,70 +46,84 @@ export default function ChatInput() {
   const sendMessage = async () => {
     if (!chatId) return;
 
-    const payload = {
-      user: isGroup ? undefined : nextPerson(chatId),
-      group_id: isGroup ? chatId : undefined,
-      type: isReply ? "replay" : "message",
-      parent_message_id: triggerPayload?._id ?? undefined,
-      text: message,
-    };
+    try {
+      const payload = {
+        user: isGroup ? undefined : nextPerson(chatId),
+        group_id: isGroup ? chatId : undefined,
+        type: isReply ? "replay" : "message",
+        parent_message_id: triggerPayload?._id ?? undefined,
+        text: message,
+      };
 
-    const endpoint = isGroup ? ENDPOINTS.GROUP_CHAT.POST : ENDPOINTS.CHAT.SEND;
+      const endpoint = isGroup
+        ? ENDPOINTS.GROUP_CHAT.POST
+        : ENDPOINTS.CHAT.SEND;
 
-    const response = await api.post(endpoint, payload);
+      const response = await api.post(endpoint, payload);
 
-    if (!response.data?.success) {
+      if (!response.data?.success) {
+        Notification.error("Something went wrong");
+        return;
+      }
+
+      appendChats([response.data?.data]);
+      if (isReply) {
+        resetTrigger();
+      }
+      setMessage("");
+    } catch (error) {
+      console.log(error);
       Notification.error("Something went wrong");
-      return;
     }
-
-    appendChats([response.data?.data]);
-    if (isReply) {
-      resetTrigger();
-    }
-    setMessage("");
   };
 
   const sendWithAttachments = async () => {
     if (!chatId) return;
 
-    const payload = {
-      user: isGroup ? undefined : nextPerson(chatId),
-      group_id: isGroup ? chatId : undefined,
-      type: isReply ? "replay" : "message",
-      parent_message_id: triggerPayload?._id ?? undefined,
-      text: message,
-      files: files.map((file) => file.name),
-    };
+    try {
+      const payload = {
+        user: isGroup ? undefined : nextPerson(chatId),
+        group_id: isGroup ? chatId : undefined,
+        type: isReply ? "replay" : "message",
+        parent_message_id: triggerPayload?._id ?? undefined,
+        text: message,
+        files: files.map((file) => file.name),
+      };
 
-    const endpoint = isGroup ? ENDPOINTS.GROUP_CHAT.POST : ENDPOINTS.CHAT.SEND;
-    const response = await api.post(endpoint, payload);
+      const endpoint = isGroup
+        ? ENDPOINTS.GROUP_CHAT.POST
+        : ENDPOINTS.CHAT.SEND;
+      const response = await api.post(endpoint, payload);
 
-    if (!response.data?.success) {
+      if (!response.data?.success) {
+        Notification.error("Something went wrong");
+        return;
+      }
+
+      if (!response.data?.upload_urls) {
+        return Notification.error("Something went wrong");
+      }
+
+      let urls = response.data?.upload_urls ?? [];
+
+      for (let i = 0; i < urls.length; i++) {
+        await axios.put(urls[i].upload_url, files[i], {
+          headers: {
+            "Content-Type": files[i].type,
+          },
+        });
+      }
+
+      appendChats([response.data?.data]);
+      if (isReply) {
+        resetTrigger();
+      }
+      setMessage("");
+      setFiles([]);
+    } catch (error) {
+      console.log(error);
       Notification.error("Something went wrong");
-      return;
     }
-
-    if (!response.data?.upload_urls) {
-      return Notification.error("Something went wrong");
-    }
-
-    let urls = response.data?.upload_urls ?? [];
-
-    for (let i = 0; i < urls.length; i++) {
-      await axios.put(urls[i].upload_url, files[i], {
-        headers: {
-          "Content-Type": files[i].type,
-        },
-      });
-    }
-
-    appendChats([response.data?.data]);
-    if (isReply) {
-      resetTrigger();
-    }
-    setMessage("");
-    setFiles([]);
   };
 
   const handleSubmit = () => {
