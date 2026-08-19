@@ -35,7 +35,7 @@ type UserPermissionChanges = Record<string, UpdateUserPermissionsPayload>;
 
 interface userDetails {
   id: string;
-  label : string
+  label : string | null
 }
 
 interface AccessAndPermissionGridProps {
