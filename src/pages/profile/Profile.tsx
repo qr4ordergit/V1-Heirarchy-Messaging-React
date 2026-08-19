@@ -90,13 +90,7 @@ const Profile = () => {
     setLoadingTags(true);
     try {
       const tags = await getTagsApi();
-      const tagStrings: string[] = (tags || [])
-        .map((t: any) =>
-          typeof t === "string" ? t : t.tag_name || t.tag_id || t.name || "",
-        )
-        .filter(Boolean);
-
-      storeTags(tagStrings);
+      storeTags(Array.isArray(tags) ? tags : []);
     } catch (error: any) {
       notifications.show({
         title: "",
@@ -125,7 +119,7 @@ const Profile = () => {
     try {
       const res = await createTagApi(trimmedTag);
       notifications.show({
-        title: "Success",
+        title: "",
         message: res.message || "Tag created successfully.",
         color: "green",
       });
@@ -149,7 +143,7 @@ const Profile = () => {
     try {
       const res = await deleteTagApi(tagIdentifier);
       notifications.show({
-        title: "Success",
+        title: "",
         message: res.message || "Tag deleted successfully.",
         color: "green",
       });
@@ -191,7 +185,7 @@ const Profile = () => {
       }
 
       notifications.show({
-        title: "Success",
+        title: "",
         message: patchData.message || "Profile picture updated successfully.",
         color: "green",
       });
@@ -345,7 +339,7 @@ const Profile = () => {
 
                 {switchAccountOpen && (
                   <div className="px-5 pb-4 pt-2 border-t border-gray-100 space-y-2 animate-fadeIn">
-                    <div className="flex items-center justify-between p-2 rounded-lg bg-indigo-50/60 border border-indigo-200">
+                    {/* <div className="flex items-center justify-between p-2 rounded-lg bg-indigo-50/60 border border-indigo-200">
                       <Group gap="sm">
                         <Avatar color="indigo" radius="xl" size={32}>
                           {userInitials}
@@ -359,7 +353,7 @@ const Profile = () => {
                           </Text>
                         </div>
                       </Group>
-                    </div>
+                    </div> */}
 
                     {loadingAccounts ? (
                       <div className="flex justify-center items-center py-3">

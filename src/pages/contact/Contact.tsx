@@ -53,7 +53,7 @@ export interface GroupItem {
   admins: string[];
   members: string[];
   group_image?: string;
-  profile_picture?: string;
+  profile_url?: string;
   created_by: string;
   member_count: number;
   only_admins_can_message: boolean;
@@ -966,7 +966,7 @@ const Contact = () => {
                       >
                         <Group gap="md">
                           <Avatar
-                            src={group.profile_picture || null}
+                            src={group.profile_url || null}
                             color="blue"
                             radius="xl"
                             size={42}
