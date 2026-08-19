@@ -33,8 +33,13 @@ interface UpdateUserPermissionsPayload {
 
 type UserPermissionChanges = Record<string, UpdateUserPermissionsPayload>;
 
+interface userDetails {
+  id: string;
+  label : string
+}
+
 interface AccessAndPermissionGridProps {
-  users: string[];
+  users: userDetails[];
   targetUser: string;
 }
 
@@ -247,7 +252,7 @@ export default function AccessAndPermissionGrid({
 
               <Table.Tr bg={"var(--mantine-color-gray-1)"}>
                 <Table.Th colSpan={7} ta="center">
-                  Messages
+                  Direct Message ( DM )
                 </Table.Th>
                 <Table.Th colSpan={4} ta="center">
                   Group Messages
@@ -272,12 +277,12 @@ export default function AccessAndPermissionGrid({
 
             <Table.Tbody>
               {users.map((user) => {
-                const currentUser = changes[user];
+                const currentUser = changes[user.id];
 
                 const canUserAccess = Boolean(currentUser);
 
                 return (
-                  <Table.Tr key={user}>
+                  <Table.Tr key={user.id}>
                     <Table.Td
                       style={{
                         position: "sticky",
@@ -288,7 +293,7 @@ export default function AccessAndPermissionGrid({
                       }}
                     >
                       <Text size="xs" fw={600} ta="center">
-                        {user}
+                        {user.label}
                       </Text>
                     </Table.Td>
 
@@ -305,7 +310,7 @@ export default function AccessAndPermissionGrid({
                           checked={canUserAccess}
                           onChange={(event) =>
                             handleAccessChange(
-                              user,
+                              user.id,
                               event.currentTarget.checked,
                             )
                           }
@@ -328,7 +333,7 @@ export default function AccessAndPermissionGrid({
                               disabled={!canUserAccess}
                               onChange={(event) =>
                                 handlePermissionChange(
-                                  user,
+                                  user.id,
                                   permission.path,
                                   event.currentTarget.checked,
                                 )

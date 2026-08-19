@@ -146,7 +146,7 @@ export default function Accounts() {
     if (b.user_id === accessAndPermissions.targetUser) return 1;
     return 0;
   })
-  .map((acc) => acc.user_id);;
+  .map((acc) => ({id:acc.user_id,label:acc.phone_number !== "" ? acc.phone_number : acc.user_id}));;
 
   const togglePasskeyVisibility = (account: Account) => {
     setVisiblePasskeys((prev) => ({

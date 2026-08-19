@@ -99,10 +99,10 @@ export const PERMISSIONS = {
   messages: {
     chat: {
       create: false,
-      start: false,
       read: false,
       update: false,
       delete: false,
+      start: false,
       history: {
         get: false,
         delete: false,
@@ -147,10 +147,10 @@ export const PERMISSIONS = {
 export const PERMISSION_LABELS: Record<string, string> = {
   // Direct Message ( DM )
   "messages.chat.create": "Write",
-  "messages.chat.start": "Start Chat",
   "messages.chat.read": "View",
   "messages.chat.update": "Update",
   "messages.chat.delete": "Delete ",
+  "messages.chat.start": "Start Chat",
   "messages.chat.history.get": "View Chats",
   "messages.chat.history.delete": "Delete Chats",
   
