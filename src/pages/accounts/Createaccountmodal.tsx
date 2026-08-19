@@ -472,7 +472,8 @@ export default function CreateAccountModal({
                 onChange={(value) => setField("countryCode")(value ?? "+91")}
                 searchable
                 allowDeselect={false}
-                w={130}
+                w={160}
+                styles={{ input: { fontSize: 13 } }}
               />
               <TextInput
                 label="Phone Number"
