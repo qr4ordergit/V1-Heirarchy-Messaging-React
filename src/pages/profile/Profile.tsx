@@ -18,7 +18,6 @@ import {
   IconLogout,
   IconPencil,
   IconPlus,
-  IconSwitch3,
   IconTag,
   IconTrash,
   IconX,
@@ -30,7 +29,6 @@ import { logout } from "../../api/authApi";
 import {
   createTagApi,
   deleteTagApi,
-  getAdjacencyListApi,
   getTagsApi,
   updateProfileApi,
   uploadImageToS3Api,
@@ -46,17 +44,12 @@ const Profile = () => {
   const clearTokens = useAuthStore((state) => state.clearTokens);
   const userDetails = useAuthStore((state) => state.userDetails);
   const setUserDetails = useAuthStore((state) => state.setUserDetails);
-  const setTargetUser = useAuthStore((state) => state.setTargetUser);
   const target_user = useAuthStore((state) => state.target_user);
 
   const tagsList = useTagStore((state) => state.tags);
   const storeTags = useTagStore((state) => state.storeTags);
   const appendTag = useTagStore((state) => state.appendTag);
   const removeTag = useTagStore((state) => state.removeTag);
-
-  const [switchAccountOpen, setSwitchAccountOpen] = useState(false);
-  const [adjacencyList, setAdjacencyList] = useState<string[]>([]);
-  const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const [tagsOpen, setTagsOpen] = useState(false);
@@ -68,23 +61,6 @@ const Profile = () => {
   const isSubRoute = ["/privacy", "/help", "/about"].includes(
     location.pathname,
   );
-
-  const fetchAdjacencyList = async () => {
-    setLoadingAccounts(true);
-    try {
-      const list = await getAdjacencyListApi();
-      setAdjacencyList(list);
-    } catch (error: any) {
-      notifications.show({
-        title: "",
-        message: error.message || `Error fetching accounts: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
-    } finally {
-      setLoadingAccounts(false);
-    }
-  };
 
   const fetchTagsList = async () => {
     setLoadingTags(true);
@@ -203,16 +179,11 @@ const Profile = () => {
   };
 
   useEffect(() => {
-    fetchAdjacencyList();
     fetchTagsList();
   }, []);
 
   const handlePencilClick = () => {
     fileInputRef.current?.click();
-  };
-
-  const handleToggleSwitchAccount = () => {
-    setSwitchAccountOpen((prev) => !prev);
   };
 
   const handleToggleTags = () => {
@@ -221,11 +192,6 @@ const Profile = () => {
     if (nextState) {
       fetchTagsList();
     }
-  };
-
-  const handleSwitchToAccount = (selectedUsername: string) => {
-    setTargetUser(selectedUsername);
-    navigate(`/${ROUTES.CHATS}`);
   };
 
   const handleLogout = async () => {
@@ -246,10 +212,6 @@ const Profile = () => {
       .map((part: string) => part[0]?.toUpperCase() || "")
       .join("")
       .slice(0, 2) || "M";
-
-  const otherAccounts = adjacencyList.filter(
-    (accUsername) => accUsername !== username,
-  );
 
   if (isSubRoute) {
     return (
@@ -310,101 +272,6 @@ const Profile = () => {
             </div>
 
             <div className="w-full space-y-3">
-              <Card
-                withBorder
-                radius="lg"
-                p={0}
-                className="w-full transition-all duration-200 border-gray-200/90 shadow-xs hover:shadow-sm bg-white"
-              >
-                <UnstyledButton
-                  onClick={handleToggleSwitchAccount}
-                  className="w-full px-5 py-4 cursor-pointer"
-                >
-                  <Group justify="space-between">
-                    <Group gap="md">
-                      <div className="p-2 rounded-lg bg-indigo-50 flex items-center justify-center">
-                        <IconSwitch3 size={20} className="text-indigo-600" />
-                      </div>
-                      <Text fw={600} size="md" className="text-gray-800">
-                        Switch Account
-                      </Text>
-                    </Group>
-                    {switchAccountOpen ? (
-                      <IconChevronDown size={18} className="text-gray-400" />
-                    ) : (
-                      <IconChevronRight size={18} className="text-gray-400" />
-                    )}
-                  </Group>
-                </UnstyledButton>
-
-                {switchAccountOpen && (
-                  <div className="px-5 pb-4 pt-2 border-t border-gray-100 space-y-2 animate-fadeIn">
-                    {/* <div className="flex items-center justify-between p-2 rounded-lg bg-indigo-50/60 border border-indigo-200">
-                      <Group gap="sm">
-                        <Avatar color="indigo" radius="xl" size={32}>
-                          {userInitials}
-                        </Avatar>
-                        <div>
-                          <Text size="sm" fw={600} className="text-indigo-900">
-                            {username}
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            Active Account
-                          </Text>
-                        </div>
-                      </Group>
-                    </div> */}
-
-                    {loadingAccounts ? (
-                      <div className="flex justify-center items-center py-3">
-                        <Loader size="sm" color="indigo" />
-                      </div>
-                    ) : otherAccounts.length > 0 ? (
-                      otherAccounts.map((accUsername) => {
-                        const initials =
-                          accUsername
-                            .split("-")
-                            .map((p) => p[0]?.toUpperCase() || "")
-                            .join("")
-                            .slice(0, 2) || "U";
-
-                        return (
-                          <UnstyledButton
-                            key={accUsername}
-                            onClick={() => handleSwitchToAccount(accUsername)}
-                            className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200 cursor-pointer"
-                          >
-                            <Group gap="sm">
-                              <Avatar color="gray" radius="xl" size={32}>
-                                {initials}
-                              </Avatar>
-                              <div>
-                                <Text
-                                  size="sm"
-                                  fw={500}
-                                  className="text-gray-700"
-                                >
-                                  {accUsername}
-                                </Text>
-                                <Text size="xs" c="dimmed">
-                                  Tap to switch
-                                </Text>
-                              </div>
-                            </Group>
-                          </UnstyledButton>
-                        );
-                      })
-                    ) : (
-                      <div className="py-2 text-center">
-                        <Text size="xs" c="dimmed" fw={500}>
-                          No other accounts available to switch.
-                        </Text>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </Card>
-
               <Card
                 withBorder
                 radius="lg"
