@@ -5,12 +5,14 @@ interface AvatarProps {
   name: string;
   size?: number;
   colorIndex?: number;
+  onClick?: () => void;
 }
 
 export default function Avatar({
   name,
   size = 44,
   colorIndex = 0,
+  onClick,
 }: AvatarProps) {
   return (
     <div
@@ -20,7 +22,9 @@ export default function Avatar({
         height: size,
         fontSize: size * 0.36,
         background: colorFor(colorIndex),
+        cursor: onClick ? "pointer" : undefined,
       }}
+      onClick={onClick}
     >
       {initials(name)}
     </div>

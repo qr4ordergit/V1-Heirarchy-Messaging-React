@@ -8,8 +8,10 @@ import {
   IconArrowForward,
   IconCopy,
   IconPencil,
+  IconStar,
   IconTrash,
 } from "@tabler/icons-react";
+import { useAuthStore } from "../../../store/auth/auth.store";
 
 interface CHATOPTIONSPROPS {
   children: ReactNode;
@@ -18,6 +20,9 @@ interface CHATOPTIONSPROPS {
 
 export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
   const { setTrigger } = useTriggerStore((state) => state);
+  const userDetails = useAuthStore((state) => state.userDetails);
+
+  const isMe = userDetails?.username === msg.created_by;
 
   const onDelete = () => {
     setTrigger({
@@ -73,13 +78,53 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
     }
   };
 
+  const onTag = () => {
+    setTrigger({
+      toTrigger: TRIGGERS.tagList,
+      payload: msg,
+    });
+  };
+
+  const optionConditions = {
+    copy: () => {
+      let isDisabled = true;
+      if (msg.body?.text) {
+        isDisabled = false;
+      }
+
+      return isDisabled;
+    },
+
+    edit: () => {
+      let isDisabled = true;
+      if (isMe) {
+        isDisabled = false;
+      }
+
+      return isDisabled;
+    },
+
+    delete: () => {
+      let isDisabled = true;
+      if (isMe) {
+        isDisabled = false;
+      }
+
+      return isDisabled;
+    },
+  };
+
   return (
     <Menu shadow="md" width={200}>
-      <Menu.ContextMenu>{children}</Menu.ContextMenu>
+      <Menu.ContextMenu longPressDelay={400}>{children}</Menu.ContextMenu>
 
       <Menu.Dropdown>
         <Menu.Label>Actions</Menu.Label>
-        <Menu.Item onClick={onEdit} leftSection={<IconPencil size={14} />}>
+        <Menu.Item
+          disabled={optionConditions.edit()}
+          onClick={onEdit}
+          leftSection={<IconPencil size={14} />}
+        >
           Edit
         </Menu.Item>
         <Menu.Item
@@ -88,11 +133,19 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
         >
           Reply
         </Menu.Item>
-        <Menu.Item onClick={onCopy} leftSection={<IconCopy size={14} />}>
+        <Menu.Item
+          disabled={optionConditions.copy()}
+          onClick={onCopy}
+          leftSection={<IconCopy size={14} />}
+        >
           Copy Content
+        </Menu.Item>
+        <Menu.Item onClick={onTag} leftSection={<IconStar size={14} />}>
+          Add Tags
         </Menu.Item>
         <Menu.Divider />
         <Menu.Item
+          disabled={optionConditions.delete()}
           onClick={onDelete}
           color="red"
           leftSection={<IconTrash size={14} />}

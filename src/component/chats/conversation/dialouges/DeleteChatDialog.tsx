@@ -30,26 +30,32 @@ function DeleteChatDialog() {
       Notification.error("Unable to delete chat");
       return;
     }
-    const payload = {
-      data: {
-        message_id: triggerPayload._id,
-        soft_delete: true,
-      },
-    };
+    try {
+      const payload = {
+        data: {
+          message_id: triggerPayload._id,
+          soft_delete: true,
+        },
+      };
 
-    const endpoint = isGroup
-      ? ENDPOINTS.GROUP_CHAT.DELETE
-      : ENDPOINTS.CHAT.DELETE;
-    const res = await api.delete(endpoint, payload);
+      const endpoint = isGroup
+        ? ENDPOINTS.GROUP_CHAT.DELETE
+        : ENDPOINTS.CHAT.DELETE;
+      const res = await api.delete(endpoint, payload);
 
-    if (!res.data?.success) {
-      return Notification.error("Unable to delete chat");
+      if (!res.data?.success) {
+        return Notification.error("Unable to delete chat");
+      }
+
+      popChat(triggerPayload?._id ?? "");
+
+      Notification.success("Chat deleted successfully");
+      resetTrigger();
+    } catch (error) {
+      console.log(error);
+      Notification.error("Something went wrong");
+      resetTrigger();
     }
-
-    popChat(triggerPayload._id);
-
-    Notification.success("Chat deleted successfully");
-    resetTrigger();
   };
 
   return (

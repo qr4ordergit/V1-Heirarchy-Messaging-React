@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
   START_CONVERSATION: `${API_BASE_URL}/start-conversation`,
   PERMISSIONS: `${API_BASE_URL}/permissions`,
   MANAGE_MEMBERS: `${API_BASE_URL}/group/manage-members`,
+  TAGS: `${API_BASE_URL}/tags`,
   USER_ACCESS: `${API_BASE_URL}/user-access`,
   CREATE_GROUP: `${API_BASE_URL}/group`,
   SECONDARY_USER_PASSWORD_CHANGE: `${API_BASE_URL}/auth/secondary-user-password-reset`,
@@ -42,6 +43,8 @@ const avatarColors = [
   "yellow",
   "orange",
 ];
+
+const token = useAuthStore.getState().accessToken;
 
 export function getAvatarColor(name: string) {
   let hash = 0;
@@ -84,6 +87,9 @@ export const TRIGGERS = {
   reply: "reply",
   refreshChat: "refresh_chat",
   previewMedia: "preview_media",
+  tagList: "tagList",
+  searchByText: "search:text",
+  searchByTag: "search:tag",
 };
 
 export const CIPHER_SECRET =
@@ -172,3 +178,30 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "users.tags.update": "Update Tag",
   "users.tags.delete": "Delete Tag",
 };
+export const getHeaders = (): Record<string, string> => ({
+  Authorization: token ?? "",
+  "Content-Type": "application/json",
+});
+
+export const COUNTRY_CODES = [
+  { value: "+91", label: "+91 India" },
+  { value: "+1", label: "+1 USA/Canada" },
+  { value: "+44", label: "+44 UK" },
+  { value: "+61", label: "+61 Australia" },
+  { value: "+971", label: "+971 UAE" },
+  { value: "+65", label: "+65 Singapore" },
+  { value: "+966", label: "+966 Saudi Arabia" },
+  { value: "+49", label: "+49 Germany" },
+  { value: "+33", label: "+33 France" },
+  { value: "+81", label: "+81 Japan" },
+  { value: "+86", label: "+86 China" },
+  { value: "+27", label: "+27 South Africa" },
+  { value: "+55", label: "+55 Brazil" },
+  { value: "+7", label: "+7 Russia" },
+  { value: "+92", label: "+92 Pakistan" },
+  { value: "+880", label: "+880 Bangladesh" },
+  { value: "+94", label: "+94 Sri Lanka" },
+  { value: "+977", label: "+977 Nepal" },
+  { value: "+63", label: "+63 Philippines" },
+  { value: "+62", label: "+62 Indonesia" },
+];

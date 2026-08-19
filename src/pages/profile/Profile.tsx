@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import {
+  ActionIcon,
   Avatar,
+  Button,
   Card,
   Group,
   Loader,
   Stack,
   Text,
+  TextInput,
   UnstyledButton,
 } from "@mantine/core";
 import {
@@ -14,14 +17,25 @@ import {
   IconChevronRight,
   IconLogout,
   IconPencil,
+  IconPlus,
   IconSwitch3,
+  IconTag,
+  IconTrash,
   IconX,
 } from "@tabler/icons-react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/auth/auth.store";
+import { useTagStore } from "../../store/tags/tags.store";
 import { logout } from "../../api/authApi";
+import {
+  createTagApi,
+  deleteTagApi,
+  getAdjacencyListApi,
+  getTagsApi,
+  updateProfileApi,
+  uploadImageToS3Api,
+} from "../../api/profileApi";
 import { ROUTES } from "../../router/routes";
-import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
 import { notifications } from "@mantine/notifications";
 
 const Profile = () => {
@@ -34,50 +48,36 @@ const Profile = () => {
   const setUserDetails = useAuthStore((state) => state.setUserDetails);
   const setTargetUser = useAuthStore((state) => state.setTargetUser);
   const target_user = useAuthStore((state) => state.target_user);
-  const token = useAuthStore((state) => state.accessToken);
+
+  const tagsList = useTagStore((state) => state.tags);
+  const storeTags = useTagStore((state) => state.storeTags);
+  const appendTag = useTagStore((state) => state.appendTag);
+  const removeTag = useTagStore((state) => state.removeTag);
 
   const [switchAccountOpen, setSwitchAccountOpen] = useState(false);
   const [adjacencyList, setAdjacencyList] = useState<string[]>([]);
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  const [tagsOpen, setTagsOpen] = useState(false);
+  const [loadingTags, setLoadingTags] = useState(false);
+  const [newTagName, setNewTagName] = useState("");
+  const [creatingTag, setCreatingTag] = useState(false);
+  const [deletingTagId, setDeletingTagId] = useState<string | null>(null);
+
   const isSubRoute = ["/privacy", "/help", "/about"].includes(
     location.pathname,
   );
 
-  const getHeaders = (): Record<string, string> => ({
-    Authorization: token ?? "",
-    "Content-Type": "application/json",
-  });
-
   const fetchAdjacencyList = async () => {
     setLoadingAccounts(true);
     try {
-      const response = await fetch(
-        withTargetUser(API_ENDPOINTS.ADJACENCY_LIST),
-        {
-          method: "GET",
-          headers: getHeaders(),
-        },
-      );
-
-      const data = await response.json();
-
-      if (response.ok && (data.adjacencylist || data.data)) {
-        const list = data.adjacencylist || data.data || [];
-        setAdjacencyList(list);
-      } else {
-        notifications.show({
-          title: "",
-          message: data.message || "Failed to fetch accounts list.",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-      }
-    } catch (error) {
+      const list = await getAdjacencyListApi();
+      setAdjacencyList(list);
+    } catch (error: any) {
       notifications.show({
         title: "",
-        message: `Error fetching account list: ${error}`,
+        message: error.message || `Error fetching accounts: ${error}`,
         color: "red",
         icon: <IconX size={18} />,
       });
@@ -86,12 +86,85 @@ const Profile = () => {
     }
   };
 
-  useEffect(() => {
-    fetchAdjacencyList();
-  }, []);
+  const fetchTagsList = async () => {
+    setLoadingTags(true);
+    try {
+      const tags = await getTagsApi();
+      const tagStrings: string[] = (tags || [])
+        .map((t: any) =>
+          typeof t === "string" ? t : t.tag_name || t.tag_id || t.name || "",
+        )
+        .filter(Boolean);
 
-  const handlePencilClick = () => {
-    fileInputRef.current?.click();
+      storeTags(tagStrings);
+    } catch (error: any) {
+      notifications.show({
+        title: "",
+        message: error.message || `Error fetching tags: ${error}`,
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+    } finally {
+      setLoadingTags(false);
+    }
+  };
+
+  const handleCreateTag = async () => {
+    const trimmedTag = newTagName.trim();
+    if (!trimmedTag) {
+      notifications.show({
+        title: "",
+        message: "Please enter a tag name.",
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+      return;
+    }
+
+    setCreatingTag(true);
+    try {
+      const res = await createTagApi(trimmedTag);
+      notifications.show({
+        title: "Success",
+        message: res.message || "Tag created successfully.",
+        color: "green",
+      });
+
+      appendTag(trimmedTag);
+      setNewTagName("");
+    } catch (error: any) {
+      notifications.show({
+        title: "",
+        message: error.message || `Error creating tag: ${error}`,
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+    } finally {
+      setCreatingTag(false);
+    }
+  };
+
+  const handleDeleteTag = async (tagIdentifier: string) => {
+    setDeletingTagId(tagIdentifier);
+    try {
+      const res = await deleteTagApi(tagIdentifier);
+      notifications.show({
+        title: "Success",
+        message: res.message || "Tag deleted successfully.",
+        color: "green",
+      });
+
+      removeTag(tagIdentifier);
+    } catch (error: any) {
+      notifications.show({
+        title: "",
+        message: error.message || `Error deleting tag: ${error}`,
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+    } finally {
+      setDeletingTagId(null);
+    }
   };
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -100,69 +173,32 @@ const Profile = () => {
 
     setUploadingImage(true);
     try {
-      const patchUrl = withTargetUser(API_ENDPOINTS.USER_HOME);
-      const patchPayload = {
+      const patchData = await updateProfileApi({
         display_name: target_user || userDetails?.username || "",
         profile_picture: file.name,
-      };
-
-      const response = await fetch(patchUrl, {
-        method: "PATCH",
-        headers: getHeaders(),
-        body: JSON.stringify(patchPayload),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        notifications.show({
-          title: "",
-          message: data.message || "Failed to initiate profile update.",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-        return;
-      }
-
-      const presignedUrl = data.profile_picture_upload_url;
-
-      if (presignedUrl) {
-        const s3Response = await fetch(presignedUrl, {
-          method: "PUT",
-          headers: {
-            "Content-Type": file.type || "image/png",
-          },
-          body: file,
-        });
-
-        if (!s3Response.ok) {
-          notifications.show({
-            title: "",
-            message: "Failed to upload image file to storage.",
-            color: "red",
-            icon: <IconX size={18} />,
-          });
-          return;
-        }
+      if (patchData.profile_picture_upload_url) {
+        await uploadImageToS3Api(patchData.profile_picture_upload_url, file);
       }
 
       const localPreviewUrl = URL.createObjectURL(file);
       if (userDetails) {
         setUserDetails({
           ...userDetails,
-          profile_url: localPreviewUrl,
+          profile_picture: localPreviewUrl,
         });
       }
 
       notifications.show({
         title: "Success",
-        message: data.message || "Profile picture updated successfully.",
+        message: patchData.message || "Profile picture updated successfully.",
         color: "green",
       });
-    } catch (error) {
+    } catch (error: any) {
       notifications.show({
         title: "",
-        message: `Error uploading profile picture: ${error}`,
+        message: error.message || `Error uploading profile picture: ${error}`,
         color: "red",
         icon: <IconX size={18} />,
       });
@@ -172,8 +208,25 @@ const Profile = () => {
     }
   };
 
+  useEffect(() => {
+    fetchAdjacencyList();
+    fetchTagsList();
+  }, []);
+
+  const handlePencilClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const handleToggleSwitchAccount = () => {
     setSwitchAccountOpen((prev) => !prev);
+  };
+
+  const handleToggleTags = () => {
+    const nextState = !tagsOpen;
+    setTagsOpen(nextState);
+    if (nextState) {
+      fetchTagsList();
+    }
   };
 
   const handleSwitchToAccount = (selectedUsername: string) => {
@@ -225,18 +278,18 @@ const Profile = () => {
       />
 
       <div className="flex flex-col md:flex-row h-full min-h-[calc(100vh-100px)] overflow-hidden bg-white">
-        <div className="w-full md:w-7/12 bg-white flex flex-col justify-between px-4 pt-4 sm:px-6 sm:pt-6 sm:pb-1 relative">
+        <div className="w-full md:w-7/12 bg-white flex flex-col justify-between px-4 pt-4 sm:px-6 sm:pt-6 sm:pb-1 relative overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
           <Stack gap="md" className="w-full">
             <div className="flex flex-col items-center justify-center pt-2 pb-2 gap-2">
               <div className="relative inline-block">
                 <Avatar
-                  src={userDetails?.profile_url || null}
+                  src={userDetails?.profile_picture || null}
                   color="indigo"
                   radius="xl"
                   size={84}
                   className="text-2xl font-bold shadow-sm"
                 >
-                  {!userDetails?.profile_url && userInitials}
+                  {!userDetails?.profile_picture && userInitials}
                 </Avatar>
 
                 <UnstyledButton
@@ -292,6 +345,22 @@ const Profile = () => {
 
                 {switchAccountOpen && (
                   <div className="px-5 pb-4 pt-2 border-t border-gray-100 space-y-2 animate-fadeIn">
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-indigo-50/60 border border-indigo-200">
+                      <Group gap="sm">
+                        <Avatar color="indigo" radius="xl" size={32}>
+                          {userInitials}
+                        </Avatar>
+                        <div>
+                          <Text size="sm" fw={600} className="text-indigo-900">
+                            {username}
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            Active Account
+                          </Text>
+                        </div>
+                      </Group>
+                    </div>
+
                     {loadingAccounts ? (
                       <div className="flex justify-center items-center py-3">
                         <Loader size="sm" color="indigo" />
@@ -335,6 +404,109 @@ const Profile = () => {
                       <div className="py-2 text-center">
                         <Text size="xs" c="dimmed" fw={500}>
                           No other accounts available to switch.
+                        </Text>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
+
+              <Card
+                withBorder
+                radius="lg"
+                p={0}
+                className="w-full transition-all duration-200 border-gray-200/90 shadow-xs hover:shadow-sm bg-white"
+              >
+                <UnstyledButton
+                  onClick={handleToggleTags}
+                  className="w-full px-5 py-4 cursor-pointer"
+                >
+                  <Group justify="space-between">
+                    <Group gap="md">
+                      <div className="p-2 rounded-lg bg-indigo-50 flex items-center justify-center">
+                        <IconTag size={20} className="text-indigo-600" />
+                      </div>
+                      <Text fw={600} size="md" className="text-gray-800">
+                        Tags List
+                      </Text>
+                    </Group>
+                    {tagsOpen ? (
+                      <IconChevronDown size={18} className="text-gray-400" />
+                    ) : (
+                      <IconChevronRight size={18} className="text-gray-400" />
+                    )}
+                  </Group>
+                </UnstyledButton>
+
+                {tagsOpen && (
+                  <div className="px-5 pb-4 pt-2 border-t border-gray-100 space-y-3 animate-fadeIn">
+                    <div className="flex items-center gap-2">
+                      <TextInput
+                        placeholder="Enter new tag name..."
+                        size="sm"
+                        className="flex-1"
+                        value={newTagName}
+                        disabled={creatingTag}
+                        onChange={(e) => setNewTagName(e.currentTarget.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleCreateTag();
+                          }
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        color="indigo"
+                        leftSection={<IconPlus size={16} />}
+                        loading={creatingTag}
+                        onClick={handleCreateTag}
+                        className="cursor-pointer shrink-0"
+                      >
+                        Add
+                      </Button>
+                    </div>
+
+                    {loadingTags ? (
+                      <div className="flex justify-center items-center py-3">
+                        <Loader size="sm" color="indigo" />
+                      </div>
+                    ) : tagsList.length > 0 ? (
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        {tagsList.map((tag, idx) => (
+                          <div
+                            key={`${tag}-${idx}`}
+                            className="flex items-center justify-between p-2.5 rounded-lg bg-gray-50/80 border border-gray-100 hover:bg-gray-100/70 transition-colors"
+                          >
+                            <Group gap="xs">
+                              <IconTag size={16} className="text-indigo-500" />
+                              <Text
+                                size="sm"
+                                fw={500}
+                                className="text-gray-700"
+                              >
+                                {tag}
+                              </Text>
+                            </Group>
+
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              size="sm"
+                              loading={deletingTagId === tag}
+                              onClick={() => handleDeleteTag(tag)}
+                              className="hover:bg-red-50 cursor-pointer"
+                              title="Delete Tag"
+                            >
+                              <IconTrash size={16} />
+                            </ActionIcon>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-3 text-center">
+                        <Text size="xs" c="dimmed" fw={500}>
+                          No tags created yet.
                         </Text>
                       </div>
                     )}

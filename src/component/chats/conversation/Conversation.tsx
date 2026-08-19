@@ -1,11 +1,15 @@
+import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import ChatInput from "./ChatInput";
 import Chatting from "./Chatting";
 import DeleteChatDialog from "./dialouges/DeleteChatDialog";
 import EditChatDialog from "./dialouges/EditChatDialog";
 import Previewer from "./modals/Previewer";
+import TagsModal from "./modals/TagsModal";
 import Navbar from "./Navbar";
+import TextFilterInputBox from "./TextFilterInputBox";
 
 function Conversation() {
+  const { trigger } = useTriggerStore((state) => state);
   return (
     <div className="p-2 h-full">
       <div className="h-full rounded p-1">
@@ -17,7 +21,11 @@ function Conversation() {
                 <Chatting />
               </div>
               <div>
-                <ChatInput />
+                {trigger.includes("search:") ? (
+                  <TextFilterInputBox />
+                ) : (
+                  <ChatInput />
+                )}
               </div>
             </div>
           </div>
@@ -26,6 +34,7 @@ function Conversation() {
       <DeleteChatDialog />
       <EditChatDialog />
       <Previewer />
+      <TagsModal />
     </div>
   );
 }
