@@ -55,6 +55,7 @@ const CreateGroupModal = ({
   const [groupImage, setGroupImage] = useState<File | null>(null);
   const [onlyAdminsCanMessage, setOnlyAdminsCanMessage] = useState(false);
   const [updatingMembers, setUpdatingMembers] = useState(false);
+  const [updatingAdmins, setUpdatingAdmins] = useState(false);
 
   const getUserId = (c: Contact) =>
     c.username || (c.id.includes("#") ? c.id.split("#")[1] : c.id);
@@ -137,6 +138,65 @@ const CreateGroupModal = ({
     }
   };
 
+  const callManageAdminsApi = async (
+    targetAdminIds: string[],
+    operation: "add-members" | "remove-members",
+  ): Promise<boolean> => {
+    if (!initialGroup) return true;
+
+    try {
+      const payload = {
+        group_id: initialGroup._id,
+        admins: targetAdminIds,
+        operation,
+      };
+
+      const response = await api.post(
+        withTargetUser(API_ENDPOINTS.MANAGE_MEMBERS),
+        payload,
+      );
+
+      const data = response.data;
+
+      if (response.status !== 200 || data.success === false) {
+        notifications.show({
+          title: "",
+          message: data.message || "Something went wrong.",
+          color: "red",
+          icon: <IconX size={18} />,
+        });
+        return false;
+      }
+
+      return true;
+    } catch (error: any) {
+      if (error.response) {
+        const backendData = error.response.data;
+
+        notifications.show({
+          title: "",
+          message:
+            backendData?.message ||
+            backendData?.error ||
+            (typeof backendData === "string"
+              ? backendData
+              : "Validation failed."),
+          color: "red",
+          icon: <IconX size={18} />,
+        });
+      } else {
+        notifications.show({
+          title: "",
+          message: error.message || "Network error occurred.",
+          color: "red",
+          icon: <IconX size={18} />,
+        });
+      }
+
+      return false;
+    }
+  };
+
   const handleRemoveMember = async (memberId: string) => {
     const memberToRemove = members.find((m) => m.id === memberId);
     if (!memberToRemove) return;
@@ -183,6 +243,35 @@ const CreateGroupModal = ({
     }
 
     setMembers((prev) => [...prev, ...newlyAddedContacts]);
+  };
+
+  const handleAdminChange = async (newAdmins: string[]) => {
+    if (!initialGroup) {
+      setAdmins(newAdmins);
+      return;
+    }
+
+    const addedAdmins = newAdmins.filter((a) => !admins.includes(a));
+    const removedAdmins = admins.filter((a) => !newAdmins.includes(a));
+
+    if (addedAdmins.length > 0) {
+      setUpdatingAdmins(true);
+      const success = await callManageAdminsApi(addedAdmins, "add-members");
+      setUpdatingAdmins(false);
+      if (success) {
+        setAdmins(newAdmins);
+      }
+    } else if (removedAdmins.length > 0) {
+      setUpdatingAdmins(true);
+      const success = await callManageAdminsApi(
+        removedAdmins,
+        "remove-members",
+      );
+      setUpdatingAdmins(false);
+      if (success) {
+        setAdmins(newAdmins);
+      }
+    }
   };
 
   const handleSubmit = async () => {
@@ -317,7 +406,7 @@ const CreateGroupModal = ({
                       onRemove={() => handleRemoveMember(member.id)}
                       size="sm"
                       color="indigo"
-                      disabled={updatingMembers}
+                      disabled={updatingMembers || updatingAdmins}
                     >
                       <Group gap={4} wrap="nowrap">
                         <Avatar color={member.color} radius="xl" size={16}>
@@ -345,7 +434,7 @@ const CreateGroupModal = ({
                 data={availableContactsToAdd}
                 value={[]}
                 onChange={handleAddNewMembers}
-                disabled={updatingMembers}
+                disabled={updatingMembers || updatingAdmins}
                 leftSection={<IconUserPlus size={16} />}
                 searchable={false}
                 comboboxProps={{
@@ -360,7 +449,8 @@ const CreateGroupModal = ({
               size="sm"
               data={adminOptions}
               value={admins}
-              onChange={setAdmins}
+              onChange={handleAdminChange}
+              disabled={updatingMembers || updatingAdmins}
               searchable={false}
               comboboxProps={{
                 withinPortal: true,
@@ -381,7 +471,7 @@ const CreateGroupModal = ({
             fullWidth
             color="indigo"
             size="sm"
-            loading={loading || updatingMembers}
+            loading={loading || updatingMembers || updatingAdmins}
             onClick={handleSubmit}
           >
             {initialGroup ? "Update Group" : "Create Group"}

@@ -205,7 +205,8 @@ const Profile = () => {
     }
   };
 
-  const username = target_user || userDetails?.username || "";
+  const username =
+    userDetails?.phone_number || target_user || userDetails?.username || "";
   const userInitials =
     username
       .split("-")
