@@ -32,7 +32,6 @@ import {
   IconEyeOff,
   IconSearch,
   IconX,
-  IconAdjustmentsPause,
 } from "@tabler/icons-react";
 
 import {
@@ -348,6 +347,7 @@ export default function Accounts() {
   });
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAccounts();
   }, []);
   return (

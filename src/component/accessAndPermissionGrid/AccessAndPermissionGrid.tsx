@@ -31,10 +31,7 @@ interface UpdateUserPermissionsPayload {
   permissions: PermissionNode;
 }
 
-type UserPermissionChanges = Record<
-  string,
-  UpdateUserPermissionsPayload
->;
+type UserPermissionChanges = Record<string, UpdateUserPermissionsPayload>;
 
 interface AccessAndPermissionGridProps {
   users: string[];
@@ -54,8 +51,7 @@ export default function AccessAndPermissionGrid({
   const [loading, setLoading] = useState(false);
   const [loadingAP, setLoadingAP] = useState(false);
 
-  const [changes, setChanges] =
-    useState<UserPermissionChanges>({});
+  const [changes, setChanges] = useState<UserPermissionChanges>({});
 
   const handlePermissionChange = (
     username: string,
@@ -65,8 +61,7 @@ export default function AccessAndPermissionGrid({
     setChanges((previous) => {
       const existingUser = previous[username];
 
-      const currentPermissions =
-        existingUser?.permissions ?? {};
+      const currentPermissions = existingUser?.permissions ?? {};
 
       const updatedPermissions = setNestedPermission(
         currentPermissions,
@@ -93,10 +88,7 @@ export default function AccessAndPermissionGrid({
     });
   };
 
-  const handleAccessChange = (
-    username: string,
-    checked: boolean,
-  ) => {
+  const handleAccessChange = (username: string, checked: boolean) => {
     setChanges((previous) => {
       if (checked) {
         return {
@@ -126,13 +118,9 @@ export default function AccessAndPermissionGrid({
         sub_users: Object.values(changes),
       };
 
-      await AcessAndPermissionService.updateAccessAndPermission(
-        payload,
-      );
+      await AcessAndPermissionService.updateAccessAndPermission(payload);
 
-      Notification.success(
-        "Access & Permission updated",
-      );
+      Notification.success("Access & Permission updated");
     } catch (error) {
       if (error instanceof Error) {
         Notification.error(error.message);
@@ -143,22 +131,18 @@ export default function AccessAndPermissionGrid({
   };
 
   const loadAccessAndPermissions = async () => {
-  try {
-    setLoadingAP(true);
+    try {
+      setLoadingAP(true);
 
-    const res =
-      (await AcessAndPermissionService.getAccessAndPermission(
+      const res = (await AcessAndPermissionService.getAccessAndPermission(
         targetUser,
       )) as AccessAndPermissionResponse;
 
-    const formattedChanges =
-      res.sub_users.reduce<UserPermissionChanges>(
+      const formattedChanges = res.sub_users.reduce<UserPermissionChanges>(
         (result, user) => {
           result[user.username] = {
             username: user.username,
-            permissions: removeFalsePermissions(
-              user.permissions,
-            ),
+            permissions: removeFalsePermissions(user.permissions),
           };
 
           return result;
@@ -166,15 +150,15 @@ export default function AccessAndPermissionGrid({
         {},
       );
 
-    setChanges(formattedChanges);
-  } catch (error) {
-    if (error instanceof Error) {
-      Notification.error(error.message);
+      setChanges(formattedChanges);
+    } catch (error) {
+      if (error instanceof Error) {
+        Notification.error(error.message);
+      }
+    } finally {
+      setLoadingAP(false);
     }
-  } finally {
-    setLoadingAP(false);
-  }
-};
+  };
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -184,37 +168,24 @@ export default function AccessAndPermissionGrid({
 
   if (loadingAP) {
     return (
-      <Flex
-        justify="center"
-        align="center"
-        h="calc(100dvh - 80px)"
-      >
+      <Flex justify="center" align="center" h="calc(100dvh - 80px)">
         <Loader size="xs" />
       </Flex>
     );
   }
 
   return (
-    <Flex
-      direction="column"
-      h="calc(100dvh - 80px)"
-      gap="md"
-    >
+    <Flex direction="column" h="calc(100dvh - 80px)" gap="md">
       <Box
         style={{
           flex: 1,
           minHeight: 0,
           overflow: "hidden",
-          border:
-            "1px solid var(--mantine-color-gray-3)",
+          border: "1px solid var(--mantine-color-gray-3)",
           borderRadius: 10,
         }}
       >
-        <ScrollArea
-          h="100%"
-          type="auto"
-          scrollbarSize={0}
-        >
+        <ScrollArea h="100%" type="auto" scrollbarSize={0}>
           <Table
             withColumnBorders
             horizontalSpacing={6}
@@ -226,16 +197,13 @@ export default function AccessAndPermissionGrid({
             }}
             styles={{
               th: {
-                borderLeft:
-                  "1px solid var(--mantine-color-gray-3)",
-                borderBottom:
-                  "1px solid var(--mantine-color-gray-3)",
+                borderLeft: "1px solid var(--mantine-color-gray-3)",
+                borderBottom: "1px solid var(--mantine-color-gray-3)",
                 borderRight: 0,
               },
 
               td: {
-                borderBottom:
-                  "1px solid var(--mantine-color-gray-3)",
+                borderBottom: "1px solid var(--mantine-color-gray-3)",
                 borderRight: 0,
               },
             }}
@@ -249,15 +217,14 @@ export default function AccessAndPermissionGrid({
             >
               <Table.Tr>
                 <Table.Th
-                  rowSpan={2}
+                  rowSpan={3}
                   style={{
                     position: "sticky",
                     left: 0,
                     top: 0,
                     zIndex: 12,
                     textAlign: "center",
-                    background:
-                      "var(--mantine-color-gray-1)",
+                    background: "var(--mantine-color-gray-1)",
                     borderLeft: 0,
                   }}
                 >
@@ -265,32 +232,49 @@ export default function AccessAndPermissionGrid({
                 </Table.Th>
 
                 <Table.Th
-                  rowSpan={2}
+                  rowSpan={3}
                   style={{
                     position: "sticky",
                     top: 0,
                     zIndex: 11,
                     textAlign: "center",
-                    background:
-                      "var(--mantine-color-gray-1)",
+                    background: "var(--mantine-color-gray-1)",
                   }}
                 >
                   Access
                 </Table.Th>
               </Table.Tr>
 
+              <Table.Tr bg={"var(--mantine-color-gray-1)"}>
+                <Table.Th colSpan={7} ta="center">
+                  Messages
+                </Table.Th>
+                <Table.Th colSpan={4} ta="center">
+                  Group Messages
+                </Table.Th>
+                <Table.Th colSpan={4} ta="center">
+                  Group
+                </Table.Th>
+                <Table.Th colSpan={4} ta="center">
+                  Contacts
+                </Table.Th>
+                <Table.Th colSpan={2} ta="center">
+                  Users
+                </Table.Th>
+                <Table.Th colSpan={4} ta="center">
+                  Tags
+                </Table.Th>
+              </Table.Tr>
+
               {/* Permission headers */}
-              <PermissionTableHeader
-                data={PERMISSIONS}
-              />
+              <PermissionTableHeader data={PERMISSIONS} />
             </Table.Thead>
 
             <Table.Tbody>
               {users.map((user) => {
                 const currentUser = changes[user];
 
-                const canUserAccess =
-                  Boolean(currentUser);
+                const canUserAccess = Boolean(currentUser);
 
                 return (
                   <Table.Tr key={user}>
@@ -298,22 +282,13 @@ export default function AccessAndPermissionGrid({
                       style={{
                         position: "sticky",
                         left: 0,
-                        zIndex: 11,
-                        background:
-                          "var(--mantine-color-gray-1)",
+                        zIndex: 6,
+                        background: "var(--mantine-color-gray-1)",
                         whiteSpace: "nowrap",
                       }}
                     >
-                      <Text
-                        size="xs"
-                        fw={600}
-                        ta="center"
-                      >
-                        {`${user} ${
-                          user === targetUser
-                            ? "( target user )"
-                            : ""
-                        }`}
+                      <Text size="xs" fw={600} ta="center">
+                        {user}
                       </Text>
                     </Table.Td>
 
@@ -331,50 +306,38 @@ export default function AccessAndPermissionGrid({
                           onChange={(event) =>
                             handleAccessChange(
                               user,
-                              event.currentTarget
-                                .checked,
+                              event.currentTarget.checked,
                             )
                           }
                         />
                       </Flex>
                     </Table.Td>
 
-                    {permissionColumns.map(
-                      (permission) => {
-                        const checked =
-                          getNestedPermission(
-                            currentUser?.permissions ??
-                              {},
-                            permission.path,
-                          );
+                    {permissionColumns.map((permission) => {
+                      const checked = getNestedPermission(
+                        currentUser?.permissions ?? {},
+                        permission.path,
+                      );
 
-                        return (
-                          <Table.Td
-                            key={permission.id}
-                            ta="center"
-                          >
-                            <Flex justify="center">
-                              <Checkbox
-                                size="xs"
-                                checked={checked}
-                                disabled={
-                                  !canUserAccess
-                                }
-                                onChange={(event) =>
-                                  handlePermissionChange(
-                                    user,
-                                    permission.path,
-                                    event
-                                      .currentTarget
-                                      .checked,
-                                  )
-                                }
-                              />
-                            </Flex>
-                          </Table.Td>
-                        );
-                      },
-                    )}
+                      return (
+                        <Table.Td key={permission.id} ta="center">
+                          <Flex justify="center">
+                            <Checkbox
+                              size="xs"
+                              checked={checked}
+                              disabled={!canUserAccess}
+                              onChange={(event) =>
+                                handlePermissionChange(
+                                  user,
+                                  permission.path,
+                                  event.currentTarget.checked,
+                                )
+                              }
+                            />
+                          </Flex>
+                        </Table.Td>
+                      );
+                    })}
                   </Table.Tr>
                 );
               })}
@@ -387,10 +350,7 @@ export default function AccessAndPermissionGrid({
         <Button
           size="compact-xs"
           onClick={handleSave}
-          disabled={
-            Object.keys(changes).length === 0 ||
-            loading
-          }
+          disabled={Object.keys(changes).length === 0 || loading}
           loading={loading}
         >
           Save changes

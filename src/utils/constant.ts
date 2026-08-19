@@ -145,38 +145,42 @@ export const PERMISSIONS = {
 };
 
 export const PERMISSION_LABELS: Record<string, string> = {
-  "messages.chat.create": "Write Message",
+  // Direct Message ( DM )
+  "messages.chat.create": "Write",
   "messages.chat.start": "Start Chat",
-  "messages.chat.read": "View Messages",
-  "messages.chat.update": "Update Message",
-  "messages.chat.delete": "Delete Message",
-
+  "messages.chat.read": "View",
+  "messages.chat.update": "Update",
+  "messages.chat.delete": "Delete ",
   "messages.chat.history.get": "View Chats",
   "messages.chat.history.delete": "Delete Chats",
+  
+  // Group Messages
+  "messages.group.create": "Write",
+  "messages.group.read": "View",
+  "messages.group.update": "Update",
+  "messages.group.delete": "Delete",
 
-  "messages.group.create": "Write Message",
-  "messages.group.read": "View Messages",
-  "messages.group.update": "Update Message",
-  "messages.group.delete": "Delete Message",
+  // Group
+  "group.create": "Create",
+  "group.read": "View",
+  "group.update": "Update",
+  "group.delete": "Delete",
 
-  "group.create": "Create Group",
-  "group.read": "View Groups",
-  "group.update": "Update Group",
-  "group.delete": "Delete Group",
+  // Contacts
+  "contacts.create": "Add",
+  "contacts.read": "View",
+  "contacts.update": "Update",
+  "contacts.delete": "Delete",
 
-  "contacts.create": "Add Contact",
-  "contacts.read": "View Contacts",
-  "contacts.update": "Update Contact",
-  "contacts.delete": "Delete Contact",
-
+  // Users
   "users.read": "View Profile",
-
   "users.accesstree.read": "View Subusers",
 
-  "users.tags.create": "Create Tag",
-  "users.tags.read": "View Tag",
-  "users.tags.update": "Update Tag",
-  "users.tags.delete": "Delete Tag",
+  // Tags
+  "users.tags.create": "Create",
+  "users.tags.read": "View",
+  "users.tags.update": "Update",
+  "users.tags.delete": "Delete",
 };
 export const getHeaders = (): Record<string, string> => ({
   Authorization: token ?? "",
