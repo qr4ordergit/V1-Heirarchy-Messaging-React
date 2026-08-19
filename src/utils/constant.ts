@@ -95,8 +95,30 @@ export const TRIGGERS = {
 export const CIPHER_SECRET =
   "a3f9c81e2d4b7f60918c5e3a2b7d4f9c1e6a8b3d5f2c9e4a7b1d8f3c6e9a2b5d";
 
+export const getHeaders = (): Record<string, string> => ({
+  Authorization: token ?? "",
+  "Content-Type": "application/json",
+});
 
- export const getHeaders = (): Record<string, string> => ({
-    Authorization: token ?? "",
-    "Content-Type": "application/json",
-  });
+export const COUNTRY_CODES = [
+  { value: "+91", label: "+91 India" },
+  { value: "+1", label: "+1 USA/Canada" },
+  { value: "+44", label: "+44 UK" },
+  { value: "+61", label: "+61 Australia" },
+  { value: "+971", label: "+971 UAE" },
+  { value: "+65", label: "+65 Singapore" },
+  { value: "+966", label: "+966 Saudi Arabia" },
+  { value: "+49", label: "+49 Germany" },
+  { value: "+33", label: "+33 France" },
+  { value: "+81", label: "+81 Japan" },
+  { value: "+86", label: "+86 China" },
+  { value: "+27", label: "+27 South Africa" },
+  { value: "+55", label: "+55 Brazil" },
+  { value: "+7", label: "+7 Russia" },
+  { value: "+92", label: "+92 Pakistan" },
+  { value: "+880", label: "+880 Bangladesh" },
+  { value: "+94", label: "+94 Sri Lanka" },
+  { value: "+977", label: "+977 Nepal" },
+  { value: "+63", label: "+63 Philippines" },
+  { value: "+62", label: "+62 Indonesia" },
+];
