@@ -19,6 +19,7 @@ import {
   TextInput,
   Title,
   Switch,
+  Tooltip,
 } from "@mantine/core";
 import {
   IconDotsVertical,
@@ -499,7 +500,11 @@ export default function Accounts() {
                             {account.isLocked ? (
                               <IconLock size={14} color="red" />
                             ) : (
-                              <IconLockOpen size={14} />
+                              <>
+                                <Tooltip label="Lock with passkey">
+                                  <IconLockOpen size={14} />
+                                </Tooltip>
+                              </>
                             )}
                           </ActionIcon>
 

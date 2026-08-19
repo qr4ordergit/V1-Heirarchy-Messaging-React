@@ -17,7 +17,9 @@ import { useTagStore } from "../../../store/tags/tags.store";
 function Navbar() {
   const { dms } = useDMListStore((state) => state);
   const { groups } = useGroupListStore((state) => state);
-  const { setTrigger } = useTriggerStore((state) => state);
+  const { setTrigger, trigger, resetTrigger } = useTriggerStore(
+    (state) => state,
+  );
   const { tags } = useTagStore((state) => state);
 
   const { chatId } = useParams<{ chatId: string }>();
@@ -50,12 +52,18 @@ function Navbar() {
   };
 
   const onSearchByTag = (tag = "") => {
-    setTrigger({
-      toTrigger: TRIGGERS.searchByTag,
-      payload: {
-        tag: tag,
-      },
-    });
+    if (trigger.length > 0) {
+      console.log("a");
+      resetTrigger();
+    }
+    setTimeout(() => {
+      setTrigger({
+        toTrigger: TRIGGERS.searchByTag,
+        payload: {
+          tag: tag,
+        },
+      });
+    }, 0);
   };
 
   return (
