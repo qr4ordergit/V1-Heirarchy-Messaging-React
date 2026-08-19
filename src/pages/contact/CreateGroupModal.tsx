@@ -16,12 +16,9 @@ import {
 } from "@mantine/core";
 import { IconUpload, IconUserPlus, IconX } from "@tabler/icons-react";
 import type { Contact, GroupItem } from "./Contact";
-import {
-  API_ENDPOINTS,
-  getHeaders,
-  withTargetUser,
-} from "../../utils/constant";
+import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
 import { notifications } from "@mantine/notifications";
+import { api } from "../../api/axios";
 
 interface CreateGroupModalProps {
   opened: boolean;
@@ -111,18 +108,14 @@ const CreateGroupModal = ({
         operation,
       };
 
-      const response = await fetch(
+      const response = await api.post(
         withTargetUser(API_ENDPOINTS.MANAGE_MEMBERS),
-        {
-          method: "POST",
-          headers: getHeaders(),
-          body: JSON.stringify(payload),
-        },
+        payload,
       );
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok || data.success === false) {
+      if (response.status !== 200 || data.success === false) {
         notifications.show({
           title: "",
           message: data.message || "Something went wrong.",

@@ -1,22 +1,30 @@
+import { useEffect, useState } from "react";
 import {
+  ActionIcon,
+  Avatar,
   Box,
   Button,
   Flex,
   Group,
   Input,
+  Loader,
+  Menu,
   Paper,
   ScrollArea,
   Stack,
   Text,
+  UnstyledButton,
 } from "@mantine/core";
 import Heading from "../heading/Heading";
-import { IconSearch } from "@tabler/icons-react";
+import { IconSearch, IconSwitch3, IconX } from "@tabler/icons-react";
 import { useConversationTypeStore } from "../../store/conversation/conversation.type.store";
 import DmList from "../dmList/DmList";
 import GroupList from "../groupList/GroupList";
 import { useNavigate } from "react-router";
 import { ROUTES } from "../../router/routes";
 import { useAuthStore } from "../../store/auth/auth.store";
+import { getAdjacencyListApi } from "../../api/profileApi";
+import { notifications } from "@mantine/notifications";
 
 export default function ConversationPanel() {
   const type = useConversationTypeStore((state) => state.type);
@@ -24,8 +32,44 @@ export default function ConversationPanel() {
   const search = useConversationTypeStore((state) => state.search);
   const setSearch = useConversationTypeStore((state) => state.setSearch);
   const target_user = useAuthStore((state) => state.target_user);
+  const setTargetUser = useAuthStore((state) => state.setTargetUser);
+  const userDetails = useAuthStore((state) => state.userDetails);
+
+  const [adjacencyList, setAdjacencyList] = useState<string[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
 
   const navigate = useNavigate();
+
+  const activeUsername = target_user || userDetails?.username || "";
+
+  const otherAccounts = adjacencyList.filter((acc) => acc !== activeUsername);
+
+  const fetchAdjacencyList = async () => {
+    setLoadingAccounts(true);
+    try {
+      const list = await getAdjacencyListApi();
+      setAdjacencyList(list);
+    } catch (error: any) {
+      notifications.show({
+        title: "",
+        message: error.message || `Error fetching accounts: ${error}`,
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdjacencyList();
+  }, []);
+
+  const handleSwitchAccount = (selectedUsername: string) => {
+    setTargetUser(selectedUsername);
+    // navigate(`/${ROUTES.CHATS}`);
+    window.location.reload();
+  };
 
   const conversationTypes = [
     { label: "DM", value: "dm" },
@@ -50,11 +94,61 @@ export default function ConversationPanel() {
           minHeight: 0,
         }}
       >
-        <Flex align={"end"} gap={"xs"} justify={"space-between"}>
+        <Flex align={"center"} gap={"xs"} justify={"space-between"}>
           <Heading c="var(--mantine-color-blue-4">Chat Hub</Heading>
-          {target_user !== "" && (
+          {loadingAccounts ? (
+            <Loader size="xs" color="indigo" />
+          ) : otherAccounts.length > 0 ? (
+            <Menu shadow="md" width={220} position="bottom-end" radius="md">
+              <Menu.Target>
+                <UnstyledButton className="cursor-pointer">
+                  <Group gap={4}>
+                    <Text size="xs" c="dimmed" fw={500}>
+                      {activeUsername}
+                    </Text>
+                    <ActionIcon
+                      size="xs"
+                      variant="light"
+                      color="indigo"
+                      radius="xl"
+                    >
+                      <IconSwitch3 size={12} />
+                    </ActionIcon>
+                  </Group>
+                </UnstyledButton>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Label>Switch Account</Menu.Label>
+                {otherAccounts.map((accUsername) => {
+                  const initials =
+                    accUsername
+                      .split("-")
+                      .map((p) => p[0]?.toUpperCase() || "")
+                      .join("")
+                      .slice(0, 2) || "U";
+
+                  return (
+                    <Menu.Item
+                      key={accUsername}
+                      onClick={() => handleSwitchAccount(accUsername)}
+                      leftSection={
+                        <Avatar color="indigo" radius="xl" size={20}>
+                          {initials}
+                        </Avatar>
+                      }
+                    >
+                      <Text size="xs" fw={500}>
+                        {accUsername}
+                      </Text>
+                    </Menu.Item>
+                  );
+                })}
+              </Menu.Dropdown>
+            </Menu>
+          ) : (
             <Text size="xs" c={"dimmed"}>
-              {target_user}
+              {activeUsername}
             </Text>
           )}
         </Flex>
