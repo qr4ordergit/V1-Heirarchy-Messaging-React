@@ -13,6 +13,10 @@ export const ENDPOINTS = {
     DELETE: "/message",
     PUT: "/message"
   },
+  ACCESS_PERMISSION:{
+    GET : "/user-access/sub-users-permissions",
+    PATCH : "/user-access"
+  },
   GROUP_CHAT: {
     GET: "/groups-message?group_id=",
     POST: "/groups-message",

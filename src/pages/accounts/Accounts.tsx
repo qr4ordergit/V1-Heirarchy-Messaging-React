@@ -34,6 +34,7 @@ import {
   IconEyeOff,
   IconSearch,
   IconX,
+  IconAdjustmentsPause,
 } from "@tabler/icons-react";
 
 import {
@@ -55,6 +56,7 @@ import ManageSubUsersModal from "../../component/manageSubUsers/ManageSubUsersMo
 import { encryptPasskey, decryptPasskey } from "../../utils/passkeyCipher";
 import classes from "./Accounts.module.css";
 import { ClearStore } from "../../store/clear.store";
+import AccessAndPermissionGrid from "../../component/accessAndPermissionGrid/AccessAndPermissionGrid";
 
 type IdentifierType = "username" | "email" | "phone";
 
@@ -102,6 +104,11 @@ const statusColor = (status: string | null) => {
   }
 };
 
+interface AccessAndPermissionsState {
+  open: boolean;
+  targetUser: string;
+}
+
 export default function Accounts() {
   //const { suggestUsername, logout } = useAuthApi();
   const navigate = useNavigate();
@@ -110,6 +117,7 @@ export default function Accounts() {
   const userDetails = useAuthStore((state) => state.userDetails);
 
   const [accounts, setAccounts] = useState<Account[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -160,8 +168,37 @@ export default function Accounts() {
     Record<string, boolean>
   >({});
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [accessAndPermissions, setAccessAndPermissions] =
+    useState<AccessAndPermissionsState>({
+      open: false,
+      targetUser: "",
+    });
+
   const setField = (field: keyof NewAccountForm) => (value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const onOpenAccessAndPermissions = (user_id: string) => {
+    setAccessAndPermissions({
+      open: true,
+      targetUser: user_id,
+    });
+  };
+
+  const onCloseAccessAndPermissions = () => {
+    setAccessAndPermissions({
+      open: false,
+      targetUser: "",
+    });
+  };
+
+  const users = structuredClone(accounts)
+  .sort((a, b) => {
+    if (a.user_id === accessAndPermissions.targetUser) return -1;
+    if (b.user_id === accessAndPermissions.targetUser) return 1;
+    return 0;
+  })
+  .map((acc) => acc.user_id);;
 
   const togglePasskeyVisibility = (account: Account) => {
     setVisiblePasskeys((prev) => ({
@@ -815,6 +852,14 @@ export default function Accounts() {
 
                         <Menu.Dropdown>
                           <Menu.Item
+                            leftSection={<IconAdjustmentsPause size={14} />}
+                            onClick={() =>
+                              onOpenAccessAndPermissions(account.user_id)
+                            }
+                          >
+                            Access & Permissions
+                          </Menu.Item>
+                          <Menu.Item
                             leftSection={<IconKey size={14} />}
                             onClick={() => setPasswordTarget(account)}
                           >
@@ -1213,6 +1258,16 @@ export default function Accounts() {
         targetUser={manageSubUsersTarget}
         onClose={() => setManageSubUsersTarget(null)}
       />
+
+      <Modal
+        opened={accessAndPermissions.open}
+        onClose={onCloseAccessAndPermissions}
+        title="Access & Permissions"
+        fullScreen
+        radius={0}
+      >
+        <AccessAndPermissionGrid users={users} targetUser={accessAndPermissions.targetUser}/>
+      </Modal>
     </div>
   );
 }

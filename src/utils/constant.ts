@@ -88,3 +88,87 @@ export const TRIGGERS = {
 
 export const CIPHER_SECRET =
   "a3f9c81e2d4b7f60918c5e3a2b7d4f9c1e6a8b3d5f2c9e4a7b1d8f3c6e9a2b5d";
+
+export const PERMISSIONS = {
+  messages: {
+    chat: {
+      create: false,
+      start: false,
+      read: false,
+      update: false,
+      delete: false,
+      history: {
+        get: false,
+        delete: false,
+      },
+    },
+    group: {
+      create: false,
+      read: false,
+      update: false,
+      delete: false,
+    },
+  },
+
+  group: {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
+
+  contacts: {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
+
+  users: {
+    read: false,
+    accesstree: {
+      read: false,
+    },
+    tags: {
+      create: false,
+      read: false,
+      update: false,
+      delete: false,
+    },
+  },
+};
+
+export const PERMISSION_LABELS: Record<string, string> = {
+  "messages.chat.create": "Write Message",
+  "messages.chat.start": "Start Chat",
+  "messages.chat.read": "View Messages",
+  "messages.chat.update": "Update Message",
+  "messages.chat.delete": "Delete Message",
+
+  "messages.chat.history.get": "View Chats",
+  "messages.chat.history.delete": "Delete Chats",
+
+  "messages.group.create": "Write Message",
+  "messages.group.read": "View Messages",
+  "messages.group.update": "Update Message",
+  "messages.group.delete": "Delete Message",
+
+  "group.create": "Create Group",
+  "group.read": "View Groups",
+  "group.update": "Update Group",
+  "group.delete": "Delete Group",
+
+  "contacts.create": "Add Contact",
+  "contacts.read": "View Contacts",
+  "contacts.update": "Update Contact",
+  "contacts.delete": "Delete Contact",
+
+  "users.read": "View Profile",
+
+  "users.accesstree.read": "View Subusers",
+
+  "users.tags.create": "Create Tag",
+  "users.tags.read": "View Tag",
+  "users.tags.update": "Update Tag",
+  "users.tags.delete": "Delete Tag",
+};
