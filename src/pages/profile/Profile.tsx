@@ -35,6 +35,7 @@ import {
 } from "../../api/profileApi";
 import { ROUTES } from "../../router/routes";
 import { notifications } from "@mantine/notifications";
+import { handleApiError } from "../../utils/errorHandler";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -79,13 +80,8 @@ const Profile = () => {
       const tags = await getTagsApi();
       storeTags(Array.isArray(tags) ? tags : []);
     } catch (error: any) {
-      notifications.show({
-        title: "",
-        message: error.message || `Error fetching tags: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
-    } finally {
+        handleApiError(error);
+      } finally {
       setLoadingTags(false);
     }
   };
@@ -114,13 +110,8 @@ const Profile = () => {
       appendTag(trimmedTag);
       setNewTagName("");
     } catch (error: any) {
-      notifications.show({
-        title: "",
-        message: error.message || `Error creating tag: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
-    } finally {
+        handleApiError(error);
+      } finally {
       setCreatingTag(false);
     }
   };
@@ -137,13 +128,8 @@ const Profile = () => {
 
       removeTag(tagIdentifier);
     } catch (error: any) {
-      notifications.show({
-        title: "",
-        message: error.message || `Error deleting tag: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
-    } finally {
+        handleApiError(error);
+      } finally {
       setDeletingTagId(null);
     }
   };
@@ -182,14 +168,9 @@ const Profile = () => {
         message: patchData.message || "Profile picture updated successfully.",
         color: "green",
       });
-    } catch (error: any) {
-      notifications.show({
-        title: "",
-        message: error.message || `Error uploading profile picture: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
-    } finally {
+    }catch (error: any) {
+        handleApiError(error);
+      }  finally {
       setUploadingImage(false);
       if (event.target) event.target.value = "";
     }
@@ -214,9 +195,9 @@ const Profile = () => {
   const handleLogout = async () => {
     try {
       await logout();
-    } catch (err) {
-      console.error("Logout request failed:", err);
-    } finally {
+    } catch (error: any) {
+        handleApiError(error);
+      } finally {
       clearTokens();
       navigate(ROUTES.HOME, { replace: true });
     }

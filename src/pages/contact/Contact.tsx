@@ -31,6 +31,7 @@ import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
 import { notifications } from "@mantine/notifications";
 import { encryptPasskey } from "../../utils/passkeyCipher";
 import { api } from "../../api/axios";
+import { handleApiError } from "../../utils/errorHandler";
 
 export interface Contact {
   id: string;
@@ -124,13 +125,8 @@ const Contact = () => {
           icon: <IconX size={18} />,
         });
       }
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Error fetching contacts: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setLoading(false);
     }
@@ -153,13 +149,8 @@ const Contact = () => {
           icon: <IconX size={18} />,
         });
       }
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Error fetching groups: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setGroupsLoading(false);
     }
@@ -173,6 +164,8 @@ const Contact = () => {
     setActiveTab(value);
     if (value === "groups") {
       fetchGroups();
+    } else {
+      fetchContacts();
     }
   };
 
@@ -252,14 +245,8 @@ const Contact = () => {
               },
               body: group_image_file,
             });
-          } catch (uploadError) {
-            console.error("Presigned URL Upload Error:", uploadError);
-            notifications.show({
-              title: "Warning",
-              message: "Group saved, but failed to upload group image.",
-              color: "orange",
-              icon: <IconX size={18} />,
-            });
+          } catch (error: any) {
+            handleApiError(error);
           }
         }
 
@@ -287,13 +274,8 @@ const Contact = () => {
           icon: <IconX size={18} />,
         });
       }
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Error ${isEdit ? "updating" : "creating"} group: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setCreatingGroupLoading(false);
     }
@@ -338,13 +320,8 @@ const Contact = () => {
           icon: <IconX size={18} />,
         });
       }
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Error deleting group: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setDeletingGroupId(null);
     }
@@ -393,13 +370,8 @@ const Contact = () => {
           icon: <IconX size={18} />,
         });
       }
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Error starting conversation: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setStartingChatId(null);
     }
@@ -461,13 +433,8 @@ const Contact = () => {
           icon: <IconX size={18} />,
         });
       }
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Error deleting contact: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setDeletingContactId(null);
     }
@@ -543,13 +510,8 @@ const Contact = () => {
           icon: <IconX size={18} />,
         });
       }
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Error fetching contact details: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setFetchingDetailsId(null);
     }
@@ -605,13 +567,8 @@ const Contact = () => {
             icon: <IconX size={18} />,
           });
         }
-      } catch (error) {
-        notifications.show({
-          title: "",
-          message: `Error adding contact: ${error}`,
-          color: "red",
-          icon: <IconX size={18} />,
-        });
+      } catch (error: any) {
+        handleApiError(error);
       }
     } else {
       try {
@@ -648,13 +605,8 @@ const Contact = () => {
             icon: <IconX size={18} />,
           });
         }
-      } catch (error) {
-        notifications.show({
-          title: "",
-          message: `Error updating contact: ${error}`,
-          color: "red",
-          icon: <IconX size={18} />,
-        });
+      } catch (error: any) {
+        handleApiError(error);
       }
     }
   };

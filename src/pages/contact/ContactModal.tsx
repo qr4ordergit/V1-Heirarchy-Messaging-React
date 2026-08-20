@@ -6,6 +6,7 @@ import { notifications } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
 import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
 import { api } from "../../api/axios";
+import { handleApiError } from "../../utils/errorHandler";
 
 interface ContactModalProps {
   opened: boolean;
@@ -123,13 +124,8 @@ const ContactModal = ({
             icon: <IconX size={18} />,
           });
         }
-      } catch (error) {
-        notifications.show({
-          title: "",
-          message: `Error verifying user: ${error}`,
-          color: "red",
-          icon: <IconX size={18} />,
-        });
+      } catch (error: any) {
+        handleApiError(error);
       } finally {
         setVerifying(false);
       }

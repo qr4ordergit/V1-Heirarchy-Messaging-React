@@ -19,6 +19,7 @@ import type { Contact, GroupItem } from "./Contact";
 import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
 import { notifications } from "@mantine/notifications";
 import { api } from "../../api/axios";
+import { handleApiError } from "../../utils/errorHandler";
 
 interface CreateGroupModalProps {
   opened: boolean;
@@ -127,13 +128,8 @@ const CreateGroupModal = ({
       }
 
       return true;
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Failed to update members: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
       return false;
     }
   };
@@ -170,29 +166,7 @@ const CreateGroupModal = ({
 
       return true;
     } catch (error: any) {
-      if (error.response) {
-        const backendData = error.response.data;
-
-        notifications.show({
-          title: "",
-          message:
-            backendData?.message ||
-            backendData?.error ||
-            (typeof backendData === "string"
-              ? backendData
-              : "Validation failed."),
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-      } else {
-        notifications.show({
-          title: "",
-          message: error.message || "Network error occurred.",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-      }
-
+      handleApiError(error);
       return false;
     }
   };
