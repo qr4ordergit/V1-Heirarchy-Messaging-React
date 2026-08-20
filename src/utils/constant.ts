@@ -90,6 +90,11 @@ export const TRIGGERS = {
   tagList: "tagList",
   searchByText: "search:text",
   searchByTag: "search:tag",
+  isPrivate: "secret_007:isPrivate",
+  privateMessageModal: "secret_007:privateMessageModal",
+  privatePayload: "privatePayload",
+  privateMessageSender: "privateMessageSender",
+  decryptPrivateMsgDialog: "decryptPrivateMsgDialog"
 };
 
 export const CIPHER_SECRET =
@@ -154,7 +159,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "messages.chat.start": "Start Chat",
   "messages.chat.history.get": "View Chats",
   "messages.chat.history.delete": "Delete Chats",
-  
+
   // Group Messages
   "messages.group.create": "Write",
   "messages.group.read": "View",

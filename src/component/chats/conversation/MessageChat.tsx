@@ -6,6 +6,7 @@ import { useAuthStore } from "../../../store/auth/auth.store";
 import { MediaChat } from "./MediaChat";
 import { ChatOptions } from "./ChatOptions";
 import ReplyChat from "./ReplyChat";
+import { chatCardColorProvider } from "../../../utils/chatCardColorProvider";
 
 interface MessageChatProps {
   msg: MESSAGE;
@@ -29,7 +30,7 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
           radius="lg"
           p="sm"
           maw="70%"
-          bg={isMe ? "blue.6" : "white"}
+          bg={chatCardColorProvider(isMe)}
         >
           {!isMe && (
             <Text size="xs" fw={600} c="blue" mb={4}>
@@ -50,7 +51,10 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
               ))
             : ""}
 
-          <Text c={isMe ? "white" : "dark"} style={{ whiteSpace: "pre-wrap" }}>
+          <Text
+            c={isMe ? "white" : "dark"}
+            style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
+          >
             {msg.body?.text}
           </Text>
 
