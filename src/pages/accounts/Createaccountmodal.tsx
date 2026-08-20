@@ -473,7 +473,7 @@ export default function CreateAccountModal({
                 searchable
                 allowDeselect={false}
                 w={160}
-                styles={{ input: { fontSize: 13 } }}
+                styles={{ input: { fontSize: 12 } }}
               />
               <TextInput
                 label="Phone Number"
