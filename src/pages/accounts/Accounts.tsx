@@ -89,6 +89,9 @@ export default function Accounts() {
   const navigate = useNavigate();
   const clearTokens = useAuthStore((state) => state.clearTokens);
   const setTargetUser = useAuthStore((state) => state.setTargetUser);
+  const setTargetUserDetails = useAuthStore(
+    (state) => state.setTargetUserDetails,
+  );
 
   const [accounts, setAccounts] = useState<Account[]>([]);
 
@@ -142,12 +145,15 @@ export default function Accounts() {
   };
 
   const users = structuredClone(accounts)
-  .sort((a, b) => {
-    if (a.user_id === accessAndPermissions.targetUser) return -1;
-    if (b.user_id === accessAndPermissions.targetUser) return 1;
-    return 0;
-  })
-  .map((acc) => ({id:acc.user_id,label:acc.phone_number !== "" ? acc.phone_number : acc.user_id}));;
+    .sort((a, b) => {
+      if (a.user_id === accessAndPermissions.targetUser) return -1;
+      if (b.user_id === accessAndPermissions.targetUser) return 1;
+      return 0;
+    })
+    .map((acc) => ({
+      id: acc.user_id,
+      label: acc.phone_number !== "" ? acc.phone_number : acc.user_id,
+    }));
 
   const togglePasskeyVisibility = (account: Account) => {
     setVisiblePasskeys((prev) => ({
@@ -468,6 +474,7 @@ export default function Accounts() {
                         onClick={() => {
                           console.log("Avatar clicked:", account.user_id);
                           setTargetUser(account.user_id);
+                          setTargetUserDetails(account);
                           navigate(`/${ROUTES.CHATS}`);
                         }}
                       />
@@ -480,6 +487,7 @@ export default function Accounts() {
                             className={classes.accountName}
                             onClick={() => {
                               setTargetUser(account.user_id);
+                          setTargetUserDetails(account);
                               navigate(`/${ROUTES.CHATS}`);
                             }}
                           >
@@ -569,8 +577,8 @@ export default function Accounts() {
                         fw={500}
                         style={{ cursor: "pointer", whiteSpace: "nowrap" }}
                         onClick={() =>
-                              onOpenAccessAndPermissions(account.user_id)
-                            }
+                          onOpenAccessAndPermissions(account.user_id)
+                        }
                       >
                         Manage Access & Permissions
                       </Text>
@@ -819,7 +827,10 @@ export default function Accounts() {
         fullScreen
         radius={0}
       >
-        <AccessAndPermissionGrid users={users} targetUser={accessAndPermissions.targetUser}/>
+        <AccessAndPermissionGrid
+          users={users}
+          targetUser={accessAndPermissions.targetUser}
+        />
       </Modal>
     </div>
   );
