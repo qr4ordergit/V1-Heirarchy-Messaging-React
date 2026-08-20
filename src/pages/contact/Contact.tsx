@@ -29,13 +29,10 @@ import ContactModal from "./ContactModal";
 import CreateGroupModal from "./CreateGroupModal";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/auth/auth.store";
-import {
-  API_ENDPOINTS,
-  getHeaders,
-  withTargetUser,
-} from "../../utils/constant";
+import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
 import { notifications } from "@mantine/notifications";
 import { encryptPasskey } from "../../utils/passkeyCipher";
+import { api } from "../../api/axios";
 
 export interface Contact {
   id: string;
@@ -106,13 +103,10 @@ const Contact = () => {
   const fetchContacts = async () => {
     setLoading(true);
     try {
-      const response = await fetch(withTargetUser(API_ENDPOINTS.CONTACTS), {
-        method: "GET",
-        headers: getHeaders(),
-      });
+      const response = await api.get(withTargetUser(API_ENDPOINTS.CONTACTS));
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.status === 200) {
+        const data = await response.data;
         const formattedContacts = (data.contacts || data || []).map(
           (item: any, index: number) => ({
             id: item._id || index,
@@ -148,13 +142,10 @@ const Contact = () => {
     setGroupsLoading(true);
     try {
       const endpoint = withTargetUser(API_ENDPOINTS.CREATE_GROUP);
-      const response = await fetch(endpoint, {
-        method: "GET",
-        headers: getHeaders(),
-      });
+      const response = await api.get(endpoint);
 
-      if (response.ok) {
-        const result = await response.json();
+      if (response.status === 200) {
+        const result = await response.data;
         setGroups(result.data || []);
       } else {
         notifications.show({
@@ -243,15 +234,15 @@ const Contact = () => {
           ? { ...apiPayload, group_id: selectedGroup._id }
           : apiPayload;
 
-      const response = await fetch(endpoint, {
+      const response = await api.request({
+        url: endpoint,
         method,
-        headers: getHeaders(),
-        body: JSON.stringify(finalBody),
+        data: finalBody,
       });
 
-      const data = await response.json();
+      const data = await response.data;
 
-      if (response.ok || data.success) {
+      if (response.status === 201 || response.status === 200 || data.success) {
         const presignedUrl = data.upload_url || data.group?.upload_url;
 
         if (presignedUrl && group_image_file) {
@@ -324,19 +315,16 @@ const Contact = () => {
     setDeletingGroupId(group._id);
 
     try {
-      const response = await fetch(
-        withTargetUser(API_ENDPOINTS.CREATE_GROUP) +
-          `?group_id=${encodeURIComponent(group._id)}`,
+      const deleteUrl = `${API_ENDPOINTS.CREATE_GROUP}?group_id=${encodeURIComponent(group._id)}`;
+      const response = await api.request({
+        url: withTargetUser(deleteUrl),
 
-        {
-          method: "DELETE",
-          headers: getHeaders(),
-        },
-      );
+        method: "DELETE",
+      });
 
-      const data = await response.json();
+      const data = await response.data;
 
-      if (response.ok || data.success) {
+      if (response.status === 200 || response.status === 201 || data.success) {
         notifications.show({
           title: "",
           message: data.message || "Group deleted successfully",
@@ -387,17 +375,17 @@ const Contact = () => {
     try {
       const endpoint = withTargetUser(API_ENDPOINTS.START_CONVERSATION);
 
-      const response = await fetch(endpoint, {
+      const response = await api.request({
+        url: endpoint,
         method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify({
+        data: JSON.stringify({
           user_id: targetUserId,
         }),
       });
 
-      const data = await response.json();
+      const data = await response.data;
 
-      if (response.ok || data.success) {
+      if (response.status === 201 || data.success) {
         navigate(`/chats/${targetUserId}`);
       } else {
         notifications.show({
@@ -452,14 +440,14 @@ const Contact = () => {
         contact_user_id: contactUserId,
       };
 
-      const response = await fetch(withTargetUser(API_ENDPOINTS.CONTACTS), {
+      const response = await api.request({
+        url: withTargetUser(API_ENDPOINTS.CONTACTS),
         method: "DELETE",
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
+        data: JSON.stringify(payload),
       });
-      const data = await response.json();
+      const data = await response.data;
 
-      if (data.success || response.ok) {
+      if (data.success || response.status === 200 || response.status === 201) {
         notifications.show({
           title: "",
           message: data.message,
@@ -527,17 +515,15 @@ const Contact = () => {
     setFetchingDetailsId(contact.id);
 
     try {
-      const response = await fetch(
-        withTargetUser(API_ENDPOINTS.CONTACTS) + `/${contactUserId}`,
-        {
-          method: "GET",
-          headers: getHeaders(),
-        },
-      );
+      const getUrl = `${API_ENDPOINTS.CONTACTS}/${contactUserId}`;
+      const response = await api.request({
+        url: withTargetUser(getUrl),
+        method: "GET",
+      });
 
-      const data = await response.json();
+      const data = await response.data;
 
-      if ((response.ok || data.success) && data.contact) {
+      if ((response.status === 200 || data.success) && data.contact) {
         const fetched = data.contact;
 
         const updatedContact: Contact = {
@@ -596,15 +582,15 @@ const Contact = () => {
           );
         }
 
-        const response = await fetch(withTargetUser(API_ENDPOINTS.CONTACTS), {
+        const response = await api.request({
+          url: withTargetUser(API_ENDPOINTS.CONTACTS),
           method: "POST",
-          headers: getHeaders(),
-          body: JSON.stringify(payload),
+          data: JSON.stringify(payload),
         });
 
-        const data = await response.json();
+        const data = await response.data;
 
-        if (data.success || response.ok) {
+        if (data.success || response.status === 201) {
           notifications.show({
             title: "",
             message: data.message || "Contact added successfully",
@@ -639,15 +625,15 @@ const Contact = () => {
           email: values.email,
         };
 
-        const response = await fetch(withTargetUser(API_ENDPOINTS.CONTACTS), {
+        const response = await api.request({
+          url: withTargetUser(API_ENDPOINTS.CONTACTS),
           method: "PUT",
-          headers: getHeaders(),
-          body: JSON.stringify(payload),
+          data: JSON.stringify(payload),
         });
 
-        const data = await response.json();
+        const data = await response.data;
 
-        if (data.success || response.ok) {
+        if (data.success || response.status === 200) {
           notifications.show({
             title: "",
             message: data.message || "Contact updated successfully",
