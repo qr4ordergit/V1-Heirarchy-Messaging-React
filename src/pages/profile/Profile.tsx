@@ -43,9 +43,12 @@ const Profile = () => {
 
   const clearTokens = useAuthStore((state) => state.clearTokens);
   const userDetails = useAuthStore((state) => state.userDetails);
+  const setTargetUserDetails = useAuthStore(
+    (state) => state.setTargetUserDetails,
+  );
   const setUserDetails = useAuthStore((state) => state.setUserDetails);
   const target_user = useAuthStore((state) => state.target_user);
-
+  const targetUserDetails = useAuthStore((state) => state.targetUserDetails);
   const tagsList = useTagStore((state) => state.tags);
   const storeTags = useTagStore((state) => state.storeTags);
   const appendTag = useTagStore((state) => state.appendTag);
@@ -61,6 +64,14 @@ const Profile = () => {
   const isSubRoute = ["/privacy", "/help", "/about"].includes(
     location.pathname,
   );
+
+  const getValidAvatarSrc = (url?: string | null) => {
+    return url && url !== "NA" ? url : null;
+  };
+
+  const profileImage =
+    getValidAvatarSrc(userDetails?.profile_picture) ||
+    getValidAvatarSrc(targetUserDetails?.profile_picture);
 
   const fetchTagsList = async () => {
     setLoadingTags(true);
@@ -153,6 +164,12 @@ const Profile = () => {
       }
 
       const localPreviewUrl = URL.createObjectURL(file);
+      if (targetUserDetails) {
+        setTargetUserDetails({
+          ...targetUserDetails,
+          profile_picture: localPreviewUrl,
+        });
+      }
       if (userDetails) {
         setUserDetails({
           ...userDetails,
@@ -206,7 +223,11 @@ const Profile = () => {
   };
 
   const username =
-    userDetails?.phone_number || target_user || userDetails?.username || "";
+    targetUserDetails?.phone_number ||
+    userDetails?.phone_number ||
+    target_user ||
+    userDetails?.username ||
+    "";
   const userInitials =
     username
       .split("-")
@@ -240,13 +261,13 @@ const Profile = () => {
             <div className="flex flex-col items-center justify-center pt-2 pb-2 gap-2">
               <div className="relative inline-block">
                 <Avatar
-                  src={userDetails?.profile_picture || null}
+                  src={profileImage}
                   color="indigo"
                   radius="xl"
                   size={84}
                   className="text-2xl font-bold shadow-sm"
                 >
-                  {!userDetails?.profile_picture && userInitials}
+                  {!profileImage && userInitials}
                 </Avatar>
 
                 <UnstyledButton

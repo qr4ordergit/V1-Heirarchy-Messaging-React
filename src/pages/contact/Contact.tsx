@@ -677,11 +677,33 @@ const Contact = () => {
                 color="indigo"
                 variant="outline"
                 radius="md"
+                className="w-full"
+                styles={{
+                  tab: {
+                    paddingInline: 8,
+                  },
+                  tabSection: {
+                    marginInline: 4,
+                  },
+                }}
               >
-                <Tabs.List>
+                <Tabs.List grow>
                   <Tabs.Tab
                     value="contacts"
                     leftSection={<IconUser size={16} />}
+                    rightSection={
+                      <ActionIcon
+                        size="xs"
+                        variant="subtle"
+                        color="indigo"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAdd();
+                        }}
+                      >
+                        <IconPlus size={14} />
+                      </ActionIcon>
+                    }
                     bg={
                       activeTab === "contacts"
                         ? "var(--mantine-color-blue-1)"
@@ -690,9 +712,24 @@ const Contact = () => {
                   >
                     Contact List
                   </Tabs.Tab>
+
                   <Tabs.Tab
                     value="groups"
                     leftSection={<IconUsersGroup size={16} />}
+                    rightSection={
+                      <ActionIcon
+                        size="xs"
+                        variant="subtle"
+                        color="indigo"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveTab("contacts");
+                          setIsCreatingGroup(true);
+                        }}
+                      >
+                        <IconPlus size={14} />
+                      </ActionIcon>
+                    }
                     bg={
                       activeTab === "groups"
                         ? "var(--mantine-color-blue-1)"
@@ -703,32 +740,6 @@ const Contact = () => {
                   </Tabs.Tab>
                 </Tabs.List>
               </Tabs>
-
-              <Menu shadow="md" width={200} position="bottom-end">
-                <Menu.Target>
-                  <ActionIcon variant="subtle" size="lg" radius="md">
-                    <IconSettings size={22} />
-                  </ActionIcon>
-                </Menu.Target>
-
-                <Menu.Dropdown>
-                  <Menu.Item
-                    leftSection={<IconPlus size={16} />}
-                    onClick={handleAdd}
-                  >
-                    Add Contact
-                  </Menu.Item>
-                  <Menu.Item
-                    leftSection={<IconUsersGroup size={16} />}
-                    onClick={() => {
-                      setActiveTab("contacts");
-                      setIsCreatingGroup(true);
-                    }}
-                  >
-                    Create Group
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
             </Group>
 
             {activeTab === "contacts" && (

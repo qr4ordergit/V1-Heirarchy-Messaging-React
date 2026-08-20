@@ -25,6 +25,7 @@ import { ROUTES } from "../../router/routes";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { getAdjacencyListApi } from "../../api/profileApi";
 import { notifications } from "@mantine/notifications";
+import { fetchAccounts } from "../../api/accountApi";
 
 export default function ConversationPanel() {
   const type = useConversationTypeStore((state) => state.type);
@@ -34,6 +35,9 @@ export default function ConversationPanel() {
   const target_user = useAuthStore((state) => state.target_user);
   const setTargetUser = useAuthStore((state) => state.setTargetUser);
   const userDetails = useAuthStore((state) => state.userDetails);
+  const setTargetUserDetails = useAuthStore(
+    (state) => state.setTargetUserDetails,
+  );
 
   const [adjacencyList, setAdjacencyList] = useState<string[]>([]);
   const [loadingAccounts, setLoadingAccounts] = useState(false);
@@ -65,9 +69,29 @@ export default function ConversationPanel() {
     fetchAdjacencyList();
   }, []);
 
-  const handleSwitchAccount = (selectedUsername: string) => {
+  const handleCancel = () => {
+    setTargetUser("");
+    // setTargetUserDetails(null);
+    navigate(`/${ROUTES.ACCOUNTS}`);
+  };
+
+  const handleSwitchAccount = async (selectedUsername: string) => {
+    try {
+      const accounts = await fetchAccounts();
+      const matchedAccount = accounts.find(
+        (acc) =>
+          acc.user_id === selectedUsername ||
+          acc.display_name === selectedUsername,
+      );
+
+      if (matchedAccount) {
+        setTargetUserDetails(matchedAccount);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+
     setTargetUser(selectedUsername);
-    // navigate(`/${ROUTES.CHATS}`);
     window.location.reload();
   };
 
@@ -99,57 +123,82 @@ export default function ConversationPanel() {
           {loadingAccounts ? (
             <Loader size="xs" color="indigo" />
           ) : otherAccounts.length > 0 ? (
-            <Menu shadow="md" width={220} position="bottom-end" radius="md">
-              <Menu.Target>
-                <UnstyledButton className="cursor-pointer">
-                  <Group gap={4}>
-                    <Text size="xs" c="dimmed" fw={500}>
-                      {activeUsername}
-                    </Text>
-                    <ActionIcon
-                      size="xs"
-                      variant="light"
-                      color="indigo"
-                      radius="xl"
-                    >
-                      <IconSwitch3 size={12} />
-                    </ActionIcon>
-                  </Group>
-                </UnstyledButton>
-              </Menu.Target>
+            <Group gap={4} wrap="nowrap">
+              <ActionIcon
+                size="xs"
+                variant="subtle"
+                color="gray"
+                radius="xl"
+                onClick={handleCancel}
+                title="Go to accounts"
+              >
+                <IconX size={12} />
+              </ActionIcon>
 
-              <Menu.Dropdown>
-                <Menu.Label>Switch Account</Menu.Label>
-                {otherAccounts.map((accUsername) => {
-                  const initials =
-                    accUsername
-                      .split("-")
-                      .map((p) => p[0]?.toUpperCase() || "")
-                      .join("")
-                      .slice(0, 2) || "U";
-
-                  return (
-                    <Menu.Item
-                      key={accUsername}
-                      onClick={() => handleSwitchAccount(accUsername)}
-                      leftSection={
-                        <Avatar color="indigo" radius="xl" size={20}>
-                          {initials}
-                        </Avatar>
-                      }
-                    >
-                      <Text size="xs" fw={500}>
-                        {accUsername}
+              <Menu shadow="md" width={220} position="bottom-end" radius="md">
+                <Menu.Target>
+                  <UnstyledButton className="cursor-pointer">
+                    <Group gap={4} wrap="nowrap">
+                      <Text size="xs" c="dimmed" fw={500}>
+                        {activeUsername}
                       </Text>
-                    </Menu.Item>
-                  );
-                })}
-              </Menu.Dropdown>
-            </Menu>
+                      <ActionIcon
+                        size="xs"
+                        variant="light"
+                        color="indigo"
+                        radius="xl"
+                      >
+                        <IconSwitch3 size={12} />
+                      </ActionIcon>
+                    </Group>
+                  </UnstyledButton>
+                </Menu.Target>
+
+                <Menu.Dropdown>
+                  <Menu.Label>Switch Account</Menu.Label>
+                  {otherAccounts.map((accUsername) => {
+                    const initials =
+                      accUsername
+                        .split("-")
+                        .map((p) => p[0]?.toUpperCase() || "")
+                        .join("")
+                        .slice(0, 2) || "U";
+
+                    return (
+                      <Menu.Item
+                        key={accUsername}
+                        onClick={() => handleSwitchAccount(accUsername)}
+                        leftSection={
+                          <Avatar color="indigo" radius="xl" size={20}>
+                            {initials}
+                          </Avatar>
+                        }
+                      >
+                        <Text size="xs" fw={500}>
+                          {accUsername}
+                        </Text>
+                      </Menu.Item>
+                    );
+                  })}
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
           ) : (
-            <Text size="xs" c={"dimmed"}>
-              {activeUsername}
-            </Text>
+            <Group gap={4} wrap="nowrap">
+              <ActionIcon
+                size="xs"
+                variant="subtle"
+                color="gray"
+                radius="xl"
+                onClick={handleCancel}
+                title="Go to accounts"
+              >
+                <IconX size={12} />
+              </ActionIcon>
+              <Text size="xs" c={"dimmed"}>
+                {activeUsername}
+              </Text>
+            </Group>
           )}
         </Flex>
         <Input
