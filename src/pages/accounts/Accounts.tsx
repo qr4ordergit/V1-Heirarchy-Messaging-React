@@ -53,7 +53,7 @@ import { ClearStore } from "../../store/clear.store";
 import AccessAndPermissionGrid from "../../component/accessAndPermissionGrid/AccessAndPermissionGrid";
 
 import CreateAccountModal from "./Createaccountmodal";
-
+//import { useDisableBackButton } from "../../hooks/useDisableBackButton";
 const PASSKEY_PATTERN = /^[a-zA-Z0-9]{4,12}$/;
 
 const getDisplayName = (account: Account) =>
@@ -354,9 +354,9 @@ export default function Accounts() {
   });
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAccounts();
   }, []);
+  //useDisableBackButton();
   return (
     <div className={classes.wrapper}>
       <Container size="md" py="xl">
@@ -487,7 +487,7 @@ export default function Accounts() {
                             className={classes.accountName}
                             onClick={() => {
                               setTargetUser(account.user_id);
-                          setTargetUserDetails(account);
+                              setTargetUserDetails(account);
                               navigate(`/${ROUTES.CHATS}`);
                             }}
                           >
