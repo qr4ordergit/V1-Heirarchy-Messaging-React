@@ -26,18 +26,7 @@ interface CreateGroupModalProps {
   onClose: () => void;
   selectedContacts: Contact[];
   initialGroup?: GroupItem | null;
-  onSaveGroup: (
-    payload: {
-      group_name: string;
-      description: string;
-      admin: string[];
-      members: string[];
-      group_image: string;
-      group_image_file: File | null;
-      only_admins_can_message: boolean;
-    },
-    isEdit: boolean,
-  ) => Promise<void>;
+  onSaveGroup: (payload: Record<string, any>, isEdit: boolean) => Promise<void>;
   loading?: boolean;
 }
 
@@ -249,6 +238,54 @@ const CreateGroupModal = ({
   };
 
   const handleSubmit = async () => {
+    if (initialGroup) {
+      const payload: Record<string, any> = {};
+
+      const trimmedGroupName = groupName.trim();
+      const initialGroupName = (initialGroup.group_name || "").trim();
+      if (trimmedGroupName !== initialGroupName) {
+        if (!trimmedGroupName) {
+          notifications.show({
+            title: "",
+            message: "Group name cannot be empty.",
+            color: "red",
+            icon: <IconX size={18} />,
+          });
+          return;
+        }
+        payload.group_name = trimmedGroupName;
+      }
+
+      const trimmedDescription = description.trim();
+      const initialDescription = (initialGroup.group_description || "").trim();
+      if (trimmedDescription !== initialDescription) {
+        payload.description = trimmedDescription;
+      }
+
+      const initialOnlyAdmins = initialGroup.only_admins_can_message || false;
+      if (onlyAdminsCanMessage !== initialOnlyAdmins) {
+        payload.only_admins_can_message = onlyAdminsCanMessage;
+      }
+
+      if (groupImage) {
+        payload.group_image = groupImage.name;
+        payload.group_image_file = groupImage;
+      }
+
+      if (Object.keys(payload).length === 0) {
+        notifications.show({
+          title: "",
+          message: "No changes detected to update.",
+          color: "yellow",
+        });
+        onClose();
+        return;
+      }
+
+      await onSaveGroup(payload, true);
+      return;
+    }
+
     if (!groupName.trim()) {
       notifications.show({
         title: "",
@@ -276,14 +313,12 @@ const CreateGroupModal = ({
       description: description.trim(),
       admin: admins,
       members: memberIds,
-      group_image: groupImage
-        ? groupImage.name
-        : initialGroup?.group_image || "",
+      group_image: groupImage ? groupImage.name : "",
       group_image_file: groupImage,
       only_admins_can_message: onlyAdminsCanMessage,
     };
 
-    await onSaveGroup(payload, Boolean(initialGroup));
+    await onSaveGroup(payload, false);
   };
 
   const adminOptions = members.map((m) => ({

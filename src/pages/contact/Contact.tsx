@@ -201,13 +201,13 @@ const Contact = () => {
 
   const handleSaveGroupPayload = async (
     payload: {
-      group_name: string;
-      description: string;
-      admin: string[];
-      members: string[];
-      group_image: string;
-      group_image_file: File | null;
-      only_admins_can_message: boolean;
+      group_name?: string;
+      description?: string;
+      admin?: string[];
+      members?: string[];
+      group_image?: string;
+      group_image_file?: File | null;
+      only_admins_can_message?: boolean;
     },
     isEdit: boolean,
   ) => {
@@ -231,7 +231,7 @@ const Contact = () => {
         data: finalBody,
       });
 
-      const data = await response.data;
+      const data = response.data;
 
       if (response.status === 201 || response.status === 200 || data.success) {
         const presignedUrl = data.upload_url || data.group?.upload_url;

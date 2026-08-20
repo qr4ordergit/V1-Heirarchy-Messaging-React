@@ -124,16 +124,18 @@ export default function ConversationPanel() {
             <Loader size="xs" color="indigo" />
           ) : otherAccounts.length > 0 ? (
             <Group gap={4} wrap="nowrap">
-              <ActionIcon
-                size="xs"
-                variant="subtle"
-                color="gray"
-                radius="xl"
-                onClick={handleCancel}
-                title="Go to accounts"
-              >
-                <IconX size={12} />
-              </ActionIcon>
+              {target_user && (
+                <ActionIcon
+                  size="xs"
+                  variant="subtle"
+                  color="gray"
+                  radius="xl"
+                  onClick={handleCancel}
+                  title="Close Monitoring"
+                >
+                  <IconX size={12} />
+                </ActionIcon>
+              )}
 
               <Menu shadow="md" width={220} position="bottom-end" radius="md">
                 <Menu.Target>
@@ -185,16 +187,18 @@ export default function ConversationPanel() {
             </Group>
           ) : (
             <Group gap={4} wrap="nowrap">
-              <ActionIcon
-                size="xs"
-                variant="subtle"
-                color="gray"
-                radius="xl"
-                onClick={handleCancel}
-                title="Go to accounts"
-              >
-                <IconX size={12} />
-              </ActionIcon>
+              {target_user && (
+                <ActionIcon
+                  size="xs"
+                  variant="subtle"
+                  color="gray"
+                  radius="xl"
+                  onClick={handleCancel}
+                  title="Close Monitoring"
+                >
+                  <IconX size={12} />
+                </ActionIcon>
+              )}
               <Text size="xs" c={"dimmed"}>
                 {activeUsername}
               </Text>
