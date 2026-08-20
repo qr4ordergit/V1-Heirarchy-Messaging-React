@@ -20,6 +20,10 @@ import {
   Title,
   Switch,
   Tooltip,
+  Tabs,
+  Flex,
+  Checkbox,
+  Accordion,
 } from "@mantine/core";
 import {
   IconDotsVertical,
@@ -123,6 +127,8 @@ export default function Accounts() {
     Record<string, boolean>
   >({});
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [openTemp, setOpenTemp] = useState(false);
 
   const [accessAndPermissions, setAccessAndPermissions] =
     useState<AccessAndPermissionsState>({
@@ -487,7 +493,7 @@ export default function Accounts() {
                             className={classes.accountName}
                             onClick={() => {
                               setTargetUser(account.user_id);
-                          setTargetUserDetails(account);
+                              setTargetUserDetails(account);
                               navigate(`/${ROUTES.CHATS}`);
                             }}
                           >
@@ -601,6 +607,13 @@ export default function Accounts() {
                         </Menu.Target>
 
                         <Menu.Dropdown>
+                          <Menu.Item
+                            leftSection={<IconKey size={14} />}
+                            onClick={() => setOpenTemp(true)}
+                          >
+                            Manage Access & Permissions
+                          </Menu.Item>
+
                           <Menu.Item
                             leftSection={<IconKey size={14} />}
                             onClick={() => setPasswordTarget(account)}
@@ -831,6 +844,118 @@ export default function Accounts() {
           users={users}
           targetUser={accessAndPermissions.targetUser}
         />
+      </Modal>
+
+      <Modal
+        opened={openTemp}
+        onClose={() => {
+          setOpenTemp(false);
+        }}
+        title="Manage Access & Permissions"
+        fullScreen
+        radius={0}
+      >
+        <Tabs defaultValue="own">
+          <Tabs.List>
+            <Tabs.Tab value="own">User Permission</Tabs.Tab>
+            <Tabs.Tab value="user to user">User to User Permission</Tabs.Tab>
+          </Tabs.List>
+
+          <Tabs.Panel value="own">
+            <Flex direction={"column"} gap={"md"} ms={"lg"}>
+              <Text>Direct Message ( DM )</Text>
+              <Flex gap={4}>
+                <Text>Write</Text>
+                <Checkbox />
+              </Flex>
+              <Flex gap={4}>
+                <Text>View</Text>
+                <Checkbox />
+              </Flex>
+              <Flex gap={4}>
+                <Text>Update</Text>
+                <Checkbox />
+              </Flex>
+              <Flex gap={4}>
+                <Text>Delete</Text>
+                <Checkbox />
+              </Flex>
+              <Flex justify={"end"}><Button>Save</Button></Flex>
+            </Flex>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="user to user">
+            <Accordion>
+              <Accordion.Item
+                key={"Mmbr-nchauhan-916"}
+                value="Mmbr-nchauhan-916"
+              >
+                <Accordion.Control>
+                  <Flex gap={"lg"}>
+                    <Text>Mmbr-nchauhan</Text>
+                     <Checkbox label="Allow access"/>
+                  </Flex>
+                  </Accordion.Control>
+                <Accordion.Panel>
+                  <Flex direction={"column"} gap={"md"} ms={"lg"}>
+              <Text>Direct Message ( DM )</Text>
+              <Flex gap={4}>
+                <Text>Write</Text>
+                <Checkbox />
+              </Flex>
+              <Flex gap={4}>
+                <Text>View</Text>
+                <Checkbox />
+              </Flex>
+              <Flex gap={4}>
+                <Text>Update</Text>
+                <Checkbox />
+              </Flex>
+              <Flex gap={4}>
+                <Text>Delete</Text>
+                <Checkbox />
+              </Flex>
+            </Flex>
+                </Accordion.Panel>
+              </Accordion.Item>
+            </Accordion>
+             <Accordion>
+              <Accordion.Item
+                key={"+917045891244"}
+                value="+917045891244"
+              >
+                <Accordion.Control>
+                  <Flex gap={"lg"}>
+                    <Text>+917045891244</Text>
+                     <Checkbox label="Allow access"/>
+                  </Flex>
+                  </Accordion.Control>
+                <Accordion.Panel>
+                  <Flex direction={"column"} gap={"md"} ms={"lg"}>
+              <Text>Direct Message ( DM )</Text>
+              <Flex gap={4}>
+                <Text>Write</Text>
+                <Checkbox />
+              </Flex>
+              <Flex gap={4}>
+                <Text>View</Text>
+                <Checkbox />
+              </Flex>
+              <Flex gap={4}>
+                <Text>Update</Text>
+                <Checkbox />
+              </Flex>
+              <Flex gap={4}>
+                <Text>Delete</Text>
+                <Checkbox />
+              </Flex>
+            </Flex>
+                </Accordion.Panel>
+              </Accordion.Item>
+            </Accordion>
+              <Flex justify={"end"}><Button>Save</Button></Flex>
+          </Tabs.Panel>
+        </Tabs>
       </Modal>
     </div>
   );
