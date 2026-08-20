@@ -135,13 +135,14 @@ export const PERMISSIONS = {
     accesstree: {
       read: false,
     },
-    tags: {
+  },
+
+  tags: {
       create: false,
       read: false,
       update: false,
       delete: false,
     },
-  },
 };
 
 export const PERMISSION_LABELS: Record<string, string> = {
@@ -177,10 +178,10 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "users.accesstree.read": "View Subusers",
 
   // Tags
-  "users.tags.create": "Create",
-  "users.tags.read": "View",
-  "users.tags.update": "Update",
-  "users.tags.delete": "Delete",
+  "tags.create": "Create",
+  "tags.read": "View",
+  "tags.update": "Update",
+  "tags.delete": "Delete",
 };
 export const getHeaders = (): Record<string, string> => ({
   Authorization: token ?? "",
