@@ -365,9 +365,9 @@ export default function Accounts() {
     if (!query) return true;
     const haystack = [
       getDisplayName(account),
-      account.email ?? "",
+
       account.user_id,
-      account.status ?? "",
+      account.phone_number,
     ]
       .join(" ")
       .toLowerCase();
@@ -431,7 +431,12 @@ export default function Accounts() {
   return (
     <div className={classes.wrapper}>
       <Container size="md" py="xl">
-        <Group justify="space-between" align="flex-start" mb="lg">
+        <Group
+          justify="space-between"
+          align="flex-start"
+          mb="lg"
+          className={classes.headerGroup}
+        >
           <div>
             <Title order={2} className={classes.title} mb={4}>
               Your Accounts
@@ -440,7 +445,7 @@ export default function Accounts() {
               Create multiple accounts and switch between them easily.
             </Text>
           </div>
-          <Group gap="sm">
+          <Group gap="sm" className={classes.headerActions}>
             <Button
               leftSection={<IconPlus size={16} />}
               radius="xl"
@@ -452,7 +457,7 @@ export default function Accounts() {
             <Button
               leftSection={<IconLogout size={16} />}
               radius="xl"
-              variant="subtle"
+              variant="light"
               color="red"
               loading={loggingOut}
               onClick={handleLogout}
@@ -482,11 +487,12 @@ export default function Accounts() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             radius="xl"
-            mb="md"
+            mb="lg"
             name="account-search"
             autoComplete="off"
             data-1p-ignore
             data-lpignore="true"
+            classNames={{ input: classes.searchInput }}
           />
         )}
 
@@ -517,7 +523,7 @@ export default function Accounts() {
             </Center>
           </Card>
         ) : (
-          <Stack gap="sm">
+          <Stack gap="md">
             {filteredAccounts?.map((account, i) => {
               const isPasskeyVisible = !!visiblePasskeys[account.user_id];
               const plainPasskey = isPasskeyVisible
@@ -529,10 +535,14 @@ export default function Accounts() {
                   key={account.user_id}
                   withBorder
                   radius="md"
-                  padding="md"
+                  padding="lg"
                   className={classes.accountCard}
                 >
-                  <Group justify="space-between" wrap="nowrap" gap="sm">
+                  <Group
+                    justify="space-between"
+                    gap="sm"
+                    className={classes.cardRow}
+                  >
                     <Group
                       gap="md"
                       wrap="nowrap"
@@ -550,7 +560,7 @@ export default function Accounts() {
                         }}
                       />
 
-                      <div style={{ minWidth: 0, flex: 1 }}>
+                      <div className={classes.accountInfo}>
                         <Group gap={6} wrap="nowrap" align="center">
                           <Text
                             fw={600}
@@ -641,7 +651,7 @@ export default function Accounts() {
                       </div>
                     </Group>
 
-                    <Group gap="lg" wrap="nowrap">
+                    <Group gap="lg" className={classes.cardActions}>
                       <Text
                         size="sm"
                         c="dimmed"
