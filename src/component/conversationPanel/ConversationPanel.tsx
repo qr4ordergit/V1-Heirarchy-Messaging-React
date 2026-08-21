@@ -24,8 +24,8 @@ import { useNavigate } from "react-router";
 import { ROUTES } from "../../router/routes";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { getAdjacencyListApi } from "../../api/profileApi";
-import { notifications } from "@mantine/notifications";
 import { fetchAccounts } from "../../api/accountApi";
+import { handleApiError } from "../../utils/errorHandler";
 
 export default function ConversationPanel() {
   const type = useConversationTypeStore((state) => state.type);
@@ -54,12 +54,7 @@ export default function ConversationPanel() {
       const list = await getAdjacencyListApi();
       setAdjacencyList(list);
     } catch (error: any) {
-      notifications.show({
-        title: "",
-        message: error.message || `Error fetching accounts: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+      handleApiError(error);
     } finally {
       setLoadingAccounts(false);
     }
@@ -119,7 +114,7 @@ export default function ConversationPanel() {
         }}
       >
         <Flex align={"center"} gap={"xs"} justify={"space-between"}>
-          <Heading c="var(--mantine-color-blue-4">Chat Hub</Heading>
+          <Heading c="var(--mantine-color-blue-4)">Chat Hub</Heading>
           {loadingAccounts ? (
             <Loader size="xs" color="indigo" />
           ) : otherAccounts.length > 0 ? (
@@ -139,19 +134,14 @@ export default function ConversationPanel() {
 
               <Menu shadow="md" width={220} position="bottom-end" radius="md">
                 <Menu.Target>
-                  <UnstyledButton className="cursor-pointer">
+                  <UnstyledButton component="div" className="cursor-pointer">
                     <Group gap={4} wrap="nowrap">
                       <Text size="xs" c="dimmed" fw={500}>
                         {activeUsername}
                       </Text>
-                      <ActionIcon
-                        size="xs"
-                        variant="light"
-                        color="indigo"
-                        radius="xl"
-                      >
+                      <div className="flex items-center justify-center rounded-full bg-indigo-50 p-1 text-indigo-600">
                         <IconSwitch3 size={12} />
-                      </ActionIcon>
+                      </div>
                     </Group>
                   </UnstyledButton>
                 </Menu.Target>
