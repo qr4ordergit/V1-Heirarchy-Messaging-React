@@ -68,25 +68,25 @@ const ContactModal = ({
   const handleSubmit = async () => {
     const contactUserId = form.username.split("#")[1] || form.username.trim();
 
-    if (!contactUserId) {
-      notifications.show({
-        title: "",
-        message: "Username is required.",
-        color: "red",
-        icon: <IconX size={18} />,
-      });
-      return;
-    }
+    // if (!contactUserId) {
+    //   notifications.show({
+    //     title: "",
+    //     message: "Username is required.",
+    //     color: "red",
+    //     icon: <IconX size={18} />,
+    //   });
+    //   return;
+    // }
 
-    if (!form.name.trim()) {
-      notifications.show({
-        title: "",
-        message: "Name is required.",
-        color: "red",
-        icon: <IconX size={18} />,
-      });
-      return;
-    }
+    // if (!form.name.trim()) {
+    //   notifications.show({
+    //     title: "",
+    //     message: "Name is required.",
+    //     color: "red",
+    //     icon: <IconX size={18} />,
+    //   });
+    //   return;
+    // }
 
     if (contact) {
       await onSave(form, false);
