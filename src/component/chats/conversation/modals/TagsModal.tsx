@@ -15,6 +15,7 @@ import { ENDPOINTS } from "../../../../api/endpoints";
 import { Notification } from "../../../../utils/notification";
 import { useChatStore } from "../../../../store/chats/chats.store";
 import { useParams } from "react-router";
+import { useAuthStore } from "../../../../store/auth/auth.store";
 
 function TagsModal() {
   const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
@@ -23,6 +24,7 @@ function TagsModal() {
   const { tags } = useTagStore((state) => state);
   const { updateTagStatus } = useChatStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
+  const { targetUserDetails } = useAuthStore((state) => state);
 
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
@@ -40,6 +42,7 @@ function TagsModal() {
       for: chatId?.includes("group") ? "GROUP" : "DM",
       tag_id: selectedTags,
       message_id: [triggerPayload?._id],
+      target_user: targetUserDetails?.user_id,
     };
 
     const res = await api.post(ENDPOINTS.TAGS.POST, payload);

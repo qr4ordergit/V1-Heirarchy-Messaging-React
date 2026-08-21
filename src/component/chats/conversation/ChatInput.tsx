@@ -32,8 +32,9 @@ export default function ChatInput() {
   const appendChats = useChatStore((state) => state.appendChats);
   const { trigger, triggerPayload, resetTrigger, setTrigger } =
     useTriggerStore();
-  const userDetails = useAuthStore((state) => state.userDetails);
+  const { userDetails, targetUserDetails } = useAuthStore((state) => state);
 
+  const own_user_id = targetUserDetails?.user_id ?? userDetails?.username;
   const isReply = trigger === TRIGGERS.reply;
   const isGroup = chatId?.includes("group");
 
@@ -60,15 +61,13 @@ export default function ChatInput() {
         type: isReply ? "replay" : "message",
         parent_message_id: triggerPayload?._id ?? undefined,
         text: message,
+        target_user: targetUserDetails?.user_id,
       };
 
       if (trigger === TRIGGERS.privateMessageSender) {
         payload["user_key"] = triggerPayload?.password;
         if (triggerPayload?.users && triggerPayload?.users?.length > 0) {
-          payload["users_list"] = [
-            ...triggerPayload?.users,
-            userDetails?.username,
-          ];
+          payload["users_list"] = [...triggerPayload?.users, own_user_id];
         }
       }
 
@@ -106,15 +105,13 @@ export default function ChatInput() {
         parent_message_id: triggerPayload?._id ?? undefined,
         text: message,
         files: files.map((file) => file.name),
+        target_user: targetUserDetails?.user_id,
       };
 
       if (trigger === TRIGGERS.privateMessageSender) {
         payload["user_key"] = triggerPayload?.password;
         if (triggerPayload?.users && triggerPayload?.users?.length > 0) {
-          payload["users_list"] = [
-            ...triggerPayload?.users,
-            userDetails?.username,
-          ];
+          payload["users_list"] = [...triggerPayload?.users, own_user_id];
         }
       }
 

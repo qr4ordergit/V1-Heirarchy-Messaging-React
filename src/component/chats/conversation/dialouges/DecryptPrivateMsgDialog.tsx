@@ -7,6 +7,7 @@ import { ENDPOINTS } from "../../../../api/endpoints";
 import { useParams } from "react-router";
 import { useState, useTransition } from "react";
 import { useChatStore } from "../../../../store/chats/chats.store";
+import { useAuthStore } from "../../../../store/auth/auth.store";
 
 interface DECRYPT_PAYLOAD {
   [key: string]: unknown;
@@ -18,6 +19,7 @@ function DecryptPrivateMsgDialog() {
   );
   const { updateDecryptedMsg } = useChatStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
+  const { targetUserDetails } = useAuthStore((state) => state);
 
   const [password, setPassword] = useState<string>("");
 
@@ -38,6 +40,7 @@ function DecryptPrivateMsgDialog() {
       const payload: DECRYPT_PAYLOAD = {
         group_id: chatId,
         message_id: triggerPayload?._id,
+        target_user: targetUserDetails?.user_id,
       };
 
       if (mode === "manual") {

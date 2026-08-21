@@ -24,7 +24,7 @@ interface MembersResponse {
 function PrivateMessagePayloadModal() {
   const { trigger, resetTrigger, setTrigger } = useTriggerStore();
   const { chatId } = useParams<{ chatId: string }>();
-  const userDetails = useAuthStore((state) => state.userDetails);
+  const { userDetails, targetUserDetails } = useAuthStore((state) => state);
 
   const [members, setMembers] = useState<string[]>([]);
   const [password, setPassword] = useState<string>("");
@@ -40,8 +40,11 @@ function PrivateMessagePayloadModal() {
     if (!chatId) return;
 
     try {
+      const target_user = targetUserDetails?.user_id
+        ? `&target_user=${targetUserDetails?.user_id}`
+        : "";
       const response = await api.get<MembersResponse>(
-        `${ENDPOINTS.GROUPS.GETMEMBERS}?group_id=${encodeURIComponent(chatId)}`,
+        `${ENDPOINTS.GROUPS.GETMEMBERS}?group_id=${encodeURIComponent(chatId)}${target_user}`,
       );
 
       if (response.status === 200) {

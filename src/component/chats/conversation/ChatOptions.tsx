@@ -21,9 +21,10 @@ interface CHATOPTIONSPROPS {
 
 export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
   const { setTrigger } = useTriggerStore((state) => state);
-  const userDetails = useAuthStore((state) => state.userDetails);
+  const { userDetails, targetUserDetails } = useAuthStore((state) => state);
 
-  const isMe = userDetails?.username === msg.created_by;
+  const own_user_id = targetUserDetails?.user_id ?? userDetails?.username;
+  const isMe = own_user_id === msg.created_by;
 
   const onDelete = () => {
     setTrigger({

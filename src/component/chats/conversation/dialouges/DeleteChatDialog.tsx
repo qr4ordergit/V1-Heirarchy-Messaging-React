@@ -7,6 +7,7 @@ import { Notification } from "../../../../utils/notification";
 import { useTransition } from "react";
 import { useChatStore } from "../../../../store/chats/chats.store";
 import { useParams } from "react-router";
+import { useAuthStore } from "../../../../store/auth/auth.store";
 
 function DeleteChatDialog() {
   const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
@@ -14,6 +15,7 @@ function DeleteChatDialog() {
   );
   const { popChat } = useChatStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
+  const { targetUserDetails } = useAuthStore((state) => state);
 
   const isGroup = chatId?.includes("group");
 
@@ -35,6 +37,7 @@ function DeleteChatDialog() {
         data: {
           message_id: triggerPayload._id,
           soft_delete: true,
+          target_user: targetUserDetails?.user_id,
         },
       };
 

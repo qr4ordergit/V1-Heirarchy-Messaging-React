@@ -6,7 +6,6 @@ import { useAuthStore } from "../../../store/auth/auth.store";
 import { MediaChat } from "./MediaChat";
 import { ChatOptions } from "./ChatOptions";
 import ReplyChat from "./ReplyChat";
-import { chatCardColorProvider } from "../../../utils/chatCardColorProvider";
 
 interface MessageChatProps {
   msg: MESSAGE;
@@ -14,9 +13,10 @@ interface MessageChatProps {
 }
 
 export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
-  const userDetails = useAuthStore((state) => state.userDetails);
+  const { userDetails, targetUserDetails } = useAuthStore((state) => state);
 
-  const isMe = userDetails?.username === msg.created_by;
+  const own_user_id = targetUserDetails?.user_id ?? userDetails?.username;
+  const isMe = own_user_id === msg.created_by;
   return (
     <Group
       justify={isMe ? "flex-end" : "flex-start"}
@@ -30,7 +30,7 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
           radius="lg"
           p="sm"
           maw="70%"
-          bg={chatCardColorProvider(isMe)}
+          bg={isMe ? "blue.6" : "white"}
         >
           {!isMe && (
             <Text size="xs" fw={600} c="blue" mb={4}>

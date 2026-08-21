@@ -8,6 +8,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useChatStore } from "../../../../store/chats/chats.store";
 import { useNextPerson } from "../../../../hooks/useNextPerson";
 import { useParams } from "react-router";
+import { useAuthStore } from "../../../../store/auth/auth.store";
 
 function EditChatDialog() {
   const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
@@ -16,6 +17,7 @@ function EditChatDialog() {
   const { alterChat } = useChatStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
   const nextPerson = useNextPerson();
+  const { targetUserDetails } = useAuthStore((state) => state);
 
   const isGroup = chatId?.includes("group");
 
@@ -40,6 +42,7 @@ function EditChatDialog() {
         user: isGroup ? undefined : nextPerson(chatId),
         body: { text: message },
         message_id: triggerPayload?._id,
+        target_user: targetUserDetails?.user_id,
       };
 
       const endpoint = isGroup ? ENDPOINTS.GROUP_CHAT.PUT : ENDPOINTS.CHAT.PUT;

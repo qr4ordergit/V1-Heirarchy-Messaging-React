@@ -10,6 +10,7 @@ import { useNextPerson } from "../../../hooks/useNextPerson";
 import { MessageChat } from "./MessageChat";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../utils/constant";
+import { useAuthStore } from "../../../store/auth/auth.store";
 
 export default function Chatting() {
   const messages = useChatStore((state) => state.chats);
@@ -21,6 +22,7 @@ export default function Chatting() {
     (state) => state,
   );
   const navigate = useNavigate();
+  const { targetUserDetails } = useAuthStore((state) => state);
 
   const [fetchLoader, FetchFn] = useTransition();
 
@@ -28,8 +30,11 @@ export default function Chatting() {
     try {
       if (!chatId) return;
 
+      const target_user = targetUserDetails?.user_id
+        ? `&target_user=${targetUserDetails?.user_id}`
+        : "";
       const response = await api.get(
-        `${ENDPOINTS.CHAT.GET}${nextPerson(chatId)}`,
+        `${ENDPOINTS.CHAT.GET}${nextPerson(chatId)}${target_user}`,
       );
 
       if (!response.data?.success) {
@@ -48,8 +53,12 @@ export default function Chatting() {
     try {
       if (!chatId) return;
 
+      const target_user = targetUserDetails?.user_id
+        ? `&target_user=${targetUserDetails?.user_id}`
+        : "";
+
       const response = await api.get(
-        `${ENDPOINTS.GROUP_CHAT.GET}${encodeURIComponent(chatId)}`,
+        `${ENDPOINTS.GROUP_CHAT.GET}${encodeURIComponent(chatId)}${target_user}`,
       );
 
       if (!response.data?.success) {
@@ -76,8 +85,12 @@ export default function Chatting() {
     try {
       if (!chatId) return;
 
+      const target_user = targetUserDetails?.user_id
+        ? `&target_user=${targetUserDetails?.user_id}`
+        : "";
+
       const response = await api.get(
-        `${ENDPOINTS.TAGS.GET}?for=${chatId.includes("group") ? "GROUP" : "DM"}&tag_id=${triggerPayload?.tag}&scope_id=${encodeURIComponent(chatId)}`,
+        `${ENDPOINTS.TAGS.GET}?for=${chatId.includes("group") ? "GROUP" : "DM"}&tag_id=${triggerPayload?.tag}&scope_id=${encodeURIComponent(chatId)}${target_user}`,
       );
 
       if (!response.data?.success) {
