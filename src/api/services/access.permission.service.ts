@@ -1,10 +1,10 @@
-import type { PermissionNode } from "../../utils/permission";
+import type { Permissions } from "../../utils/permission";
 import { api } from "../axios";
 import { ENDPOINTS } from "../endpoints";
 
-interface UpdateUserPermissionsProps {
+export interface UpdateUserPermissionsProps {
   username: string;
-  permissions: PermissionNode;
+  permissions: Permissions;
 }
 
 interface UpdateAccessAndPermissionProps {
@@ -12,7 +12,15 @@ interface UpdateAccessAndPermissionProps {
   sub_users: UpdateUserPermissionsProps[];
 }
 
+type PermissionsType = Record<string, Record<string, boolean>>;
+
+export interface UpdatePermissionsProps {
+  target_user: string;
+  permissions: PermissionsType;
+}
+
 export const AcessAndPermissionService = {
+  // user to user
   getAccessAndPermission: async (target_user: string) => {
     const res = await api.get(
       `${ENDPOINTS.ACCESS_PERMISSION.GET}?target_user=${target_user}`,
@@ -21,6 +29,17 @@ export const AcessAndPermissionService = {
   },
   updateAccessAndPermission: async (data: UpdateAccessAndPermissionProps) => {
     const res = await api.patch(ENDPOINTS.ACCESS_PERMISSION.PATCH, data);
+    return res.data;
+  },
+  // single user
+   getUserPermission: async (target_user: string) => {
+    const res = await api.get(
+      `${ENDPOINTS.PERMISSION.GET}?target_user=${target_user}`,
+    );
+    return res.data;
+  },
+   updatePermission: async (data: UpdatePermissionsProps) => {
+    const res = await api.patch(ENDPOINTS.PERMISSION.PATCH, data);
     return res.data;
   },
 };

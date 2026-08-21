@@ -1,76 +1,70 @@
 import { Table } from "@mantine/core";
-import { PERMISSION_LABELS } from "../../utils/constant";
+import {
+  PERMISSION_GROUP_LABELS,
+  PERMISSION_LABELS,
+} from "../../utils/constant";
 
-type PermissionNode = {
-  [key: string]: boolean | PermissionNode;
-};
+type PermissionGroup = Record<string, boolean>;
+
+type Permissions = Record<string, PermissionGroup>;
 
 interface PermissionHeaderProps {
-  data: PermissionNode;
+  data: Permissions;
 }
-
-const isLeaf = (
-  value: boolean | PermissionNode,
-): value is boolean => {
-  return typeof value === "boolean";
-};
-
-const formatLabel = (value: string) => {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-};
 
 export default function PermissionTableHeader({
   data,
 }: PermissionHeaderProps) {
-  const headers: {
-    path: string;
-    label: string;
-  }[] = [];
-
-  const buildHeaders = (
-    currentData: PermissionNode,
-    parentPath = "",
-  ) => {
-    Object.entries(currentData).forEach(([key, value]) => {
-      const currentPath = parentPath
-        ? `${parentPath}.${key}`
-        : key;
-
-      if (isLeaf(value)) {
-        headers.push({
-          path: currentPath,
-          label:
-            PERMISSION_LABELS[currentPath] ??
-            formatLabel(key),
-        });
-
-        return;
-      }
-
-      buildHeaders(value, currentPath);
-    });
-  };
-
-  buildHeaders(data);
-
   return (
-    <Table.Tr>
-      {headers.map(({ path, label }) => (
-        <Table.Th
-          key={path}
-          ta="center"
-          style={{
-            whiteSpace: "nowrap",
-            backgroundColor:
-              "var(--mantine-color-gray-1)",
-            position: "sticky",
-            top: 0,
-            zIndex: 2,
-          }}
-        >
-          {label}
-        </Table.Th>
-      ))}
-    </Table.Tr>
+    <>
+      {/* Group headers */}
+      <Table.Tr>
+        {Object.entries(data).map(
+          ([groupKey, permissions]) => {
+            const permissionCount =
+              Object.keys(permissions).length;
+
+            return (
+              <Table.Th
+                key={groupKey}
+                colSpan={permissionCount}
+                ta="center"
+                style={{
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {PERMISSION_GROUP_LABELS[groupKey] ??
+                  groupKey}
+              </Table.Th>
+            );
+          },
+        )}
+      </Table.Tr>
+
+      {/* Permission headers */}
+      <Table.Tr>
+        {Object.entries(data).map(
+          ([groupKey, permissions]) =>
+            Object.keys(permissions).map(
+              (permissionKey) => {
+                const path = `${groupKey}.${permissionKey}`;
+
+                return (
+                  <Table.Th
+                    key={path}
+                    ta="center"
+                    style={{
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {PERMISSION_LABELS[path] ??
+                      permissionKey}
+                  </Table.Th>
+                );
+              },
+            ),
+        )}
+      </Table.Tr>
+    </>
   );
 }

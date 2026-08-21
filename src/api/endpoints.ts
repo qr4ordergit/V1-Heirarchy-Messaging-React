@@ -17,6 +17,10 @@ export const ENDPOINTS = {
     GET : "/user-access/sub-users-permissions",
     PATCH : "/user-access"
   },
+  PERMISSION:{
+    GET : "/permissions",
+    PATCH : "/permissions"
+  },
   GROUP_CHAT: {
     GET: "/groups-message?group_id=",
     POST: "/groups-message",

@@ -7,35 +7,40 @@ import {
   Flex,
   Loader,
   ScrollArea,
+  Stack,
   Table,
   Text,
 } from "@mantine/core";
 
 import PermissionTableHeader from "./PermissionTableHeader";
 
-import { PERMISSIONS } from "../../utils/constant";
+import {
+  PERMISSION_GROUP_LABELS,
+  PERMISSION_LABELS,
+  PERMISSIONS,
+} from "../../utils/constant";
 
 import {
-  flattenPermissions,
-  getNestedPermission,
-  removeFalsePermissions,
-  setNestedPermission,
-  type PermissionNode,
+  getPermissionValue,
+  setPermissionValue,
+  type Permissions,
 } from "../../utils/permission";
 
 import { Notification } from "../../utils/notification";
 import { AcessAndPermissionService } from "../../api/services/access.permission.service";
+import { useMediaQuery } from "@mantine/hooks";
+import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 
 interface UpdateUserPermissionsPayload {
   username: string;
-  permissions: PermissionNode;
+  permissions: Permissions;
 }
 
 type UserPermissionChanges = Record<string, UpdateUserPermissionsPayload>;
 
 interface userDetails {
   id: string;
-  label : string | null
+  label: string | null;
 }
 
 interface AccessAndPermissionGridProps {
@@ -51,12 +56,21 @@ export default function AccessAndPermissionGrid({
   users,
   targetUser,
 }: AccessAndPermissionGridProps) {
-  const permissionColumns = flattenPermissions(PERMISSIONS);
+  const mobileAndTabScreen = useMediaQuery("(max-width: 800px)");
+
+  const permissionColumns = Object.entries(PERMISSIONS).flatMap(
+    ([group, permissions]) =>
+      Object.keys(permissions).map((permission) => ({
+        id: `${group}.${permission}`,
+        path: `${group}.${permission}`,
+      })),
+  );
 
   const [loading, setLoading] = useState(false);
   const [loadingAP, setLoadingAP] = useState(false);
 
   const [changes, setChanges] = useState<UserPermissionChanges>({});
+  const [openedUserAcc, setOpenedUserAcc] = useState<string | null>(null);
 
   const handlePermissionChange = (
     username: string,
@@ -68,23 +82,14 @@ export default function AccessAndPermissionGrid({
 
       const currentPermissions = existingUser?.permissions ?? {};
 
-      const updatedPermissions = setNestedPermission(
+      const updatedPermissions = setPermissionValue(
         currentPermissions,
         permissionId,
         checked,
       );
 
-      if (Object.keys(updatedPermissions).length === 0) {
-        const updatedChanges = { ...previous };
-
-        delete updatedChanges[username];
-
-        return updatedChanges;
-      }
-
       return {
         ...previous,
-
         [username]: {
           username,
           permissions: updatedPermissions,
@@ -147,7 +152,7 @@ export default function AccessAndPermissionGrid({
         (result, user) => {
           result[user.username] = {
             username: user.username,
-            permissions: removeFalsePermissions(user.permissions),
+            permissions: user.permissions,
           };
 
           return result;
@@ -173,14 +178,14 @@ export default function AccessAndPermissionGrid({
 
   if (loadingAP) {
     return (
-      <Flex justify="center" align="center" h="calc(100dvh - 80px)">
+      <Flex justify="center" align="center" h="calc(100dvh - 120px)">
         <Loader size="xs" />
       </Flex>
     );
   }
 
   return (
-    <Flex direction="column" h="calc(100dvh - 80px)" gap="md">
+    <Flex direction="column" h="calc(100dvh - 120px)" gap="md">
       <Box
         style={{
           flex: 1,
@@ -190,164 +195,263 @@ export default function AccessAndPermissionGrid({
           borderRadius: 10,
         }}
       >
-        <ScrollArea h="100%" type="auto" scrollbarSize={0}>
-          <Table
-            withColumnBorders
-            horizontalSpacing={6}
-            verticalSpacing={6}
-            fz="xs"
-            style={{
-              borderSpacing: 0,
-              borderCollapse: "separate",
-            }}
-            styles={{
-              th: {
-                borderLeft: "1px solid var(--mantine-color-gray-3)",
-                borderBottom: "1px solid var(--mantine-color-gray-3)",
-                borderRight: 0,
-              },
-
-              td: {
-                borderBottom: "1px solid var(--mantine-color-gray-3)",
-                borderRight: 0,
-              },
-            }}
-          >
-            <Table.Thead
+        <ScrollArea
+          h="100%"
+          type="auto"
+          scrollbarSize={0}
+          p={mobileAndTabScreen ? "xs" : ""}
+        >
+          {!mobileAndTabScreen ? (
+            <Table
+              withColumnBorders
+              horizontalSpacing={6}
+              verticalSpacing={6}
+              fz="xs"
               style={{
-                position: "sticky",
-                top: 0,
-                zIndex: 10,
+                borderSpacing: 0,
+                borderCollapse: "separate",
+              }}
+              styles={{
+                th: {
+                  borderLeft: "1px solid var(--mantine-color-gray-3)",
+                  borderBottom: "1px solid var(--mantine-color-gray-3)",
+                  borderRight: 0,
+                },
+
+                td: {
+                  borderBottom: "1px solid var(--mantine-color-gray-3)",
+                  borderRight: 0,
+                },
               }}
             >
-              <Table.Tr>
-                <Table.Th
-                  rowSpan={3}
-                  style={{
-                    position: "sticky",
-                    left: 0,
-                    top: 0,
-                    zIndex: 12,
-                    textAlign: "center",
-                    background: "var(--mantine-color-gray-1)",
-                    borderLeft: 0,
-                  }}
-                >
-                  Username
-                </Table.Th>
+              <Table.Thead
+                style={{
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 10,
+                      background: "var(--mantine-color-gray-1)",
+                }}
+              >
+                <Table.Tr>
+                  <Table.Th
+                    rowSpan={3}
+                    style={{
+                      position: "sticky",
+                      left: 0,
+                      zIndex: 12,
+                      textAlign: "center",
+                      borderLeft: 0,
+                      background: "var(--mantine-color-gray-1)",
+                    }}
+                  >
+                    Username
+                  </Table.Th>
 
-                <Table.Th
-                  rowSpan={3}
-                  style={{
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 11,
-                    textAlign: "center",
-                    background: "var(--mantine-color-gray-1)",
-                  }}
-                >
-                  Access
-                </Table.Th>
-              </Table.Tr>
+                  <Table.Th
+                    rowSpan={3}
+                    style={{
+                      textAlign: "center",
+                    }}
+                  >
+                    Access
+                  </Table.Th>
+                </Table.Tr>
 
-              <Table.Tr bg={"var(--mantine-color-gray-1)"}>
-                <Table.Th colSpan={7} ta="center">
-                  Direct Message ( DM )
-                </Table.Th>
-                <Table.Th colSpan={4} ta="center">
-                  Group Messages
-                </Table.Th>
-                <Table.Th colSpan={4} ta="center">
-                  Group
-                </Table.Th>
-                <Table.Th colSpan={4} ta="center">
-                  Contacts
-                </Table.Th>
-                <Table.Th colSpan={2} ta="center">
-                  Users
-                </Table.Th>
-                <Table.Th colSpan={4} ta="center">
-                  Tags
-                </Table.Th>
-              </Table.Tr>
+                {/* Permission headers */}
+                <PermissionTableHeader data={PERMISSIONS} />
+              </Table.Thead>
 
-              {/* Permission headers */}
-              <PermissionTableHeader data={PERMISSIONS} />
-            </Table.Thead>
+              <Table.Tbody>
+                {users.map((user) => {
+                  const currentUser = changes[user.id];
 
-            <Table.Tbody>
+                  const canUserAccess = Boolean(currentUser);
+
+                  return (
+                    <Table.Tr key={user.id}>
+                      <Table.Td
+                        style={{
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 6,
+                          background: "var(--mantine-color-gray-1)",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <Text size="xs" fw={600} ta="center">
+                          {user.label}
+                        </Text>
+                      </Table.Td>
+
+                      <Table.Td
+                        ta="center"
+                        style={{
+                          position: "sticky",
+                          zIndex: 5,
+                        }}
+                      >
+                        <Flex justify="center">
+                          <Checkbox
+                            size="xs"
+                            checked={canUserAccess}
+                            onChange={(event) =>
+                              handleAccessChange(
+                                user.id,
+                                event.currentTarget.checked,
+                              )
+                            }
+                          />
+                        </Flex>
+                      </Table.Td>
+
+                      {permissionColumns.map((permission) => {
+                        const checked = getPermissionValue(
+                          currentUser?.permissions ?? {},
+                          permission.path,
+                        );
+
+                        return (
+                          <Table.Td key={permission.id} ta="center">
+                            <Flex justify="center">
+                              <Checkbox
+                                size="xs"
+                                checked={checked}
+                                disabled={!canUserAccess}
+                                onChange={(event) =>
+                                  handlePermissionChange(
+                                    user.id,
+                                    permission.path,
+                                    event.currentTarget.checked,
+                                  )
+                                }
+                              />
+                            </Flex>
+                          </Table.Td>
+                        );
+                      })}
+                    </Table.Tr>
+                  );
+                })}
+              </Table.Tbody>
+            </Table>
+          ) : (
+            <Stack gap={"xs"}>
+              <Text size="xs" c={"dimmed"} ms={"xs"}>
+                Access
+              </Text>
               {users.map((user) => {
                 const currentUser = changes[user.id];
-
                 const canUserAccess = Boolean(currentUser);
 
+                const opend = openedUserAcc === user.id;
                 return (
-                  <Table.Tr key={user.id}>
-                    <Table.Td
+                  <Box
+                    key={user.id}
+                    style={{
+                      border: "1px solid var(--mantine-color-gray-3)",
+                      borderRadius: "10px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Flex
+                      align={"center"}
+                      gap={"md"}
+                      justify={"space-between"}
                       style={{
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 6,
-                        background: "var(--mantine-color-gray-1)",
-                        whiteSpace: "nowrap",
+                        padding: "5px 10px",
+                        cursor: canUserAccess ? "pointer" : "not-allowed",
+                        background: opend
+                          ? "var(--mantine-color-gray-3)"
+                          : "white",
                       }}
+                      onClick={() =>
+                        canUserAccess &&
+                        setOpenedUserAcc((prev) =>
+                          prev === user.id ? null : user.id,
+                        )
+                      }
                     >
-                      <Text size="xs" fw={600} ta="center">
-                        {user.label}
-                      </Text>
-                    </Table.Td>
-
-                    <Table.Td
-                      ta="center"
-                      style={{
-                        position: "sticky",
-                        zIndex: 5,
-                      }}
-                    >
-                      <Flex justify="center">
+                      <Flex align={"center"} gap={"xs"}>
                         <Checkbox
                           size="xs"
                           checked={canUserAccess}
-                          onChange={(event) =>
+                          onChange={(event) => {
+                            event.stopPropagation();
                             handleAccessChange(
                               user.id,
                               event.currentTarget.checked,
-                            )
-                          }
+                            );
+                            setOpenedUserAcc(null);
+                          }}
                         />
+                        <Text size="xs" fw={"bolder"}>
+                          {user.label}
+                        </Text>
                       </Flex>
-                    </Table.Td>
+                      {!opend ? (
+                        <IconChevronDown size={15} />
+                      ) : (
+                        <IconChevronUp size={15} />
+                      )}
+                    </Flex>
+                    {opend && (
+                      <Stack
+                        p="xs"
+                        bg="white"
+                        style={{
+                          borderTop: "1px solid var(--mantine-color-gray-3)",
+                        }}
+                        gap={"lg"}
+                      >
+                        {Object.entries(PERMISSIONS).map(
+                          ([groupKey, permissions]) => (
+                            <Stack key={groupKey} gap="xs">
+                              <Text size="xs" c="dimmed">
+                                {PERMISSION_GROUP_LABELS[groupKey] ?? groupKey}
+                              </Text>
 
-                    {permissionColumns.map((permission) => {
-                      const checked = getNestedPermission(
-                        currentUser?.permissions ?? {},
-                        permission.path,
-                      );
+                              <Flex gap="md" style={{ flexWrap: "wrap" }}>
+                                {Object.keys(permissions).map(
+                                  (permissionKey) => {
+                                    const path = `${groupKey}.${permissionKey}`;
 
-                      return (
-                        <Table.Td key={permission.id} ta="center">
-                          <Flex justify="center">
-                            <Checkbox
-                              size="xs"
-                              checked={checked}
-                              disabled={!canUserAccess}
-                              onChange={(event) =>
-                                handlePermissionChange(
-                                  user.id,
-                                  permission.path,
-                                  event.currentTarget.checked,
-                                )
-                              }
-                            />
-                          </Flex>
-                        </Table.Td>
-                      );
-                    })}
-                  </Table.Tr>
+                                    const checked = getPermissionValue(
+                                      currentUser?.permissions ?? {},
+                                      path,
+                                    );
+
+                                    return (
+                                      <Checkbox
+                                        key={path}
+                                        size="xs"
+                                        checked={checked}
+                                        disabled={!canUserAccess}
+                                        label={
+                                          PERMISSION_LABELS[path] ??
+                                          permissionKey
+                                        }
+                                        onChange={(event) =>
+                                          handlePermissionChange(
+                                            user.id,
+                                            path,
+                                            event.currentTarget.checked,
+                                          )
+                                        }
+                                      />
+                                    );
+                                  },
+                                )}
+                              </Flex>
+                            </Stack>
+                          ),
+                        )}
+                      </Stack>
+                    )}
+                  </Box>
                 );
               })}
-            </Table.Tbody>
-          </Table>
+            </Stack>
+          )}
         </ScrollArea>
       </Box>
 
@@ -355,7 +459,7 @@ export default function AccessAndPermissionGrid({
         <Button
           size="compact-xs"
           onClick={handleSave}
-          disabled={Object.keys(changes).length === 0 || loading}
+          disabled={loading}
           loading={loading}
         >
           Save changes

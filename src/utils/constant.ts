@@ -96,93 +96,111 @@ export const CIPHER_SECRET =
   "a3f9c81e2d4b7f60918c5e3a2b7d4f9c1e6a8b3d5f2c9e4a7b1d8f3c6e9a2b5d";
 
 export const PERMISSIONS = {
-  messages: {
-    chat: {
-      create: false,
-      read: false,
-      update: false,
-      delete: false,
-      start: false,
-      history: {
-        get: false,
-        delete: false,
-      },
-    },
-    group: {
-      create: false,
-      read: false,
-      update: false,
-      delete: false,
-    },
+  chat: {
+    start: false,
+    "history-get": false,
+    "history-delete": false,
   },
-
-  group: {
+  "direct-messages": {
     create: false,
     read: false,
     update: false,
     delete: false,
   },
-
+  groups: {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
+  "group-messages": {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
+  keyring: {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
   contacts: {
     create: false,
     read: false,
     update: false,
     delete: false,
   },
-
-  users: {
-    read: false,
-    accesstree: {
-      read: false,
-    },
-  },
-
   tags: {
-      create: false,
-      read: false,
-      update: false,
-      delete: false,
-    },
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
+  "users-accesstree": {
+    read: false,
+    update: false,
+  },
 };
 
 export const PERMISSION_LABELS: Record<string, string> = {
-  // Direct Message ( DM )
-  "messages.chat.create": "Write",
-  "messages.chat.read": "View",
-  "messages.chat.update": "Update",
-  "messages.chat.delete": "Delete ",
-  "messages.chat.start": "Start Chat",
-  "messages.chat.history.get": "View Chats",
-  "messages.chat.history.delete": "Delete Chats",
-  
+  // Manage Chats
+  "chat.start": "Initiate Chat",
+  "chat.history-get": "View Chats",
+  "chat.history-delete": "Delete Chats",
+
+  // Direct Messages (DM)
+  "direct-messages.create": "Write",
+  "direct-messages.read": "View",
+  "direct-messages.update": "Update",
+  "direct-messages.delete": "Delete",
+
+  // Manage Groups
+  "groups.create": "Create",
+  "groups.read": "View",
+  "groups.update": "Update",
+  "groups.delete": "Delete",
+
   // Group Messages
-  "messages.group.create": "Write",
-  "messages.group.read": "View",
-  "messages.group.update": "Update",
-  "messages.group.delete": "Delete",
+  "group-messages.create": "Write",
+  "group-messages.read": "View",
+  "group-messages.update": "Update",
+  "group-messages.delete": "Delete",
 
-  // Group
-  "group.create": "Create",
-  "group.read": "View",
-  "group.update": "Update",
-  "group.delete": "Delete",
+  // Manage Keyring
+  "keyring.create": "Create",
+  "keyring.read": "View",
+  "keyring.update": "Update",
+  "keyring.delete": "Delete",
 
-  // Contacts
+  // Manage Contacts
   "contacts.create": "Add",
   "contacts.read": "View",
   "contacts.update": "Update",
   "contacts.delete": "Delete",
 
-  // Users
-  "users.read": "View Profile",
-  "users.accesstree.read": "View Subusers",
-
-  // Tags
+  // Manage Tags
   "tags.create": "Create",
   "tags.read": "View",
   "tags.update": "Update",
   "tags.delete": "Delete",
+
+  // Manage Subuser Access
+  "users-accesstree.read": "View",
+  "users-accesstree.update": "Update",
 };
+
+export const PERMISSION_GROUP_LABELS: Record<string, string> = {
+  chat: "Manage Chats",
+  "direct-messages": "Direct Messages (DM)",
+  groups: "Manage Groups",
+  "group-messages": "Group Messages",
+  keyring: "Manage Keyring",
+  contacts: "Manage Contacts",
+  tags: "Manage Tags",
+  "users-accesstree": "Manage Subuser Access",
+};
+
 export const getHeaders = (): Record<string, string> => ({
   Authorization: token ?? "",
   "Content-Type": "application/json",

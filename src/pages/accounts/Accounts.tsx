@@ -20,6 +20,9 @@ import {
   Title,
   Switch,
   Tooltip,
+  Flex,
+  Checkbox,
+  ScrollArea,
 } from "@mantine/core";
 import {
   IconDotsVertical,
@@ -53,6 +56,17 @@ import { ClearStore } from "../../store/clear.store";
 import AccessAndPermissionGrid from "../../component/accessAndPermissionGrid/AccessAndPermissionGrid";
 
 import CreateAccountModal from "./Createaccountmodal";
+import {
+  PERMISSION_GROUP_LABELS,
+  PERMISSION_LABELS,
+  PERMISSIONS,
+} from "../../utils/constant";
+import { getPermissionValue, setPermissionValue, hasAnyPermission } from '../../utils/permission';
+import {
+  AcessAndPermissionService,
+  type UpdatePermissionsProps,
+} from "../../api/services/access.permission.service";
+import { Notification } from "../../utils/notification";
 
 const PASSKEY_PATTERN = /^[a-zA-Z0-9]{4,12}$/;
 
@@ -124,11 +138,20 @@ export default function Accounts() {
   >({});
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [perType, setPerType] = useState<string>("User Permission");
+
   const [accessAndPermissions, setAccessAndPermissions] =
     useState<AccessAndPermissionsState>({
       open: false,
       targetUser: "",
     });
+
+  const [loadingSave, setLoadingSave] = useState(false);
+  const [loadingP, setLoadingP] = useState(false);
+  const [changes, setChanges] = useState<UpdatePermissionsProps>({
+    target_user: accessAndPermissions.targetUser,
+    permissions: {},
+  });
 
   const onOpenAccessAndPermissions = (user_id: string) => {
     setAccessAndPermissions({
@@ -140,16 +163,13 @@ export default function Accounts() {
   const onCloseAccessAndPermissions = () => {
     setAccessAndPermissions({
       open: false,
-      targetUser: "",
+      targetUser: "User Permission",
     });
+    setPerType("User Permission")
   };
 
   const users = structuredClone(accounts)
-    .sort((a, b) => {
-      if (a.user_id === accessAndPermissions.targetUser) return -1;
-      if (b.user_id === accessAndPermissions.targetUser) return 1;
-      return 0;
-    })
+    .filter((acc) => acc.user_id !== accessAndPermissions.targetUser)
     .map((acc) => ({
       id: acc.user_id,
       label: acc.phone_number !== "" ? acc.phone_number : acc.user_id,
@@ -353,6 +373,56 @@ export default function Accounts() {
     return haystack.includes(query);
   });
 
+  const handleSave = async () => {
+    try {
+      setLoadingSave(true);
+
+      await AcessAndPermissionService.updatePermission(changes);
+
+      Notification.success("Access & Permission updated");
+    } catch (error) {
+      if (error instanceof Error) {
+        Notification.error(error.message);
+      }
+    } finally {
+      setLoadingSave(false);
+    }
+  };
+
+  const handlePermissionChange = (permissionId: string, checked: boolean) => {
+    const target_user = accessAndPermissions.targetUser;
+
+    setChanges((previous) => {
+      const currentPermissions = previous?.permissions ?? {};
+
+      const updatedPermissions = setPermissionValue(
+        currentPermissions,
+        permissionId,
+        checked,
+      );
+
+      return {
+        target_user,
+        permissions: updatedPermissions,
+      };
+    });
+  };
+
+  const loadPermissions = async (targetUser: string) => {
+    try {
+      setLoadingP(true);
+      const res = await AcessAndPermissionService.getUserPermission(targetUser);
+
+      setChanges(res);
+    } catch (error) {
+      if (error instanceof Error) {
+        Notification.error(error.message);
+      }
+    } finally {
+      setLoadingP(false);
+    }
+  };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAccounts();
@@ -487,7 +557,7 @@ export default function Accounts() {
                             className={classes.accountName}
                             onClick={() => {
                               setTargetUser(account.user_id);
-                          setTargetUserDetails(account);
+                              setTargetUserDetails(account);
                               navigate(`/${ROUTES.CHATS}`);
                             }}
                           >
@@ -576,9 +646,10 @@ export default function Accounts() {
                         c="dimmed"
                         fw={500}
                         style={{ cursor: "pointer", whiteSpace: "nowrap" }}
-                        onClick={() =>
-                          onOpenAccessAndPermissions(account.user_id)
-                        }
+                        onClick={() => {
+                          loadPermissions(account.user_id);
+                          onOpenAccessAndPermissions(account.user_id);
+                        }}
                       >
                         Manage Access & Permissions
                       </Text>
@@ -823,14 +894,96 @@ export default function Accounts() {
       <Modal
         opened={accessAndPermissions.open}
         onClose={onCloseAccessAndPermissions}
-        title="Manage Access & Permissions"
+        title={`Manage Access & Permissions ( ${accessAndPermissions.targetUser} )`}
         fullScreen
         radius={0}
       >
-        <AccessAndPermissionGrid
-          users={users}
-          targetUser={accessAndPermissions.targetUser}
-        />
+        <Group gap="xs" mb={"md"}>
+          {["User Permission", "User to User Permission"].map((name) => (
+            <Button
+              key={name}
+              size="compact-xs"
+              radius="xl"
+              variant={perType === name ? "filled" : "outline"}
+              onClick={() => {
+                setPerType(name);
+                if (name === "User Permission") {
+                  loadPermissions(accessAndPermissions.targetUser);
+                }
+              }}
+            >
+              {name}
+            </Button>
+          ))}
+        </Group>
+        {perType === "User Permission" ? (
+          loadingP ? (
+            <Flex justify="center" align="center" h="calc(100dvh - 120px)">
+              <Loader size="xs" />
+            </Flex>
+          ) : (
+            <Flex direction="column" h="calc(100dvh - 120px)" gap="md">
+              <ScrollArea h="100%" type="auto" scrollbarSize={0} pl={{base :0, xs : "lg"}}>
+                <Stack
+                  p="xs"
+                  bg="white"
+                  gap={"lg"}
+                >
+                  {Object.entries(PERMISSIONS).map(
+                    ([groupKey, permissions]) => (
+                      <Stack key={groupKey} gap="xs">
+                        <Text size="xs" c="dimmed">
+                          {PERMISSION_GROUP_LABELS[groupKey] ?? groupKey}
+                        </Text>
+
+                        <Flex gap="md" style={{ flexWrap: "wrap" }}>
+                          {Object.keys(permissions).map((permissionKey) => {
+                            const path = `${groupKey}.${permissionKey}`;
+
+                            const checked = getPermissionValue(
+                              changes?.permissions ?? {},
+                              path,
+                            );
+
+                            return (
+                              <Checkbox
+                                key={path}
+                                size="xs"
+                                checked={checked}
+                                label={PERMISSION_LABELS[path] ?? permissionKey}
+                                onChange={(event) =>
+                                  handlePermissionChange(
+                                    path,
+                                    event.currentTarget.checked,
+                                  )
+                                }
+                              />
+                            );
+                          })}
+                        </Flex>
+                      </Stack>
+                    ),
+                  )}
+                </Stack>
+              </ScrollArea>
+              <Flex justify="flex-end">
+                <Button
+                  size="compact-xs"
+                  onClick={handleSave}
+                  loading={loadingSave}
+                  disabled={!hasAnyPermission(changes.permissions)}
+                >
+                  Save changes
+                </Button>
+              </Flex>
+            </Flex>
+          )
+        ) : (
+          <AccessAndPermissionGrid
+            users={users}
+            targetUser={accessAndPermissions.targetUser}
+          />
+        )}
       </Modal>
     </div>
   );
