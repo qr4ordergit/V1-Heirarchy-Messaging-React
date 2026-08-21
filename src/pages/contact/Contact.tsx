@@ -32,6 +32,7 @@ import { notifications } from "@mantine/notifications";
 import { encryptPasskey } from "../../utils/passkeyCipher";
 import { api } from "../../api/axios";
 import { handleApiError } from "../../utils/errorHandler";
+import { useConversationTypeStore } from "../../store/conversation/conversation.type.store";
 
 export interface Contact {
   id: string;
@@ -62,6 +63,7 @@ export type ContactFormValues = Omit<Contact, "id" | "color"> & {
 };
 
 const Contact = () => {
+  const setType = useConversationTypeStore((state) => state.setType);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -361,6 +363,7 @@ const Contact = () => {
       const data = await response.data;
 
       if (response.status === 201 || data.success) {
+        setType("dm");
         navigate(`/chats/${targetUserId}`);
       } else {
         notifications.show({
@@ -378,10 +381,8 @@ const Contact = () => {
   };
 
   const handleGroupClick = (group: GroupItem) => {
-    const groupId = group._id.includes("#")
-      ? group._id.split("#")[1]
-      : group._id;
-    navigate(`/chats/${groupId}`);
+    setType("groups");
+    navigate(`/chats/${encodeURIComponent(group._id)}`);
   };
 
   const handleDelete = async (contact: Contact) => {

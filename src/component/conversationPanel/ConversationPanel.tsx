@@ -71,7 +71,7 @@ export default function ConversationPanel() {
 
   const handleCancel = () => {
     setTargetUser("");
-    // setTargetUserDetails(null);
+    setTargetUserDetails(null);
     navigate(`/${ROUTES.ACCOUNTS}`);
   };
 

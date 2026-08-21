@@ -80,8 +80,8 @@ const Profile = () => {
       const tags = await getTagsApi();
       storeTags(Array.isArray(tags) ? tags : []);
     } catch (error: any) {
-        handleApiError(error);
-      } finally {
+      handleApiError(error);
+    } finally {
       setLoadingTags(false);
     }
   };
@@ -110,8 +110,8 @@ const Profile = () => {
       appendTag(trimmedTag);
       setNewTagName("");
     } catch (error: any) {
-        handleApiError(error);
-      } finally {
+      handleApiError(error);
+    } finally {
       setCreatingTag(false);
     }
   };
@@ -128,8 +128,8 @@ const Profile = () => {
 
       removeTag(tagIdentifier);
     } catch (error: any) {
-        handleApiError(error);
-      } finally {
+      handleApiError(error);
+    } finally {
       setDeletingTagId(null);
     }
   };
@@ -168,9 +168,9 @@ const Profile = () => {
         message: patchData.message || "Profile picture updated successfully.",
         color: "green",
       });
-    }catch (error: any) {
-        handleApiError(error);
-      }  finally {
+    } catch (error: any) {
+      handleApiError(error);
+    } finally {
       setUploadingImage(false);
       if (event.target) event.target.value = "";
     }
@@ -196,8 +196,8 @@ const Profile = () => {
     try {
       await logout();
     } catch (error: any) {
-        handleApiError(error);
-      } finally {
+      handleApiError(error);
+    } finally {
       clearTokens();
       navigate(ROUTES.HOME, { replace: true });
     }
@@ -285,7 +285,7 @@ const Profile = () => {
                   onClick={handleToggleTags}
                   className="w-full px-5 py-4 cursor-pointer"
                 >
-                  <Group justify="space-between">
+                  <Group justify="space-between" pr="xs">
                     <Group gap="md">
                       <div className="p-2 rounded-lg bg-indigo-50 flex items-center justify-center">
                         <IconTag size={20} className="text-indigo-600" />
