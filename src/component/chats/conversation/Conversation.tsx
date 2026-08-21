@@ -10,6 +10,8 @@ import Previewer from "./modals/Previewer";
 import TagsModal from "./modals/TagsModal";
 import Navbar from "./Navbar";
 import TextFilterInputBox from "./TextFilterInputBox";
+import PrivateMessagePayloadModal from "./modals/PrivateMessagePayloadModal";
+import DecryptPrivateMsgDialog from "./dialouges/DecryptPrivateMsgDialog";
 
 function Conversation() {
   const { trigger } = useTriggerStore((state) => state);
@@ -55,6 +57,8 @@ function Conversation() {
       <EditChatDialog />
       <Previewer />
       <TagsModal />
+      <PrivateMessagePayloadModal />
+      <DecryptPrivateMsgDialog />
     </div>
   );
 }

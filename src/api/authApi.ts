@@ -1,5 +1,6 @@
 import { API_ENDPOINTS } from "../utils/constant";
 import { useAuthStore } from "../store/auth/auth.store";
+import { LOGOUT_REDIRECT_URI } from "../config/cognito";
 export interface SignupPayload {
   email: string;
   password: string;
@@ -93,7 +94,9 @@ export async function suggestUsername(
 export async function logout(): Promise<LogoutResponse> {
   const { accessToken } = useAuthStore.getState();
 
-  const response = await fetch(API_ENDPOINTS.AUTH_LOGOUT, {
+  const logoutUrl = `${API_ENDPOINTS.AUTH_LOGOUT}?redirect_uri=${encodeURIComponent(LOGOUT_REDIRECT_URI)}`;
+
+  const response = await fetch(logoutUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

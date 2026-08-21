@@ -68,6 +68,7 @@ import {
 } from "../../api/services/access.permission.service";
 import { Notification } from "../../utils/notification";
 
+//import { useDisableBackButton } from "../../hooks/useDisableBackButton";
 const PASSKEY_PATTERN = /^[a-zA-Z0-9]{4,12}$/;
 
 const getDisplayName = (account: Account) =>
@@ -424,9 +425,9 @@ export default function Accounts() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAccounts();
   }, []);
+  //useDisableBackButton();
   return (
     <div className={classes.wrapper}>
       <Container size="md" py="xl">

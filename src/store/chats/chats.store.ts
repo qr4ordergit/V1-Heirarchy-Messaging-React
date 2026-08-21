@@ -10,6 +10,9 @@ export interface MESSAGE {
         media_url?: string[];
     };
     tag?: string,
+    users?: string[],
+    password?: string,
+    double_encryption?: boolean,
 
     [key: string]: unknown;
 }
@@ -23,7 +26,8 @@ interface ChatsStore {
     alterChat: (message_id: string, newMessage: string) => void;
     updateTagStatus: (message_ids: [string]) => void,
     filterChatsByText: (text: string) => void,
-    emptyOGList: () => void
+    emptyOGList: () => void,
+    updateDecryptedMsg: (msg: MESSAGE) => void
 }
 
 export const useChatStore = create<ChatsStore>((set) => ({
@@ -91,6 +95,17 @@ export const useChatStore = create<ChatsStore>((set) => ({
     emptyOGList: () => {
         set(() => ({
             ogChats: []
+        }))
+    },
+    updateDecryptedMsg: (msg) => {
+        set((state) => ({
+            chats: state.chats.map((chat) => {
+                if (chat._id === msg._id) {
+                    return msg
+                }
+
+                return chat
+            })
         }))
     }
 

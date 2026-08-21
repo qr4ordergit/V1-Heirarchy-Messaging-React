@@ -8,8 +8,8 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { IconPaperclip, IconSend, IconX } from "@tabler/icons-react";
-import { useState, useTransition } from "react";
+import { IconLock, IconPaperclip, IconSend, IconX } from "@tabler/icons-react";
+import { useEffect, useState, useTransition } from "react";
 import { api } from "../../../api/axios";
 import { ENDPOINTS } from "../../../api/endpoints";
 import { Notification } from "../../../utils/notification";
@@ -20,12 +20,19 @@ import axios from "axios";
 import ReplyInputBoxCard from "./ReplyInputBoxCard";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../utils/constant";
+import { useAuthStore } from "../../../store/auth/auth.store";
+
+interface SUBMIT_PAYLOAD {
+  [key: string]: unknown;
+}
 
 export default function ChatInput() {
   const { chatId } = useParams<{ chatId: string }>();
   const nextPerson = useNextPerson();
   const appendChats = useChatStore((state) => state.appendChats);
-  const { trigger, triggerPayload, resetTrigger } = useTriggerStore();
+  const { trigger, triggerPayload, resetTrigger, setTrigger } =
+    useTriggerStore();
+  const userDetails = useAuthStore((state) => state.userDetails);
 
   const isReply = trigger === TRIGGERS.reply;
   const isGroup = chatId?.includes("group");
@@ -47,13 +54,23 @@ export default function ChatInput() {
     if (!chatId) return;
 
     try {
-      const payload = {
+      const payload: SUBMIT_PAYLOAD = {
         user: isGroup ? undefined : nextPerson(chatId),
         group_id: isGroup ? chatId : undefined,
         type: isReply ? "replay" : "message",
         parent_message_id: triggerPayload?._id ?? undefined,
         text: message,
       };
+
+      if (trigger === TRIGGERS.privateMessageSender) {
+        payload["user_key"] = triggerPayload?.password;
+        if (triggerPayload?.users && triggerPayload?.users?.length > 0) {
+          payload["users_list"] = [
+            ...triggerPayload?.users,
+            userDetails?.username,
+          ];
+        }
+      }
 
       const endpoint = isGroup
         ? ENDPOINTS.GROUP_CHAT.POST
@@ -65,8 +82,9 @@ export default function ChatInput() {
         Notification.error("Something went wrong");
         return;
       }
-
-      appendChats([response.data?.data]);
+      let finalMsg = response.data?.data;
+      finalMsg["double_encryption"] = false;
+      appendChats([finalMsg]);
       if (isReply) {
         resetTrigger();
       }
@@ -81,7 +99,7 @@ export default function ChatInput() {
     if (!chatId) return;
 
     try {
-      const payload = {
+      const payload: SUBMIT_PAYLOAD = {
         user: isGroup ? undefined : nextPerson(chatId),
         group_id: isGroup ? chatId : undefined,
         type: isReply ? "replay" : "message",
@@ -89,6 +107,16 @@ export default function ChatInput() {
         text: message,
         files: files.map((file) => file.name),
       };
+
+      if (trigger === TRIGGERS.privateMessageSender) {
+        payload["user_key"] = triggerPayload?.password;
+        if (triggerPayload?.users && triggerPayload?.users?.length > 0) {
+          payload["users_list"] = [
+            ...triggerPayload?.users,
+            userDetails?.username,
+          ];
+        }
+      }
 
       const endpoint = isGroup
         ? ENDPOINTS.GROUP_CHAT.POST
@@ -114,7 +142,9 @@ export default function ChatInput() {
         });
       }
 
-      appendChats([response.data?.data]);
+      let finalMsg = response.data?.data;
+      finalMsg["double_encryption"] = false;
+      appendChats([finalMsg]);
       if (isReply) {
         resetTrigger();
       }
@@ -127,12 +157,42 @@ export default function ChatInput() {
   };
 
   const handleSubmit = () => {
+    if (trigger === TRIGGERS.isPrivate) {
+      setTrigger({
+        toTrigger: TRIGGERS.privateMessageModal,
+      });
+
+      return;
+    }
+
     if (files.length > 0) {
       SubmitFn(sendWithAttachments);
     } else {
       SubmitFn(sendMessage);
     }
   };
+
+  const togglePrivate = () => {
+    if (trigger !== TRIGGERS.isPrivate) {
+      setTrigger({
+        toTrigger: TRIGGERS.isPrivate,
+      });
+    } else {
+      resetTrigger();
+    }
+  };
+
+  const triggerHandler = () => {
+    switch (trigger) {
+      case TRIGGERS.privateMessageSender:
+        handleSubmit();
+        break;
+    }
+  };
+
+  useEffect(() => {
+    triggerHandler();
+  }, [trigger]);
 
   return (
     <Paper shadow="xs" radius="xl" p="xs" withBorder>
@@ -146,6 +206,17 @@ export default function ChatInput() {
           gap: 8,
         }}
       >
+        {chatId?.includes("group") && (
+          <ActionIcon
+            variant={trigger.includes("secret_007") ? "filled" : "subtle"}
+            radius="xl"
+            size={36}
+            onClick={togglePrivate}
+          >
+            <IconLock size={20} stroke={2} />
+          </ActionIcon>
+        )}
+
         {/* Attachment */}
         <FileButton onChange={handleFiles} multiple disabled={submitLoader}>
           {(props) => (

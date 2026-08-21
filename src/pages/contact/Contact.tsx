@@ -7,7 +7,6 @@ import {
   Card,
   Checkbox,
   Group,
-  Menu,
   Pill,
   Stack,
   Tabs,
@@ -19,7 +18,6 @@ import {
   IconEdit,
   IconPlus,
   IconSearch,
-  IconSettings,
   IconTrash,
   IconUser,
   IconUsersGroup,
@@ -33,6 +31,8 @@ import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
 import { notifications } from "@mantine/notifications";
 import { encryptPasskey } from "../../utils/passkeyCipher";
 import { api } from "../../api/axios";
+import { handleApiError } from "../../utils/errorHandler";
+import { useConversationTypeStore } from "../../store/conversation/conversation.type.store";
 
 export interface Contact {
   id: string;
@@ -63,6 +63,7 @@ export type ContactFormValues = Omit<Contact, "id" | "color"> & {
 };
 
 const Contact = () => {
+  const setType = useConversationTypeStore((state) => state.setType);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -126,13 +127,8 @@ const Contact = () => {
           icon: <IconX size={18} />,
         });
       }
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Error fetching contacts: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setLoading(false);
     }
@@ -155,13 +151,8 @@ const Contact = () => {
           icon: <IconX size={18} />,
         });
       }
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Error fetching groups: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setGroupsLoading(false);
     }
@@ -175,6 +166,8 @@ const Contact = () => {
     setActiveTab(value);
     if (value === "groups") {
       fetchGroups();
+    } else {
+      fetchContacts();
     }
   };
 
@@ -210,13 +203,13 @@ const Contact = () => {
 
   const handleSaveGroupPayload = async (
     payload: {
-      group_name: string;
-      description: string;
-      admin: string[];
-      members: string[];
-      group_image: string;
-      group_image_file: File | null;
-      only_admins_can_message: boolean;
+      group_name?: string;
+      description?: string;
+      admin?: string[];
+      members?: string[];
+      group_image?: string;
+      group_image_file?: File | null;
+      only_admins_can_message?: boolean;
     },
     isEdit: boolean,
   ) => {
@@ -240,7 +233,7 @@ const Contact = () => {
         data: finalBody,
       });
 
-      const data = await response.data;
+      const data = response.data;
 
       if (response.status === 201 || response.status === 200 || data.success) {
         const presignedUrl = data.upload_url || data.group?.upload_url;
@@ -254,14 +247,8 @@ const Contact = () => {
               },
               body: group_image_file,
             });
-          } catch (uploadError) {
-            console.error("Presigned URL Upload Error:", uploadError);
-            notifications.show({
-              title: "Warning",
-              message: "Group saved, but failed to upload group image.",
-              color: "orange",
-              icon: <IconX size={18} />,
-            });
+          } catch (error: any) {
+            handleApiError(error);
           }
         }
 
@@ -289,13 +276,8 @@ const Contact = () => {
           icon: <IconX size={18} />,
         });
       }
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Error ${isEdit ? "updating" : "creating"} group: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setCreatingGroupLoading(false);
     }
@@ -340,13 +322,8 @@ const Contact = () => {
           icon: <IconX size={18} />,
         });
       }
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Error deleting group: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setDeletingGroupId(null);
     }
@@ -386,6 +363,7 @@ const Contact = () => {
       const data = await response.data;
 
       if (response.status === 201 || data.success) {
+        setType("dm");
         navigate(`/chats/${targetUserId}`);
       } else {
         notifications.show({
@@ -395,23 +373,16 @@ const Contact = () => {
           icon: <IconX size={18} />,
         });
       }
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Error starting conversation: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setStartingChatId(null);
     }
   };
 
   const handleGroupClick = (group: GroupItem) => {
-    const groupId = group._id.includes("#")
-      ? group._id.split("#")[1]
-      : group._id;
-    navigate(`/chats/${groupId}`);
+    setType("groups");
+    navigate(`/chats/${encodeURIComponent(group._id)}`);
   };
 
   const handleDelete = async (contact: Contact) => {
@@ -463,13 +434,8 @@ const Contact = () => {
           icon: <IconX size={18} />,
         });
       }
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Error deleting contact: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setDeletingContactId(null);
     }
@@ -545,13 +511,8 @@ const Contact = () => {
           icon: <IconX size={18} />,
         });
       }
-    } catch (error) {
-      notifications.show({
-        title: "",
-        message: `Error fetching contact details: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setFetchingDetailsId(null);
     }
@@ -607,13 +568,8 @@ const Contact = () => {
             icon: <IconX size={18} />,
           });
         }
-      } catch (error) {
-        notifications.show({
-          title: "",
-          message: `Error adding contact: ${error}`,
-          color: "red",
-          icon: <IconX size={18} />,
-        });
+      } catch (error: any) {
+        handleApiError(error);
       }
     } else {
       try {
@@ -650,13 +606,8 @@ const Contact = () => {
             icon: <IconX size={18} />,
           });
         }
-      } catch (error) {
-        notifications.show({
-          title: "",
-          message: `Error updating contact: ${error}`,
-          color: "red",
-          icon: <IconX size={18} />,
-        });
+      } catch (error: any) {
+        handleApiError(error);
       }
     }
   };
@@ -677,11 +628,33 @@ const Contact = () => {
                 color="indigo"
                 variant="outline"
                 radius="md"
+                className="w-full"
+                styles={{
+                  tab: {
+                    paddingInline: 8,
+                  },
+                  tabSection: {
+                    marginInline: 4,
+                  },
+                }}
               >
-                <Tabs.List>
+                <Tabs.List grow>
                   <Tabs.Tab
                     value="contacts"
                     leftSection={<IconUser size={16} />}
+                    rightSection={
+                      <ActionIcon
+                        size="xs"
+                        variant="subtle"
+                        color="indigo"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAdd();
+                        }}
+                      >
+                        <IconPlus size={14} />
+                      </ActionIcon>
+                    }
                     bg={
                       activeTab === "contacts"
                         ? "var(--mantine-color-blue-1)"
@@ -690,9 +663,24 @@ const Contact = () => {
                   >
                     Contact List
                   </Tabs.Tab>
+
                   <Tabs.Tab
                     value="groups"
                     leftSection={<IconUsersGroup size={16} />}
+                    rightSection={
+                      <ActionIcon
+                        size="xs"
+                        variant="subtle"
+                        color="indigo"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveTab("contacts");
+                          setIsCreatingGroup(true);
+                        }}
+                      >
+                        <IconPlus size={14} />
+                      </ActionIcon>
+                    }
                     bg={
                       activeTab === "groups"
                         ? "var(--mantine-color-blue-1)"
@@ -703,32 +691,6 @@ const Contact = () => {
                   </Tabs.Tab>
                 </Tabs.List>
               </Tabs>
-
-              <Menu shadow="md" width={200} position="bottom-end">
-                <Menu.Target>
-                  <ActionIcon variant="subtle" size="lg" radius="md">
-                    <IconSettings size={22} />
-                  </ActionIcon>
-                </Menu.Target>
-
-                <Menu.Dropdown>
-                  <Menu.Item
-                    leftSection={<IconPlus size={16} />}
-                    onClick={handleAdd}
-                  >
-                    Add Contact
-                  </Menu.Item>
-                  <Menu.Item
-                    leftSection={<IconUsersGroup size={16} />}
-                    onClick={() => {
-                      setActiveTab("contacts");
-                      setIsCreatingGroup(true);
-                    }}
-                  >
-                    Create Group
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
             </Group>
 
             {activeTab === "contacts" && (

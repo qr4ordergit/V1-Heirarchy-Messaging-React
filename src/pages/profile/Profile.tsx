@@ -35,6 +35,7 @@ import {
 } from "../../api/profileApi";
 import { ROUTES } from "../../router/routes";
 import { notifications } from "@mantine/notifications";
+import { handleApiError } from "../../utils/errorHandler";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -43,9 +44,12 @@ const Profile = () => {
 
   const clearTokens = useAuthStore((state) => state.clearTokens);
   const userDetails = useAuthStore((state) => state.userDetails);
+  const setTargetUserDetails = useAuthStore(
+    (state) => state.setTargetUserDetails,
+  );
   const setUserDetails = useAuthStore((state) => state.setUserDetails);
   const target_user = useAuthStore((state) => state.target_user);
-
+  const targetUserDetails = useAuthStore((state) => state.targetUserDetails);
   const tagsList = useTagStore((state) => state.tags);
   const storeTags = useTagStore((state) => state.storeTags);
   const appendTag = useTagStore((state) => state.appendTag);
@@ -62,18 +66,21 @@ const Profile = () => {
     location.pathname,
   );
 
+  const getValidAvatarSrc = (url?: string | null) => {
+    return url && url !== "NA" ? url : null;
+  };
+
+  const profileImage =
+    getValidAvatarSrc(userDetails?.profile_picture) ||
+    getValidAvatarSrc(targetUserDetails?.profile_picture);
+
   const fetchTagsList = async () => {
     setLoadingTags(true);
     try {
       const tags = await getTagsApi();
       storeTags(Array.isArray(tags) ? tags : []);
     } catch (error: any) {
-      notifications.show({
-        title: "",
-        message: error.message || `Error fetching tags: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+      handleApiError(error);
     } finally {
       setLoadingTags(false);
     }
@@ -103,12 +110,7 @@ const Profile = () => {
       appendTag(trimmedTag);
       setNewTagName("");
     } catch (error: any) {
-      notifications.show({
-        title: "",
-        message: error.message || `Error creating tag: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+      handleApiError(error);
     } finally {
       setCreatingTag(false);
     }
@@ -126,12 +128,7 @@ const Profile = () => {
 
       removeTag(tagIdentifier);
     } catch (error: any) {
-      notifications.show({
-        title: "",
-        message: error.message || `Error deleting tag: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+      handleApiError(error);
     } finally {
       setDeletingTagId(null);
     }
@@ -153,6 +150,12 @@ const Profile = () => {
       }
 
       const localPreviewUrl = URL.createObjectURL(file);
+      if (targetUserDetails) {
+        setTargetUserDetails({
+          ...targetUserDetails,
+          profile_picture: localPreviewUrl,
+        });
+      }
       if (userDetails) {
         setUserDetails({
           ...userDetails,
@@ -166,12 +169,7 @@ const Profile = () => {
         color: "green",
       });
     } catch (error: any) {
-      notifications.show({
-        title: "",
-        message: error.message || `Error uploading profile picture: ${error}`,
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+      handleApiError(error);
     } finally {
       setUploadingImage(false);
       if (event.target) event.target.value = "";
@@ -197,8 +195,8 @@ const Profile = () => {
   const handleLogout = async () => {
     try {
       await logout();
-    } catch (err) {
-      console.error("Logout request failed:", err);
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       clearTokens();
       navigate(ROUTES.HOME, { replace: true });
@@ -206,7 +204,11 @@ const Profile = () => {
   };
 
   const username =
-    userDetails?.phone_number || target_user || userDetails?.username || "";
+    targetUserDetails?.phone_number ||
+    userDetails?.phone_number ||
+    target_user ||
+    userDetails?.username ||
+    "";
   const userInitials =
     username
       .split("-")
@@ -240,13 +242,13 @@ const Profile = () => {
             <div className="flex flex-col items-center justify-center pt-2 pb-2 gap-2">
               <div className="relative inline-block">
                 <Avatar
-                  src={userDetails?.profile_picture || null}
+                  src={profileImage}
                   color="indigo"
                   radius="xl"
                   size={84}
                   className="text-2xl font-bold shadow-sm"
                 >
-                  {!userDetails?.profile_picture && userInitials}
+                  {!profileImage && userInitials}
                 </Avatar>
 
                 <UnstyledButton
@@ -283,7 +285,7 @@ const Profile = () => {
                   onClick={handleToggleTags}
                   className="w-full px-5 py-4 cursor-pointer"
                 >
-                  <Group justify="space-between">
+                  <Group justify="space-between" pr="xs">
                     <Group gap="md">
                       <div className="p-2 rounded-lg bg-indigo-50 flex items-center justify-center">
                         <IconTag size={20} className="text-indigo-600" />

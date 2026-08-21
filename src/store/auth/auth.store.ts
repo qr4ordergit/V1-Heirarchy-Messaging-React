@@ -27,11 +27,11 @@ interface AuthState {
   isAuthenticated: boolean;
   userDetails: UserDetails | null;
   target_user: string;
-  targetUserDetails : Account | null;
+  targetUserDetails: Account | null;
   setTokens: (tokens: AuthTokens) => void;
   setUserDetails: (details: UserDetails) => void;
   setTargetUser: (target_user: string) => void;
-  setTargetUserDetails: (targetUserDetails: Account) => void;
+  setTargetUserDetails: (targetUserDetails: Account | null) => void;
   clearTokens: () => void;
 }
 
@@ -45,7 +45,7 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: false,
         userDetails: null,
         target_user: "",
-        targetUserDetails : null,
+        targetUserDetails: null,
 
         setTokens: (tokens) =>
           set(
@@ -77,7 +77,7 @@ export const useAuthStore = create<AuthState>()(
               isAuthenticated: false,
               userDetails: null,
               target_user: "",
-              targetUserDetails : null
+              targetUserDetails: null,
             },
             false,
             "auth/clearTokens",

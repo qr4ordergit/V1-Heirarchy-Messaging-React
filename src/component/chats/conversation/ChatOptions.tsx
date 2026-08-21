@@ -7,6 +7,7 @@ import { Notification } from "../../../utils/notification";
 import {
   IconArrowForward,
   IconCopy,
+  IconLockOpen2,
   IconPencil,
   IconStar,
   IconTrash,
@@ -27,7 +28,9 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
   const onDelete = () => {
     setTrigger({
       toTrigger: TRIGGERS.deleteConfirmationDialouge,
-      payload: msg,
+      payload: {
+        _id: msg._id,
+      },
     });
   };
 
@@ -82,6 +85,15 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
     setTrigger({
       toTrigger: TRIGGERS.tagList,
       payload: msg,
+    });
+  };
+
+  const onDecrypt = () => {
+    setTrigger({
+      toTrigger: TRIGGERS.decryptPrivateMsgDialog,
+      payload: {
+        _id: msg._id,
+      },
     });
   };
 
@@ -143,6 +155,18 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
         <Menu.Item onClick={onTag} leftSection={<IconStar size={14} />}>
           Add Tags
         </Menu.Item>
+        {msg?.double_encryption && (
+          <>
+            <Menu.Divider />
+            <Menu.Item
+              onClick={onDecrypt}
+              color="green"
+              leftSection={<IconLockOpen2 size={14} />}
+            >
+              Decrypt message
+            </Menu.Item>
+          </>
+        )}
         <Menu.Divider />
         <Menu.Item
           disabled={optionConditions.delete()}

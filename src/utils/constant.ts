@@ -90,6 +90,11 @@ export const TRIGGERS = {
   tagList: "tagList",
   searchByText: "search:text",
   searchByTag: "search:tag",
+  isPrivate: "secret_007:isPrivate",
+  privateMessageModal: "secret_007:privateMessageModal",
+  privatePayload: "privatePayload",
+  privateMessageSender: "privateMessageSender",
+  decryptPrivateMsgDialog: "decryptPrivateMsgDialog"
 };
 
 export const CIPHER_SECRET =

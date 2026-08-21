@@ -5,7 +5,8 @@ export const ENDPOINTS = {
   },
   GROUPS: {
     LIST: "/group/chat-history",
-    LEAVE: "/group/manage-members"
+    LEAVE: "/group/manage-members",
+    GETMEMBERS: "/group"
   },
   CHAT: {
     SEND: "/message",
@@ -13,9 +14,9 @@ export const ENDPOINTS = {
     DELETE: "/message",
     PUT: "/message"
   },
-  ACCESS_PERMISSION:{
-    GET : "/user-access/sub-users-permissions",
-    PATCH : "/user-access"
+  ACCESS_PERMISSION: {
+    GET: "/user-access/sub-users-permissions",
+    PATCH: "/user-access"
   },
   PERMISSION:{
     GET : "/permissions",
@@ -30,5 +31,8 @@ export const ENDPOINTS = {
   TAGS: {
     POST: "/tags/manage",
     GET: "/tags/manage"
+  },
+  PRIVATEMSG: {
+    DECRYPT: "/groups-message/decrypt"
   }
 } as const;

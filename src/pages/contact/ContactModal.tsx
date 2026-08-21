@@ -6,6 +6,7 @@ import { notifications } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
 import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
 import { api } from "../../api/axios";
+import { handleApiError } from "../../utils/errorHandler";
 
 interface ContactModalProps {
   opened: boolean;
@@ -67,25 +68,25 @@ const ContactModal = ({
   const handleSubmit = async () => {
     const contactUserId = form.username.split("#")[1] || form.username.trim();
 
-    if (!contactUserId) {
-      notifications.show({
-        title: "",
-        message: "Username is required.",
-        color: "red",
-        icon: <IconX size={18} />,
-      });
-      return;
-    }
+    // if (!contactUserId) {
+    //   notifications.show({
+    //     title: "",
+    //     message: "Username is required.",
+    //     color: "red",
+    //     icon: <IconX size={18} />,
+    //   });
+    //   return;
+    // }
 
-    if (!form.name.trim()) {
-      notifications.show({
-        title: "",
-        message: "Name is required.",
-        color: "red",
-        icon: <IconX size={18} />,
-      });
-      return;
-    }
+    // if (!form.name.trim()) {
+    //   notifications.show({
+    //     title: "",
+    //     message: "Name is required.",
+    //     color: "red",
+    //     icon: <IconX size={18} />,
+    //   });
+    //   return;
+    // }
 
     if (contact) {
       await onSave(form, false);
@@ -123,13 +124,8 @@ const ContactModal = ({
             icon: <IconX size={18} />,
           });
         }
-      } catch (error) {
-        notifications.show({
-          title: "",
-          message: `Error verifying user: ${error}`,
-          color: "red",
-          icon: <IconX size={18} />,
-        });
+      } catch (error: any) {
+        handleApiError(error);
       } finally {
         setVerifying(false);
       }
