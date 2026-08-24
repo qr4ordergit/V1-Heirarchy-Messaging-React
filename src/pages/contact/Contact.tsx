@@ -383,7 +383,7 @@ const Contact = () => {
       return;
     }
 
-    const targetUserId = contact.username || contact.id.split("#")[1];
+    const targetUserId = contact.id.split("#")[1];
 
     if (!targetUserId) {
       notifications.show({
@@ -412,7 +412,7 @@ const Contact = () => {
 
       if (response.status === 201 || data.success) {
         setType("dm");
-        navigate(`/chats/${targetUserId}`);
+        navigate(`/chats/${encodeURIComponent(contact.id)}`);
       } else {
         notifications.show({
           title: "",
