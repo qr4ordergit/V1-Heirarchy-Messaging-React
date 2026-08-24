@@ -7,7 +7,6 @@ import { Notification } from "../../../utils/notification";
 import {
   IconArrowForward,
   IconCopy,
-  IconLockOpen2,
   IconPencil,
   IconStar,
   IconTrash,
@@ -89,20 +88,15 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
     });
   };
 
-  const onDecrypt = () => {
-    setTrigger({
-      toTrigger: TRIGGERS.decryptPrivateMsgDialog,
-      payload: {
-        _id: msg._id,
-      },
-    });
-  };
-
   const optionConditions = {
     copy: () => {
       let isDisabled = true;
       if (msg.body?.text) {
         isDisabled = false;
+      }
+
+      if (msg?.private_msg) {
+        isDisabled = true;
       }
 
       return isDisabled;
@@ -112,6 +106,10 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
       let isDisabled = true;
       if (isMe) {
         isDisabled = false;
+      }
+
+      if (msg?.private_msg) {
+        isDisabled = true;
       }
 
       return isDisabled;
@@ -128,8 +126,8 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
   };
 
   return (
-    <Menu shadow="md" width={200}>
-      <Menu.ContextMenu longPressDelay={400}>{children}</Menu.ContextMenu>
+    <Menu shadow="md" width={200} offset={0}>
+      <Menu.Target>{children}</Menu.Target>
 
       <Menu.Dropdown>
         <Menu.Label>Actions</Menu.Label>
@@ -156,18 +154,6 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
         <Menu.Item onClick={onTag} leftSection={<IconStar size={14} />}>
           Add Tags
         </Menu.Item>
-        {msg?.double_encryption && (
-          <>
-            <Menu.Divider />
-            <Menu.Item
-              onClick={onDecrypt}
-              color="green"
-              leftSection={<IconLockOpen2 size={14} />}
-            >
-              Decrypt message
-            </Menu.Item>
-          </>
-        )}
         <Menu.Divider />
         <Menu.Item
           disabled={optionConditions.delete()}

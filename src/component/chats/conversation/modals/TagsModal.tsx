@@ -6,6 +6,7 @@ import {
   Modal,
   ScrollArea,
   Stack,
+  Text,
 } from "@mantine/core";
 import { useTriggerStore } from "../../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../../utils/constant";
@@ -67,21 +68,21 @@ function TagsModal() {
       title="Add Tags to message"
     >
       <Stack gap="md">
-        <ScrollArea h={200}>
+        <ScrollArea h={Math.min(tags.length * 36, 200)}>
           <Checkbox.Group value={selectedTags} onChange={setSelectedTags}>
             <Stack gap="sm">
-              {tags.map((tag) => (
-                <Checkbox key={tag} value={tag} label={tag} />
-              ))}
+              {tags.length ? (
+                tags.map((tag) => (
+                  <Checkbox key={tag} value={tag} label={tag} />
+                ))
+              ) : (
+                <Text className="text-red-500">Tags not found</Text>
+              )}
             </Stack>
           </Checkbox.Group>
         </ScrollArea>
 
         <Group justify="flex-end">
-          <Button variant="default" onClick={onClose}>
-            Cancel
-          </Button>
-
           <Button
             onClick={handleAdd}
             disabled={selectedTags.length === 0}

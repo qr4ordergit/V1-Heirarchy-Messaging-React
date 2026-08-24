@@ -16,9 +16,11 @@ import { useAuthStore } from "../../../../store/auth/auth.store";
 import { Notification } from "../../../../utils/notification";
 
 interface MembersResponse {
-  data: {
-    members?: string[];
-  };
+  data: [
+    {
+      members?: string[];
+    },
+  ];
 }
 
 function PrivateMessagePayloadModal() {
@@ -48,9 +50,10 @@ function PrivateMessagePayloadModal() {
       );
 
       if (response.status === 200) {
-        let mems = response.data?.data?.members ?? [];
+        let mems = response.data?.data?.[0]?.members ?? [];
+        const own_user_id = targetUserDetails?.user_id ?? userDetails?.username;
 
-        mems = mems.filter((user) => user !== userDetails?.username);
+        mems = mems.filter((user) => user !== own_user_id);
         setMembers(mems);
       }
     } catch {}

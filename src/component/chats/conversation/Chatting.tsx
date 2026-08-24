@@ -4,13 +4,14 @@ import { ENDPOINTS } from "../../../api/endpoints";
 import { useEffect, useRef, useTransition } from "react";
 import { ConversationShimmer } from "../../loaders/shimmers/ConversationShimmer";
 import { Notification } from "../../../utils/notification";
-import { useChatStore } from "../../../store/chats/chats.store";
+import { useChatStore, type MESSAGE } from "../../../store/chats/chats.store";
 import { useNavigate, useParams } from "react-router";
 import { useNextPerson } from "../../../hooks/useNextPerson";
 import { MessageChat } from "./MessageChat";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../utils/constant";
 import { useAuthStore } from "../../../store/auth/auth.store";
+import EncryptedChatCard from "./EncryptedChatCard";
 
 export default function Chatting() {
   const messages = useChatStore((state) => state.chats);
@@ -135,6 +136,18 @@ export default function Chatting() {
     }
   };
 
+  const conditionalRenderer = {
+    msgCardProvider: (msg: MESSAGE) => {
+      if (msg?.double_encryption) {
+        return <EncryptedChatCard key={msg._id} msg={msg} />;
+      } else {
+        return (
+          <MessageChat key={msg._id} msg={msg} onReplyClick={scrollToMessage} />
+        );
+      }
+    },
+  };
+
   useEffect(() => {
     fetchChats();
   }, [chatId]);
@@ -164,13 +177,7 @@ export default function Chatting() {
     >
       <Stack py="md" gap="sm" className="h-100">
         {messages.map((msg) => {
-          return (
-            <MessageChat
-              key={msg._id}
-              msg={msg}
-              onReplyClick={scrollToMessage}
-            />
-          );
+          return conditionalRenderer.msgCardProvider(msg);
         })}
       </Stack>
     </ScrollArea>

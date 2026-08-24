@@ -1,11 +1,11 @@
-import { Button, Dialog, Divider, Group, TextInput } from "@mantine/core";
+import { Button, Group, Loader, Modal, Text, TextInput } from "@mantine/core";
 import { useTriggerStore } from "../../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../../utils/constant";
 import { Notification } from "../../../../utils/notification";
 import { api } from "../../../../api/axios";
 import { ENDPOINTS } from "../../../../api/endpoints";
 import { useParams } from "react-router";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useChatStore } from "../../../../store/chats/chats.store";
 import { useAuthStore } from "../../../../store/auth/auth.store";
 
@@ -40,14 +40,19 @@ function DecryptPrivateMsgDialog() {
       const payload: DECRYPT_PAYLOAD = {
         group_id: chatId,
         message_id: triggerPayload?._id,
-        target_user: targetUserDetails?.user_id,
       };
 
       if (mode === "manual") {
         payload["password"] = password;
       }
 
-      const res = await api.post(ENDPOINTS.PRIVATEMSG.DECRYPT, payload);
+      const endpoint_url = targetUserDetails?.user_id
+        ? `?target_user=${targetUserDetails?.user_id}`
+        : "";
+      const res = await api.post(
+        `${ENDPOINTS.PRIVATEMSG.DECRYPT}${endpoint_url}`,
+        payload,
+      );
 
       if (!res.data?.success) {
         Notification.error("Failed to decrypt message");
@@ -57,6 +62,7 @@ function DecryptPrivateMsgDialog() {
       const finalMsgObj = res.data?.data;
 
       finalMsgObj["double_encryption"] = false;
+      finalMsgObj["private_msg"] = true;
       updateDecryptedMsg(finalMsgObj);
       if (mode === "manual") {
         setPassword("");
@@ -64,8 +70,10 @@ function DecryptPrivateMsgDialog() {
       resetTrigger();
     } catch (error) {
       console.log(error);
-      Notification.error("Failed to decrypt message");
-      resetTrigger();
+      if (mode === "manual") {
+        Notification.error("Failed to decrypt message");
+        resetTrigger();
+      }
     }
   };
 
@@ -76,47 +84,47 @@ function DecryptPrivateMsgDialog() {
       DecryptFn2(() => onDecrypt(mode));
     }
   };
+
+  useEffect(() => {
+    if (trigger === TRIGGERS.decryptPrivateMsgDialog) {
+      handleDecrypt("auto");
+    }
+  }, [trigger]);
+
   return (
-    <Dialog
+    <Modal
       opened={trigger === TRIGGERS.decryptPrivateMsgDialog}
-      withCloseButton
       onClose={onClose}
-      size="lg"
-      position={{ bottom: 20, right: 20 }}
+      title="Decrypting message"
     >
       <div>
-        <Button
-          onClick={() => handleDecrypt("auto")}
-          loading={decryptLoader1}
-          loaderProps={{ type: "dots" }}
-        >
-          Auto decrypt
-        </Button>
-        <Divider
-          my="xs"
-          label="or Decrypt With Password"
-          labelPosition="left"
-        />
-        <Group align="flex-end">
-          <TextInput
-            readOnly={decryptLoader2}
-            disabled={decryptLoader1}
-            placeholder="Enter password"
-            style={{ flex: 1 }}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <Button
-            loading={decryptLoader2}
-            disabled={decryptLoader1}
-            loaderProps={{ type: "dots" }}
-            onClick={() => handleDecrypt("manual")}
-          >
-            Submit
-          </Button>
-        </Group>
+        {decryptLoader1 ? (
+          <Group>
+            <Loader color="blue" size={"sm"} />
+            <Text>Message is decrypting... Please wait</Text>
+          </Group>
+        ) : (
+          <Group align="flex-end">
+            <TextInput
+              readOnly={decryptLoader2}
+              disabled={decryptLoader1}
+              placeholder="Enter password"
+              style={{ flex: 1 }}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <Button
+              loading={decryptLoader2}
+              disabled={decryptLoader1}
+              loaderProps={{ type: "dots" }}
+              onClick={() => handleDecrypt("manual")}
+            >
+              Submit
+            </Button>
+          </Group>
+        )}
       </div>
-    </Dialog>
+    </Modal>
   );
 }
 
