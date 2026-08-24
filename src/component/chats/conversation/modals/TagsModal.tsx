@@ -43,10 +43,13 @@ function TagsModal() {
       for: chatId?.includes("group") ? "GROUP" : "DM",
       tag_id: selectedTags,
       message_id: [triggerPayload?._id],
-      target_user: targetUserDetails?.user_id,
     };
 
-    const res = await api.post(ENDPOINTS.TAGS.POST, payload);
+    const endpoint_url = targetUserDetails?.user_id
+      ? `${ENDPOINTS.TAGS.POST}?target_user=${targetUserDetails?.user_id}`
+      : "";
+
+    const res = await api.post(endpoint_url, payload);
 
     if (!res.data?.success) {
       Notification.error("Something went wrong");

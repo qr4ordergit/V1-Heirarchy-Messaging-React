@@ -112,6 +112,10 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
         isDisabled = true;
       }
 
+      if (!msg.body?.text) {
+        isDisabled = true;
+      }
+
       return isDisabled;
     },
 
