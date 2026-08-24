@@ -1,4 +1,5 @@
 import {
+  IconHome,
   IconMessageCircle,
   IconUser,
   IconUsers,
@@ -6,6 +7,11 @@ import {
 import { ROUTES } from "../router/routes";
 
 export const navigationItems = [
+  {
+    label: "Home",
+    to: ROUTES.ACCOUNTS,
+    icon: IconHome,
+  },
   {
     label: "Chats",
     to: ROUTES.CHATS,

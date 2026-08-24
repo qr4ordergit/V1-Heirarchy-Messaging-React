@@ -53,14 +53,18 @@ export const hasAnyPermission = (
 
 export const hasAllPermissions = (
   permissions: PermissionsType,
+  allPermissions: PermissionsType,
 ): boolean => {
-  return Object.entries(permissions)
+  return Object.entries(allPermissions)
     .filter(
       ([group]) =>
         !IGNORED_PERMISSION_GROUPS.includes(group),
     )
-    .every(([, groupPermissions]) =>
-      Object.values(groupPermissions).every(Boolean),
+    .every(([group, groupPermissions]) =>
+      Object.keys(groupPermissions).every(
+        (permission) =>
+          permissions[group]?.[permission] === true,
+      ),
     );
 };
 
@@ -68,13 +72,14 @@ export const setAllPermissions = (
   permissions: PermissionsType,
   checked: boolean,
 ): PermissionsType => {
-  const updated: PermissionsType = {
-    ...permissions,
-  };
+  const updated: PermissionsType =
+    structuredClone(permissions);
 
   Object.entries(updated).forEach(
     ([group, groupPermissions]) => {
-      if (IGNORED_PERMISSION_GROUPS.includes(group)) {
+      if (
+        IGNORED_PERMISSION_GROUPS.includes(group)
+      ) {
         return;
       }
 

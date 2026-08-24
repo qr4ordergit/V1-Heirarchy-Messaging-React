@@ -53,7 +53,7 @@ import Avatar from "../../component/avatar/Avatar";
 import { encryptPasskey, decryptPasskey } from "../../utils/passkeyCipher";
 import classes from "./Accounts.module.css";
 import { ClearStore } from "../../store/clear.store";
-import AccessAndPermissionGrid from "../../component/accessAndPermissionGrid/AccessAndPermissionGrid";
+import AccessAndPermission from "../../component/accessAndPermission/AccessAndPermission";
 
 import CreateAccountModal from "./Createaccountmodal";
 import {
@@ -61,7 +61,13 @@ import {
   PERMISSION_LABELS,
   PERMISSIONS,
 } from "../../utils/constant";
-import { getPermissionValue, setPermissionValue, hasAnyPermission } from '../../utils/permission';
+import {
+  getPermissionValue,
+  setPermissionValue,
+  hasAnyPermission,
+  hasAllPermissions,
+  setAllPermissions,
+} from "../../utils/permission";
 import {
   AcessAndPermissionService,
   type UpdatePermissionsProps,
@@ -166,7 +172,7 @@ export default function Accounts() {
       open: false,
       targetUser: "User Permission",
     });
-    setPerType("User Permission")
+    setPerType("User Permission");
   };
 
   const users = structuredClone(accounts)
@@ -553,7 +559,6 @@ export default function Accounts() {
                         colorIndex={i}
                         size={48}
                         onClick={() => {
-                          console.log("Avatar clicked:", account.user_id);
                           setTargetUser(account.user_id);
                           setTargetUserDetails(account);
                           navigate(`/${ROUTES.CHATS}`);
@@ -905,7 +910,7 @@ export default function Accounts() {
       <Modal
         opened={accessAndPermissions.open}
         onClose={onCloseAccessAndPermissions}
-        title={`Manage Access & Permissions ( ${accessAndPermissions.targetUser} )`}
+        title={<Text> Manage Access & Permissions of <span style={{color : "var(--mantine-color-blue-4)"}}><b>{accessAndPermissions.targetUser}</b></span></Text>}
         fullScreen
         radius={0}
       >
@@ -934,16 +939,31 @@ export default function Accounts() {
             </Flex>
           ) : (
             <Flex direction="column" h="calc(100dvh - 120px)" gap="md">
-              <ScrollArea h="100%" type="auto" scrollbarSize={0} pl={{base :0, xs : "lg"}}>
-                <Stack
-                  p="xs"
-                  bg="white"
-                  gap={"lg"}
-                >
+              <ScrollArea
+                h="100%"
+                type="auto"
+                scrollbarSize={0}
+                pl={{ base: 0, xs: "lg" }}
+              >
+                <Stack p="xs" bg="white" gap={"lg"}>
+                  <Checkbox
+                    size="xs"
+                    label="Select All"
+                    checked={hasAllPermissions(changes.permissions,PERMISSIONS)}
+                    onChange={(event) => {
+                      setChanges((prev) => ({
+                        ...prev,
+                        permissions: setAllPermissions(
+                          changes.permissions,
+                          event.target.checked,
+                        ),
+                      }));
+                    }}
+                  />
                   {Object.entries(PERMISSIONS).map(
                     ([groupKey, permissions]) => (
                       <Stack key={groupKey} gap="xs">
-                        <Text size="xs" c="dimmed">
+                        <Text size="xs" fw={"bolder"} c={"gray"}>
                           {PERMISSION_GROUP_LABELS[groupKey] ?? groupKey}
                         </Text>
 
@@ -990,7 +1010,7 @@ export default function Accounts() {
             </Flex>
           )
         ) : (
-          <AccessAndPermissionGrid
+          <AccessAndPermission
             users={users}
             targetUser={accessAndPermissions.targetUser}
           />
