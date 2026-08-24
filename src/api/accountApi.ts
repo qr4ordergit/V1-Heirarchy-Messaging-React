@@ -3,13 +3,19 @@ import { API_ENDPOINTS } from "../utils/constant";
 
 function authHeaders(): Record<string, string> {
   const token = useAuthStore.getState().accessToken;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+
+  return token
+    ? {
+        Authorization: `Bearer ${token}`,
+      }
+    : {};
 }
 
 const DEFAULT_COUNTRY_CODE = "+91";
 
 export function withCountryCode(phone: string): string {
   const trimmed = phone.trim();
+
   return trimmed.startsWith("+")
     ? trimmed
     : `${DEFAULT_COUNTRY_CODE}${trimmed}`;
@@ -20,10 +26,15 @@ export interface Account {
   display_name: string | null;
   email: string | null;
   profile_picture: string | null;
+  phone_number: string | null;
   status: string | null;
   isLocked: boolean;
   passkey_hash?: string;
-  phone_number: string | null;
+}
+
+export interface SubUserAccessDetail {
+  user_id: string;
+  sub_users: Account[];
 }
 
 export interface CreateAccountPayload {
@@ -65,11 +76,6 @@ export interface UpdateUserLockResponse {
   message: string;
 }
 
-export interface SubUserAccessDetail {
-  user_id: string;
-  sub_users: Account[];
-}
-
 export interface UpdateUserAccessResponse {
   message?: string;
 }
@@ -82,32 +88,35 @@ async function parseJson(response: Response): Promise<unknown> {
   }
 }
 
-export async function fetchAccounts(): Promise<Account[]> {
+export async function fetchSubUserAccessDetail(): Promise<SubUserAccessDetail> {
   const response = await fetch(API_ENDPOINTS.ACCOUNTS_LIST, {
     method: "GET",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
   });
 
   const data = await parseJson(response);
 
   if (!response.ok) {
     const message =
-      (data as { message?: string } | null)?.message ||
-      "Could not load accounts.";
+      (
+        data as {
+          message?: string;
+        } | null
+      )?.message || "Could not load accounts.";
+
     throw new Error(message);
   }
 
-  if (Array.isArray(data)) return data as Account[];
-  if (data && Array.isArray((data as { sub_users?: unknown }).sub_users)) {
-    return (data as { sub_users: Account[] }).sub_users;
-  }
-  if (data && Array.isArray((data as { accounts?: unknown }).accounts)) {
-    return (data as { accounts: Account[] }).accounts;
-  }
-  if (data && Array.isArray((data as { users?: unknown }).users)) {
-    return (data as { users: Account[] }).users;
-  }
-  return [];
+  return data as SubUserAccessDetail;
+}
+
+export async function fetchAccounts(): Promise<Account[]> {
+  const result = await fetchSubUserAccessDetail();
+
+  return Array.isArray(result.sub_users) ? result.sub_users : [];
 }
 
 export async function createAccount(
@@ -128,12 +137,16 @@ export async function createAccount(
     body.email = payload.email;
   } else {
     const userDetail = useAuthStore.getState().userDetails;
+
     body.email = userDetail?.email;
   }
 
   const response = await fetch(API_ENDPOINTS.AUTH_SUB_USERS, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
     body: JSON.stringify(body),
   });
 
@@ -141,8 +154,12 @@ export async function createAccount(
 
   if (!response.ok) {
     const message =
-      (data as { message?: string } | null)?.message ||
-      "Could not create account.";
+      (
+        data as {
+          message?: string;
+        } | null
+      )?.message || "Could not create account.";
+
     throw new Error(message);
   }
 
@@ -154,7 +171,10 @@ export async function verifySubUserOtp(
 ): Promise<VerifySubUserOtpResponse> {
   const response = await fetch(API_ENDPOINTS.AUTH_SUB_USERS, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
     body: JSON.stringify({
       operation: "verify",
       email: payload.email,
@@ -168,7 +188,12 @@ export async function verifySubUserOtp(
 
   if (!response.ok) {
     const message =
-      (data as { message?: string } | null)?.message || "Could not verify OTP.";
+      (
+        data as {
+          message?: string;
+        } | null
+      )?.message || "Could not verify OTP.";
+
     throw new Error(message);
   }
 
@@ -180,16 +205,25 @@ export async function deleteAccount(
 ): Promise<DeleteAccountResponse> {
   const response = await fetch(API_ENDPOINTS.USER_ACCESS, {
     method: "DELETE",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
-    body: JSON.stringify({ sub_user_id: subUserId }),
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify({
+      sub_user_id: subUserId,
+    }),
   });
 
   const data = await parseJson(response);
 
   if (!response.ok) {
     const message =
-      (data as { message?: string } | null)?.message ||
-      "Could not remove account.";
+      (
+        data as {
+          message?: string;
+        } | null
+      )?.message || "Could not remove account.";
+
     throw new Error(message);
   }
 
@@ -201,26 +235,30 @@ export async function changePassword(
   newPassword: string,
   confirmNewPassword: string,
 ): Promise<ChangePasswordResponse> {
-  const response = await fetch(
-    `${API_ENDPOINTS.SECONDARY_USER_PASSWORD_CHANGE}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify({
-        operation: "reset_password",
-        username: userId,
-        new_password: newPassword,
-        confirm_password: confirmNewPassword,
-      }),
+  const response = await fetch(API_ENDPOINTS.SECONDARY_USER_PASSWORD_CHANGE, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
     },
-  );
+    body: JSON.stringify({
+      operation: "reset_password",
+      username: userId,
+      new_password: newPassword,
+      confirm_password: confirmNewPassword,
+    }),
+  });
 
   const data = await parseJson(response);
 
   if (!response.ok) {
     const message =
-      (data as { message?: string } | null)?.message ||
-      "Could not change password.";
+      (
+        data as {
+          message?: string;
+        } | null
+      )?.message || "Could not change password.";
+
     throw new Error(message);
   }
 
@@ -232,9 +270,12 @@ export async function updateUserLock(
   isLocked: boolean,
   encryptedPasskey: string,
 ): Promise<UpdateUserLockResponse> {
-  const response = await fetch(`${API_ENDPOINTS.USER_HOME}`, {
+  const response = await fetch(API_ENDPOINTS.USER_HOME, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
     body: JSON.stringify({
       isLocked,
       passkey_hash: encryptedPasskey,
@@ -246,35 +287,16 @@ export async function updateUserLock(
 
   if (!response.ok) {
     const message =
-      (data as { message?: string } | null)?.message ||
-      "Could not update lock settings.";
+      (
+        data as {
+          message?: string;
+        } | null
+      )?.message || "Could not update lock settings.";
+
     throw new Error(message);
   }
 
   return data as UpdateUserLockResponse;
-}
-
-export async function fetchSubUserAccessDetail(
-  targetUserId: string,
-): Promise<SubUserAccessDetail> {
-  const response = await fetch(
-    `${API_ENDPOINTS.ACCOUNTS_LIST}?target_user=${encodeURIComponent(targetUserId)}`,
-    {
-      method: "GET",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
-    },
-  );
-
-  const data = await parseJson(response);
-
-  if (!response.ok) {
-    const message =
-      (data as { message?: string } | null)?.message ||
-      "Could not load sub-account access.";
-    throw new Error(message);
-  }
-
-  return data as SubUserAccessDetail;
 }
 
 export async function updateUserAccess(
@@ -283,7 +305,10 @@ export async function updateUserAccess(
 ): Promise<UpdateUserAccessResponse> {
   const response = await fetch(API_ENDPOINTS.USER_ACCESS, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
     body: JSON.stringify({
       target_user: targetUserId,
       sub_users: subUserIds,
@@ -294,8 +319,12 @@ export async function updateUserAccess(
 
   if (!response.ok) {
     const message =
-      (data as { message?: string } | null)?.message ||
-      "Could not update sub-account access.";
+      (
+        data as {
+          message?: string;
+        } | null
+      )?.message || "Could not update sub-account access.";
+
     throw new Error(message);
   }
 

@@ -23,6 +23,7 @@ import {
   Flex,
   Checkbox,
   ScrollArea,
+  ThemeIcon,
 } from "@mantine/core";
 import {
   IconDotsVertical,
@@ -36,6 +37,7 @@ import {
   IconEyeOff,
   IconSearch,
   IconX,
+  IconMail,
 } from "@tabler/icons-react";
 
 import {
@@ -45,6 +47,7 @@ import {
   updateUserLock,
   type Account,
 } from "../../api/accountApi";
+
 import { logout } from "../../api/authApi";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { ROUTES } from "../../router/routes";
@@ -65,8 +68,6 @@ import {
   getPermissionValue,
   setPermissionValue,
   hasAnyPermission,
-  hasAllPermissions,
-  setAllPermissions,
 } from "../../utils/permission";
 import {
   AcessAndPermissionService,
@@ -108,11 +109,14 @@ interface AccessAndPermissionsState {
 
 export default function Accounts() {
   const navigate = useNavigate();
+  const userDetails = useAuthStore((state) => state.userDetails);
   const clearTokens = useAuthStore((state) => state.clearTokens);
   const setTargetUser = useAuthStore((state) => state.setTargetUser);
   const setTargetUserDetails = useAuthStore(
     (state) => state.setTargetUserDetails,
   );
+
+  const isHubAccountLoggedIn = userDetails?.group_name === "hub";
 
   const [accounts, setAccounts] = useState<Account[]>([]);
 
@@ -201,13 +205,34 @@ export default function Accounts() {
   const loadAccounts = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const data = await fetchAccounts();
-      setAccounts(data);
+      const subAccounts = await fetchAccounts();
+
+      const currentUser: Account | null = userDetails
+        ? {
+            user_id: userDetails.username,
+            display_name: userDetails.username,
+            email: userDetails.email ?? "",
+            phone_number: userDetails.phone_number ?? "",
+            profile_picture: userDetails.profile_picture ?? null,
+            status: "active",
+            isLocked: false,
+            passkey_hash: "",
+          }
+        : null;
+
+      const allAccounts = currentUser
+        ? [currentUser, ...subAccounts]
+        : subAccounts;
+
+      setAccounts(allAccounts);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Could not load accounts.";
+
       setError(message);
+
       notifications.show({
         color: "red",
         title: "Couldn't load accounts",
@@ -431,8 +456,12 @@ export default function Accounts() {
   };
 
   useEffect(() => {
-    loadAccounts();
-  }, []);
+    if (!userDetails) {
+      return;
+    }
+
+    void loadAccounts();
+  }, [userDetails]);
   //useDisableBackButton();
   return (
     <div className={classes.wrapper}>
@@ -473,35 +502,6 @@ export default function Accounts() {
           </Group>
         </Group>
 
-        {accounts.length > 0 && (
-          <TextInput
-            placeholder="Search by username"
-            leftSection={<IconSearch size={16} />}
-            rightSection={
-              searchQuery ? (
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  radius="xl"
-                  aria-label="Clear search"
-                  onClick={() => setSearchQuery("")}
-                >
-                  <IconX size={14} />
-                </ActionIcon>
-              ) : null
-            }
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            radius="xl"
-            mb="lg"
-            name="account-search"
-            autoComplete="off"
-            data-1p-ignore
-            data-lpignore="true"
-            classNames={{ input: classes.searchInput }}
-          />
-        )}
-
         {error && (
           <Alert color="red" title="Couldn't load accounts" mb="md">
             {error}
@@ -529,187 +529,446 @@ export default function Accounts() {
             </Center>
           </Card>
         ) : (
-          <Stack gap="md">
-            {filteredAccounts?.map((account, i) => {
-              const isPasskeyVisible = !!visiblePasskeys[account.user_id];
-              const plainPasskey = isPasskeyVisible
-                ? getPlainPasskey(account)
-                : "";
+          <Stack gap="xl">
+            {filteredAccounts
+              .filter((account) => account.user_id === userDetails?.username)
+              .map((account) => {
+                const isPasskeyVisible = !!visiblePasskeys[account.user_id];
+                const plainPasskey = isPasskeyVisible
+                  ? getPlainPasskey(account)
+                  : "";
 
-              return (
-                <Card
-                  key={account.user_id}
-                  withBorder
-                  radius="md"
-                  padding="lg"
-                  className={classes.accountCard}
-                >
-                  <Group
-                    justify="space-between"
-                    gap="sm"
-                    className={classes.cardRow}
-                  >
-                    <Group
-                      gap="md"
-                      wrap="nowrap"
-                      style={{ flex: 1, minWidth: 0 }}
+                if (isHubAccountLoggedIn) {
+                  const emailValue =
+                    account.email || getAccountIdentifier(account);
+
+                  return (
+                    <Card
+                      key={account.user_id}
+                      withBorder
+                      radius="xl"
+                      padding="md"
+                      className={classes.accountCard}
+                      style={{ width: "fit-content" }}
                     >
-                      <Avatar
-                        name={getInitialsSource(account)}
-                        colorIndex={i}
-                        size={48}
-                        onClick={() => {
-                          setTargetUser(account.user_id);
-                          setTargetUserDetails(account);
-                          navigate(`/${ROUTES.CHATS}`);
-                        }}
-                      />
+                      <Group gap="sm" wrap="nowrap">
+                        <ThemeIcon
+                          size={36}
+                          radius="xl"
+                          variant="light"
+                          color="indigo"
+                        >
+                          <IconMail size={18} />
+                        </ThemeIcon>
 
-                      <div className={classes.accountInfo}>
-                        <Group gap={6} wrap="nowrap" align="center">
-                          <Text
-                            fw={600}
-                            truncate="end"
-                            className={classes.accountName}
+                        <div>
+                          <Text size="xs" c="dimmed" fw={500}>
+                            Logged in as
+                          </Text>
+                          <Text size="sm" fw={700}>
+                            {emailValue}
+                          </Text>
+                        </div>
+                      </Group>
+                    </Card>
+                  );
+                }
+
+                return (
+                  <Stack key={account.user_id} gap="sm">
+                    <Text size="sm" fw={600}>
+                      Logged In Account
+                    </Text>
+
+                    <Card
+                      withBorder
+                      radius="md"
+                      padding="lg"
+                      className={classes.accountCard}
+                    >
+                      <Group
+                        justify="space-between"
+                        gap="sm"
+                        className={classes.cardRow}
+                      >
+                        <Group
+                          gap="md"
+                          wrap="nowrap"
+                          style={{ flex: 1, minWidth: 0 }}
+                        >
+                          <Avatar
+                            name={getInitialsSource(account)}
+                            colorIndex={0}
+                            size={48}
                             onClick={() => {
                               setTargetUser(account.user_id);
                               setTargetUserDetails(account);
                               navigate(`/${ROUTES.CHATS}`);
                             }}
-                          >
-                            {getAccountIdentifier(account)}
-                          </Text>
-                          <ActionIcon
-                            variant="subtle"
-                            color={account.isLocked ? "dark" : "gray"}
-                            radius="xl"
-                            size="sm"
-                            aria-label={
-                              account.isLocked
-                                ? "Account is locked"
-                                : "Account is unlocked"
-                            }
-                            onClick={() => openLockModal(account)}
-                          >
-                            {account.isLocked ? (
-                              <IconLock size={14} color="red" />
-                            ) : (
-                              <>
-                                <Tooltip label="Lock with passkey">
-                                  <IconLockOpen size={14} />
-                                </Tooltip>
-                              </>
-                            )}
-                          </ActionIcon>
+                          />
 
-                          {account.isLocked && (
-                            <>
-                              <Badge
-                                size="sm"
-                                variant="light"
-                                color="red"
-                                radius="sm"
-                                onClick={() => openLockModal(account)}
-                                style={{
-                                  cursor: "pointer",
-                                  fontFamily: "monospace",
+                          <div className={classes.accountInfo}>
+                            <Group gap={6} wrap="nowrap" align="center">
+                              <Text
+                                fw={600}
+                                truncate="end"
+                                className={classes.accountName}
+                                onClick={() => {
+                                  setTargetUser(account.user_id);
+                                  setTargetUserDetails(account);
+                                  navigate(`/${ROUTES.CHATS}`);
                                 }}
                               >
-                                {isPasskeyVisible
-                                  ? plainPasskey || "—"
-                                  : "••••••"}
-                              </Badge>
+                                {getAccountIdentifier(account)}
+                              </Text>
+
+                              <ActionIcon
+                                variant="subtle"
+                                color={account.isLocked ? "dark" : "gray"}
+                                radius="xl"
+                                size="sm"
+                                aria-label={
+                                  account.isLocked
+                                    ? "Account is locked"
+                                    : "Account is unlocked"
+                                }
+                                onClick={() => openLockModal(account)}
+                              >
+                                {account.isLocked ? (
+                                  <IconLock size={14} color="red" />
+                                ) : (
+                                  <Tooltip label="Lock with passkey">
+                                    <IconLockOpen size={14} />
+                                  </Tooltip>
+                                )}
+                              </ActionIcon>
+
+                              {account.isLocked && (
+                                <>
+                                  <Badge
+                                    size="sm"
+                                    variant="light"
+                                    color="red"
+                                    radius="sm"
+                                    onClick={() => openLockModal(account)}
+                                    style={{
+                                      cursor: "pointer",
+                                      fontFamily: "monospace",
+                                    }}
+                                  >
+                                    {isPasskeyVisible
+                                      ? plainPasskey || "—"
+                                      : "••••••"}
+                                  </Badge>
+
+                                  <ActionIcon
+                                    variant="subtle"
+                                    color="gray"
+                                    radius="xl"
+                                    size="sm"
+                                    aria-label={
+                                      isPasskeyVisible
+                                        ? "Hide passkey"
+                                        : "Show passkey"
+                                    }
+                                    onClick={() =>
+                                      togglePasskeyVisibility(account)
+                                    }
+                                  >
+                                    {isPasskeyVisible ? (
+                                      <IconEyeOff size={14} />
+                                    ) : (
+                                      <IconEye size={14} />
+                                    )}
+                                  </ActionIcon>
+                                </>
+                              )}
+                            </Group>
+
+                            {account.status && (
+                              <Group gap={6} mt={4} align="center">
+                                <Badge
+                                  size="sm"
+                                  variant="light"
+                                  color={statusColor(account.status)}
+                                  radius="sm"
+                                >
+                                  {account.status}
+                                </Badge>
+                              </Group>
+                            )}
+                          </div>
+                        </Group>
+
+                        <Group gap="lg" className={classes.cardActions}>
+                          <Menu
+                            position="bottom-end"
+                            withinPortal
+                            shadow="md"
+                            radius="md"
+                          >
+                            <Menu.Target>
                               <ActionIcon
                                 variant="subtle"
                                 color="gray"
                                 radius="xl"
-                                size="sm"
-                                aria-label={
-                                  isPasskeyVisible
-                                    ? "Hide passkey"
-                                    : "Show passkey"
-                                }
-                                onClick={() => togglePasskeyVisibility(account)}
+                                aria-label="Account options"
                               >
-                                {isPasskeyVisible ? (
-                                  <IconEyeOff size={14} />
-                                ) : (
-                                  <IconEye size={14} />
-                                )}
+                                <IconDotsVertical size={16} />
                               </ActionIcon>
-                            </>
-                          )}
+                            </Menu.Target>
+
+                            <Menu.Dropdown>
+                              <Menu.Item
+                                leftSection={<IconKey size={14} />}
+                                onClick={() => setPasswordTarget(account)}
+                              >
+                                Change Password
+                              </Menu.Item>
+                            </Menu.Dropdown>
+                          </Menu>
                         </Group>
+                      </Group>
+                    </Card>
+                  </Stack>
+                );
+              })}
 
-                        {account.status && (
-                          <Group gap={6} mt={4} align="center">
-                            <Badge
-                              size="sm"
-                              variant="light"
-                              color={statusColor(account.status)}
-                              radius="sm"
+            {filteredAccounts.some(
+              (account) => account.user_id !== userDetails?.username,
+            ) && (
+              <Stack gap="sm">
+                <Text size="sm" fw={600}>
+                  Associated Accounts
+                </Text>
+                {accounts.length > 0 && (
+                  <TextInput
+                    placeholder="Search by username"
+                    leftSection={<IconSearch size={16} />}
+                    rightSection={
+                      searchQuery ? (
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          radius="xl"
+                          aria-label="Clear search"
+                          onClick={() => setSearchQuery("")}
+                        >
+                          <IconX size={14} />
+                        </ActionIcon>
+                      ) : null
+                    }
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    radius="xl"
+                    // mb="lg"
+                    name="account-search"
+                    autoComplete="off"
+                    data-1p-ignore
+                    data-lpignore="true"
+                    classNames={{ input: classes.searchInput }}
+                  />
+                )}
+
+                <Stack gap="md">
+                  {filteredAccounts
+                    .filter(
+                      (account) => account.user_id !== userDetails?.username,
+                    )
+                    .map((account, i) => {
+                      const isPasskeyVisible =
+                        !!visiblePasskeys[account.user_id];
+
+                      const plainPasskey = isPasskeyVisible
+                        ? getPlainPasskey(account)
+                        : "";
+
+                      return (
+                        <Card
+                          key={account.user_id}
+                          withBorder
+                          radius="md"
+                          padding="lg"
+                          className={classes.accountCard}
+                        >
+                          <Group
+                            justify="space-between"
+                            gap="sm"
+                            className={classes.cardRow}
+                          >
+                            <Group
+                              gap="md"
+                              wrap="nowrap"
+                              style={{
+                                flex: 1,
+                                minWidth: 0,
+                              }}
                             >
-                              {account.status}
-                            </Badge>
+                              <Avatar
+                                name={getInitialsSource(account)}
+                                colorIndex={i + 1}
+                                size={48}
+                                onClick={() => {
+                                  setTargetUser(account.user_id);
+                                  setTargetUserDetails(account);
+                                  navigate(`/${ROUTES.CHATS}`);
+                                }}
+                              />
+
+                              <div className={classes.accountInfo}>
+                                <Group gap={6} wrap="nowrap" align="center">
+                                  <Text
+                                    fw={600}
+                                    truncate="end"
+                                    className={classes.accountName}
+                                    onClick={() => {
+                                      setTargetUser(account.user_id);
+                                      setTargetUserDetails(account);
+                                      navigate(`/${ROUTES.CHATS}`);
+                                    }}
+                                  >
+                                    {getAccountIdentifier(account)}
+                                  </Text>
+
+                                  <ActionIcon
+                                    variant="subtle"
+                                    color={account.isLocked ? "dark" : "gray"}
+                                    radius="xl"
+                                    size="sm"
+                                    aria-label={
+                                      account.isLocked
+                                        ? "Account is locked"
+                                        : "Account is unlocked"
+                                    }
+                                    onClick={() => openLockModal(account)}
+                                  >
+                                    {account.isLocked ? (
+                                      <IconLock size={14} color="red" />
+                                    ) : (
+                                      <Tooltip label="Lock with passkey">
+                                        <IconLockOpen size={14} />
+                                      </Tooltip>
+                                    )}
+                                  </ActionIcon>
+
+                                  {account.isLocked && (
+                                    <>
+                                      <Badge
+                                        size="sm"
+                                        variant="light"
+                                        color="red"
+                                        radius="sm"
+                                        onClick={() => openLockModal(account)}
+                                        style={{
+                                          cursor: "pointer",
+                                          fontFamily: "monospace",
+                                        }}
+                                      >
+                                        {isPasskeyVisible
+                                          ? plainPasskey || "—"
+                                          : "••••••"}
+                                      </Badge>
+
+                                      <ActionIcon
+                                        variant="subtle"
+                                        color="gray"
+                                        radius="xl"
+                                        size="sm"
+                                        aria-label={
+                                          isPasskeyVisible
+                                            ? "Hide passkey"
+                                            : "Show passkey"
+                                        }
+                                        onClick={() =>
+                                          togglePasskeyVisibility(account)
+                                        }
+                                      >
+                                        {isPasskeyVisible ? (
+                                          <IconEyeOff size={14} />
+                                        ) : (
+                                          <IconEye size={14} />
+                                        )}
+                                      </ActionIcon>
+                                    </>
+                                  )}
+                                </Group>
+
+                                {account.status && (
+                                  <Group gap={6} mt={4} align="center">
+                                    <Badge
+                                      size="sm"
+                                      variant="light"
+                                      color={statusColor(account.status)}
+                                      radius="sm"
+                                    >
+                                      {account.status}
+                                    </Badge>
+                                  </Group>
+                                )}
+                              </div>
+                            </Group>
+
+                            <Group gap="lg" className={classes.cardActions}>
+                              <Text
+                                size="sm"
+                                c="dimmed"
+                                fw={500}
+                                style={{
+                                  cursor: "pointer",
+                                  whiteSpace: "nowrap",
+                                }}
+                                onClick={() => {
+                                  loadPermissions(account.user_id);
+                                  onOpenAccessAndPermissions(account.user_id);
+                                }}
+                              >
+                                Manage Access & Permissions
+                              </Text>
+
+                              <Menu
+                                position="bottom-end"
+                                withinPortal
+                                shadow="md"
+                                radius="md"
+                              >
+                                <Menu.Target>
+                                  <ActionIcon
+                                    variant="subtle"
+                                    color="gray"
+                                    radius="xl"
+                                    aria-label="Account options"
+                                  >
+                                    <IconDotsVertical size={16} />
+                                  </ActionIcon>
+                                </Menu.Target>
+
+                                <Menu.Dropdown>
+                                  <Menu.Item
+                                    leftSection={<IconKey size={14} />}
+                                    onClick={() => setPasswordTarget(account)}
+                                  >
+                                    Change Password
+                                  </Menu.Item>
+
+                                  <Menu.Divider />
+
+                                  <Menu.Item
+                                    color="red"
+                                    leftSection={<IconTrash size={14} />}
+                                    onClick={() => setDeleteTarget(account)}
+                                  >
+                                    Remove Account
+                                  </Menu.Item>
+                                </Menu.Dropdown>
+                              </Menu>
+                            </Group>
                           </Group>
-                        )}
-                      </div>
-                    </Group>
-
-                    <Group gap="lg" className={classes.cardActions}>
-                      <Text
-                        size="sm"
-                        c="dimmed"
-                        fw={500}
-                        style={{ cursor: "pointer", whiteSpace: "nowrap" }}
-                        onClick={() => {
-                          loadPermissions(account.user_id);
-                          onOpenAccessAndPermissions(account.user_id);
-                        }}
-                      >
-                        Manage Access & Permissions
-                      </Text>
-
-                      <Menu
-                        position="bottom-end"
-                        withinPortal
-                        shadow="md"
-                        radius="md"
-                      >
-                        <Menu.Target>
-                          <ActionIcon
-                            variant="subtle"
-                            color="gray"
-                            radius="xl"
-                            aria-label="Account options"
-                          >
-                            <IconDotsVertical size={16} />
-                          </ActionIcon>
-                        </Menu.Target>
-
-                        <Menu.Dropdown>
-                          <Menu.Item
-                            leftSection={<IconKey size={14} />}
-                            onClick={() => setPasswordTarget(account)}
-                          >
-                            Change Password
-                          </Menu.Item>
-
-                          <Menu.Divider />
-                          <Menu.Item
-                            color="red"
-                            leftSection={<IconTrash size={14} />}
-                            onClick={() => setDeleteTarget(account)}
-                          >
-                            Remove Account
-                          </Menu.Item>
-                        </Menu.Dropdown>
-                      </Menu>
-                    </Group>
-                  </Group>
-                </Card>
-              );
-            })}
+                        </Card>
+                      );
+                    })}
+                </Stack>
+              </Stack>
+            )}
           </Stack>
         )}
       </Container>
@@ -910,7 +1169,7 @@ export default function Accounts() {
       <Modal
         opened={accessAndPermissions.open}
         onClose={onCloseAccessAndPermissions}
-        title={<Text> Manage Access & Permissions of <span style={{color : "var(--mantine-color-blue-4)"}}><b>{accessAndPermissions.targetUser}</b></span></Text>}
+        title={`Manage Access & Permissions ( ${accessAndPermissions.targetUser} )`}
         fullScreen
         radius={0}
       >
@@ -946,24 +1205,10 @@ export default function Accounts() {
                 pl={{ base: 0, xs: "lg" }}
               >
                 <Stack p="xs" bg="white" gap={"lg"}>
-                  <Checkbox
-                    size="xs"
-                    label="Select All"
-                    checked={hasAllPermissions(changes.permissions,PERMISSIONS)}
-                    onChange={(event) => {
-                      setChanges((prev) => ({
-                        ...prev,
-                        permissions: setAllPermissions(
-                          changes.permissions,
-                          event.target.checked,
-                        ),
-                      }));
-                    }}
-                  />
                   {Object.entries(PERMISSIONS).map(
                     ([groupKey, permissions]) => (
                       <Stack key={groupKey} gap="xs">
-                        <Text size="xs" fw={"bolder"} c={"gray"}>
+                        <Text size="xs" c="dimmed">
                           {PERMISSION_GROUP_LABELS[groupKey] ?? groupKey}
                         </Text>
 

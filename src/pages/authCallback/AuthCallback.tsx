@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Alert, Center, Loader, Stack, Text } from "@mantine/core";
-import { useAuthStore, isHubAccount } from "../../store/auth/auth.store";
+
+import { useAuthStore } from "../../store/auth/auth.store";
 import { fetchUserDetails } from "../../api/userApi";
 import { ROUTES } from "../../router/routes";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
   const setTokens = useAuthStore((state) => state.setTokens);
   const setUserDetails = useAuthStore((state) => state.setUserDetails);
+
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,25 +31,29 @@ export default function AuthCallback() {
       refreshToken: refreshToken ?? "",
     });
 
-    (async () => {
+    const completeAuthentication = async () => {
       try {
         const details = await fetchUserDetails();
 
         setUserDetails(details);
-        if (isHubAccount(details)) {
-          navigate(ROUTES.ACCOUNTS, { replace: true });
-        } else {
-          navigate(`/${ROUTES.CHATS}`, { replace: true });
-        }
+
+        navigate(ROUTES.ACCOUNTS, {
+          replace: true,
+        });
       } catch (err) {
+        console.error("Authentication failed:", err);
+
         setError(
           err instanceof Error
             ? err.message
             : "Could not verify your account. Please try logging in again.",
         );
       }
-    })();
+    };
+
+    void completeAuthentication();
   }, [searchParams, navigate, setTokens, setUserDetails]);
+
   if (error) {
     return (
       <Center h="100vh">
@@ -61,6 +68,7 @@ export default function AuthCallback() {
     <Center h="100vh">
       <Stack align="center" gap="sm">
         <Loader />
+
         <Text c="dimmed" size="sm">
           Signing you in...
         </Text>
