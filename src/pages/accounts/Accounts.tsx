@@ -606,7 +606,7 @@ export default function Accounts() {
                             colorIndex={0}
                             size={48}
                             onClick={() => {
-                              setTargetUser(account.user_id);
+                              // setTargetUser(account.user_id);
                               setTargetUserDetails(account);
                               navigate(`/${ROUTES.CHATS}`);
                             }}
@@ -619,7 +619,7 @@ export default function Accounts() {
                                 truncate="end"
                                 className={classes.accountName}
                                 onClick={() => {
-                                  setTargetUser(account.user_id);
+                                  //setTargetUser(account.user_id);
                                   setTargetUserDetails(account);
                                   navigate(`/${ROUTES.CHATS}`);
                                 }}
