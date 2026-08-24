@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { devtools, persist, createJSONStorage } from "zustand/middleware";
+
 import type { Account } from "../../api/accountApi";
 
 interface AuthTokens {
@@ -17,21 +18,27 @@ export interface UserDetails {
   profile_picture: string | null;
 }
 
-export const isHubAccount = (details: UserDetails | null | undefined) =>
-  (details?.group_name ?? "").toLowerCase() === "hub";
-
 interface AuthState {
   accessToken: string | null;
   idToken: string | null;
   refreshToken: string | null;
+
   isAuthenticated: boolean;
+
   userDetails: UserDetails | null;
+
   target_user: string;
+
   targetUserDetails: Account | null;
+
   setTokens: (tokens: AuthTokens) => void;
+
   setUserDetails: (details: UserDetails) => void;
+
   setTargetUser: (target_user: string) => void;
+
   setTargetUserDetails: (targetUserDetails: Account | null) => void;
+
   clearTokens: () => void;
 }
 
@@ -42,17 +49,24 @@ export const useAuthStore = create<AuthState>()(
         accessToken: null,
         idToken: null,
         refreshToken: null,
+
         isAuthenticated: false,
+
         userDetails: null,
+
         target_user: "",
+
         targetUserDetails: null,
 
         setTokens: (tokens) =>
           set(
             {
               accessToken: tokens.accessToken,
+
               idToken: tokens.idToken,
+
               refreshToken: tokens.refreshToken,
+
               isAuthenticated: true,
             },
             false,
@@ -60,13 +74,31 @@ export const useAuthStore = create<AuthState>()(
           ),
 
         setUserDetails: (details) =>
-          set({ userDetails: details }, false, "auth/setUserDetails"),
+          set(
+            {
+              userDetails: details,
+            },
+            false,
+            "auth/setUserDetails",
+          ),
 
         setTargetUser: (target_user) =>
-          set({ target_user }, false, "auth/traget_user"),
+          set(
+            {
+              target_user,
+            },
+            false,
+            "auth/setTargetUser",
+          ),
 
         setTargetUserDetails: (targetUserDetails) =>
-          set({ targetUserDetails }, false, "auth/traget_user_details"),
+          set(
+            {
+              targetUserDetails,
+            },
+            false,
+            "auth/setTargetUserDetails",
+          ),
 
         clearTokens: () =>
           set(
@@ -74,9 +106,13 @@ export const useAuthStore = create<AuthState>()(
               accessToken: null,
               idToken: null,
               refreshToken: null,
+
               isAuthenticated: false,
+
               userDetails: null,
+
               target_user: "",
+
               targetUserDetails: null,
             },
             false,
@@ -85,18 +121,29 @@ export const useAuthStore = create<AuthState>()(
       }),
       {
         name: "auth-storage",
+
         storage: createJSONStorage(() => localStorage),
+
         partialize: (state) => ({
           accessToken: state.accessToken,
+
           idToken: state.idToken,
+
           refreshToken: state.refreshToken,
+
           isAuthenticated: state.isAuthenticated,
+
           userDetails: state.userDetails,
+
           target_user: state.target_user,
+
           targetUserDetails: state.targetUserDetails,
         }),
       },
     ),
-    { name: "AuthStore", enabled: import.meta.env.DEV },
+    {
+      name: "AuthStore",
+      enabled: import.meta.env.DEV,
+    },
   ),
 );

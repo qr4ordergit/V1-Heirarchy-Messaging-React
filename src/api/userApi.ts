@@ -8,11 +8,16 @@ export async function fetchUserDetails(): Promise<UserDetails> {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : {}),
     },
   });
 
   let data: unknown = null;
+
   try {
     data = await response.json();
   } catch {
@@ -21,8 +26,12 @@ export async function fetchUserDetails(): Promise<UserDetails> {
 
   if (!response.ok) {
     const message =
-      (data as { message?: string } | null)?.message ||
-      "Could not load user details.";
+      (
+        data as {
+          message?: string;
+        } | null
+      )?.message || "Could not load user details.";
+
     throw new Error(message);
   }
 

@@ -4,7 +4,6 @@ import { HashRouter, Route, Routes } from "react-router";
 import { ROUTES } from "./routes";
 import LazyLoader from "../component/lazyLoader/LazyLoader";
 import RequireAuth from "./guards/RequireAuth";
-import RequireHub from "./guards/RequireHub";
 import { useAuthStore } from "../store/auth/auth.store";
 import Conversation from "../component/chats/conversation/Conversation";
 
@@ -27,22 +26,28 @@ function useCaptureTokensAnywhere() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+
     const accessToken = params.get("access_token");
+    const idToken = params.get("id_token");
+    const refreshToken = params.get("refresh_token");
 
-    if (accessToken) {
-      setTokens({
-        accessToken,
-        idToken: params.get("id_token") ?? "",
-        refreshToken: params.get("refresh_token") ?? "",
-      });
-
-      const cleanHash = window.location.hash.split("?")[0];
-      window.history.replaceState(
-        null,
-        "",
-        `${window.location.pathname}${cleanHash}`,
-      );
+    if (!accessToken) {
+      return;
     }
+
+    setTokens({
+      accessToken,
+      idToken: idToken ?? "",
+      refreshToken: refreshToken ?? "",
+    });
+
+    const cleanHash = window.location.hash.split("?")[0];
+
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${cleanHash}`,
+    );
   }, [setTokens]);
 }
 
@@ -58,18 +63,21 @@ export default function AppRouter() {
           <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
 
           <Route element={<RequireAuth />}>
-            <Route element={<RequireHub />}>
-              <Route path={ROUTES.ACCOUNTS} element={<Accounts />} />
-            </Route>
+            <Route path={ROUTES.ACCOUNTS} element={<Accounts />} />
 
             <Route element={<MainLayout />}>
               <Route path={ROUTES.CHATS} element={<ChatsLayout />}>
                 <Route path=":chatId" element={<Conversation />} />
               </Route>
+
               <Route path={ROUTES.CONTACT} element={<Contact />} />
+
               <Route path={ROUTES.PROFILE} element={<Profile />} />
+
               <Route path={ROUTES.PRIVACY} element={<Privacy />} />
+
               <Route path={ROUTES.ABOUT} element={<About />} />
+
               <Route
                 path={ROUTES.HELPANDSUPPORT}
                 element={<HelpAndSupport />}
