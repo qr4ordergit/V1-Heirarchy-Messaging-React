@@ -11,6 +11,7 @@ import { MediaChat } from "./MediaChat";
 import { ChatOptions } from "./ChatOptions";
 import ReplyChat from "./ReplyChat";
 import { useState } from "react";
+import useContactNameProvider from "../../../hooks/useContactNameProvider";
 
 interface MessageChatProps {
   msg: MESSAGE;
@@ -22,6 +23,8 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
 
   const own_user_id = targetUserDetails?.user_id ?? userDetails?.username;
   const isMe = own_user_id === msg.created_by;
+
+  const contactNameProvider = useContactNameProvider();
 
   const [showMenuIcon, setShowMenuIcon] = useState<boolean>(false);
 
@@ -44,7 +47,7 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
       >
         {!isMe && (
           <Text size="xs" fw={600} c="blue" mb={4}>
-            {msg.created_by}
+            {contactNameProvider(msg.created_by ?? "")}
           </Text>
         )}
 
@@ -77,7 +80,7 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
         {showMenuIcon && (
           <ChatOptions msg={msg}>
             <div className="absolute top-0 right-2 cursor-pointer">
-              <IconCaretDownFilled className="text-gray-200" size={18} />
+              <IconCaretDownFilled className="text-gray-300" size={18} />
             </div>
           </ChatOptions>
         )}

@@ -68,19 +68,19 @@ function TagsModal() {
       title="Add Tags to message"
     >
       <Stack gap="md">
-        <ScrollArea h={Math.min(tags.length * 36, 200)}>
-          <Checkbox.Group value={selectedTags} onChange={setSelectedTags}>
-            <Stack gap="sm">
-              {tags.length ? (
-                tags.map((tag) => (
+        {tags.length ? (
+          <ScrollArea h={Math.min(tags.length * 36, 200)}>
+            <Checkbox.Group value={selectedTags} onChange={setSelectedTags}>
+              <Stack gap="sm">
+                {tags.map((tag) => (
                   <Checkbox key={tag} value={tag} label={tag} />
-                ))
-              ) : (
-                <Text className="text-red-500">Tags not found</Text>
-              )}
-            </Stack>
-          </Checkbox.Group>
-        </ScrollArea>
+                ))}
+              </Stack>
+            </Checkbox.Group>
+          </ScrollArea>
+        ) : (
+          <Text className="text-red-500">Tags not found</Text>
+        )}
 
         <Group justify="flex-end">
           <Button

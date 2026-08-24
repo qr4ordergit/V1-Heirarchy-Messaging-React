@@ -34,11 +34,13 @@ function EncryptedChatCard({ msg }: props) {
     >
       <Card
         withBorder
-        bg={"blue.6"}
+        bg={isMe ? "blue.6" : "white"}
         className="text-white cursor-pointer"
         onDoubleClick={onDecrypt}
       >
-        <div className="h-25 flex flex-col justify-center items-center text-white">
+        <div
+          className={`h-25 flex flex-col justify-center items-center ${isMe ? "text-white" : "text-dark"}`}
+        >
           <IconLock />
           <div>Double click to decrypt content</div>
         </div>

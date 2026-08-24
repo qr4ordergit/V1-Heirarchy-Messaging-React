@@ -12,10 +12,14 @@ import Navbar from "./Navbar";
 import TextFilterInputBox from "./TextFilterInputBox";
 import PrivateMessagePayloadModal from "./modals/PrivateMessagePayloadModal";
 import DecryptPrivateMsgDialog from "./dialouges/DecryptPrivateMsgDialog";
+import { api } from "../../../api/axios";
+import { API_ENDPOINTS, withTargetUser } from "../../../utils/constant";
+import useContactStore from "../../../store/contacts/contacts.store";
 
 function Conversation() {
   const { trigger } = useTriggerStore((state) => state);
   const { storeTags, tags } = useTagStore((state) => state);
+  const { storeContacts } = useContactStore((state) => state);
 
   const fetchTagsList = async () => {
     try {
@@ -26,10 +30,21 @@ function Conversation() {
     }
   };
 
+  const fetchContacts = async () => {
+    try {
+      const response = await api.get(withTargetUser(API_ENDPOINTS.CONTACTS));
+
+      if (response.data?.success) {
+        storeContacts(response.data?.contacts);
+      }
+    } catch (error) {}
+  };
+
   useEffect(() => {
     if (tags.length === 0) {
       fetchTagsList();
     }
+    fetchContacts();
   }, []);
 
   return (
