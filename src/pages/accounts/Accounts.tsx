@@ -151,7 +151,7 @@ export default function Accounts() {
   >({});
   const [searchQuery, setSearchQuery] = useState("");
 
-    const [perType, setPerType] = useState<string>("User Permission");
+  const [perType, setPerType] = useState<string>("User Permission");
 
   const [accessAndPermissions, setAccessAndPermissions] =
     useState<AccessAndPermissionsState>({
@@ -182,7 +182,11 @@ export default function Accounts() {
   };
 
   const users = structuredClone(accounts)
-    .filter((acc) => (acc.user_id !== accessAndPermissions.targetUser && acc.user_id !== userDetails?.username))
+    .filter(
+      (acc) =>
+        acc.user_id !== accessAndPermissions.targetUser &&
+        acc.user_id !== userDetails?.username,
+    )
     .map((acc) => ({
       id: acc.user_id,
       label: acc.phone_number !== "" ? acc.phone_number : acc.user_id,
@@ -407,7 +411,7 @@ export default function Accounts() {
     return haystack.includes(query);
   });
 
-    const handleSave = async () => {
+  const handleSave = async () => {
     try {
       setLoadingSave(true);
 
@@ -464,7 +468,7 @@ export default function Accounts() {
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadAccounts();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userDetails]);
   //useDisableBackButton();
   return (
@@ -607,7 +611,7 @@ export default function Accounts() {
                             size={48}
                             onClick={() => {
                               // setTargetUser(account.user_id);
-                              setTargetUserDetails(account);
+                              //setTargetUserDetails(account);
                               navigate(`/${ROUTES.CHATS}`);
                             }}
                           />
@@ -620,7 +624,7 @@ export default function Accounts() {
                                 className={classes.accountName}
                                 onClick={() => {
                                   //setTargetUser(account.user_id);
-                                  setTargetUserDetails(account);
+                                  //setTargetUserDetails(account);
                                   navigate(`/${ROUTES.CHATS}`);
                                 }}
                               >
@@ -1171,12 +1175,18 @@ export default function Accounts() {
         </Stack>
       </Modal>
 
-      
- 
- <Modal
+      <Modal
         opened={accessAndPermissions.open}
         onClose={onCloseAccessAndPermissions}
-        title={<Text> Manage Access & Permissions of <span style={{color : "var(--mantine-color-blue-4)"}}><b>{accessAndPermissions.targetUser}</b></span></Text>}
+        title={
+          <Text>
+            {" "}
+            Manage Access & Permissions of{" "}
+            <span style={{ color: "var(--mantine-color-blue-4)" }}>
+              <b>{accessAndPermissions.targetUser}</b>
+            </span>
+          </Text>
+        }
         fullScreen
         radius={0}
       >
@@ -1215,7 +1225,10 @@ export default function Accounts() {
                   <Checkbox
                     size="xs"
                     label="Select All"
-                    checked={hasAllPermissions(changes.permissions,PERMISSIONS)}
+                    checked={hasAllPermissions(
+                      changes.permissions,
+                      PERMISSIONS,
+                    )}
                     onChange={(event) => {
                       setChanges((prev) => ({
                         ...prev,
