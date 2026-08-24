@@ -18,6 +18,15 @@ export interface UserDetails {
   profile_picture: string | null;
 }
 
+/*
+ * group_name identifies what kind of account is logged in:
+ *
+ *   "hub"          -> Hub account
+ *   "sub-account"  -> Sub account
+ */
+export const isHubAccount = (details: UserDetails | null | undefined) =>
+  details?.group_name === "hub";
+
 interface AuthState {
   accessToken: string | null;
   idToken: string | null;

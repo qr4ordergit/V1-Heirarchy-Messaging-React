@@ -49,7 +49,7 @@ import {
 } from "../../api/accountApi";
 
 import { logout } from "../../api/authApi";
-import { useAuthStore } from "../../store/auth/auth.store";
+import { useAuthStore, isHubAccount } from "../../store/auth/auth.store";
 import { ROUTES } from "../../router/routes";
 import Avatar from "../../component/avatar/Avatar";
 
@@ -116,7 +116,7 @@ export default function Accounts() {
     (state) => state.setTargetUserDetails,
   );
 
-  const isHubAccountLoggedIn = userDetails?.group_name === "hub";
+  const isHubAccountLoggedIn = isHubAccount(userDetails);
 
   const [accounts, setAccounts] = useState<Account[]>([]);
 
@@ -530,6 +530,7 @@ export default function Accounts() {
           </Card>
         ) : (
           <Stack gap="xl">
+            {/* My Account */}
             {filteredAccounts
               .filter((account) => account.user_id === userDetails?.username)
               .map((account) => {
