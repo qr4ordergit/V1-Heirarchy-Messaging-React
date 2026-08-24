@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
   START_CONVERSATION: `${API_BASE_URL}/start-conversation`,
   PERMISSIONS: `${API_BASE_URL}/permissions`,
   MANAGE_MEMBERS: `${API_BASE_URL}/group/manage-members`,
+  CREATE_INVITE_LINK: `${API_BASE_URL}/invites`,
   TAGS: `${API_BASE_URL}/tags`,
   USER_ACCESS: `${API_BASE_URL}/user-access`,
   CREATE_GROUP: `${API_BASE_URL}/group`,
@@ -94,7 +95,7 @@ export const TRIGGERS = {
   privateMessageModal: "secret_007:privateMessageModal",
   privatePayload: "privatePayload",
   privateMessageSender: "privateMessageSender",
-  decryptPrivateMsgDialog: "decryptPrivateMsgDialog"
+  decryptPrivateMsgDialog: "decryptPrivateMsgDialog",
 };
 
 export const CIPHER_SECRET =

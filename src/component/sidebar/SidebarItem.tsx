@@ -8,11 +8,7 @@ interface SidebarItemProps {
   Icon: React.ComponentType<IconProps>;
 }
 
-export default function SidebarItem({
-  label,
-  to,
-  Icon,
-}: SidebarItemProps) {
+export default function SidebarItem({ label, to, Icon }: SidebarItemProps) {
   return (
     <NavLink to={to}>
       {({ isActive }) => (

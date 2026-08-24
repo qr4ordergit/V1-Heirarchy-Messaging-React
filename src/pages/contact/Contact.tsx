@@ -18,6 +18,7 @@ import {
   IconEdit,
   IconPlus,
   IconSearch,
+  IconShare,
   IconTrash,
   IconUser,
   IconUsersGroup,
@@ -93,6 +94,7 @@ const Contact = () => {
   const [groupModalOpened, setGroupModalOpened] = useState<boolean>(false);
   const [creatingGroupLoading, setCreatingGroupLoading] =
     useState<boolean>(false);
+  const [sharingGroupId, setSharingGroupId] = useState<string | null>(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -184,6 +186,52 @@ const Contact = () => {
 
   const handleRemoveGroupContact = (contactId: string) => {
     setSelectedGroupContacts((prev) => prev.filter((c) => c.id !== contactId));
+  };
+
+  const handleShareGroup = async (group: any) => {
+    setSharingGroupId(group._id);
+
+    try {
+      const payload = {
+        resource_id: group._id,
+        resource_type: "group",
+        created_by: group.created_by,
+        expiry_hours: 24,
+        max_uses: 10,
+      };
+
+      const response = await api.post(
+        withTargetUser(API_ENDPOINTS.CREATE_INVITE_LINK),
+        payload,
+      );
+
+      const data = response.data;
+
+      if (response.status === 200 || response.status === 201 || data.success) {
+        if (data.invite_url || data.invite_code || data.url) {
+          const inviteLink = data.invite_url || data.url || data.invite_code;
+          navigator.clipboard.writeText(inviteLink);
+        }
+
+        notifications.show({
+          title: "",
+          message:
+            data.message || "Invite link created and copied to clipboard!",
+          color: "green",
+          icon: <IconCheck size={18} />,
+        });
+      } else {
+        notifications.show({
+          title: "",
+          message: data.message || "Failed to create invite.",
+          color: "red",
+        });
+      }
+    } catch (error: any) {
+      handleApiError(error);
+    } finally {
+      setSharingGroupId(null);
+    }
   };
 
   const handleCreateGroupSubmit = () => {
@@ -644,12 +692,21 @@ const Contact = () => {
                     leftSection={<IconUser size={16} />}
                     rightSection={
                       <ActionIcon
+                        component="div"
+                        role="button"
+                        tabIndex={0}
                         size="xs"
                         variant="subtle"
                         color="indigo"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleAdd();
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.stopPropagation();
+                            handleAdd();
+                          }
                         }}
                       >
                         <IconPlus size={14} />
@@ -669,6 +726,9 @@ const Contact = () => {
                     leftSection={<IconUsersGroup size={16} />}
                     rightSection={
                       <ActionIcon
+                        component="div"
+                        role="button"
+                        tabIndex={0}
                         size="xs"
                         variant="subtle"
                         color="indigo"
@@ -676,6 +736,13 @@ const Contact = () => {
                           e.stopPropagation();
                           setActiveTab("contacts");
                           setIsCreatingGroup(true);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.stopPropagation();
+                            setActiveTab("contacts");
+                            setIsCreatingGroup(true);
+                          }
                         }}
                       >
                         <IconPlus size={14} />
@@ -964,6 +1031,20 @@ const Contact = () => {
                             }}
                           >
                             <IconTrash size={18} />
+                          </ActionIcon>
+
+                          <ActionIcon
+                            variant="subtle"
+                            color="blue"
+                            size="md"
+                            radius="md"
+                            loading={sharingGroupId === group._id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShareGroup(group);
+                            }}
+                          >
+                            <IconShare size={18} />
                           </ActionIcon>
                         </Group>
                       </Group>
