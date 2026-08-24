@@ -68,6 +68,8 @@ import {
   getPermissionValue,
   setPermissionValue,
   hasAnyPermission,
+  hasAllPermissions,
+  setAllPermissions,
 } from "../../utils/permission";
 import {
   AcessAndPermissionService,
@@ -149,7 +151,7 @@ export default function Accounts() {
   >({});
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [perType, setPerType] = useState<string>("User Permission");
+    const [perType, setPerType] = useState<string>("User Permission");
 
   const [accessAndPermissions, setAccessAndPermissions] =
     useState<AccessAndPermissionsState>({
@@ -180,7 +182,7 @@ export default function Accounts() {
   };
 
   const users = structuredClone(accounts)
-    .filter((acc) => acc.user_id !== accessAndPermissions.targetUser)
+    .filter((acc) => (acc.user_id !== accessAndPermissions.targetUser && acc.user_id !== userDetails?.username))
     .map((acc) => ({
       id: acc.user_id,
       label: acc.phone_number !== "" ? acc.phone_number : acc.user_id,
@@ -405,7 +407,7 @@ export default function Accounts() {
     return haystack.includes(query);
   });
 
-  const handleSave = async () => {
+    const handleSave = async () => {
     try {
       setLoadingSave(true);
 
@@ -460,7 +462,9 @@ export default function Accounts() {
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadAccounts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userDetails]);
   //useDisableBackButton();
   return (
@@ -1167,10 +1171,12 @@ export default function Accounts() {
         </Stack>
       </Modal>
 
-      <Modal
+      
+ 
+ <Modal
         opened={accessAndPermissions.open}
         onClose={onCloseAccessAndPermissions}
-        title={`Manage Access & Permissions ( ${accessAndPermissions.targetUser} )`}
+        title={<Text> Manage Access & Permissions of <span style={{color : "var(--mantine-color-blue-4)"}}><b>{accessAndPermissions.targetUser}</b></span></Text>}
         fullScreen
         radius={0}
       >
@@ -1206,10 +1212,24 @@ export default function Accounts() {
                 pl={{ base: 0, xs: "lg" }}
               >
                 <Stack p="xs" bg="white" gap={"lg"}>
+                  <Checkbox
+                    size="xs"
+                    label="Select All"
+                    checked={hasAllPermissions(changes.permissions,PERMISSIONS)}
+                    onChange={(event) => {
+                      setChanges((prev) => ({
+                        ...prev,
+                        permissions: setAllPermissions(
+                          changes.permissions,
+                          event.target.checked,
+                        ),
+                      }));
+                    }}
+                  />
                   {Object.entries(PERMISSIONS).map(
                     ([groupKey, permissions]) => (
                       <Stack key={groupKey} gap="xs">
-                        <Text size="xs" c="dimmed">
+                        <Text size="xs" fw={"bolder"} c={"gray"}>
                           {PERMISSION_GROUP_LABELS[groupKey] ?? groupKey}
                         </Text>
 
