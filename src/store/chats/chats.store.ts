@@ -17,6 +17,11 @@ export interface MESSAGE {
     [key: string]: unknown;
 }
 
+interface TAG_STATUS_PAYLOAD {
+    message_ids: string[],
+    status: boolean
+}
+
 interface ChatsStore {
     chats: MESSAGE[];
     ogChats: MESSAGE[];
@@ -24,7 +29,7 @@ interface ChatsStore {
     appendChats: (messages: MESSAGE[]) => void;
     popChat: (message_id: string) => void;
     alterChat: (message_id: string, newMessage: string) => void;
-    updateTagStatus: (message_ids: [string]) => void,
+    updateTagStatus: (payload: TAG_STATUS_PAYLOAD) => void,
     filterChatsByText: (text: string) => void,
     emptyOGList: () => void,
     updateDecryptedMsg: (msg: MESSAGE) => void
@@ -66,11 +71,11 @@ export const useChatStore = create<ChatsStore>((set) => ({
             })
         }))
     },
-    updateTagStatus: (message_ids) => {
+    updateTagStatus: (payload) => {
         set((state) => ({
             chats: state.chats.map((chat) => {
-                if (message_ids.includes(chat._id ?? "")) {
-                    chat.is_tagged = true
+                if (payload.message_ids.includes(chat._id ?? "")) {
+                    chat.is_tagged = payload.status
                 }
                 return chat
             })

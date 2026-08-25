@@ -10,7 +10,6 @@ import { useAuthStore } from "../../../store/auth/auth.store";
 import { MediaChat } from "./MediaChat";
 import { ChatOptions } from "./ChatOptions";
 import ReplyChat from "./ReplyChat";
-import { useState } from "react";
 import useContactNameProvider from "../../../hooks/useContactNameProvider";
 
 interface MessageChatProps {
@@ -26,8 +25,6 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
 
   const contactNameProvider = useContactNameProvider();
 
-  const [showMenuIcon, setShowMenuIcon] = useState<boolean>(false);
-
   return (
     <Group
       justify={isMe ? "flex-end" : "flex-start"}
@@ -42,8 +39,6 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
         maw="70%"
         bg={isMe ? "blue.6" : "white"}
         className="relative"
-        onMouseEnter={() => setShowMenuIcon(true)}
-        onMouseLeave={() => setShowMenuIcon(false)}
       >
         {!isMe && (
           <Text size="xs" fw={600} c="blue" mb={4}>
@@ -77,13 +72,11 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
 
           <IconChecks size={14} color="#9be7ff" />
         </Group>
-        {showMenuIcon && (
-          <ChatOptions msg={msg}>
-            <div className="absolute top-0 right-2 cursor-pointer">
-              <IconCaretDownFilled className="text-gray-300" size={18} />
-            </div>
-          </ChatOptions>
-        )}
+        <ChatOptions msg={msg}>
+          <div className="absolute top-0 right-2 cursor-pointer">
+            <IconCaretDownFilled className="text-gray-300" size={18} />
+          </div>
+        </ChatOptions>
       </Paper>
     </Group>
   );

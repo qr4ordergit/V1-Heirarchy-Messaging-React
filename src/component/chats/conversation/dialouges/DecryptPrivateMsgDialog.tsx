@@ -22,6 +22,8 @@ function DecryptPrivateMsgDialog() {
   const { targetUserDetails } = useAuthStore((state) => state);
 
   const [password, setPassword] = useState<string>("");
+  const [isPasswordIncorrect, setIsPasswordIncorrect] =
+    useState<boolean>(false);
 
   const [decryptLoader1, DecryptFn1] = useTransition();
   const [decryptLoader2, DecryptFn2] = useTransition();
@@ -55,7 +57,7 @@ function DecryptPrivateMsgDialog() {
       );
 
       if (!res.data?.success) {
-        Notification.error("Failed to decrypt message");
+        setIsPasswordIncorrect(true);
         return;
       }
 
@@ -104,24 +106,33 @@ function DecryptPrivateMsgDialog() {
             <Text>Message is decrypting... Please wait</Text>
           </Group>
         ) : (
-          <Group align="flex-end">
-            <TextInput
-              readOnly={decryptLoader2}
-              disabled={decryptLoader1}
-              placeholder="Enter password"
-              style={{ flex: 1 }}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <Button
-              loading={decryptLoader2}
-              disabled={decryptLoader1}
-              loaderProps={{ type: "dots" }}
-              onClick={() => handleDecrypt("manual")}
-            >
-              Submit
-            </Button>
-          </Group>
+          <div>
+            <Group align="flex-end">
+              <TextInput
+                readOnly={decryptLoader2}
+                disabled={decryptLoader1}
+                placeholder="Enter password"
+                style={{ flex: 1 }}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setIsPasswordIncorrect(false)}
+                error={isPasswordIncorrect}
+              />
+              <Button
+                loading={decryptLoader2}
+                disabled={decryptLoader1}
+                loaderProps={{ type: "dots" }}
+                onClick={() => handleDecrypt("manual")}
+              >
+                Submit
+              </Button>
+            </Group>
+            {isPasswordIncorrect && (
+              <Text size="sm" className="text-red-500">
+                Incorrect password
+              </Text>
+            )}
+          </div>
         )}
       </div>
     </Modal>

@@ -18,9 +18,9 @@ export const ENDPOINTS = {
     GET: "/user-access/sub-users-permissions",
     PATCH: "/user-access"
   },
-  PERMISSION:{
-    GET : "/permissions",
-    PATCH : "/permissions"
+  PERMISSION: {
+    GET: "/permissions",
+    PATCH: "/permissions"
   },
   GROUP_CHAT: {
     GET: "/groups-message?group_id=",
@@ -30,7 +30,9 @@ export const ENDPOINTS = {
   },
   TAGS: {
     POST: "/tags/manage",
-    GET: "/tags/manage"
+    GET: "/tags/manage",
+    DELETE: "/tags/manage",
+    EXISTING: "/tags/by_message_id"
   },
   PRIVATEMSG: {
     DECRYPT: "/groups-message/decrypt"
