@@ -489,14 +489,16 @@ export default function Accounts() {
             </Text>
           </div>
           <Group gap="sm" className={classes.headerActions}>
-            <Button
-              leftSection={<IconPlus size={16} />}
-              radius="xl"
-              variant="gradient"
-              onClick={() => setModalOpen(true)}
-            >
-              Add Account
-            </Button>
+            {isHubAccountLoggedIn && (
+              <Button
+                leftSection={<IconPlus size={16} />}
+                radius="xl"
+                variant="gradient"
+                onClick={() => setModalOpen(true)}
+              >
+                Add Account
+              </Button>
+            )}
             <Button
               leftSection={<IconLogout size={16} />}
               radius="xl"
@@ -631,65 +633,69 @@ export default function Accounts() {
                                 {getAccountIdentifier(account)}
                               </Text>
 
-                              <ActionIcon
-                                variant="subtle"
-                                color={account.isLocked ? "dark" : "gray"}
-                                radius="xl"
-                                size="sm"
-                                aria-label={
-                                  account.isLocked
-                                    ? "Account is locked"
-                                    : "Account is unlocked"
-                                }
-                                onClick={() => openLockModal(account)}
-                              >
-                                {account.isLocked ? (
-                                  <IconLock size={14} color="red" />
-                                ) : (
-                                  <Tooltip label="Lock with passkey">
-                                    <IconLockOpen size={14} />
-                                  </Tooltip>
-                                )}
-                              </ActionIcon>
-
-                              {account.isLocked && (
+                              {isHubAccountLoggedIn && (
                                 <>
-                                  <Badge
-                                    size="sm"
-                                    variant="light"
-                                    color="red"
-                                    radius="sm"
-                                    onClick={() => openLockModal(account)}
-                                    style={{
-                                      cursor: "pointer",
-                                      fontFamily: "monospace",
-                                    }}
-                                  >
-                                    {isPasskeyVisible
-                                      ? plainPasskey || "—"
-                                      : "••••••"}
-                                  </Badge>
-
                                   <ActionIcon
                                     variant="subtle"
-                                    color="gray"
+                                    color={account.isLocked ? "dark" : "gray"}
                                     radius="xl"
                                     size="sm"
                                     aria-label={
-                                      isPasskeyVisible
-                                        ? "Hide passkey"
-                                        : "Show passkey"
+                                      account.isLocked
+                                        ? "Account is locked"
+                                        : "Account is unlocked"
                                     }
-                                    onClick={() =>
-                                      togglePasskeyVisibility(account)
-                                    }
+                                    onClick={() => openLockModal(account)}
                                   >
-                                    {isPasskeyVisible ? (
-                                      <IconEyeOff size={14} />
+                                    {account.isLocked ? (
+                                      <IconLock size={14} color="red" />
                                     ) : (
-                                      <IconEye size={14} />
+                                      <Tooltip label="Lock with passkey">
+                                        <IconLockOpen size={14} />
+                                      </Tooltip>
                                     )}
                                   </ActionIcon>
+
+                                  {account.isLocked && (
+                                    <>
+                                      <Badge
+                                        size="sm"
+                                        variant="light"
+                                        color="red"
+                                        radius="sm"
+                                        onClick={() => openLockModal(account)}
+                                        style={{
+                                          cursor: "pointer",
+                                          fontFamily: "monospace",
+                                        }}
+                                      >
+                                        {isPasskeyVisible
+                                          ? plainPasskey || "—"
+                                          : "••••••"}
+                                      </Badge>
+
+                                      <ActionIcon
+                                        variant="subtle"
+                                        color="gray"
+                                        radius="xl"
+                                        size="sm"
+                                        aria-label={
+                                          isPasskeyVisible
+                                            ? "Hide passkey"
+                                            : "Show passkey"
+                                        }
+                                        onClick={() =>
+                                          togglePasskeyVisibility(account)
+                                        }
+                                      >
+                                        {isPasskeyVisible ? (
+                                          <IconEyeOff size={14} />
+                                        ) : (
+                                          <IconEye size={14} />
+                                        )}
+                                      </ActionIcon>
+                                    </>
+                                  )}
                                 </>
                               )}
                             </Group>
@@ -709,34 +715,36 @@ export default function Accounts() {
                           </div>
                         </Group>
 
-                        <Group gap="lg" className={classes.cardActions}>
-                          <Menu
-                            position="bottom-end"
-                            withinPortal
-                            shadow="md"
-                            radius="md"
-                          >
-                            <Menu.Target>
-                              <ActionIcon
-                                variant="subtle"
-                                color="gray"
-                                radius="xl"
-                                aria-label="Account options"
-                              >
-                                <IconDotsVertical size={16} />
-                              </ActionIcon>
-                            </Menu.Target>
+                        {isHubAccountLoggedIn && (
+                          <Group gap="lg" className={classes.cardActions}>
+                            <Menu
+                              position="bottom-end"
+                              withinPortal
+                              shadow="md"
+                              radius="md"
+                            >
+                              <Menu.Target>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="gray"
+                                  radius="xl"
+                                  aria-label="Account options"
+                                >
+                                  <IconDotsVertical size={16} />
+                                </ActionIcon>
+                              </Menu.Target>
 
-                            <Menu.Dropdown>
-                              <Menu.Item
-                                leftSection={<IconKey size={14} />}
-                                onClick={() => setPasswordTarget(account)}
-                              >
-                                Change Password
-                              </Menu.Item>
-                            </Menu.Dropdown>
-                          </Menu>
-                        </Group>
+                              <Menu.Dropdown>
+                                <Menu.Item
+                                  leftSection={<IconKey size={14} />}
+                                  onClick={() => setPasswordTarget(account)}
+                                >
+                                  Change Password
+                                </Menu.Item>
+                              </Menu.Dropdown>
+                            </Menu>
+                          </Group>
+                        )}
                       </Group>
                     </Card>
                   </Stack>
@@ -839,65 +847,73 @@ export default function Accounts() {
                                     {getAccountIdentifier(account)}
                                   </Text>
 
-                                  <ActionIcon
-                                    variant="subtle"
-                                    color={account.isLocked ? "dark" : "gray"}
-                                    radius="xl"
-                                    size="sm"
-                                    aria-label={
-                                      account.isLocked
-                                        ? "Account is locked"
-                                        : "Account is unlocked"
-                                    }
-                                    onClick={() => openLockModal(account)}
-                                  >
-                                    {account.isLocked ? (
-                                      <IconLock size={14} color="red" />
-                                    ) : (
-                                      <Tooltip label="Lock with passkey">
-                                        <IconLockOpen size={14} />
-                                      </Tooltip>
-                                    )}
-                                  </ActionIcon>
-
-                                  {account.isLocked && (
+                                  {isHubAccountLoggedIn && (
                                     <>
-                                      <Badge
-                                        size="sm"
-                                        variant="light"
-                                        color="red"
-                                        radius="sm"
-                                        onClick={() => openLockModal(account)}
-                                        style={{
-                                          cursor: "pointer",
-                                          fontFamily: "monospace",
-                                        }}
-                                      >
-                                        {isPasskeyVisible
-                                          ? plainPasskey || "—"
-                                          : "••••••"}
-                                      </Badge>
-
                                       <ActionIcon
                                         variant="subtle"
-                                        color="gray"
+                                        color={
+                                          account.isLocked ? "dark" : "gray"
+                                        }
                                         radius="xl"
                                         size="sm"
                                         aria-label={
-                                          isPasskeyVisible
-                                            ? "Hide passkey"
-                                            : "Show passkey"
+                                          account.isLocked
+                                            ? "Account is locked"
+                                            : "Account is unlocked"
                                         }
-                                        onClick={() =>
-                                          togglePasskeyVisibility(account)
-                                        }
+                                        onClick={() => openLockModal(account)}
                                       >
-                                        {isPasskeyVisible ? (
-                                          <IconEyeOff size={14} />
+                                        {account.isLocked ? (
+                                          <IconLock size={14} color="red" />
                                         ) : (
-                                          <IconEye size={14} />
+                                          <Tooltip label="Lock with passkey">
+                                            <IconLockOpen size={14} />
+                                          </Tooltip>
                                         )}
                                       </ActionIcon>
+
+                                      {account.isLocked && (
+                                        <>
+                                          <Badge
+                                            size="sm"
+                                            variant="light"
+                                            color="red"
+                                            radius="sm"
+                                            onClick={() =>
+                                              openLockModal(account)
+                                            }
+                                            style={{
+                                              cursor: "pointer",
+                                              fontFamily: "monospace",
+                                            }}
+                                          >
+                                            {isPasskeyVisible
+                                              ? plainPasskey || "—"
+                                              : "••••••"}
+                                          </Badge>
+
+                                          <ActionIcon
+                                            variant="subtle"
+                                            color="gray"
+                                            radius="xl"
+                                            size="sm"
+                                            aria-label={
+                                              isPasskeyVisible
+                                                ? "Hide passkey"
+                                                : "Show passkey"
+                                            }
+                                            onClick={() =>
+                                              togglePasskeyVisibility(account)
+                                            }
+                                          >
+                                            {isPasskeyVisible ? (
+                                              <IconEyeOff size={14} />
+                                            ) : (
+                                              <IconEye size={14} />
+                                            )}
+                                          </ActionIcon>
+                                        </>
+                                      )}
                                     </>
                                   )}
                                 </Group>
@@ -917,60 +933,62 @@ export default function Accounts() {
                               </div>
                             </Group>
 
-                            <Group gap="lg" className={classes.cardActions}>
-                              <Text
-                                size="sm"
-                                c="dimmed"
-                                fw={500}
-                                style={{
-                                  cursor: "pointer",
-                                  whiteSpace: "nowrap",
-                                }}
-                                onClick={() => {
-                                  loadPermissions(account.user_id);
-                                  onOpenAccessAndPermissions(account.user_id);
-                                }}
-                              >
-                                Manage Access & Permissions
-                              </Text>
+                            {isHubAccountLoggedIn && (
+                              <Group gap="lg" className={classes.cardActions}>
+                                <Text
+                                  size="sm"
+                                  c="dimmed"
+                                  fw={500}
+                                  style={{
+                                    cursor: "pointer",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                  onClick={() => {
+                                    loadPermissions(account.user_id);
+                                    onOpenAccessAndPermissions(account.user_id);
+                                  }}
+                                >
+                                  Manage Access & Permissions
+                                </Text>
 
-                              <Menu
-                                position="bottom-end"
-                                withinPortal
-                                shadow="md"
-                                radius="md"
-                              >
-                                <Menu.Target>
-                                  <ActionIcon
-                                    variant="subtle"
-                                    color="gray"
-                                    radius="xl"
-                                    aria-label="Account options"
-                                  >
-                                    <IconDotsVertical size={16} />
-                                  </ActionIcon>
-                                </Menu.Target>
+                                <Menu
+                                  position="bottom-end"
+                                  withinPortal
+                                  shadow="md"
+                                  radius="md"
+                                >
+                                  <Menu.Target>
+                                    <ActionIcon
+                                      variant="subtle"
+                                      color="gray"
+                                      radius="xl"
+                                      aria-label="Account options"
+                                    >
+                                      <IconDotsVertical size={16} />
+                                    </ActionIcon>
+                                  </Menu.Target>
 
-                                <Menu.Dropdown>
-                                  <Menu.Item
-                                    leftSection={<IconKey size={14} />}
-                                    onClick={() => setPasswordTarget(account)}
-                                  >
-                                    Change Password
-                                  </Menu.Item>
+                                  <Menu.Dropdown>
+                                    <Menu.Item
+                                      leftSection={<IconKey size={14} />}
+                                      onClick={() => setPasswordTarget(account)}
+                                    >
+                                      Change Password
+                                    </Menu.Item>
 
-                                  <Menu.Divider />
+                                    <Menu.Divider />
 
-                                  <Menu.Item
-                                    color="red"
-                                    leftSection={<IconTrash size={14} />}
-                                    onClick={() => setDeleteTarget(account)}
-                                  >
-                                    Remove Account
-                                  </Menu.Item>
-                                </Menu.Dropdown>
-                              </Menu>
-                            </Group>
+                                    <Menu.Item
+                                      color="red"
+                                      leftSection={<IconTrash size={14} />}
+                                      onClick={() => setDeleteTarget(account)}
+                                    >
+                                      Remove Account
+                                    </Menu.Item>
+                                  </Menu.Dropdown>
+                                </Menu>
+                              </Group>
+                            )}
                           </Group>
                         </Card>
                       );
