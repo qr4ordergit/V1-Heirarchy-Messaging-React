@@ -20,6 +20,9 @@ const Accounts = lazy(() => import("../pages/accounts/Accounts"));
 const AuthCallback = lazy(() => import("../pages/authCallback/AuthCallback"));
 const MainLayout = lazy(() => import("../layouts/mainLayout/MainLayout"));
 const ChatsLayout = lazy(() => import("../layouts/chatsLayout/ChatsLayout"));
+const InviteRedirectHandler = lazy(
+  () => import("../component/inviteRedirectHandler/InviteRedirectHandler"),
+);
 
 function useCaptureTokensAnywhere() {
   const setTokens = useAuthStore((state) => state.setTokens);
@@ -84,7 +87,7 @@ export default function AppRouter() {
               />
             </Route>
           </Route>
-
+          <Route path={ROUTES.INVITE} element={<InviteRedirectHandler />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

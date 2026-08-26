@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ChangeEvent } from "react";
 import { Button, Grid, Modal, Stack, TextInput } from "@mantine/core";
-import type { Contact, ContactFormValues } from "./Contact";
+import type { Contact, ContactFormValues } from "../../pages/contact/Contact";
 import { notifications } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
 import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";

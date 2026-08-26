@@ -14,7 +14,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import {
-  IconCheck,
+  IconDoorExit,
   IconEdit,
   IconPlus,
   IconSearch,
@@ -24,16 +24,23 @@ import {
   IconUsersGroup,
   IconX,
 } from "@tabler/icons-react";
-import ContactModal from "./ContactModal";
-import CreateGroupModal from "./CreateGroupModal";
+import ContactModal from "../../component/modal/ContactModal";
+import CreateGroupModal from "../../component/modal/CreateGroupModal";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/auth/auth.store";
-import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
-import { notifications } from "@mantine/notifications";
-import { encryptPasskey } from "../../utils/passkeyCipher";
-import { api } from "../../api/axios";
-import { handleApiError } from "../../utils/errorHandler";
 import { useConversationTypeStore } from "../../store/conversation/conversation.type.store";
+import {
+  getContactsApi,
+  getGroupsApi,
+  getContactDetailsApi,
+  saveContactApi,
+  deleteContactApi,
+  deleteGroupApi,
+  leaveGroupApi,
+  startConversationApi,
+  createInviteLinkApi,
+  saveGroupPayloadApi,
+} from "../../api/contactApi";
 
 export interface Contact {
   id: string;
@@ -55,6 +62,7 @@ export interface GroupItem {
   created_by: string;
   member_count: number;
   only_admins_can_message: boolean;
+  invites?: string[];
   soft_deleted?: boolean;
 }
 
@@ -66,98 +74,54 @@ export type ContactFormValues = Omit<Contact, "id" | "color"> & {
 const Contact = () => {
   const setType = useConversationTypeStore((state) => state.setType);
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
   const [groups, setGroups] = useState<GroupItem[]>([]);
-  const [groupsLoading, setGroupsLoading] = useState<boolean>(false);
+  const [groupsLoading, setGroupsLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<GroupItem | null>(null);
-  const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
 
+  const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
+  const [leavingGroupId, setLeavingGroupId] = useState<string | null>(null);
   const [fetchingDetailsId, setFetchingDetailsId] = useState<string | null>(
     null,
   );
-  const [startingChatId, setStartingChatId] = useState<string | number | null>(
-    null,
-  );
+  const [startingChatId, setStartingChatId] = useState<string | null>(null);
   const [deletingContactId, setDeletingContactId] = useState<string | null>(
     null,
   );
+  const [sharingGroupId, setSharingGroupId] = useState<string | null>(null);
+  const [creatingGroupLoading, setCreatingGroupLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<string | null>("contacts");
-  const [search, setSearch] = useState<string>("");
-  const [opened, setOpened] = useState<boolean>(false);
+  const [search, setSearch] = useState("");
+  const [opened, setOpened] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [isCreatingGroup, setIsCreatingGroup] = useState<boolean>(false);
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [selectedGroupContacts, setSelectedGroupContacts] = useState<Contact[]>(
     [],
   );
-  const [groupModalOpened, setGroupModalOpened] = useState<boolean>(false);
-  const [creatingGroupLoading, setCreatingGroupLoading] =
-    useState<boolean>(false);
-  const [sharingGroupId, setSharingGroupId] = useState<string | null>(null);
+  const [groupModalOpened, setGroupModalOpened] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
   const isDetailActive = location.pathname.split("/").length > 3;
 
-  const userDetails = useAuthStore.getState().userDetails;
+  const userDetails = useAuthStore((state) => state.userDetails);
   const target_user = useAuthStore((state) => state.target_user);
+  const currentUsername = target_user || userDetails?.username || "";
 
   const fetchContacts = async () => {
     setLoading(true);
-    try {
-      const response = await api.get(withTargetUser(API_ENDPOINTS.CONTACTS));
-
-      if (response.status === 200) {
-        const data = await response.data;
-        const formattedContacts = (data.contacts || data || []).map(
-          (item: any, index: number) => ({
-            id: item._id || index,
-            username: item.contact_user_id || item.username || "",
-            name: item.display_name || item.name || "Unknown",
-            phone: item.phone || "",
-            email: item.email || "",
-            color: item.color || "indigo",
-          }),
-        );
-        setContacts(formattedContacts);
-      } else {
-        notifications.show({
-          title: "",
-          message: "Failed to fetch contacts.",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-      }
-    } catch (error: any) {
-      handleApiError(error);
-    } finally {
-      setLoading(false);
-    }
+    const data = await getContactsApi();
+    if (data) setContacts(data);
+    setLoading(false);
   };
 
   const fetchGroups = async () => {
     setGroupsLoading(true);
-    try {
-      const endpoint = withTargetUser(API_ENDPOINTS.CREATE_GROUP);
-      const response = await api.get(endpoint);
-
-      if (response.status === 200) {
-        const result = await response.data;
-        setGroups(result.data || []);
-      } else {
-        notifications.show({
-          title: "",
-          message: "Failed to fetch groups.",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-      }
-    } catch (error: any) {
-      handleApiError(error);
-    } finally {
-      setGroupsLoading(false);
-    }
+    const data = await getGroupsApi();
+    if (data) setGroups(data);
+    setGroupsLoading(false);
   };
 
   useEffect(() => {
@@ -166,215 +130,66 @@ const Contact = () => {
 
   const handleTabChange = (value: string | null) => {
     setActiveTab(value);
-    if (value === "groups") {
-      fetchGroups();
-    } else {
-      fetchContacts();
-    }
+    if (value === "groups") fetchGroups();
+    else fetchContacts();
   };
 
   const handleToggleSelectContact = (contact: Contact) => {
-    setSelectedGroupContacts((prev) => {
-      const exists = prev.some((c) => c.id === contact.id);
-      if (exists) {
-        return prev.filter((c) => c.id !== contact.id);
-      } else {
-        return [...prev, contact];
-      }
-    });
+    setSelectedGroupContacts((prev) =>
+      prev.some((c) => c.id === contact.id)
+        ? prev.filter((c) => c.id !== contact.id)
+        : [...prev, contact],
+    );
   };
 
-  const handleRemoveGroupContact = (contactId: string) => {
-    setSelectedGroupContacts((prev) => prev.filter((c) => c.id !== contactId));
-  };
-
-  const handleShareGroup = async (group: any) => {
+  const handleShareGroup = async (group: GroupItem) => {
     setSharingGroupId(group._id);
+    let inviteUrl = "";
 
-    try {
-      const payload = {
-        resource_id: group._id,
-        resource_type: "group",
-        created_by: group.created_by,
-        expiry_hours: 24,
-        max_uses: 10,
-      };
-
-      const response = await api.post(
-        withTargetUser(API_ENDPOINTS.CREATE_INVITE_LINK),
-        payload,
-      );
-
-      const data = response.data;
-
-      if (response.status === 200 || response.status === 201 || data.success) {
-        if (data.invite_url || data.invite_code || data.url) {
-          const inviteLink = data.invite_url || data.url || data.invite_code;
-          navigator.clipboard.writeText(inviteLink);
-        }
-
-        notifications.show({
-          title: "",
-          message:
-            data.message || "Invite link created and copied to clipboard!",
-          color: "green",
-          icon: <IconCheck size={18} />,
-        });
-      } else {
-        notifications.show({
-          title: "",
-          message: data.message || "Failed to create invite.",
-          color: "red",
-        });
-      }
-    } catch (error: any) {
-      handleApiError(error);
-    } finally {
-      setSharingGroupId(null);
+    if (group.invites && group.invites.length > 0) {
+      inviteUrl = `${window.location.origin}/invites/${group.invites[0]}`;
+    } else {
+      const generated = await createInviteLinkApi(group._id, group.created_by);
+      if (generated) inviteUrl = generated;
     }
+
+    if (inviteUrl) {
+      await navigator.clipboard.writeText(inviteUrl);
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `Join ${group.group_name}`,
+            text: `Join our group "${group.group_name}" on Chat Hub:`,
+            url: inviteUrl,
+          });
+        } catch {}
+      }
+    }
+    setSharingGroupId(null);
   };
 
-  const handleCreateGroupSubmit = () => {
-    if (selectedGroupContacts.length === 0) {
-      notifications.show({
-        title: "",
-        message: "Please select at least one contact to create a group.",
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+  const handleLeaveGroup = async (group: GroupItem) => {
+    if (
+      !window.confirm(`Are you sure you want to leave "${group.group_name}"?`)
+    )
       return;
-    }
-
-    setSelectedGroup(null);
-    setGroupModalOpened(true);
-  };
-
-  const handleSaveGroupPayload = async (
-    payload: {
-      group_name?: string;
-      description?: string;
-      admin?: string[];
-      members?: string[];
-      group_image?: string;
-      group_image_file?: File | null;
-      only_admins_can_message?: boolean;
-    },
-    isEdit: boolean,
-  ) => {
-    setCreatingGroupLoading(true);
-
-    const { group_image_file, ...apiPayload } = payload;
-
-    try {
-      const endpoint = withTargetUser(API_ENDPOINTS.CREATE_GROUP);
-
-      const method = isEdit ? "PUT" : "POST";
-
-      const finalBody =
-        isEdit && selectedGroup
-          ? { ...apiPayload, group_id: selectedGroup._id }
-          : apiPayload;
-
-      const response = await api.request({
-        url: endpoint,
-        method,
-        data: finalBody,
-      });
-
-      const data = response.data;
-
-      if (response.status === 201 || response.status === 200 || data.success) {
-        const presignedUrl = data.upload_url || data.group?.upload_url;
-
-        if (presignedUrl && group_image_file) {
-          try {
-            await fetch(presignedUrl, {
-              method: "PUT",
-              headers: {
-                "Content-Type": group_image_file.type || "image/png",
-              },
-              body: group_image_file,
-            });
-          } catch (error: any) {
-            handleApiError(error);
-          }
-        }
-
-        notifications.show({
-          title: "",
-          message:
-            data.message ||
-            `Group ${isEdit ? "updated" : "created"} successfully!`,
-          color: "green",
-          icon: <IconCheck size={18} />,
-        });
-
-        setGroupModalOpened(false);
-        setIsCreatingGroup(false);
-        setSelectedGroupContacts([]);
-        setSelectedGroup(null);
-
-        fetchGroups();
-      } else {
-        notifications.show({
-          title: "",
-          message:
-            data.message || `Failed to ${isEdit ? "update" : "create"} group.`,
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-      }
-    } catch (error: any) {
-      handleApiError(error);
-    } finally {
-      setCreatingGroupLoading(false);
-    }
-  };
-
-  const handleEditGroup = (group: GroupItem) => {
-    setSelectedGroup(group);
-    setGroupModalOpened(true);
+    setLeavingGroupId(group._id);
+    const ok = await leaveGroupApi(group._id);
+    if (ok) await fetchGroups();
+    setLeavingGroupId(null);
   };
 
   const handleDeleteGroup = async (group: GroupItem) => {
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete group "${group.group_name}"?`,
-    );
-    if (!confirmDelete) return;
-
+    if (
+      !window.confirm(
+        `Are you sure you want to delete group "${group.group_name}"?`,
+      )
+    )
+      return;
     setDeletingGroupId(group._id);
-
-    try {
-      const deleteUrl = `${API_ENDPOINTS.CREATE_GROUP}?group_id=${encodeURIComponent(group._id)}`;
-      const response = await api.request({
-        url: withTargetUser(deleteUrl),
-
-        method: "DELETE",
-      });
-
-      const data = await response.data;
-
-      if (response.status === 200 || response.status === 201 || data.success) {
-        notifications.show({
-          title: "",
-          message: data.message || "Group deleted successfully",
-          color: "green",
-          icon: <IconCheck size={18} />,
-        });
-        await fetchGroups();
-      } else {
-        notifications.show({
-          title: "",
-          message: data.message || "Failed to delete group",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-      }
-    } catch (error: any) {
-      handleApiError(error);
-    } finally {
-      setDeletingGroupId(null);
-    }
+    const ok = await deleteGroupApi(group._id);
+    if (ok) await fetchGroups();
+    setDeletingGroupId(null);
   };
 
   const handleContactClick = async (contact: Contact) => {
@@ -382,291 +197,110 @@ const Contact = () => {
       handleToggleSelectContact(contact);
       return;
     }
-
     const targetUserId = contact.id.split("#")[1];
-
-    if (!targetUserId) {
-      notifications.show({
-        title: "",
-        message: "Invalid user ID for this contact.",
-        color: "red",
-        icon: <IconX size={18} />,
-      });
-      return;
-    }
+    if (!targetUserId) return;
 
     setStartingChatId(contact.id);
+    const ok = await startConversationApi(targetUserId);
+    setStartingChatId(null);
 
-    try {
-      const endpoint = withTargetUser(API_ENDPOINTS.START_CONVERSATION);
-
-      const response = await api.request({
-        url: endpoint,
-        method: "POST",
-        data: JSON.stringify({
-          user_id: targetUserId,
-        }),
-      });
-
-      const data = await response.data;
-
-      if (response.status === 201 || data.success) {
-        setType("dm");
-        navigate(`/chats/${encodeURIComponent(contact.id)}`);
-      } else {
-        notifications.show({
-          title: "",
-          message: data.message || "Failed to start conversation.",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-      }
-    } catch (error: any) {
-      handleApiError(error);
-    } finally {
-      setStartingChatId(null);
+    if (ok) {
+      setType("dm");
+      navigate(`/chats/${encodeURIComponent(contact.id)}`);
     }
   };
 
-  const handleGroupClick = (group: GroupItem) => {
-    setType("groups");
-    navigate(`/chats/${encodeURIComponent(group._id)}`);
-  };
-
-  const handleDelete = async (contact: Contact) => {
+  const handleDeleteContact = async (contact: Contact) => {
     const contactUserId = contact.username || contact.id.split("#")[1];
-
-    if (!contactUserId) {
-      notifications.show({
-        title: "",
-        message: "User details or contact user ID missing.",
-        color: "red",
-        icon: <IconX size={18} />,
-      });
+    if (
+      !contactUserId ||
+      !window.confirm(`Are you sure you want to delete ${contact.name}?`)
+    )
       return;
-    }
-
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete ${contact.name}?`,
-    );
-    if (!confirmDelete) return;
 
     setDeletingContactId(contact.id);
+    const ok = await deleteContactApi(contactUserId, currentUsername);
+    if (ok) await fetchContacts();
+    setDeletingContactId(null);
+  };
 
-    try {
-      const payload = {
-        owner_user_id: target_user || userDetails?.username,
-        contact_user_id: contactUserId,
-      };
+  const handleEditContact = async (contact: Contact) => {
+    const contactUserId = contact.username || contact.id.split("#")[1];
+    if (!contactUserId) return;
 
-      const response = await api.request({
-        url: withTargetUser(API_ENDPOINTS.CONTACTS),
-        method: "DELETE",
-        data: JSON.stringify(payload),
+    setFetchingDetailsId(contact.id);
+    const fetched = await getContactDetailsApi(contactUserId);
+    setFetchingDetailsId(null);
+
+    if (fetched) {
+      setSelectedContact({
+        id: fetched._id || contact.id,
+        username: fetched.contact_user_id || "",
+        name: fetched.display_name || "",
+        phone: fetched.phone || "",
+        email: fetched.email || "",
+        color: contact.color || "indigo",
       });
-      const data = await response.data;
+      setOpened(true);
+    }
+  };
 
-      if (data.success || response.status === 200 || response.status === 201) {
-        notifications.show({
-          title: "",
-          message: data.message,
-          color: "green",
-          icon: <IconCheck size={18} />,
-        });
-        await fetchContacts();
-      } else {
-        notifications.show({
-          title: "",
-          message: data.message,
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-      }
-    } catch (error: any) {
-      handleApiError(error);
-    } finally {
-      setDeletingContactId(null);
+  const handleSaveContact = async (
+    values: ContactFormValues,
+    passNeeded: boolean,
+  ) => {
+    const ok = await saveContactApi(
+      values,
+      passNeeded,
+      Boolean(selectedContact),
+      currentUsername,
+    );
+    if (ok) {
+      await fetchContacts();
+      setOpened(false);
+    }
+  };
+
+  const handleSaveGroupPayload = async (
+    payload: Record<string, any>,
+    isEdit: boolean,
+  ) => {
+    setCreatingGroupLoading(true);
+    const ok = await saveGroupPayloadApi(payload, isEdit, selectedGroup?._id);
+    setCreatingGroupLoading(false);
+
+    if (ok) {
+      setGroupModalOpened(false);
+      setIsCreatingGroup(false);
+      setSelectedGroupContacts([]);
+      setSelectedGroup(null);
+      fetchGroups();
     }
   };
 
   const filteredContacts = contacts.filter((item) => {
-    const value = search.toLowerCase();
+    const val = search.toLowerCase();
     return (
-      item.name.toLowerCase().includes(value) ||
-      item.username.toLowerCase().includes(value) ||
-      item.phone.includes(value) ||
-      item.email.toLowerCase().includes(value)
+      item.name.toLowerCase().includes(val) ||
+      item.username.toLowerCase().includes(val) ||
+      item.phone.includes(val) ||
+      item.email.toLowerCase().includes(val)
     );
   });
 
-  const filteredGroups = groups.filter((group) => {
-    const value = search.toLowerCase();
+  const filteredGroups = groups.filter((g) => {
+    const val = search.toLowerCase();
     return (
-      group.group_name.toLowerCase().includes(value) ||
-      (group.group_description &&
-        group.group_description.toLowerCase().includes(value))
+      g.group_name.toLowerCase().includes(val) ||
+      (g.group_description && g.group_description.toLowerCase().includes(val))
     );
   });
-
-  const handleAdd = () => {
-    setSelectedContact(null);
-    setOpened(true);
-  };
-
-  const handleEdit = async (contact: Contact) => {
-    const contactUserId = contact.username || contact.id.split("#")[1];
-
-    if (!contactUserId) {
-      notifications.show({
-        title: "",
-        message: "Unable to find valid contact ID.",
-        color: "red",
-        icon: <IconX size={18} />,
-      });
-      return;
-    }
-
-    setFetchingDetailsId(contact.id);
-
-    try {
-      const getUrl = `${API_ENDPOINTS.CONTACTS}/${contactUserId}`;
-      const response = await api.request({
-        url: withTargetUser(getUrl),
-        method: "GET",
-      });
-
-      const data = await response.data;
-
-      if ((response.status === 200 || data.success) && data.contact) {
-        const fetched = data.contact;
-
-        const updatedContact: Contact = {
-          id: fetched._id || contact.id,
-          username: fetched.contact_user_id || "",
-          name: fetched.display_name || "",
-          phone: fetched.phone || "",
-          email: fetched.email || "",
-          color: contact.color || "indigo",
-        };
-
-        setSelectedContact(updatedContact);
-        setOpened(true);
-      } else {
-        notifications.show({
-          title: "",
-          message: data.message || "Failed to fetch contact details.",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-      }
-    } catch (error: any) {
-      handleApiError(error);
-    } finally {
-      setFetchingDetailsId(null);
-    }
-  };
-
-  const handleSave = async (values: ContactFormValues, passNeeded: boolean) => {
-    const contactUserId =
-      values.username.split("#")[1] || values.username.trim();
-
-    if (!selectedContact) {
-      try {
-        const contactData = {
-          owner_user_id: target_user || userDetails?.username,
-          contact_user_id: contactUserId,
-          display_name: values.name.trim(),
-          phone: values.phone,
-          email: values.email,
-        };
-
-        const payload: Record<string, any> = {
-          contact_data: contactData,
-        };
-
-        if (passNeeded && values.passKey?.trim()) {
-          payload.pass = await encryptPasskey(
-            values.passKey.trim(),
-            contactUserId,
-          );
-        }
-
-        const response = await api.request({
-          url: withTargetUser(API_ENDPOINTS.CONTACTS),
-          method: "POST",
-          data: JSON.stringify(payload),
-        });
-
-        const data = await response.data;
-
-        if (data.success || response.status === 201) {
-          notifications.show({
-            title: "",
-            message: data.message || "Contact added successfully",
-            color: "green",
-            icon: <IconCheck size={18} />,
-          });
-          await fetchContacts();
-          setOpened(false);
-        } else {
-          notifications.show({
-            title: "",
-            message: data.message || "Failed to add contact.",
-            color: "red",
-            icon: <IconX size={18} />,
-          });
-        }
-      } catch (error: any) {
-        handleApiError(error);
-      }
-    } else {
-      try {
-        const payload = {
-          owner_user_id: target_user || userDetails?.username,
-          contact_user_id: contactUserId,
-          display_name: values.name.trim(),
-          phone: values.phone,
-          email: values.email,
-        };
-
-        const response = await api.request({
-          url: withTargetUser(API_ENDPOINTS.CONTACTS),
-          method: "PUT",
-          data: JSON.stringify(payload),
-        });
-
-        const data = await response.data;
-
-        if (data.success || response.status === 200) {
-          notifications.show({
-            title: "",
-            message: data.message || "Contact updated successfully",
-            color: "green",
-            icon: <IconCheck size={18} />,
-          });
-          await fetchContacts();
-          setOpened(false);
-        } else {
-          notifications.show({
-            title: "",
-            message: data.message || "Failed to update contact.",
-            color: "red",
-            icon: <IconX size={18} />,
-          });
-        }
-      } catch (error: any) {
-        handleApiError(error);
-      }
-    }
-  };
 
   return (
     <div className="w-full h-full px-1">
       <div className="flex flex-col md:flex-row h-full min-h-[calc(100vh-100px)] overflow-hidden bg-white">
         <div
-          className={`w-full md:w-7/12 bg-white ${
-            isDetailActive ? "hidden md:block" : "block"
-          }`}
+          className={`w-full md:w-7/12 bg-white ${isDetailActive ? "hidden md:block" : "block"}`}
         >
           <Stack p={{ base: "xs", sm: "md" }}>
             <Group justify="space-between" align="center">
@@ -678,12 +312,8 @@ const Contact = () => {
                 radius="md"
                 className="w-full"
                 styles={{
-                  tab: {
-                    paddingInline: 8,
-                  },
-                  tabSection: {
-                    marginInline: 4,
-                  },
+                  tab: { paddingInline: 8 },
+                  tabSection: { marginInline: 4 },
                 }}
               >
                 <Tabs.List grow>
@@ -700,13 +330,8 @@ const Contact = () => {
                         color="indigo"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleAdd();
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.stopPropagation();
-                            handleAdd();
-                          }
+                          setSelectedContact(null);
+                          setOpened(true);
                         }}
                       >
                         <IconPlus size={14} />
@@ -737,13 +362,6 @@ const Contact = () => {
                           setActiveTab("contacts");
                           setIsCreatingGroup(true);
                         }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.stopPropagation();
-                            setActiveTab("contacts");
-                            setIsCreatingGroup(true);
-                          }
-                        }}
                       >
                         <IconPlus size={14} />
                       </ActionIcon>
@@ -772,7 +390,11 @@ const Contact = () => {
                         <Button
                           size="xs"
                           color="indigo"
-                          onClick={handleCreateGroupSubmit}
+                          onClick={() => {
+                            if (selectedGroupContacts.length === 0) return;
+                            setSelectedGroup(null);
+                            setGroupModalOpened(true);
+                          }}
                         >
                           Create Group ({selectedGroupContacts.length})
                         </Button>
@@ -797,7 +419,11 @@ const Contact = () => {
                         <Pill
                           key={c.id}
                           withRemoveButton
-                          onRemove={() => handleRemoveGroupContact(c.id)}
+                          onRemove={() =>
+                            setSelectedGroupContacts((prev) =>
+                              prev.filter((item) => item.id !== c.id),
+                            )
+                          }
                           color="indigo"
                         >
                           {c.name}
@@ -833,99 +459,93 @@ const Contact = () => {
                       Loading contacts...
                     </Text>
                   ) : filteredContacts.length > 0 ? (
-                    filteredContacts.map((contact) => {
-                      const isSelectedForGroup = selectedGroupContacts.some(
-                        (c) => c.id === contact.id,
-                      );
-
-                      return (
-                        <Group
-                          key={contact.id}
-                          justify="space-between"
-                          px="md"
-                          py="sm"
-                          style={{
-                            borderBottom: "1px solid #ececec",
-                            transition: "0.2s",
-                            cursor:
-                              startingChatId === contact.id ||
-                              deletingContactId === contact.id ||
-                              fetchingDetailsId === contact.id
-                                ? "wait"
-                                : "pointer",
-                            opacity:
-                              startingChatId === contact.id ||
-                              deletingContactId === contact.id ||
-                              fetchingDetailsId === contact.id
-                                ? 0.6
-                                : 1,
-                          }}
-                          className="contact-row hover:bg-gray-50"
-                          onClick={() => handleContactClick(contact)}
-                        >
-                          <Group gap="md">
-                            {isCreatingGroup && (
-                              <Checkbox
-                                checked={isSelectedForGroup}
-                                onChange={() =>
-                                  handleToggleSelectContact(contact)
-                                }
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            )}
-
-                            <Avatar color={contact.color} radius="xl" size={42}>
-                              {contact.name
-                                .split(" ")
-                                .map((x) => x[0])
-                                .join("")}
-                            </Avatar>
-
-                            <div>
-                              <Text fw={700} size="sm">
-                                {contact.name}
-                              </Text>
-
-                              <Text size="xs" c="dimmed">
-                                {contact.username ? "@" : ""}
-                                {contact.username}
-                              </Text>
-                            </div>
-                          </Group>
-
-                          {!isCreatingGroup && (
-                            <Group gap="xs">
-                              <ActionIcon
-                                variant="subtle"
-                                size="md"
-                                radius="md"
-                                loading={fetchingDetailsId === contact.id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEdit(contact);
-                                }}
-                              >
-                                <IconEdit size={18} />
-                              </ActionIcon>
-
-                              <ActionIcon
-                                variant="subtle"
-                                color="red"
-                                size="md"
-                                radius="md"
-                                loading={deletingContactId === contact.id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(contact);
-                                }}
-                              >
-                                <IconTrash size={18} />
-                              </ActionIcon>
-                            </Group>
+                    filteredContacts.map((contact) => (
+                      <Group
+                        key={contact.id}
+                        justify="space-between"
+                        px="md"
+                        py="sm"
+                        style={{
+                          borderBottom: "1px solid #ececec",
+                          cursor:
+                            startingChatId === contact.id ||
+                            deletingContactId === contact.id ||
+                            fetchingDetailsId === contact.id
+                              ? "wait"
+                              : "pointer",
+                          opacity:
+                            startingChatId === contact.id ||
+                            deletingContactId === contact.id ||
+                            fetchingDetailsId === contact.id
+                              ? 0.6
+                              : 1,
+                        }}
+                        className="contact-row hover:bg-gray-50"
+                        onClick={() => handleContactClick(contact)}
+                      >
+                        <Group gap="md">
+                          {isCreatingGroup && (
+                            <Checkbox
+                              checked={selectedGroupContacts.some(
+                                (c) => c.id === contact.id,
+                              )}
+                              onChange={() =>
+                                handleToggleSelectContact(contact)
+                              }
+                              onClick={(e) => e.stopPropagation()}
+                            />
                           )}
+
+                          <Avatar color={contact.color} radius="xl" size={42}>
+                            {contact.name
+                              .split(" ")
+                              .map((x) => x[0])
+                              .join("")}
+                          </Avatar>
+
+                          <div>
+                            <Text fw={700} size="sm">
+                              {contact.name}
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              {contact.username ? "@" : ""}
+                              {contact.username}
+                            </Text>
+                          </div>
                         </Group>
-                      );
-                    })
+
+                        {!isCreatingGroup && (
+                          <Group gap="xs">
+                            <ActionIcon
+                              variant="subtle"
+                              size="md"
+                              radius="md"
+                              loading={fetchingDetailsId === contact.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditContact(contact);
+                              }}
+                            >
+                              <IconEdit size={18} />
+                            </ActionIcon>
+
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              size="md"
+                              radius="md"
+                              loading={deletingContactId === contact.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteContact(contact);
+                              }}
+                            >
+                              <IconTrash size={18} />
+                            </ActionIcon>
+                          </Group>
+                        )}
+                      </Group>
+                    ))
                   ) : (
                     <Text ta="center" py={60} c="dimmed">
                       No contacts found
@@ -963,92 +583,128 @@ const Contact = () => {
                       Loading groups...
                     </Text>
                   ) : filteredGroups.length > 0 ? (
-                    filteredGroups.map((group) => (
-                      <Group
-                        key={group._id}
-                        justify="space-between"
-                        px="md"
-                        py="sm"
-                        style={{
-                          borderBottom: "1px solid #ececec",
-                          transition: "0.2s",
-                          cursor:
-                            deletingGroupId === group._id ? "wait" : "pointer",
-                          opacity: deletingGroupId === group._id ? 0.6 : 1,
-                        }}
-                        className="group-row hover:bg-gray-50"
-                        onClick={() => handleGroupClick(group)}
-                      >
-                        <Group gap="md">
-                          <Avatar
-                            src={group.profile_url || null}
-                            color="blue"
-                            radius="xl"
-                            size={42}
-                          >
-                            {group.group_name
-                              .split(" ")
-                              .map((x) => x[0])
-                              .join("")
-                              .slice(0, 2)
-                              .toUpperCase()}
-                          </Avatar>
+                    filteredGroups.map((group) => {
+                      const isCreator = group.created_by === currentUsername;
+                      const isAdmin =
+                        Array.isArray(group.admins) &&
+                        group.admins.includes(currentUsername);
 
-                          <div>
-                            <Text fw={700} size="sm">
-                              {group.group_name}
-                            </Text>
+                      return (
+                        <Group
+                          key={group._id}
+                          justify="space-between"
+                          px="md"
+                          py="sm"
+                          style={{
+                            borderBottom: "1px solid #ececec",
+                            cursor:
+                              deletingGroupId === group._id ||
+                              leavingGroupId === group._id
+                                ? "wait"
+                                : "pointer",
+                            opacity:
+                              deletingGroupId === group._id ||
+                              leavingGroupId === group._id
+                                ? 0.6
+                                : 1,
+                          }}
+                          className="group-row hover:bg-gray-50"
+                          onClick={() => {
+                            setType("groups");
+                            navigate(`/chats/${encodeURIComponent(group._id)}`);
+                          }}
+                        >
+                          <Group gap="md">
+                            <Avatar
+                              src={group.profile_url || null}
+                              color="blue"
+                              radius="xl"
+                              size={42}
+                            >
+                              {group.group_name
+                                .split(" ")
+                                .map((x) => x[0])
+                                .join("")
+                                .slice(0, 2)
+                                .toUpperCase()}
+                            </Avatar>
 
-                            <Text size="xs" c="dimmed">
-                              {group.member_count}{" "}
-                              {group.member_count === 1 ? "member" : "members"}
-                            </Text>
-                          </div>
+                            <div>
+                              <Text fw={700} size="sm">
+                                {group.group_name}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                {group.member_count}{" "}
+                                {group.member_count === 1
+                                  ? "member"
+                                  : "members"}
+                              </Text>
+                            </div>
+                          </Group>
+
+                          <Group gap="xs">
+                            {isAdmin && (
+                              <ActionIcon
+                                variant="subtle"
+                                size="md"
+                                radius="md"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedGroup(group);
+                                  setGroupModalOpened(true);
+                                }}
+                              >
+                                <IconEdit size={18} />
+                              </ActionIcon>
+                            )}
+
+                            {isCreator && (
+                              <ActionIcon
+                                variant="subtle"
+                                color="red"
+                                size="md"
+                                radius="md"
+                                loading={deletingGroupId === group._id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteGroup(group);
+                                }}
+                              >
+                                <IconTrash size={18} />
+                              </ActionIcon>
+                            )}
+
+                            <ActionIcon
+                              variant="subtle"
+                              color="blue"
+                              size="md"
+                              radius="md"
+                              loading={sharingGroupId === group._id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleShareGroup(group);
+                              }}
+                            >
+                              <IconShare size={18} />
+                            </ActionIcon>
+
+                            <ActionIcon
+                              variant="subtle"
+                              color="orange"
+                              size="md"
+                              radius="md"
+                              loading={leavingGroupId === group._id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleLeaveGroup(group);
+                              }}
+                            >
+                              <IconDoorExit size={18} />
+                            </ActionIcon>
+                          </Group>
                         </Group>
-
-                        <Group gap="xs">
-                          <ActionIcon
-                            variant="subtle"
-                            size="md"
-                            radius="md"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditGroup(group);
-                            }}
-                          >
-                            <IconEdit size={18} />
-                          </ActionIcon>
-
-                          <ActionIcon
-                            variant="subtle"
-                            color="red"
-                            size="md"
-                            radius="md"
-                            loading={deletingGroupId === group._id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteGroup(group);
-                            }}
-                          >
-                            <IconTrash size={18} />
-                          </ActionIcon>
-
-                          <ActionIcon
-                            variant="subtle"
-                            color="blue"
-                            size="md"
-                            radius="md"
-                            loading={sharingGroupId === group._id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleShareGroup(group);
-                            }}
-                          >
-                            <IconShare size={18} />
-                          </ActionIcon>
-                        </Group>
-                      </Group>
-                    ))
+                      );
+                    })
                   ) : (
                     <Text ta="center" py={60} c="dimmed">
                       No groups found
@@ -1061,9 +717,7 @@ const Contact = () => {
         </div>
 
         <div
-          className={`w-full md:w-5/12 flex flex-col justify-center items-center ${
-            isDetailActive ? "block" : "hidden md:flex"
-          }`}
+          className={`w-full md:w-5/12 flex flex-col justify-center items-center ${isDetailActive ? "block" : "hidden md:flex"}`}
         >
           <Outlet />
         </div>
@@ -1073,7 +727,7 @@ const Contact = () => {
         opened={opened}
         onClose={() => setOpened(false)}
         contact={selectedContact}
-        onSave={handleSave}
+        onSave={handleSaveContact}
       />
 
       <CreateGroupModal
@@ -1085,6 +739,7 @@ const Contact = () => {
         selectedContacts={selectedGroup ? contacts : selectedGroupContacts}
         initialGroup={selectedGroup}
         onSaveGroup={handleSaveGroupPayload}
+        onGroupUpdated={fetchGroups}
         loading={creatingGroupLoading}
       />
     </div>

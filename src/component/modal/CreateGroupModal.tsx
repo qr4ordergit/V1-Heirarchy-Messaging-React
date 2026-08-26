@@ -9,17 +9,20 @@ import {
   Modal,
   MultiSelect,
   Pill,
+  Select,
   Stack,
   Text,
   TextInput,
   Textarea,
 } from "@mantine/core";
-import { IconUpload, IconUserPlus, IconX } from "@tabler/icons-react";
-import type { Contact, GroupItem } from "./Contact";
-import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
+import { IconUpload, IconUserPlus, IconUserShield } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { api } from "../../api/axios";
-import { handleApiError } from "../../utils/errorHandler";
+import type { Contact, GroupItem } from "../../pages/contact/Contact";
+import {
+  manageGroupMembers,
+  manageGroupAdmins,
+  transferGroupOwnership,
+} from "../../api/createGroupModalApi";
 
 interface CreateGroupModalProps {
   opened: boolean;
@@ -27,8 +30,12 @@ interface CreateGroupModalProps {
   selectedContacts: Contact[];
   initialGroup?: GroupItem | null;
   onSaveGroup: (payload: Record<string, any>, isEdit: boolean) => Promise<void>;
+  onGroupUpdated?: () => void;
   loading?: boolean;
 }
+
+const getUserId = (c: Contact) =>
+  c.username || (c.id.includes("#") ? c.id.split("#")[1] : c.id);
 
 const CreateGroupModal = ({
   opened,
@@ -36,129 +43,53 @@ const CreateGroupModal = ({
   selectedContacts,
   initialGroup = null,
   onSaveGroup,
+  onGroupUpdated,
   loading = false,
 }: CreateGroupModalProps) => {
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
   const [members, setMembers] = useState<Contact[]>([]);
   const [admins, setAdmins] = useState<string[]>([]);
+  const [owner, setOwner] = useState<string>("");
   const [groupImage, setGroupImage] = useState<File | null>(null);
   const [onlyAdminsCanMessage, setOnlyAdminsCanMessage] = useState(false);
-  const [updatingMembers, setUpdatingMembers] = useState(false);
-  const [updatingAdmins, setUpdatingAdmins] = useState(false);
-
-  const getUserId = (c: Contact) =>
-    c.username || (c.id.includes("#") ? c.id.split("#")[1] : c.id);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
-    if (opened) {
-      if (initialGroup) {
-        setGroupName(initialGroup.group_name || "");
-        setDescription(initialGroup.group_description || "");
-        setOnlyAdminsCanMessage(initialGroup.only_admins_can_message || false);
-        setAdmins(initialGroup.admins || []);
-        setGroupImage(null);
+    if (!opened) return;
 
-        const mappedMembers: Contact[] = (initialGroup.members || []).map(
-          (mId) => {
-            const found = selectedContacts.find((c) => getUserId(c) === mId);
-            return (
-              found || {
-                id: mId,
-                username: mId,
-                name: mId,
-                phone: "",
-                email: "",
-                color: "indigo",
-              }
-            );
-          },
+    if (initialGroup) {
+      setGroupName(initialGroup.group_name || "");
+      setDescription(initialGroup.group_description || "");
+      setOnlyAdminsCanMessage(initialGroup.only_admins_can_message || false);
+      setAdmins(initialGroup.admins || []);
+      setOwner(initialGroup.created_by || "");
+      setGroupImage(null);
+
+      const mappedMembers = (initialGroup.members || []).map((mId) => {
+        const found = selectedContacts.find((c) => getUserId(c) === mId);
+        return (
+          found || {
+            id: mId,
+            username: mId,
+            name: mId,
+            phone: "",
+            email: "",
+            color: "indigo",
+          }
         );
-        setMembers(mappedMembers);
-      } else {
-        setMembers(selectedContacts);
-        setGroupName("");
-        setDescription("");
-        setGroupImage(null);
-        setOnlyAdminsCanMessage(false);
-        setAdmins([]);
-      }
+      });
+      setMembers(mappedMembers);
+    } else {
+      setMembers(selectedContacts);
+      setGroupName("");
+      setDescription("");
+      setGroupImage(null);
+      setOnlyAdminsCanMessage(false);
+      setAdmins([]);
+      setOwner("");
     }
   }, [opened, initialGroup, selectedContacts]);
-
-  const callManageMembersApi = async (
-    targetUserIds: string[],
-    operation: "add-members" | "remove-members",
-  ): Promise<boolean> => {
-    if (!initialGroup) return true;
-
-    try {
-      const payload = {
-        group_id: initialGroup._id,
-        new_members: targetUserIds,
-        operation,
-      };
-
-      const response = await api.post(
-        withTargetUser(API_ENDPOINTS.MANAGE_MEMBERS),
-        payload,
-      );
-
-      const data = response.data;
-
-      if (response.status !== 200 || data.success === false) {
-        notifications.show({
-          title: "",
-          message: data.message || "Something went wrong.",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-        return false;
-      }
-
-      return true;
-    } catch (error: any) {
-      handleApiError(error);
-      return false;
-    }
-  };
-
-  const callManageAdminsApi = async (
-    targetAdminIds: string[],
-    operation: "add-members" | "remove-members",
-  ): Promise<boolean> => {
-    if (!initialGroup) return true;
-
-    try {
-      const payload = {
-        group_id: initialGroup._id,
-        admins: targetAdminIds,
-        operation,
-      };
-
-      const response = await api.post(
-        withTargetUser(API_ENDPOINTS.MANAGE_MEMBERS),
-        payload,
-      );
-
-      const data = response.data;
-
-      if (response.status !== 200 || data.success === false) {
-        notifications.show({
-          title: "",
-          message: data.message || "Something went wrong.",
-          color: "red",
-          icon: <IconX size={18} />,
-        });
-        return false;
-      }
-
-      return true;
-    } catch (error: any) {
-      handleApiError(error);
-      return false;
-    }
-  };
 
   const handleRemoveMember = async (memberId: string) => {
     const memberToRemove = members.find((m) => m.id === memberId);
@@ -167,45 +98,43 @@ const CreateGroupModal = ({
     const removedUserId = getUserId(memberToRemove);
 
     if (initialGroup) {
-      setUpdatingMembers(true);
-      const success = await callManageMembersApi(
+      setActionLoading(true);
+      const ok = await manageGroupMembers(
+        initialGroup._id,
         [removedUserId],
         "remove-members",
       );
-      setUpdatingMembers(false);
-      if (!success) return;
+      setActionLoading(false);
+      if (!ok) return;
+      onGroupUpdated?.();
     }
 
-    const updatedMembers = members.filter((m) => m.id !== memberId);
-    setMembers(updatedMembers);
+    setMembers((prev) => prev.filter((m) => m.id !== memberId));
     setAdmins((prev) => prev.filter((a) => a !== removedUserId));
   };
 
   const handleAddNewMembers = async (selectedUserIds: string[]) => {
-    const newlyAddedContacts: Contact[] = [];
-    const validSelectedUserIds: string[] = [];
+    const newlyAdded = selectedContacts.filter(
+      (c) =>
+        selectedUserIds.includes(getUserId(c)) &&
+        !members.some((m) => getUserId(m) === getUserId(c)),
+    );
 
-    selectedUserIds.forEach((userId) => {
-      const contactObj = selectedContacts.find((c) => getUserId(c) === userId);
-      if (contactObj && !members.some((m) => getUserId(m) === userId)) {
-        newlyAddedContacts.push(contactObj);
-        validSelectedUserIds.push(userId);
-      }
-    });
-
-    if (newlyAddedContacts.length === 0) return;
+    if (newlyAdded.length === 0) return;
 
     if (initialGroup) {
-      setUpdatingMembers(true);
-      const success = await callManageMembersApi(
-        validSelectedUserIds,
+      setActionLoading(true);
+      const ok = await manageGroupMembers(
+        initialGroup._id,
+        newlyAdded.map(getUserId),
         "add-members",
       );
-      setUpdatingMembers(false);
-      if (!success) return;
+      setActionLoading(false);
+      if (!ok) return;
+      onGroupUpdated?.();
     }
 
-    setMembers((prev) => [...prev, ...newlyAddedContacts]);
+    setMembers((prev) => [...prev, ...newlyAdded]);
   };
 
   const handleAdminChange = async (newAdmins: string[]) => {
@@ -214,56 +143,72 @@ const CreateGroupModal = ({
       return;
     }
 
-    const addedAdmins = newAdmins.filter((a) => !admins.includes(a));
-    const removedAdmins = admins.filter((a) => !newAdmins.includes(a));
+    const added = newAdmins.filter((a) => !admins.includes(a));
+    const removed = admins.filter((a) => !newAdmins.includes(a));
+    const operation = added.length > 0 ? "add-members" : "remove-members";
+    const targets = added.length > 0 ? added : removed;
 
-    if (addedAdmins.length > 0) {
-      setUpdatingAdmins(true);
-      const success = await callManageAdminsApi(addedAdmins, "add-members");
-      setUpdatingAdmins(false);
-      if (success) {
-        setAdmins(newAdmins);
-      }
-    } else if (removedAdmins.length > 0) {
-      setUpdatingAdmins(true);
-      const success = await callManageAdminsApi(
-        removedAdmins,
-        "remove-members",
-      );
-      setUpdatingAdmins(false);
-      if (success) {
-        setAdmins(newAdmins);
-      }
+    if (targets.length === 0) return;
+
+    setActionLoading(true);
+    const ok = await manageGroupAdmins(initialGroup._id, targets, operation);
+    setActionLoading(false);
+
+    if (ok) {
+      setAdmins(newAdmins);
+      onGroupUpdated?.();
     }
+  };
+
+  const handleOwnershipTransfer = async (newOwnerId: string) => {
+    if (!initialGroup || !newOwnerId || newOwnerId === owner) return;
+
+    setActionLoading(true);
+    const ok = await transferGroupOwnership(initialGroup._id, newOwnerId);
+    setActionLoading(false);
+
+    if (ok) {
+      setOwner(newOwnerId);
+      onGroupUpdated?.();
+    }
+  };
+
+  const hasFormFieldsChanged = () => {
+    if (!initialGroup) return true;
+    return (
+      groupName.trim() !== (initialGroup.group_name || "").trim() ||
+      description.trim() !== (initialGroup.group_description || "").trim() ||
+      onlyAdminsCanMessage !==
+        (initialGroup.only_admins_can_message || false) ||
+      Boolean(groupImage)
+    );
   };
 
   const handleSubmit = async () => {
     if (initialGroup) {
       const payload: Record<string, any> = {};
 
-      const trimmedGroupName = groupName.trim();
-      const initialGroupName = (initialGroup.group_name || "").trim();
-      if (trimmedGroupName !== initialGroupName) {
-        if (!trimmedGroupName) {
+      if (groupName.trim() !== (initialGroup.group_name || "").trim()) {
+        if (!groupName.trim()) {
           notifications.show({
             title: "",
             message: "Group name cannot be empty.",
             color: "red",
-            icon: <IconX size={18} />,
           });
           return;
         }
-        payload.group_name = trimmedGroupName;
+        payload.group_name = groupName.trim();
       }
 
-      const trimmedDescription = description.trim();
-      const initialDescription = (initialGroup.group_description || "").trim();
-      if (trimmedDescription !== initialDescription) {
-        payload.description = trimmedDescription;
+      if (
+        description.trim() !== (initialGroup.group_description || "").trim()
+      ) {
+        payload.description = description.trim();
       }
 
-      const initialOnlyAdmins = initialGroup.only_admins_can_message || false;
-      if (onlyAdminsCanMessage !== initialOnlyAdmins) {
+      if (
+        onlyAdminsCanMessage !== (initialGroup.only_admins_can_message || false)
+      ) {
         payload.only_admins_can_message = onlyAdminsCanMessage;
       }
 
@@ -273,11 +218,6 @@ const CreateGroupModal = ({
       }
 
       if (Object.keys(payload).length === 0) {
-        notifications.show({
-          title: "",
-          message: "No changes detected to update.",
-          color: "yellow",
-        });
         onClose();
         return;
       }
@@ -291,7 +231,6 @@ const CreateGroupModal = ({
         title: "",
         message: "Please enter a group name.",
         color: "red",
-        icon: <IconX size={18} />,
       });
       return;
     }
@@ -301,24 +240,22 @@ const CreateGroupModal = ({
         title: "",
         message: "At least one member is required.",
         color: "red",
-        icon: <IconX size={18} />,
       });
       return;
     }
 
-    const memberIds = members.map((m) => getUserId(m));
-
-    const payload = {
-      group_name: groupName.trim(),
-      description: description.trim(),
-      admin: admins,
-      members: memberIds,
-      group_image: groupImage ? groupImage.name : "",
-      group_image_file: groupImage,
-      only_admins_can_message: onlyAdminsCanMessage,
-    };
-
-    await onSaveGroup(payload, false);
+    await onSaveGroup(
+      {
+        group_name: groupName.trim(),
+        description: description.trim(),
+        admin: admins,
+        members: members.map(getUserId),
+        group_image: groupImage ? groupImage.name : "",
+        group_image_file: groupImage,
+        only_admins_can_message: onlyAdminsCanMessage,
+      },
+      false,
+    );
   };
 
   const adminOptions = members.map((m) => ({
@@ -326,12 +263,22 @@ const CreateGroupModal = ({
     label: `${m.name} (${getUserId(m)})`,
   }));
 
-  const availableContactsToAdd = selectedContacts
+  const transferOptions = admins.map((adminId) => {
+    const memberObj = members.find((m) => getUserId(m) === adminId);
+    return {
+      value: adminId,
+      label: memberObj ? `${memberObj.name} (${adminId})` : adminId,
+    };
+  });
+
+  const availableToAdd = selectedContacts
     .filter((c) => !members.some((m) => getUserId(m) === getUserId(c)))
     .map((c) => ({
       value: getUserId(c),
       label: `${c.name} (${getUserId(c)})`,
     }));
+
+  const isBusy = loading || actionLoading;
 
   return (
     <Modal
@@ -341,18 +288,13 @@ const CreateGroupModal = ({
       radius="lg"
       size="md"
       styles={{
-        inner: {
-          paddingTop: 10,
-          paddingBottom: 20,
-        },
+        inner: { paddingTop: 10, paddingBottom: 20 },
         content: {
           maxHeight: "80vh",
           display: "flex",
           flexDirection: "column",
         },
-        header: {
-          paddingBottom: 8,
-        },
+        header: { paddingBottom: 8 },
         body: {
           display: "flex",
           flexDirection: "column",
@@ -415,7 +357,7 @@ const CreateGroupModal = ({
                       onRemove={() => handleRemoveMember(member.id)}
                       size="sm"
                       color="indigo"
-                      disabled={updatingMembers || updatingAdmins}
+                      disabled={isBusy}
                     >
                       <Group gap={4} wrap="nowrap">
                         <Avatar color={member.color} radius="xl" size={16}>
@@ -435,20 +377,17 @@ const CreateGroupModal = ({
               </div>
             </div>
 
-            {availableContactsToAdd.length > 0 && (
+            {availableToAdd.length > 0 && (
               <MultiSelect
                 label="Add New Members"
                 placeholder="Select contacts to add..."
                 size="sm"
-                data={availableContactsToAdd}
+                data={availableToAdd}
                 value={[]}
                 onChange={handleAddNewMembers}
-                disabled={updatingMembers || updatingAdmins}
+                disabled={isBusy}
                 leftSection={<IconUserPlus size={16} />}
-                searchable={false}
-                comboboxProps={{
-                  withinPortal: true,
-                }}
+                comboboxProps={{ withinPortal: true }}
               />
             )}
 
@@ -459,12 +398,23 @@ const CreateGroupModal = ({
               data={adminOptions}
               value={admins}
               onChange={handleAdminChange}
-              disabled={updatingMembers || updatingAdmins}
-              searchable={false}
-              comboboxProps={{
-                withinPortal: true,
-              }}
+              disabled={isBusy}
+              comboboxProps={{ withinPortal: true }}
             />
+
+            {initialGroup && transferOptions.length > 0 && (
+              <Select
+                label="Transfer Ownership"
+                placeholder="Select an admin"
+                size="sm"
+                data={transferOptions}
+                value={owner}
+                onChange={(val) => val && handleOwnershipTransfer(val)}
+                disabled={isBusy}
+                leftSection={<IconUserShield size={16} />}
+                comboboxProps={{ withinPortal: true }}
+              />
+            )}
 
             <Checkbox
               label="Only admins can send messages"
@@ -480,10 +430,14 @@ const CreateGroupModal = ({
             fullWidth
             color="indigo"
             size="sm"
-            loading={loading || updatingMembers || updatingAdmins}
+            loading={isBusy}
             onClick={handleSubmit}
           >
-            {initialGroup ? "Update Group" : "Create Group"}
+            {initialGroup
+              ? hasFormFieldsChanged()
+                ? "Update Group"
+                : "Done"
+              : "Create Group"}
           </Button>
         </div>
       </div>
