@@ -143,9 +143,22 @@ export const PERMISSIONS = {
     update: false,
     delete: false,
   },
+  "sub-users": {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+    "permission-update": false,
+    "reset-password": false,
+    "reset-username-passkey": false,
+  },
   "users-accesstree": {
     read: false,
     update: false,
+  },
+  "user-account": {
+    "reset-password": false,
+    "reset-username-passkey": false,
   },
 };
 
@@ -191,9 +204,22 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "tags.update": "Update",
   "tags.delete": "Delete",
 
+  // Manage Subuser
+  "sub-users.create" : "Create",
+  "sub-users.read" : "View",
+  "sub-users.update" : "Update",
+  "sub-users.delete" : "Delete",
+  "sub-users.permission-update" : "Update Permission",
+  "sub-users.reset-password" : "Reset Password",
+  "sub-users.reset-username-passkey" : "Set Username Passkey",
+
   // Manage Subuser Access
   "users-accesstree.read": "View",
   "users-accesstree.update": "Update",
+ 
+  // Manage Account
+  "user-account.reset-password" : "Reset Password",
+  "user-account.reset-username-passkey" : "Set Username Passkey",
 };
 
 export const PERMISSION_GROUP_LABELS: Record<string, string> = {
@@ -204,7 +230,9 @@ export const PERMISSION_GROUP_LABELS: Record<string, string> = {
   keyring: "Manage Keyring",
   contacts: "Manage Contacts",
   tags: "Manage Tags",
+  "sub-users" : "Manage Subuser",
   "users-accesstree": "Manage Subuser Access",
+  "user-account" : "Manage Account"
 };
 
 export const getHeaders = (): Record<string, string> => ({
