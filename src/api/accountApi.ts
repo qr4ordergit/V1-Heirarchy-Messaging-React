@@ -244,10 +244,7 @@ export async function changePassword(
     },
     body: JSON.stringify({
       operation: "reset_password",
-      // Self password changes don't send a username — the backend
-      // identifies the account from the auth token itself. username is
-      // only needed when a hub account is changing a different
-      // (sub-)account's password.
+
       ...(isSelf ? {} : { username: userId }),
       new_password: newPassword,
       confirm_password: confirmNewPassword,
