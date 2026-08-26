@@ -234,6 +234,7 @@ export async function changePassword(
   userId: string,
   newPassword: string,
   confirmNewPassword: string,
+  isSelf: boolean = false,
 ): Promise<ChangePasswordResponse> {
   const response = await fetch(API_ENDPOINTS.SECONDARY_USER_PASSWORD_CHANGE, {
     method: "POST",
@@ -243,7 +244,11 @@ export async function changePassword(
     },
     body: JSON.stringify({
       operation: "reset_password",
-      username: userId,
+      // Self password changes don't send a username — the backend
+      // identifies the account from the auth token itself. username is
+      // only needed when a hub account is changing a different
+      // (sub-)account's password.
+      ...(isSelf ? {} : { username: userId }),
       new_password: newPassword,
       confirm_password: confirmNewPassword,
     }),
