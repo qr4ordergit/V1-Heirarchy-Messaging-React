@@ -23,7 +23,7 @@ import {
   hasAllPermissions,
   setAllPermissions,
   setPermissionValue,
-  type Permissions,
+  type PermissionsType,
 } from "../../utils/permission";
 
 import { Notification } from "../../utils/notification";
@@ -32,7 +32,7 @@ import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 
 interface UpdateUserPermissionsPayload {
   username: string;
-  permissions: Permissions;
+  permissions: PermissionsType;
 }
 
 type UserPermissionChanges = Record<string, UpdateUserPermissionsPayload>;

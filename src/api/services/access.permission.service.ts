@@ -1,19 +1,16 @@
-import type { Permissions } from "../../utils/permission";
+import type { PermissionsType } from "../../utils/permission";
 import { api } from "../axios";
 import { ENDPOINTS } from "../endpoints";
 
 export interface UpdateUserPermissionsProps {
   username: string;
-  permissions: Permissions;
+  permissions: PermissionsType;
 }
 
 interface UpdateAccessAndPermissionProps {
   target_user: string;
   sub_users: UpdateUserPermissionsProps[];
 }
-
-type PermissionsType = Record<string, Record<string, boolean>>;
-
 export interface UpdatePermissionsProps {
   target_user: string;
   permissions: PermissionsType;
