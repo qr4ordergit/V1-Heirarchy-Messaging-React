@@ -8,6 +8,7 @@ import {
   Card,
   Checkbox,
   Group,
+  Menu,
   Paper,
   Pill,
   Stack,
@@ -19,6 +20,7 @@ import {
 import {
   IconCheck,
   IconDoorExit,
+  IconDotsVertical,
   IconEdit,
   IconMailCheck,
   IconPlus,
@@ -85,26 +87,15 @@ const Contact = () => {
   const setType = useConversationTypeStore((state) => state.setType);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(false);
-
   const [groups, setGroups] = useState<GroupItem[]>([]);
   const [groupsLoading, setGroupsLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<GroupItem | null>(null);
-
   const [pendingInvite, setPendingInvite] = useState<InviteInformation | null>(
     null,
   );
   const [inviteActionLoading, setInviteActionLoading] = useState(false);
 
-  const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
-  const [leavingGroupId, setLeavingGroupId] = useState<string | null>(null);
-  const [fetchingDetailsId, setFetchingDetailsId] = useState<string | null>(
-    null,
-  );
-  const [startingChatId, setStartingChatId] = useState<string | null>(null);
-  const [deletingContactId, setDeletingContactId] = useState<string | null>(
-    null,
-  );
-  const [sharingGroupId, setSharingGroupId] = useState<string | null>(null);
+  const [activeActionId, setActiveActionId] = useState<string | null>(null);
   const [creatingGroupLoading, setCreatingGroupLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<string | null>("contacts");
@@ -134,7 +125,6 @@ const Contact = () => {
 
   const fetchGroups = async () => {
     setGroupsLoading(true);
-
     const data = await getGroupsApi();
     if (data) setGroups(data);
 
@@ -145,7 +135,6 @@ const Contact = () => {
     } else {
       setPendingInvite(null);
     }
-
     setGroupsLoading(false);
   };
 
@@ -159,51 +148,31 @@ const Contact = () => {
     else fetchContacts();
   };
 
-  const handleAcceptInvite = async () => {
+  const handleInviteAction = async (accept: boolean) => {
     const inviteCode = localStorage.getItem("group_invite_code");
     if (!inviteCode) return;
 
     setInviteActionLoading(true);
-    const ok = await acceptInviteApi(inviteCode, currentUsername);
+    const ok = accept
+      ? await acceptInviteApi(inviteCode, currentUsername)
+      : await rejectInviteApi(inviteCode);
     setInviteActionLoading(false);
 
     if (ok) {
       localStorage.removeItem("group_invite_code");
       setPendingInvite(null);
-      await fetchGroups();
+      if (accept) await fetchGroups();
     }
-  };
-
-  const handleRejectInvite = async () => {
-    const inviteCode = localStorage.getItem("group_invite_code");
-    if (!inviteCode) return;
-
-    setInviteActionLoading(true);
-    const ok = await rejectInviteApi(inviteCode);
-    setInviteActionLoading(false);
-
-    if (ok) {
-      localStorage.removeItem("group_invite_code");
-      setPendingInvite(null);
-    }
-  };
-
-  const handleToggleSelectContact = (contact: Contact) => {
-    setSelectedGroupContacts((prev) =>
-      prev.some((c) => c.id === contact.id)
-        ? prev.filter((c) => c.id !== contact.id)
-        : [...prev, contact],
-    );
   };
 
   const handleShareGroup = async (group: GroupItem) => {
-    setSharingGroupId(group._id);
-    let inviteUrl = "";
-
+    setActiveActionId(group._id);
     try {
-      if (group.invites && group.invites.length > 0) {
-        inviteUrl = `${window.location.origin}/#/invites/${group.invites[0]}`;
-      } else {
+      let inviteUrl = group.invites?.[0]
+        ? `${window.location.origin}/#/invites/${group.invites[0]}`
+        : "";
+
+      if (!inviteUrl) {
         const generated = await createInviteLinkApi(
           group._id,
           group.created_by,
@@ -212,30 +181,26 @@ const Contact = () => {
           inviteUrl = `${window.location.origin}/#/invites/${generated}`;
       }
 
-      if (inviteUrl) {
-        // const copied = await copyToClipboardSafely(inviteUrl);
-
-        if (navigator.share) {
-          try {
-            await navigator.share({
-              title: `Join ${group.group_name}`,
-              text: `Join our group "${group.group_name}" on Chat Hub:`,
-              url: inviteUrl,
+      if (inviteUrl && navigator.share) {
+        try {
+          await navigator.share({
+            title: `Join ${group.group_name}`,
+            text: `Join our group "${group.group_name}" on Chat Hub:`,
+            url: inviteUrl,
+          });
+        } catch (err: any) {
+          if (err.name !== "AbortError") {
+            notifications.show({
+              title: "",
+              message: "Invite link copied to clipboard!",
+              color: "green",
+              icon: <IconCheck size={18} />,
             });
-          } catch (err: any) {
-            if (err.name !== "AbortError") {
-              notifications.show({
-                title: "",
-                message: "Invite link copied to clipboard!",
-                color: "green",
-                icon: <IconCheck size={18} />,
-              });
-            }
           }
         }
       }
     } finally {
-      setSharingGroupId(null);
+      setActiveActionId(null);
     }
   };
 
@@ -244,10 +209,10 @@ const Contact = () => {
       !window.confirm(`Are you sure you want to leave "${group.group_name}"?`)
     )
       return;
-    setLeavingGroupId(group._id);
+    setActiveActionId(group._id);
     const ok = await leaveGroupApi(group._id);
     if (ok) await fetchGroups();
-    setLeavingGroupId(null);
+    setActiveActionId(null);
   };
 
   const handleDeleteGroup = async (group: GroupItem) => {
@@ -257,23 +222,27 @@ const Contact = () => {
       )
     )
       return;
-    setDeletingGroupId(group._id);
+    setActiveActionId(group._id);
     const ok = await deleteGroupApi(group._id);
     if (ok) await fetchGroups();
-    setDeletingGroupId(null);
+    setActiveActionId(null);
   };
 
   const handleContactClick = async (contact: Contact) => {
     if (isCreatingGroup) {
-      handleToggleSelectContact(contact);
+      setSelectedGroupContacts((prev) =>
+        prev.some((c) => c.id === contact.id)
+          ? prev.filter((c) => c.id !== contact.id)
+          : [...prev, contact],
+      );
       return;
     }
     const targetUserId = contact.id.split("#")[1];
     if (!targetUserId) return;
 
-    setStartingChatId(contact.id);
+    setActiveActionId(contact.id);
     const ok = await startConversationApi(targetUserId);
-    setStartingChatId(null);
+    setActiveActionId(null);
 
     if (ok) {
       setType("dm");
@@ -289,19 +258,19 @@ const Contact = () => {
     )
       return;
 
-    setDeletingContactId(contact.id);
+    setActiveActionId(contact.id);
     const ok = await deleteContactApi(contactUserId, currentUsername);
     if (ok) await fetchContacts();
-    setDeletingContactId(null);
+    setActiveActionId(null);
   };
 
   const handleEditContact = async (contact: Contact) => {
     const contactUserId = contact.username || contact.id.split("#")[1];
     if (!contactUserId) return;
 
-    setFetchingDetailsId(contact.id);
+    setActiveActionId(contact.id);
     const fetched = await getContactDetailsApi(contactUserId);
-    setFetchingDetailsId(null);
+    setActiveActionId(null);
 
     if (fetched) {
       setSelectedContact({
@@ -349,23 +318,17 @@ const Contact = () => {
     }
   };
 
-  const filteredContacts = contacts.filter((item) => {
-    const val = search.toLowerCase();
-    return (
-      item.name.toLowerCase().includes(val) ||
-      item.username.toLowerCase().includes(val) ||
-      item.phone.includes(val) ||
-      item.email.toLowerCase().includes(val)
-    );
-  });
-
-  const filteredGroups = groups.filter((g) => {
-    const val = search.toLowerCase();
-    return (
-      g.group_name.toLowerCase().includes(val) ||
-      (g.group_description && g.group_description.toLowerCase().includes(val))
-    );
-  });
+  const query = search.toLowerCase();
+  const filteredContacts = contacts.filter((c) =>
+    [c.name, c.username, c.phone, c.email].some((v) =>
+      v.toLowerCase().includes(query),
+    ),
+  );
+  const filteredGroups = groups.filter((g) =>
+    [g.group_name, g.group_description || ""].some((v) =>
+      v.toLowerCase().includes(query),
+    ),
+  );
 
   return (
     <div className="w-full h-full px-1">
@@ -374,80 +337,78 @@ const Contact = () => {
           className={`w-full md:w-7/12 bg-white ${isDetailActive ? "hidden md:block" : "block"}`}
         >
           <Stack p={{ base: "xs", sm: "md" }}>
-            <Group justify="space-between" align="center">
-              <Tabs
-                value={activeTab}
-                onChange={handleTabChange}
-                color="indigo"
-                variant="outline"
-                radius="md"
-                className="w-full"
-                styles={{
-                  tab: { paddingInline: 8 },
-                  tabSection: { marginInline: 4 },
-                }}
-              >
-                <Tabs.List grow>
-                  <Tabs.Tab
-                    value="contacts"
-                    leftSection={<IconUser size={16} />}
-                    rightSection={
-                      <ActionIcon
-                        component="div"
-                        role="button"
-                        tabIndex={0}
-                        size="xs"
-                        variant="subtle"
-                        color="indigo"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedContact(null);
-                          setOpened(true);
-                        }}
-                      >
-                        <IconPlus size={14} />
-                      </ActionIcon>
-                    }
-                    bg={
-                      activeTab === "contacts"
-                        ? "var(--mantine-color-blue-1)"
-                        : undefined
-                    }
-                  >
-                    Contact List
-                  </Tabs.Tab>
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              color="indigo"
+              variant="outline"
+              radius="md"
+              className="w-full"
+              styles={{
+                tab: { paddingInline: 8 },
+                tabSection: { marginInline: 4 },
+              }}
+            >
+              <Tabs.List grow>
+                <Tabs.Tab
+                  value="contacts"
+                  leftSection={<IconUser size={16} />}
+                  rightSection={
+                    <ActionIcon
+                      component="div"
+                      role="button"
+                      tabIndex={0}
+                      size="xs"
+                      variant="subtle"
+                      color="indigo"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedContact(null);
+                        setOpened(true);
+                      }}
+                    >
+                      <IconPlus size={14} />
+                    </ActionIcon>
+                  }
+                  bg={
+                    activeTab === "contacts"
+                      ? "var(--mantine-color-blue-1)"
+                      : undefined
+                  }
+                >
+                  Contact List
+                </Tabs.Tab>
 
-                  <Tabs.Tab
-                    value="groups"
-                    leftSection={<IconUsersGroup size={16} />}
-                    rightSection={
-                      <ActionIcon
-                        component="div"
-                        role="button"
-                        tabIndex={0}
-                        size="xs"
-                        variant="subtle"
-                        color="indigo"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveTab("contacts");
-                          setIsCreatingGroup(true);
-                        }}
-                      >
-                        <IconPlus size={14} />
-                      </ActionIcon>
-                    }
-                    bg={
-                      activeTab === "groups"
-                        ? "var(--mantine-color-blue-1)"
-                        : undefined
-                    }
-                  >
-                    Group List
-                  </Tabs.Tab>
-                </Tabs.List>
-              </Tabs>
-            </Group>
+                <Tabs.Tab
+                  value="groups"
+                  leftSection={<IconUsersGroup size={16} />}
+                  rightSection={
+                    <ActionIcon
+                      component="div"
+                      role="button"
+                      tabIndex={0}
+                      size="xs"
+                      variant="subtle"
+                      color="indigo"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveTab("contacts");
+                        setIsCreatingGroup(true);
+                      }}
+                    >
+                      <IconPlus size={14} />
+                    </ActionIcon>
+                  }
+                  bg={
+                    activeTab === "groups"
+                      ? "var(--mantine-color-blue-1)"
+                      : undefined
+                  }
+                >
+                  Group List
+                </Tabs.Tab>
+              </Tabs.List>
+            </Tabs>
 
             {activeTab === "contacts" && (
               <>
@@ -462,7 +423,7 @@ const Contact = () => {
                           size="xs"
                           color="indigo"
                           onClick={() => {
-                            if (selectedGroupContacts.length === 0) return;
+                            if (!selectedGroupContacts.length) return;
                             setSelectedGroup(null);
                             setGroupModalOpened(true);
                           }}
@@ -539,17 +500,8 @@ const Contact = () => {
                         style={{
                           borderBottom: "1px solid #ececec",
                           cursor:
-                            startingChatId === contact.id ||
-                            deletingContactId === contact.id ||
-                            fetchingDetailsId === contact.id
-                              ? "wait"
-                              : "pointer",
-                          opacity:
-                            startingChatId === contact.id ||
-                            deletingContactId === contact.id ||
-                            fetchingDetailsId === contact.id
-                              ? 0.6
-                              : 1,
+                            activeActionId === contact.id ? "wait" : "pointer",
+                          opacity: activeActionId === contact.id ? 0.6 : 1,
                         }}
                         className="contact-row hover:bg-gray-50"
                         onClick={() => handleContactClick(contact)}
@@ -560,10 +512,15 @@ const Contact = () => {
                               checked={selectedGroupContacts.some(
                                 (c) => c.id === contact.id,
                               )}
-                              onChange={() =>
-                                handleToggleSelectContact(contact)
-                              }
-                              onClick={(e) => e.stopPropagation()}
+                              onChange={() => {}}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedGroupContacts((prev) =>
+                                  prev.some((c) => c.id === contact.id)
+                                    ? prev.filter((c) => c.id !== contact.id)
+                                    : [...prev, contact],
+                                );
+                              }}
                             />
                           )}
 
@@ -579,41 +536,83 @@ const Contact = () => {
                               {contact.name}
                             </Text>
                             <Text size="xs" c="dimmed">
-                              {contact.username ? "@" : ""}
-                              {contact.username}
+                              {contact.username ? `@${contact.username}` : ""}
                             </Text>
                           </div>
                         </Group>
 
                         {!isCreatingGroup && (
-                          <Group gap="xs">
-                            <ActionIcon
-                              variant="subtle"
-                              size="md"
-                              radius="md"
-                              loading={fetchingDetailsId === contact.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditContact(contact);
-                              }}
-                            >
-                              <IconEdit size={18} />
-                            </ActionIcon>
+                          <>
+                            <Group gap="xs" visibleFrom="sm">
+                              <Tooltip label="Edit Contact" withArrow>
+                                <ActionIcon
+                                  variant="subtle"
+                                  size="md"
+                                  radius="md"
+                                  loading={activeActionId === contact.id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditContact(contact);
+                                  }}
+                                >
+                                  <IconEdit size={18} />
+                                </ActionIcon>
+                              </Tooltip>
 
-                            <ActionIcon
-                              variant="subtle"
-                              color="red"
-                              size="md"
-                              radius="md"
-                              loading={deletingContactId === contact.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteContact(contact);
-                              }}
+                              <Tooltip label="Delete Contact" withArrow>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="red"
+                                  size="md"
+                                  radius="md"
+                                  loading={activeActionId === contact.id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteContact(contact);
+                                  }}
+                                >
+                                  <IconTrash size={18} />
+                                </ActionIcon>
+                              </Tooltip>
+                            </Group>
+
+                            <Menu
+                              shadow="md"
+                              width={160}
+                              position="bottom-end"
+                              withinPortal
                             >
-                              <IconTrash size={18} />
-                            </ActionIcon>
-                          </Group>
+                              <Menu.Target>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="gray"
+                                  size="md"
+                                  radius="md"
+                                  hiddenFrom="sm"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <IconDotsVertical size={18} />
+                                </ActionIcon>
+                              </Menu.Target>
+                              <Menu.Dropdown
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Menu.Item
+                                  leftSection={<IconEdit size={16} />}
+                                  onClick={() => handleEditContact(contact)}
+                                >
+                                  Edit
+                                </Menu.Item>
+                                <Menu.Item
+                                  color="red"
+                                  leftSection={<IconTrash size={16} />}
+                                  onClick={() => handleDeleteContact(contact)}
+                                >
+                                  Delete
+                                </Menu.Item>
+                              </Menu.Dropdown>
+                            </Menu>
+                          </>
                         )}
                       </Group>
                     ))
@@ -639,7 +638,7 @@ const Contact = () => {
                   }
                 />
 
-                {pendingInvite && pendingInvite.resource_information && (
+                {pendingInvite?.resource_information && (
                   <Paper
                     withBorder
                     p="xs"
@@ -654,7 +653,9 @@ const Contact = () => {
                         <div>
                           <Group gap={6} align="center">
                             <Text size="sm" fw={700}>
-                              {pendingInvite.resource_information.name}
+                              {pendingInvite.resource_information.name ||
+                                (pendingInvite.resource_information as any)
+                                  .group_name}
                             </Text>
                             <Badge size="xs" variant="light" color="indigo">
                               Invite
@@ -674,7 +675,7 @@ const Contact = () => {
                             radius="xl"
                             size="md"
                             loading={inviteActionLoading}
-                            onClick={handleAcceptInvite}
+                            onClick={() => handleInviteAction(true)}
                           >
                             <IconCheck size={16} />
                           </ActionIcon>
@@ -687,7 +688,7 @@ const Contact = () => {
                             radius="xl"
                             size="md"
                             loading={inviteActionLoading}
-                            onClick={handleRejectInvite}
+                            onClick={() => handleInviteAction(false)}
                           >
                             <IconX size={16} />
                           </ActionIcon>
@@ -727,15 +728,8 @@ const Contact = () => {
                           style={{
                             borderBottom: "1px solid #ececec",
                             cursor:
-                              deletingGroupId === group._id ||
-                              leavingGroupId === group._id
-                                ? "wait"
-                                : "pointer",
-                            opacity:
-                              deletingGroupId === group._id ||
-                              leavingGroupId === group._id
-                                ? 0.6
-                                : 1,
+                              activeActionId === group._id ? "wait" : "pointer",
+                            opacity: activeActionId === group._id ? 0.6 : 1,
                           }}
                           className="group-row hover:bg-gray-50"
                           onClick={() => {
@@ -771,66 +765,133 @@ const Contact = () => {
                             </div>
                           </Group>
 
-                          <Group gap="xs">
+                          <Group gap="xs" visibleFrom="sm">
                             {isAdmin && (
-                              <ActionIcon
-                                variant="subtle"
-                                size="md"
-                                radius="md"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedGroup(group);
-                                  setGroupModalOpened(true);
-                                }}
-                              >
-                                <IconEdit size={18} />
-                              </ActionIcon>
+                              <Tooltip label="Edit Group" withArrow>
+                                <ActionIcon
+                                  variant="subtle"
+                                  size="md"
+                                  radius="md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedGroup(group);
+                                    setGroupModalOpened(true);
+                                  }}
+                                >
+                                  <IconEdit size={18} />
+                                </ActionIcon>
+                              </Tooltip>
                             )}
 
                             {isCreator && (
-                              <ActionIcon
-                                variant="subtle"
-                                color="red"
-                                size="md"
-                                radius="md"
-                                loading={deletingGroupId === group._id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteGroup(group);
-                                }}
-                              >
-                                <IconTrash size={18} />
-                              </ActionIcon>
+                              <Tooltip label="Delete Group" withArrow>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="red"
+                                  size="md"
+                                  radius="md"
+                                  loading={activeActionId === group._id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteGroup(group);
+                                  }}
+                                >
+                                  <IconTrash size={18} />
+                                </ActionIcon>
+                              </Tooltip>
                             )}
 
-                            <ActionIcon
-                              variant="subtle"
-                              color="blue"
-                              size="md"
-                              radius="md"
-                              loading={sharingGroupId === group._id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleShareGroup(group);
-                              }}
-                            >
-                              <IconShare size={18} />
-                            </ActionIcon>
+                            <Tooltip label="Share Group" withArrow>
+                              <ActionIcon
+                                variant="subtle"
+                                color="blue"
+                                size="md"
+                                radius="md"
+                                loading={activeActionId === group._id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleShareGroup(group);
+                                }}
+                              >
+                                <IconShare size={18} />
+                              </ActionIcon>
+                            </Tooltip>
 
-                            <ActionIcon
-                              variant="subtle"
-                              color="orange"
-                              size="md"
-                              radius="md"
-                              loading={leavingGroupId === group._id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleLeaveGroup(group);
-                              }}
-                            >
-                              <IconDoorExit size={18} />
-                            </ActionIcon>
+                            <Tooltip label="Leave Group" withArrow>
+                              <ActionIcon
+                                variant="subtle"
+                                color="orange"
+                                size="md"
+                                radius="md"
+                                loading={activeActionId === group._id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleLeaveGroup(group);
+                                }}
+                              >
+                                <IconDoorExit size={18} />
+                              </ActionIcon>
+                            </Tooltip>
                           </Group>
+
+                          <Menu
+                            shadow="md"
+                            width={170}
+                            position="bottom-end"
+                            withinPortal
+                          >
+                            <Menu.Target>
+                              <ActionIcon
+                                variant="subtle"
+                                color="gray"
+                                size="md"
+                                radius="md"
+                                hiddenFrom="sm"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <IconDotsVertical size={18} />
+                              </ActionIcon>
+                            </Menu.Target>
+
+                            <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
+                              {isAdmin && (
+                                <Menu.Item
+                                  leftSection={<IconEdit size={16} />}
+                                  onClick={() => {
+                                    setSelectedGroup(group);
+                                    setGroupModalOpened(true);
+                                  }}
+                                >
+                                  Edit Group
+                                </Menu.Item>
+                              )}
+
+                              <Menu.Item
+                                leftSection={<IconShare size={16} />}
+                                onClick={() => handleShareGroup(group)}
+                              >
+                                Share Group
+                              </Menu.Item>
+
+                              <Menu.Item
+                                color="orange"
+                                leftSection={<IconDoorExit size={16} />}
+                                onClick={() => handleLeaveGroup(group)}
+                              >
+                                Leave Group
+                              </Menu.Item>
+
+                              {isCreator && (
+                                <Menu.Item
+                                  color="red"
+                                  leftSection={<IconTrash size={16} />}
+                                  onClick={() => handleDeleteGroup(group)}
+                                >
+                                  Delete Group
+                                </Menu.Item>
+                              )}
+                            </Menu.Dropdown>
+                          </Menu>
                         </Group>
                       );
                     })
