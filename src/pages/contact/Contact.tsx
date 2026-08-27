@@ -3,19 +3,24 @@ import type { ChangeEvent } from "react";
 import {
   ActionIcon,
   Avatar,
+  Badge,
   Button,
   Card,
   Checkbox,
   Group,
+  Paper,
   Pill,
   Stack,
   Tabs,
   Text,
   TextInput,
+  Tooltip,
 } from "@mantine/core";
 import {
+  IconCheck,
   IconDoorExit,
   IconEdit,
+  IconMailCheck,
   IconPlus,
   IconSearch,
   IconShare,
@@ -40,7 +45,12 @@ import {
   startConversationApi,
   createInviteLinkApi,
   saveGroupPayloadApi,
+  getPendingInviteApi,
+  acceptInviteApi,
+  rejectInviteApi,
+  type InviteInformation,
 } from "../../api/contactApi";
+import { notifications } from "@mantine/notifications";
 
 export interface Contact {
   id: string;
@@ -79,6 +89,11 @@ const Contact = () => {
   const [groups, setGroups] = useState<GroupItem[]>([]);
   const [groupsLoading, setGroupsLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<GroupItem | null>(null);
+
+  const [pendingInvite, setPendingInvite] = useState<InviteInformation | null>(
+    null,
+  );
+  const [inviteActionLoading, setInviteActionLoading] = useState(false);
 
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
   const [leavingGroupId, setLeavingGroupId] = useState<string | null>(null);
@@ -119,8 +134,18 @@ const Contact = () => {
 
   const fetchGroups = async () => {
     setGroupsLoading(true);
+
     const data = await getGroupsApi();
     if (data) setGroups(data);
+
+    const storedInviteCode = localStorage.getItem("group_invite_code");
+    if (storedInviteCode && currentUsername) {
+      const inviteData = await getPendingInviteApi(storedInviteCode);
+      setPendingInvite(inviteData);
+    } else {
+      setPendingInvite(null);
+    }
+
     setGroupsLoading(false);
   };
 
@@ -132,6 +157,35 @@ const Contact = () => {
     setActiveTab(value);
     if (value === "groups") fetchGroups();
     else fetchContacts();
+  };
+
+  const handleAcceptInvite = async () => {
+    const inviteCode = localStorage.getItem("group_invite_code");
+    if (!inviteCode) return;
+
+    setInviteActionLoading(true);
+    const ok = await acceptInviteApi(inviteCode, currentUsername);
+    setInviteActionLoading(false);
+
+    if (ok) {
+      localStorage.removeItem("group_invite_code");
+      setPendingInvite(null);
+      await fetchGroups();
+    }
+  };
+
+  const handleRejectInvite = async () => {
+    const inviteCode = localStorage.getItem("group_invite_code");
+    if (!inviteCode) return;
+
+    setInviteActionLoading(true);
+    const ok = await rejectInviteApi(inviteCode);
+    setInviteActionLoading(false);
+
+    if (ok) {
+      localStorage.removeItem("group_invite_code");
+      setPendingInvite(null);
+    }
   };
 
   const handleToggleSelectContact = (contact: Contact) => {
@@ -146,26 +200,43 @@ const Contact = () => {
     setSharingGroupId(group._id);
     let inviteUrl = "";
 
-    if (group.invites && group.invites.length > 0) {
-      inviteUrl = `${window.location.origin}/invites/${group.invites[0]}`;
-    } else {
-      const generated = await createInviteLinkApi(group._id, group.created_by);
-      if (generated) inviteUrl = generated;
-    }
-
-    if (inviteUrl) {
-      await navigator.clipboard.writeText(inviteUrl);
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: `Join ${group.group_name}`,
-            text: `Join our group "${group.group_name}" on Chat Hub:`,
-            url: inviteUrl,
-          });
-        } catch {}
+    try {
+      if (group.invites && group.invites.length > 0) {
+        inviteUrl = `${window.location.origin}/#/invites/${group.invites[0]}`;
+      } else {
+        const generated = await createInviteLinkApi(
+          group._id,
+          group.created_by,
+        );
+        if (generated)
+          inviteUrl = `${window.location.origin}/#/invites/${generated}`;
       }
+
+      if (inviteUrl) {
+        // const copied = await copyToClipboardSafely(inviteUrl);
+
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: `Join ${group.group_name}`,
+              text: `Join our group "${group.group_name}" on Chat Hub:`,
+              url: inviteUrl,
+            });
+          } catch (err: any) {
+            if (err.name !== "AbortError") {
+              notifications.show({
+                title: "",
+                message: "Invite link copied to clipboard!",
+                color: "green",
+                icon: <IconCheck size={18} />,
+              });
+            }
+          }
+        }
+      }
+    } finally {
+      setSharingGroupId(null);
     }
-    setSharingGroupId(null);
   };
 
   const handleLeaveGroup = async (group: GroupItem) => {
@@ -567,6 +638,64 @@ const Contact = () => {
                     setSearch(e.target.value)
                   }
                 />
+
+                {pendingInvite && pendingInvite.resource_information && (
+                  <Paper
+                    withBorder
+                    p="xs"
+                    radius="md"
+                    className="border-indigo-200 bg-indigo-50/50"
+                  >
+                    <Group justify="space-between" wrap="nowrap">
+                      <Group gap="sm" wrap="nowrap">
+                        <Avatar color="indigo" radius="xl" size={38}>
+                          <IconMailCheck size={20} />
+                        </Avatar>
+                        <div>
+                          <Group gap={6} align="center">
+                            <Text size="sm" fw={700}>
+                              {pendingInvite.resource_information.name}
+                            </Text>
+                            <Badge size="xs" variant="light" color="indigo">
+                              Invite
+                            </Badge>
+                          </Group>
+                          <Text size="xs" c="dimmed">
+                            You were invited to join this group
+                          </Text>
+                        </div>
+                      </Group>
+
+                      <Group gap={6} wrap="nowrap">
+                        <Tooltip label="Accept Invite" withArrow>
+                          <ActionIcon
+                            variant="filled"
+                            color="green"
+                            radius="xl"
+                            size="md"
+                            loading={inviteActionLoading}
+                            onClick={handleAcceptInvite}
+                          >
+                            <IconCheck size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+
+                        <Tooltip label="Decline Invite" withArrow>
+                          <ActionIcon
+                            variant="light"
+                            color="red"
+                            radius="xl"
+                            size="md"
+                            loading={inviteActionLoading}
+                            onClick={handleRejectInvite}
+                          >
+                            <IconX size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
+                    </Group>
+                  </Paper>
+                )}
 
                 <Card
                   withBorder

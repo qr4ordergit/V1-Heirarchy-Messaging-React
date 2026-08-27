@@ -9,6 +9,100 @@ import type {
   GroupItem,
 } from "../pages/contact/Contact";
 
+export interface InviteInformation {
+  status: string;
+  resource_information: {
+    resource_id: string;
+    name: string;
+    resource_type: string;
+  };
+  remaining_uses: number;
+  expires_at: string;
+}
+
+export const getPendingInviteApi = async (
+  inviteCode: string,
+): Promise<InviteInformation | null> => {
+  try {
+    const url = withTargetUser(
+      `${API_ENDPOINTS.CREATE_INVITE_LINK}/${encodeURIComponent(inviteCode)}`,
+    );
+    const response = await api.get(url);
+    const data = response.data;
+
+    if (
+      response.status === 200 &&
+      (data.status === "VALID" || data.resource_information)
+    ) {
+      return data;
+    }
+    return null;
+  } catch (error: any) {
+    return null;
+  }
+};
+
+export const acceptInviteApi = async (
+  inviteCode: string,
+  currentUsername: string,
+): Promise<boolean> => {
+  try {
+    const url = withTargetUser(
+      `${API_ENDPOINTS.CREATE_INVITE_LINK}/${encodeURIComponent(inviteCode)}`,
+    );
+    const response = await api.post(url, { user_id: currentUsername });
+    const data = response.data;
+
+    if (response.status === 200 || response.status === 201 || data.success) {
+      notifications.show({
+        title: "",
+        message: data.message || "Group invite accepted successfully!",
+        color: "green",
+      });
+      return true;
+    }
+
+    notifications.show({
+      title: "",
+      message: data.message || "Failed to accept invite.",
+      color: "red",
+    });
+    return false;
+  } catch (error: any) {
+    handleApiError(error);
+    return false;
+  }
+};
+
+export const rejectInviteApi = async (inviteCode: string): Promise<boolean> => {
+  try {
+    const url = withTargetUser(
+      `${API_ENDPOINTS.CREATE_INVITE_LINK}/${encodeURIComponent(inviteCode)}`,
+    );
+    const response = await api.delete(url);
+    const data = response.data;
+
+    if (response.status === 200 || response.status === 204 || data.success) {
+      notifications.show({
+        title: "",
+        message: data.message || "Invite rejected.",
+        color: "blue",
+      });
+      return true;
+    }
+
+    notifications.show({
+      title: "",
+      message: data.message || "Failed to reject invite.",
+      color: "red",
+    });
+    return false;
+  } catch (error: any) {
+    handleApiError(error);
+    return false;
+  }
+};
+
 export const getContactsApi = async (): Promise<Contact[] | null> => {
   try {
     const response = await api.get(withTargetUser(API_ENDPOINTS.CONTACTS));
@@ -253,6 +347,31 @@ export const startConversationApi = async (
   }
 };
 
+export const copyToClipboardSafely = async (text: string): Promise<boolean> => {
+  if (navigator.clipboard && document.hasFocus()) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {}
+  }
+
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.left = "-999999px";
+    textarea.style.top = "-999999px";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const successful = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    return successful;
+  } catch {
+    return false;
+  }
+};
+
 export const createInviteLinkApi = async (
   groupId: string,
   createdBy: string,
@@ -271,7 +390,7 @@ export const createInviteLinkApi = async (
       payload,
     );
     const data = response.data;
-    return data.invite_url || data.url || data.invite_code || null;
+    return data.invite_code || data.url || data.invite_url || null;
   } catch (error: any) {
     handleApiError(error);
     return null;
