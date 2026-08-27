@@ -1,5 +1,6 @@
 import { ActionIcon, Avatar, Menu, ScrollArea } from "@mantine/core";
 import {
+  IconChevronLeft,
   IconDotsVertical,
   IconRefresh,
   IconSearch,
@@ -8,7 +9,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useDMListStore } from "../../../store/dm/dm.list.store";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useGroupListStore } from "../../../store/groups/group.list.store";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../utils/constant";
@@ -23,6 +24,7 @@ function Navbar() {
   const { tags } = useTagStore((state) => state);
 
   const { chatId } = useParams<{ chatId: string }>();
+  const navigate = useNavigate();
 
   const displayName = () => {
     if (decodeURIComponent(chatId ?? "").includes("group")) {
@@ -66,9 +68,23 @@ function Navbar() {
     }, 0);
   };
 
+  const onNavigate = () => {
+    navigate("/chats");
+  };
+
   return (
     <div className="bg-white rounded-full p-2 shadow">
       <div className="flex gap-3 items-center">
+        <div className="lg:hidden block">
+          <ActionIcon
+            variant="light"
+            radius="xl"
+            size={36}
+            onClick={onNavigate}
+          >
+            <IconChevronLeft />
+          </ActionIcon>
+        </div>
         <Avatar color="cyan" radius="xl">
           {displayName()[0]?.toUpperCase()}
         </Avatar>

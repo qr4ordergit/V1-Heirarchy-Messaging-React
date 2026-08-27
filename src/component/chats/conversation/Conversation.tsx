@@ -51,7 +51,7 @@ function Conversation() {
     <div className="p-2 h-full">
       <div className="h-full rounded p-1">
         <div className="flex justify-center h-full">
-          <div className="w-8/12">
+          <div className="w-full lg:w-8/12">
             <div className="flex flex-col h-full">
               <Navbar />
               <div className="flex-1 min-h-0">
