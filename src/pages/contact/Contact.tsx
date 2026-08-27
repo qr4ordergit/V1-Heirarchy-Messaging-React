@@ -22,10 +22,10 @@ import {
   IconDoorExit,
   IconDotsVertical,
   IconEdit,
+  IconLink,
   IconMailCheck,
   IconPlus,
   IconSearch,
-  IconShare,
   IconTrash,
   IconUser,
   IconUsersGroup,
@@ -51,6 +51,7 @@ import {
   acceptInviteApi,
   rejectInviteApi,
   type InviteInformation,
+  copyToClipboardSafely,
 } from "../../api/contactApi";
 import { notifications } from "@mantine/notifications";
 
@@ -177,27 +178,35 @@ const Contact = () => {
           group._id,
           group.created_by,
         );
-        if (generated)
+        if (generated) {
           inviteUrl = `${window.location.origin}/#/invites/${generated}`;
+        }
       }
 
-      if (inviteUrl && navigator.share) {
+      if (!inviteUrl) return;
+
+      const copied = await copyToClipboardSafely(inviteUrl);
+
+      if (navigator.share) {
         try {
           await navigator.share({
             title: `Join ${group.group_name}`,
             text: `Join our group "${group.group_name}" on Chat Hub:`,
             url: inviteUrl,
           });
+          return;
         } catch (err: any) {
-          if (err.name !== "AbortError") {
-            notifications.show({
-              title: "",
-              message: "Invite link copied to clipboard!",
-              color: "green",
-              icon: <IconCheck size={18} />,
-            });
-          }
+          if (err.name === "AbortError") return;
         }
+      }
+
+      if (copied) {
+        notifications.show({
+          title: "",
+          message: "Invite link copied to clipboard!",
+          color: "green",
+          icon: <IconCheck size={18} />,
+        });
       }
     } finally {
       setActiveActionId(null);
@@ -801,7 +810,7 @@ const Contact = () => {
                               </Tooltip>
                             )}
 
-                            <Tooltip label="Share Group" withArrow>
+                            <Tooltip label="Invite Link" withArrow>
                               <ActionIcon
                                 variant="subtle"
                                 color="blue"
@@ -813,7 +822,7 @@ const Contact = () => {
                                   handleShareGroup(group);
                                 }}
                               >
-                                <IconShare size={18} />
+                                <IconLink size={18} />
                               </ActionIcon>
                             </Tooltip>
 
@@ -867,10 +876,10 @@ const Contact = () => {
                               )}
 
                               <Menu.Item
-                                leftSection={<IconShare size={16} />}
+                                leftSection={<IconLink size={16} />}
                                 onClick={() => handleShareGroup(group)}
                               >
-                                Share Group
+                                Invite Link
                               </Menu.Item>
 
                               <Menu.Item
