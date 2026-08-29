@@ -12,6 +12,8 @@ interface AuthTokens {
 export interface UserDetails {
   success: boolean;
   username: string;
+  display_name?: string | null;
+  description?: string | null;
   phone_number: string | null;
   email: string;
   group_name: string | null;

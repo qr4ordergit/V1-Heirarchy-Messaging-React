@@ -2,8 +2,9 @@ import { API_ENDPOINTS, withTargetUser } from "../utils/constant";
 import { api } from "./axios";
 
 export interface UpdateProfilePayload {
-  display_name: string;
-  profile_picture: string;
+  display_name?: string;
+  description?: string;
+  profile_picture?: string;
 }
 
 export interface ProfileUpdateResponse {

@@ -52,10 +52,10 @@ export const manageGroupAdmins = async (
   operation: "add-members" | "remove-members",
 ): Promise<boolean> => {
   try {
-    const payload = {
+    const payload: Record<string, any> = {
       group_id: groupId,
-      admins: targetAdminIds,
       operation,
+      ...(operation === "add-members" && { admins: targetAdminIds }),
     };
 
     const response = await api.post(
