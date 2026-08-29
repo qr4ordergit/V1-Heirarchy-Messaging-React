@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
   AUTH: `${API_BASE_URL}/auth`,
   AUTH_USERNAME_SUGGEST: `${API_BASE_URL}/auth/username-suggest`,
   AUTH_SUB_USERS: `${API_BASE_URL}/auth/sub-users`,
+  AUTH_SUB_USERS_BULK: `${API_BASE_URL}/auth/sub-users/bulk-registration`,
   USER_DETAILS: `${API_BASE_URL}/user-details`,
   ACCOUNTS_LIST: `${API_BASE_URL}/user-access/sub-users-detail`,
   AUTH_LOGOUT: `${API_BASE_URL}/auth/logout`,
@@ -148,9 +149,9 @@ export const PERMISSIONS = {
     read: false,
     update: false,
     delete: false,
-    "permission-update": false,
-    "reset-password": false,
-    "reset-username-passkey": false,
+    // "permission-update": false,
+    // "reset-password": false,
+    // "reset-username-passkey": false,
   },
   "users-accesstree": {
     read: false,
@@ -161,7 +162,66 @@ export const PERMISSIONS = {
     "reset-username-passkey": false,
   },
 };
-
+export const USER_TO_USER_PERMISSIONS = {
+  chat: {
+    start: false,
+    "history-get": false,
+    "history-delete": false,
+  },
+  "direct-messages": {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
+  groups: {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
+  "group-messages": {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
+  keyring: {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
+  contacts: {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
+  tags: {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
+  "sub-users": {
+    // create: false,
+    read: false,
+    update: false,
+    // delete: false,
+    "permission-update": false,
+    "reset-password": false,
+    "reset-username-passkey": false,
+  },
+  "users-accesstree": {
+    read: false,
+    update: false,
+  },
+  // "user-account": {
+  //   "reset-password": false,
+  //   "reset-username-passkey": false,
+  // },
+};
 export const PERMISSION_LABELS: Record<string, string> = {
   // Manage Chats
   "chat.start": "Initiate Chat",
@@ -205,21 +265,21 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "tags.delete": "Delete",
 
   // Manage Subuser
-  "sub-users.create" : "Create",
-  "sub-users.read" : "View",
-  "sub-users.update" : "Update",
-  "sub-users.delete" : "Delete",
-  "sub-users.permission-update" : "Update Permission",
-  "sub-users.reset-password" : "Reset Password",
-  "sub-users.reset-username-passkey" : "Set Username Passkey",
+  "sub-users.create": "Create",
+  "sub-users.read": "View",
+  "sub-users.update": "Update",
+  "sub-users.delete": "Delete",
+  "sub-users.permission-update": "Update Permission",
+  "sub-users.reset-password": "Reset Password",
+  "sub-users.reset-username-passkey": "Set Username Passkey",
 
   // Manage Subuser Access
   "users-accesstree.read": "View",
   "users-accesstree.update": "Update",
- 
+
   // Manage Account
-  "user-account.reset-password" : "Reset Password",
-  "user-account.reset-username-passkey" : "Set Username Passkey",
+  "user-account.reset-password": "Reset Password",
+  "user-account.reset-username-passkey": "Set Username Passkey",
 };
 
 export const PERMISSION_GROUP_LABELS: Record<string, string> = {
@@ -230,9 +290,9 @@ export const PERMISSION_GROUP_LABELS: Record<string, string> = {
   keyring: "Manage Keyring",
   contacts: "Manage Contacts",
   tags: "Manage Tags",
-  "sub-users" : "Manage Subuser",
+  "sub-users": "Manage Subuser",
   "users-accesstree": "Manage Subuser Access",
-  "user-account" : "Manage Account"
+  "user-account": "Manage Account",
 };
 
 export const getHeaders = (): Record<string, string> => ({

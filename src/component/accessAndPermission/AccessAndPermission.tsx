@@ -11,11 +11,11 @@ import {
   Text,
 } from "@mantine/core";
 
-
 import {
   PERMISSION_GROUP_LABELS,
   PERMISSION_LABELS,
   PERMISSIONS,
+  USER_TO_USER_PERMISSIONS,
 } from "../../utils/constant";
 
 import {
@@ -55,7 +55,6 @@ export default function AccessAndPermission({
   users,
   targetUser,
 }: AccessAndPermissionGridProps) {
-
   const [loading, setLoading] = useState(false);
   const [loadingAP, setLoadingAP] = useState(false);
 
@@ -186,169 +185,161 @@ export default function AccessAndPermission({
           borderRadius: 10,
         }}
       >
-        <ScrollArea
-          h="100%"
-          type="auto"
-          scrollbarSize={0}
-          p={"xs"}
-        >
-            <Stack gap={"xs"}>
-              <Text size="xs" fw={"bolder"} c={"gray"} ms={"xs"}>
-                Access
-              </Text>
-              {users.map((user) => {
-                const currentUser = changes[user.id];
-                const canUserAccess = Boolean(currentUser);
+        <ScrollArea h="100%" type="auto" scrollbarSize={0} p={"xs"}>
+          <Stack gap={"xs"}>
+            <Text size="xs" fw={"bolder"} c={"gray"} ms={"xs"}>
+              Access
+            </Text>
+            {users.map((user) => {
+              const currentUser = changes[user.id];
+              const canUserAccess = Boolean(currentUser);
 
-                const opend = openedUserAcc === user.id;
+              const opend = openedUserAcc === user.id;
 
-                const userHasPermission =
-                  changes[user.id] &&
-                  Object.keys(changes[user.id].permissions).length > 0;
+              const userHasPermission =
+                changes[user.id] &&
+                Object.keys(changes[user.id].permissions).length > 0;
 
-                return (
-                  <Box
-                    key={user.id}
+              return (
+                <Box
+                  key={user.id}
+                  style={{
+                    border: "1px solid var(--mantine-color-gray-3)",
+                    borderRadius: "10px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <Flex
+                    align={"center"}
+                    gap={"md"}
+                    justify={"space-between"}
                     style={{
-                      border: "1px solid var(--mantine-color-gray-3)",
-                      borderRadius: "10px",
-                      overflow: "hidden",
+                      padding: "5px 10px",
+                      cursor: canUserAccess ? "pointer" : "not-allowed",
+                      background: opend
+                        ? "var(--mantine-color-gray-3)"
+                        : "white",
                     }}
+                    onClick={() =>
+                      canUserAccess &&
+                      setOpenedUserAcc((prev) =>
+                        prev === user.id ? null : user.id,
+                      )
+                    }
                   >
-                    <Flex
-                      align={"center"}
-                      gap={"md"}
-                      justify={"space-between"}
-                      style={{
-                        padding: "5px 10px",
-                        cursor: canUserAccess ? "pointer" : "not-allowed",
-                        background: opend
-                          ? "var(--mantine-color-gray-3)"
-                          : "white",
-                      }}
-                      onClick={() =>
-                        canUserAccess &&
-                        setOpenedUserAcc((prev) =>
-                          prev === user.id ? null : user.id,
-                        )
-                      }
-                    >
-                      <Flex align={"center"} gap={"xs"}>
-                        <Checkbox
-                          size="xs"
-                          checked={canUserAccess}
-                          onChange={(event) => {
-                            event.stopPropagation();
-                            handleAccessChange(
-                              user.id,
-                              event.currentTarget.checked,
-                            );
-                            setOpenedUserAcc(null);
-                          }}
-                        />
-                        <Text size="xs" fw={"bolder"}>
-                          {user.label}
-                        </Text>
-                      </Flex>
-                      {!opend ? (
-                        <IconChevronDown size={15} />
-                      ) : (
-                        <IconChevronUp size={15} />
-                      )}
-                    </Flex>
-                    {opend && (
-                      <Stack
-                        bg="white"
-                        style={{
-                          borderTop: "1px solid var(--mantine-color-gray-3)",
+                    <Flex align={"center"} gap={"xs"}>
+                      <Checkbox
+                        size="xs"
+                        checked={canUserAccess}
+                        onChange={(event) => {
+                          event.stopPropagation();
+                          handleAccessChange(
+                            user.id,
+                            event.currentTarget.checked,
+                          );
+                          setOpenedUserAcc(null);
                         }}
-                        gap={"lg"}
-                        pl={{base : "xs", xs: "xl" }}
-                        pt="xs"
-                        pb="xs"
-                        pr="xs"
-                      >
-                        <Checkbox
-                          size="xs"
-                          label="Select All"
-                          checked={
-                            userHasPermission
-                              ? hasAllPermissions(
-                                  changes[user.id].permissions,
-                                  PERMISSIONS,
-                                )
-                              : false
-                          }
-                          disabled={!canUserAccess}
-                          onChange={(event) => {
-                            const checked = event.currentTarget.checked;
-
-                            setChanges((prev) => {
-                              const currentUser = prev[user.id];
-
-                              return {
-                                ...prev,
-                                [user.id]: {
-                                  username: user.id,
-                                  permissions: setAllPermissions(
-                                    userHasPermission
-                                      ? currentUser.permissions
-                                      : PERMISSIONS,
-                                    checked,
-                                  ),
-                                },
-                              };
-                            });
-                          }}
-                        />
-                        {Object.entries(PERMISSIONS).map(
-                          ([groupKey, permissions]) => (
-                            <Stack key={groupKey} gap="xs">
-                              <Text size="xs" fw={"bolder"} c={"gray"}>
-                                {PERMISSION_GROUP_LABELS[groupKey] ?? groupKey}
-                              </Text>
-
-                              <Flex gap="md" style={{ flexWrap: "wrap" }}>
-                                {Object.keys(permissions).map(
-                                  (permissionKey) => {
-                                    const path = `${groupKey}.${permissionKey}`;
-
-                                    const checked = getPermissionValue(
-                                      currentUser?.permissions ?? {},
-                                      path,
-                                    );
-
-                                    return (
-                                      <Checkbox
-                                        key={path}
-                                        size="xs"
-                                        checked={checked}
-                                        disabled={!canUserAccess}
-                                        label={
-                                          PERMISSION_LABELS[path] ??
-                                          permissionKey
-                                        }
-                                        onChange={(event) =>
-                                          handlePermissionChange(
-                                            user.id,
-                                            path,
-                                            event.currentTarget.checked,
-                                          )
-                                        }
-                                      />
-                                    );
-                                  },
-                                )}
-                              </Flex>
-                            </Stack>
-                          ),
-                        )}
-                      </Stack>
+                      />
+                      <Text size="xs" fw={"bolder"}>
+                        {user.label}
+                      </Text>
+                    </Flex>
+                    {!opend ? (
+                      <IconChevronDown size={15} />
+                    ) : (
+                      <IconChevronUp size={15} />
                     )}
-                  </Box>
-                );
-              })}
-            </Stack>
+                  </Flex>
+                  {opend && (
+                    <Stack
+                      bg="white"
+                      style={{
+                        borderTop: "1px solid var(--mantine-color-gray-3)",
+                      }}
+                      gap={"lg"}
+                      pl={{ base: "xs", xs: "xl" }}
+                      pt="xs"
+                      pb="xs"
+                      pr="xs"
+                    >
+                      <Checkbox
+                        size="xs"
+                        label="Select All"
+                        checked={
+                          userHasPermission
+                            ? hasAllPermissions(
+                                changes[user.id].permissions,
+                                USER_TO_USER_PERMISSIONS,
+                              )
+                            : false
+                        }
+                        disabled={!canUserAccess}
+                        onChange={(event) => {
+                          const checked = event.currentTarget.checked;
+
+                          setChanges((prev) => {
+                            const currentUser = prev[user.id];
+
+                            return {
+                              ...prev,
+                              [user.id]: {
+                                username: user.id,
+                                permissions: setAllPermissions(
+                                  userHasPermission
+                                    ? currentUser.permissions
+                                    : USER_TO_USER_PERMISSIONS,
+                                  checked,
+                                ),
+                              },
+                            };
+                          });
+                        }}
+                      />
+                      {Object.entries(USER_TO_USER_PERMISSIONS).map(
+                        ([groupKey, permissions]) => (
+                          <Stack key={groupKey} gap="xs">
+                            <Text size="xs" fw={"bolder"} c={"gray"}>
+                              {PERMISSION_GROUP_LABELS[groupKey] ?? groupKey}
+                            </Text>
+
+                            <Flex gap="md" style={{ flexWrap: "wrap" }}>
+                              {Object.keys(permissions).map((permissionKey) => {
+                                const path = `${groupKey}.${permissionKey}`;
+
+                                const checked = getPermissionValue(
+                                  currentUser?.permissions ?? {},
+                                  path,
+                                );
+
+                                return (
+                                  <Checkbox
+                                    key={path}
+                                    size="xs"
+                                    checked={checked}
+                                    disabled={!canUserAccess}
+                                    label={
+                                      PERMISSION_LABELS[path] ?? permissionKey
+                                    }
+                                    onChange={(event) =>
+                                      handlePermissionChange(
+                                        user.id,
+                                        path,
+                                        event.currentTarget.checked,
+                                      )
+                                    }
+                                  />
+                                );
+                              })}
+                            </Flex>
+                          </Stack>
+                        ),
+                      )}
+                    </Stack>
+                  )}
+                </Box>
+              );
+            })}
+          </Stack>
         </ScrollArea>
       </Box>
 
