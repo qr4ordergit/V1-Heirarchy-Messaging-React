@@ -42,7 +42,6 @@ import {
   IconSearch,
   IconX,
   IconMail,
-  IconUpload,
   IconUserEdit,
   IconCopy,
   IconCheck,
@@ -72,7 +71,7 @@ import { ClearStore } from "../../store/clear.store";
 import AccessAndPermission from "../../component/accessAndPermission/AccessAndPermission";
 
 import CreateAccountModal from "./Createaccountmodal";
-import BulkUploadModal from "./BulkUploadModal";
+
 import {
   PERMISSION_GROUP_LABELS,
   PERMISSION_LABELS,
@@ -142,7 +141,6 @@ export default function Accounts() {
   const [error, setError] = useState<string | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [bulkUploadModalOpen, setBulkUploadModalOpen] = useState(false);
 
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -280,6 +278,11 @@ export default function Accounts() {
     }
   };
 
+  const handleAccountsChanged = async () => {
+    setSearchQuery("");
+    await loadAccounts();
+  };
+
   const openLockModal = (account: Account) => {
     setLockTarget(account);
     setLockEnabled(account.isLocked);
@@ -389,19 +392,56 @@ export default function Accounts() {
   };
 
   const handleCopyUsername = async (account: Account) => {
-    try {
-      await navigator.clipboard.writeText(account.user_id);
+    const markCopied = () => {
       setCopiedUserId(account.user_id);
       window.setTimeout(() => {
         setCopiedUserId((current) =>
           current === account.user_id ? null : current,
         );
       }, 1500);
+    };
+
+    const copyWithFallback = (): boolean => {
+      try {
+        const textarea = document.createElement("textarea");
+        textarea.value = account.user_id;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.top = "0";
+        textarea.style.left = "0";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+
+        textarea.focus();
+        textarea.select();
+        textarea.setSelectionRange(0, textarea.value.length);
+
+        const succeeded = document.execCommand("copy");
+        document.body.removeChild(textarea);
+        return succeeded;
+      } catch {
+        return false;
+      }
+    };
+
+    try {
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(account.user_id);
+        markCopied();
+        return;
+      }
+
+      if (copyWithFallback()) {
+        markCopied();
+        return;
+      }
+
+      throw new Error("Copy not supported");
     } catch {
       notifications.show({
         color: "red",
-        title: "",
-        message: "Could not copy username.",
+        title: "Couldn't copy",
+        message: "Could not copy username. Please copy it manually.",
       });
     }
   };
@@ -638,16 +678,7 @@ export default function Accounts() {
                 Add Account
               </Button>
             )}
-            {isHubAccountLoggedIn && (
-              <Button
-                leftSection={<IconUpload size={16} />}
-                radius="xl"
-                variant="light"
-                onClick={() => setBulkUploadModalOpen(true)}
-              >
-                Bulk Upload
-              </Button>
-            )}
+
             <Button
               leftSection={<IconLogout size={16} />}
               radius="xl"
@@ -762,8 +793,6 @@ export default function Accounts() {
                             size={48}
                             src={account.profile_picture}
                             onClick={() => {
-                              // setTargetUser(account.user_id);
-                              //setTargetUserDetails(account);
                               navigate(`/${ROUTES.CHATS}`);
                             }}
                           />
@@ -775,8 +804,6 @@ export default function Accounts() {
                                 truncate="end"
                                 className={classes.accountName}
                                 onClick={() => {
-                                  //setTargetUser(account.user_id);
-                                  //setTargetUserDetails(account);
                                   navigate(`/${ROUTES.CHATS}`);
                                 }}
                               >
@@ -1213,13 +1240,7 @@ export default function Accounts() {
       <CreateAccountModal
         opened={modalOpen}
         onClose={() => setModalOpen(false)}
-        onAccountCreated={loadAccounts}
-      />
-
-      <BulkUploadModal
-        opened={bulkUploadModalOpen}
-        onClose={() => setBulkUploadModalOpen(false)}
-        onUploaded={loadAccounts}
+        onAccountCreated={handleAccountsChanged}
       />
 
       <Modal

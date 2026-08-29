@@ -25,6 +25,9 @@ import { suggestUsername } from "../../api/authApi";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { COUNTRY_CODES } from "../../utils/constant";
 import classes from "./Accounts.module.css";
+import BulkUploadPanel from "./BulkUploadPanel";
+
+type AddAccountMode = "single" | "bulk";
 
 type IdentifierType = "username" | "email" | "phone";
 
@@ -72,6 +75,8 @@ export default function CreateAccountModal({
   onAccountCreated,
 }: CreateAccountModalProps) {
   const userDetails = useAuthStore((state) => state.userDetails);
+
+  const [mode, setMode] = useState<AddAccountMode>("single");
 
   const [form, setForm] = useState<NewAccountForm>(EMPTY_FORM);
   const [formErrors, setFormErrors] = useState<NewAccountErrors>({});
@@ -186,6 +191,7 @@ export default function CreateAccountModal({
 
   const handleClose = () => {
     onClose();
+    setMode("single");
     setForm(EMPTY_FORM);
     setFormErrors({});
     setSubmitError(null);
@@ -332,13 +338,32 @@ export default function CreateAccountModal({
       opened={opened}
       onClose={handleClose}
       title={
-        accountStep === "verify" ? "Verify Phone Number" : "Create Account"
+        accountStep === "verify"
+          ? "Verify Phone Number"
+          : mode === "bulk"
+            ? "Bulk Upload Accounts"
+            : "Create Account"
       }
       centered
       radius="md"
       size="lg"
     >
-      {accountStep === "verify" ? (
+      {accountStep === "form" && (
+        <SegmentedControl
+          fullWidth
+          mb="md"
+          value={mode}
+          onChange={(value) => setMode(value as AddAccountMode)}
+          data={[
+            { label: "Single Account", value: "single" },
+            { label: "Bulk Upload", value: "bulk" },
+          ]}
+        />
+      )}
+
+      {accountStep === "form" && mode === "bulk" ? (
+        <BulkUploadPanel onDone={handleClose} onUploaded={onAccountCreated} />
+      ) : accountStep === "verify" ? (
         <Stack gap="md" align="center">
           {accountOtpError && (
             <Alert color="red" title="Verification failed" w="100%">
