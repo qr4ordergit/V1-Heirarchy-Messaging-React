@@ -14,7 +14,6 @@ import {
 import {
   PERMISSION_GROUP_LABELS,
   PERMISSION_LABELS,
-  PERMISSIONS,
   USER_TO_USER_PERMISSIONS,
 } from "../../utils/constant";
 
