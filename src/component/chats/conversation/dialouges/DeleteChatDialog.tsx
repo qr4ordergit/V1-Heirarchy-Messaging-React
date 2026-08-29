@@ -37,14 +37,17 @@ function DeleteChatDialog() {
         data: {
           message_id: triggerPayload._id,
           soft_delete: true,
-          target_user: targetUserDetails?.user_id,
         },
       };
 
       const endpoint = isGroup
         ? ENDPOINTS.GROUP_CHAT.DELETE
         : ENDPOINTS.CHAT.DELETE;
-      const res = await api.delete(endpoint, payload);
+
+      const endpoint_params = targetUserDetails?.user_id
+        ? `?target_user=${targetUserDetails?.user_id}`
+        : "";
+      const res = await api.delete(`${endpoint}${endpoint_params}`, payload);
 
       if (!res.data?.success) {
         return Notification.error("Unable to delete chat");
