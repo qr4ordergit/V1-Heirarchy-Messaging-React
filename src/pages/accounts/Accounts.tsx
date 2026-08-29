@@ -1416,7 +1416,7 @@ export default function Accounts() {
             disabled
           />
           <Textarea
-            label="Description"
+            label="Description / Designation"
             classNames={{ label: classes.fieldLabel }}
             placeholder="Enter description"
             value={profileForm.description ?? ""}
