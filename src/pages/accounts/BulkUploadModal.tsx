@@ -116,7 +116,7 @@ export default function BulkUploadModal({
       setSelectedFile(null);
       await onUploaded?.();
       onClose();
-      window.location.reload();
+      // window.location.reload();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Could not process the file.";
