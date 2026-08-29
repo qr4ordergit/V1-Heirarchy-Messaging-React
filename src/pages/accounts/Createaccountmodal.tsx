@@ -12,6 +12,7 @@ import {
   Select,
   Stack,
   Text,
+  Textarea,
   TextInput,
 } from "@mantine/core";
 
@@ -35,6 +36,8 @@ interface NewAccountForm {
   countryCode: string;
   password: string;
   confirmPassword: string;
+  displayName: string;
+  description: string;
 }
 
 const EMPTY_FORM: NewAccountForm = {
@@ -45,6 +48,8 @@ const EMPTY_FORM: NewAccountForm = {
   countryCode: "+91",
   password: "",
   confirmPassword: "",
+  displayName: "",
+  description: "",
 };
 
 interface NewAccountErrors {
@@ -207,6 +212,8 @@ export default function CreateAccountModal({
         email: form.email.trim(),
         phone: trimmedPhone,
         password: form.password,
+        displayName: form.displayName,
+        description: form.description,
       });
 
       if (form.identifierType === "phone") {
@@ -259,7 +266,7 @@ export default function CreateAccountModal({
         username: pendingUsername,
       });
 
-      if (response.message === "OTP verified successfully") {
+      if (response.message === "OTP verified successfully.") {
         handleClose();
         await onAccountCreated();
         notifications.show({
@@ -293,6 +300,8 @@ export default function CreateAccountModal({
         email: form.email.trim(),
         phone: pendingPhone,
         password: form.password,
+        displayName: form.displayName,
+        description: form.description,
       });
       setPendingUsername(response.username || response.id || pendingUsername);
       setAccountOtp("");
@@ -508,7 +517,26 @@ export default function CreateAccountModal({
             onChange={(e) => setField("confirmPassword")(e.target.value)}
             error={formErrors.confirmPassword}
           />
+          <TextInput
+            label="Display Name"
+            description="Optional. Shown instead of the username when set."
+            classNames={{ label: classes.fieldLabel }}
+            placeholder="Enter display name"
+            value={form.displayName}
+            onChange={(e) => setField("displayName")(e.target.value)}
+          />
 
+          <Textarea
+            label="Description / Designation "
+            description="Optional. A short note about this account."
+            classNames={{ label: classes.fieldLabel }}
+            placeholder="Enter description"
+            value={form.description}
+            onChange={(e) => setField("description")(e.target.value)}
+            autosize
+            minRows={2}
+            maxRows={4}
+          />
           <Group justify="flex-end" mt="xs">
             <Button variant="subtle" onClick={handleClose}>
               Cancel

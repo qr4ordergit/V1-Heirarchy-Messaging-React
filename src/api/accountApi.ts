@@ -27,6 +27,8 @@ export interface Account {
   email: string | null;
   profile_picture: string | null;
   phone_number: string | null;
+  description?: string | null;
+  group_name?: string | null;
   status: string | null;
   isLocked: boolean;
   passkey_hash?: string;
@@ -43,6 +45,8 @@ export interface CreateAccountPayload {
   email: string;
   phone: string;
   password: string;
+  displayName?: string;
+  description?: string;
 }
 
 export interface CreateAccountResponse {
@@ -78,6 +82,23 @@ export interface UpdateUserLockResponse {
 
 export interface UpdateUserAccessResponse {
   message?: string;
+}
+
+export interface UpdateProfilePayload {
+  display_name?: string;
+  email?: string;
+  description?: string;
+  profile_picture?: string;
+  phone_number?: string;
+  status?: string;
+  isLocked?: boolean;
+  passkey_hash?: string;
+}
+
+export interface UpdateProfileResponse {
+  message?: string;
+  updated_fields?: string[];
+  profile_picture_upload_url?: string;
 }
 
 async function parseJson(response: Response): Promise<unknown> {
@@ -139,6 +160,14 @@ export async function createAccount(
     const userDetail = useAuthStore.getState().userDetails;
 
     body.email = userDetail?.email;
+  }
+
+  if (payload.displayName?.trim()) {
+    body.display_name = payload.displayName.trim();
+  }
+
+  if (payload.description?.trim()) {
+    body.description = payload.description.trim();
   }
 
   const response = await fetch(API_ENDPOINTS.AUTH_SUB_USERS, {
@@ -299,6 +328,78 @@ export async function updateUserLock(
   }
 
   return data as UpdateUserLockResponse;
+}
+
+export async function updateUserProfile(
+  payload: UpdateProfilePayload,
+  targetUserId?: string,
+): Promise<UpdateProfileResponse> {
+  const body: Record<string, unknown> = { ...payload };
+
+  if (targetUserId) {
+    body.target_user = targetUserId;
+  }
+
+  const response = await fetch(API_ENDPOINTS.USER_HOME, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify(body),
+  });
+
+  const data = await parseJson(response);
+
+  if (!response.ok) {
+    const message =
+      (
+        data as {
+          message?: string;
+        } | null
+      )?.message || "Could not update profile.";
+
+    throw new Error(message);
+  }
+
+  return data as UpdateProfileResponse;
+}
+
+export interface BulkRegistrationResponse {
+  message?: string;
+  success_count?: number;
+  failed_count?: number;
+  errors?: Array<{ row?: number; username?: string; message: string }>;
+}
+
+export async function bulkRegisterSubUsers(
+  file: File,
+): Promise<BulkRegistrationResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(API_ENDPOINTS.AUTH_SUB_USERS_BULK, {
+    method: "POST",
+    headers: {
+      ...authHeaders(),
+    },
+    body: formData,
+  });
+
+  const data = await parseJson(response);
+
+  if (!response.ok) {
+    const message =
+      (
+        data as {
+          message?: string;
+        } | null
+      )?.message || "Could not process the bulk upload.";
+
+    throw new Error(message);
+  }
+
+  return (data as BulkRegistrationResponse) ?? {};
 }
 
 export async function updateUserAccess(

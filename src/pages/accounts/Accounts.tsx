@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import { useNavigate } from "react-router";
 import { notifications } from "@mantine/notifications";
 import {
   ActionIcon,
   Alert,
+  Avatar as MantineAvatar,
   Badge,
   Button,
   Card,
@@ -24,6 +26,8 @@ import {
   Checkbox,
   ScrollArea,
   ThemeIcon,
+  Textarea,
+  UnstyledButton,
 } from "@mantine/core";
 import {
   IconDotsVertical,
@@ -38,6 +42,11 @@ import {
   IconSearch,
   IconX,
   IconMail,
+  IconUpload,
+  IconUserEdit,
+  IconCopy,
+  IconCheck,
+  IconPencil,
 } from "@tabler/icons-react";
 
 import {
@@ -45,20 +54,25 @@ import {
   deleteAccount,
   changePassword,
   updateUserLock,
+  updateUserProfile,
   type Account,
+  type UpdateProfilePayload,
 } from "../../api/accountApi";
 
 import { logout } from "../../api/authApi";
+import { uploadImageToS3Api } from "../../api/profileApi";
 import { useAuthStore, isHubAccount } from "../../store/auth/auth.store";
 import { ROUTES } from "../../router/routes";
 import Avatar from "../../component/avatar/Avatar";
 
 import { encryptPasskey, decryptPasskey } from "../../utils/passkeyCipher";
+import { initials } from "../../config/avatarColors";
 import classes from "./Accounts.module.css";
 import { ClearStore } from "../../store/clear.store";
 import AccessAndPermission from "../../component/accessAndPermission/AccessAndPermission";
 
 import CreateAccountModal from "./Createaccountmodal";
+import BulkUploadModal from "./BulkUploadModal";
 import {
   PERMISSION_GROUP_LABELS,
   PERMISSION_LABELS,
@@ -85,10 +99,11 @@ const getDisplayName = (account: Account) =>
 
 const getInitialsSource = (account: Account) => getDisplayName(account);
 
-const getAccountIdentifier = (account: Account) =>
-  account?.phone_number !== ""
-    ? account?.phone_number
-    : getDisplayName(account);
+const getAccountIdentifier = (account: Account) => {
+  if (account?.display_name?.trim()) return account.display_name.trim();
+  if (account?.phone_number?.trim()) return account.phone_number.trim();
+  return account.user_id;
+};
 
 const statusColor = (status: string | null) => {
   switch (status?.toLowerCase()) {
@@ -112,6 +127,7 @@ interface AccessAndPermissionsState {
 export default function Accounts() {
   const navigate = useNavigate();
   const userDetails = useAuthStore((state) => state.userDetails);
+  const setUserDetails = useAuthStore((state) => state.setUserDetails);
   const clearTokens = useAuthStore((state) => state.clearTokens);
   const setTargetUser = useAuthStore((state) => state.setTargetUser);
   const setTargetUserDetails = useAuthStore(
@@ -126,6 +142,7 @@ export default function Accounts() {
   const [error, setError] = useState<string | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [bulkUploadModalOpen, setBulkUploadModalOpen] = useState(false);
 
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -138,6 +155,20 @@ export default function Accounts() {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [changingPassword, setChangingPassword] = useState(false);
+
+  const [profileTarget, setProfileTarget] = useState<Account | null>(null);
+  const [profileForm, setProfileForm] = useState<UpdateProfilePayload>({});
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(
+    null,
+  );
+  const [profilePicturePreview, setProfilePicturePreview] = useState<
+    string | null
+  >(null);
+  const profilePictureInputRef = useRef<HTMLInputElement>(null);
+
+  const [copiedUserId, setCopiedUserId] = useState<string | null>(null);
 
   const [lockTarget, setLockTarget] = useState<Account | null>(null);
   const [lockEnabled, setLockEnabled] = useState(false);
@@ -267,6 +298,112 @@ export default function Accounts() {
     setPasskey("");
     setPasskeyPrefilled(false);
     setLockError(null);
+  };
+
+  const openProfileModal = (account: Account) => {
+    setProfileTarget(account);
+    setProfileForm({
+      display_name: account.display_name ?? "",
+      phone_number: account.phone_number ?? "",
+      description: account.description ?? "",
+    });
+    setProfilePictureFile(null);
+    setProfilePicturePreview(account.profile_picture || null);
+    setProfileError(null);
+  };
+
+  const closeProfileModal = () => {
+    setProfileTarget(null);
+    setProfileForm({});
+    setProfilePictureFile(null);
+    setProfilePicturePreview(null);
+    setProfileError(null);
+  };
+
+  const handleProfilePictureChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setProfilePictureFile(file);
+    setProfilePicturePreview(URL.createObjectURL(file));
+    event.target.value = "";
+  };
+
+  const handleSaveProfile = async () => {
+    if (!profileTarget) return;
+
+    setProfileError(null);
+    setSavingProfile(true);
+
+    const isSelf = profileTarget.user_id === userDetails?.username;
+
+    try {
+      const payload: UpdateProfilePayload = {
+        display_name: profileForm.display_name?.trim(),
+        description: profileForm.description?.trim(),
+      };
+
+      if (profilePictureFile) {
+        payload.profile_picture = profilePictureFile.name;
+      }
+
+      const response = await updateUserProfile(
+        payload,
+        isSelf ? undefined : profileTarget.user_id,
+      );
+
+      let uploadedPictureUrl: string | null = null;
+
+      if (profilePictureFile && response.profile_picture_upload_url) {
+        await uploadImageToS3Api(
+          response.profile_picture_upload_url,
+          profilePictureFile,
+        );
+        uploadedPictureUrl = URL.createObjectURL(profilePictureFile);
+      }
+
+      if (isSelf && userDetails) {
+        setUserDetails({
+          ...userDetails,
+          ...(uploadedPictureUrl
+            ? { profile_picture: uploadedPictureUrl }
+            : {}),
+        });
+      }
+
+      notifications.show({
+        title: "",
+        message: response.message || "Profile updated successfully.",
+        color: "green",
+      });
+
+      closeProfileModal();
+      await loadAccounts();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not update profile.";
+      setProfileError(message);
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleCopyUsername = async (account: Account) => {
+    try {
+      await navigator.clipboard.writeText(account.user_id);
+      setCopiedUserId(account.user_id);
+      window.setTimeout(() => {
+        setCopiedUserId((current) =>
+          current === account.user_id ? null : current,
+        );
+      }, 1500);
+    } catch {
+      notifications.show({
+        color: "red",
+        title: "",
+        message: "Could not copy username.",
+      });
+    }
   };
 
   const handleLogout = async () => {
@@ -501,6 +638,16 @@ export default function Accounts() {
                 Add Account
               </Button>
             )}
+            {isHubAccountLoggedIn && (
+              <Button
+                leftSection={<IconUpload size={16} />}
+                radius="xl"
+                variant="light"
+                onClick={() => setBulkUploadModalOpen(true)}
+              >
+                Bulk Upload
+              </Button>
+            )}
             <Button
               leftSection={<IconLogout size={16} />}
               radius="xl"
@@ -613,6 +760,7 @@ export default function Accounts() {
                             name={getInitialsSource(account)}
                             colorIndex={0}
                             size={48}
+                            src={account.profile_picture}
                             onClick={() => {
                               // setTargetUser(account.user_id);
                               //setTargetUserDetails(account);
@@ -634,6 +782,29 @@ export default function Accounts() {
                               >
                                 {getAccountIdentifier(account)}
                               </Text>
+
+                              <Tooltip
+                                label={
+                                  copiedUserId === account.user_id
+                                    ? "Copied!"
+                                    : "username"
+                                }
+                              >
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="gray"
+                                  radius="xl"
+                                  size="sm"
+                                  aria-label="Copy username"
+                                  onClick={() => handleCopyUsername(account)}
+                                >
+                                  {copiedUserId === account.user_id ? (
+                                    <IconCheck size={14} color="teal" />
+                                  ) : (
+                                    <IconCopy size={14} />
+                                  )}
+                                </ActionIcon>
+                              </Tooltip>
 
                               <ActionIcon
                                 variant="subtle"
@@ -733,6 +904,12 @@ export default function Accounts() {
 
                             <Menu.Dropdown>
                               <Menu.Item
+                                leftSection={<IconUserEdit size={14} />}
+                                onClick={() => openProfileModal(account)}
+                              >
+                                Update Profile
+                              </Menu.Item>
+                              <Menu.Item
                                 leftSection={<IconKey size={14} />}
                                 onClick={() => setPasswordTarget(account)}
                               >
@@ -821,6 +998,7 @@ export default function Accounts() {
                                 name={getInitialsSource(account)}
                                 colorIndex={i + 1}
                                 size={48}
+                                src={account.profile_picture}
                                 onClick={() => {
                                   setTargetUser(account.user_id);
                                   setTargetUserDetails(account);
@@ -842,6 +1020,31 @@ export default function Accounts() {
                                   >
                                     {getAccountIdentifier(account)}
                                   </Text>
+
+                                  <Tooltip
+                                    label={
+                                      copiedUserId === account.user_id
+                                        ? "Copied!"
+                                        : account.user_id
+                                    }
+                                  >
+                                    <ActionIcon
+                                      variant="subtle"
+                                      color="gray"
+                                      radius="xl"
+                                      size="sm"
+                                      aria-label="Copy username"
+                                      onClick={() =>
+                                        handleCopyUsername(account)
+                                      }
+                                    >
+                                      {copiedUserId === account.user_id ? (
+                                        <IconCheck size={14} color="teal" />
+                                      ) : (
+                                        <IconCopy size={14} />
+                                      )}
+                                    </ActionIcon>
+                                  </Tooltip>
 
                                   <ActionIcon
                                     variant="subtle"
@@ -918,6 +1121,17 @@ export default function Accounts() {
                                     </Badge>
                                   </Group>
                                 )}
+
+                                {account.description?.trim() && (
+                                  <Text
+                                    size="xs"
+                                    c="dimmed"
+                                    mt={4}
+                                    truncate="end"
+                                  >
+                                    {account.description}
+                                  </Text>
+                                )}
                               </div>
                             </Group>
 
@@ -957,6 +1171,12 @@ export default function Accounts() {
 
                                 <Menu.Dropdown>
                                   <Menu.Item
+                                    leftSection={<IconUserEdit size={14} />}
+                                    onClick={() => openProfileModal(account)}
+                                  >
+                                    Update Profile
+                                  </Menu.Item>
+                                  <Menu.Item
                                     leftSection={<IconKey size={14} />}
                                     onClick={() => setPasswordTarget(account)}
                                   >
@@ -994,6 +1214,12 @@ export default function Accounts() {
         opened={modalOpen}
         onClose={() => setModalOpen(false)}
         onAccountCreated={loadAccounts}
+      />
+
+      <BulkUploadModal
+        opened={bulkUploadModalOpen}
+        onClose={() => setBulkUploadModalOpen(false)}
+        onUploaded={loadAccounts}
       />
 
       <Modal
@@ -1099,6 +1325,122 @@ export default function Accounts() {
               onClick={handleChangePasswordConfirm}
             >
               Update Password
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={profileTarget !== null}
+        onClose={closeProfileModal}
+        title="Update Profile"
+        centered
+        radius="md"
+      >
+        <Stack gap="md">
+          {profileError && (
+            <Alert color="red" title="Couldn't update profile">
+              {profileError}
+            </Alert>
+          )}
+
+          <Text size="sm" c="dimmed">
+            Update profile details for{" "}
+            <strong>
+              {profileTarget ? getAccountIdentifier(profileTarget) : ""}
+            </strong>
+            .
+          </Text>
+
+          <input
+            ref={profilePictureInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/jpg"
+            style={{ display: "none" }}
+            onChange={handleProfilePictureChange}
+          />
+
+          <Group justify="center">
+            <div style={{ position: "relative", width: "fit-content" }}>
+              <MantineAvatar
+                src={profilePicturePreview || undefined}
+                size={84}
+                radius="xl"
+                color="indigo"
+              >
+                {!profilePicturePreview &&
+                  (profileTarget
+                    ? initials(getInitialsSource(profileTarget))
+                    : "")}
+              </MantineAvatar>
+
+              <UnstyledButton
+                onClick={() => profilePictureInputRef.current?.click()}
+                disabled={savingProfile}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  padding: 6,
+                  borderRadius: "50%",
+                  background: "var(--mantine-color-indigo-6)",
+                  color: "white",
+                  border: "2px solid white",
+                  cursor: "pointer",
+                }}
+                aria-label="Change profile picture"
+                title="Change profile picture"
+              >
+                <IconPencil size={14} />
+              </UnstyledButton>
+            </div>
+          </Group>
+
+          <TextInput
+            label="Display Name"
+            classNames={{ label: classes.fieldLabel }}
+            placeholder="Enter display name"
+            value={profileForm.display_name ?? ""}
+            onChange={(e) =>
+              setProfileForm((prev) => ({
+                ...prev,
+                display_name: e.target.value,
+              }))
+            }
+          />
+          <TextInput
+            label="Phone Number"
+            classNames={{ label: classes.fieldLabel }}
+            placeholder="Enter phone number"
+            value={profileForm.phone_number ?? ""}
+            disabled
+          />
+          <Textarea
+            label="Description"
+            classNames={{ label: classes.fieldLabel }}
+            placeholder="Enter description"
+            value={profileForm.description ?? ""}
+            onChange={(e) =>
+              setProfileForm((prev) => ({
+                ...prev,
+                description: e.target.value,
+              }))
+            }
+            autosize
+            minRows={2}
+          />
+
+          <Group justify="flex-end" mt="xs">
+            <Button variant="subtle" onClick={closeProfileModal}>
+              Cancel
+            </Button>
+            <Button
+              radius="xl"
+              variant="gradient"
+              loading={savingProfile}
+              onClick={handleSaveProfile}
+            >
+              Save Changes
             </Button>
           </Group>
         </Stack>
@@ -1247,6 +1589,7 @@ export default function Accounts() {
                       }));
                     }}
                   />
+
                   {Object.entries(PERMISSIONS).map(
                     ([groupKey, permissions]) => (
                       <Stack key={groupKey} gap="xs">
