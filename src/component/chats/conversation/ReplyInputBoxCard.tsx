@@ -22,7 +22,7 @@ function ReplyInputBoxCard() {
   if (trigger !== TRIGGERS.reply) return null;
 
   const mediaUrls = triggerPayload?.body?.media_url;
-  const firstMedia = mediaUrls?.[0];
+  const firstMedia = mediaUrls?.[0]?.name;
 
   const mediaType = firstMedia ? getMediaType(firstMedia) : null;
 

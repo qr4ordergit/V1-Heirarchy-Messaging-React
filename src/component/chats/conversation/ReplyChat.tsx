@@ -26,7 +26,7 @@ function ReplyChat({ replied_to, onReplyClick }: REPLYCHAT) {
   if (!repliedChat) return null;
 
   const mediaUrls = repliedChat.body?.media_url;
-  const firstMedia = mediaUrls?.[0];
+  const firstMedia = mediaUrls?.[0]?.name;
 
   const mediaType = firstMedia ? getMediaType(firstMedia) : null;
 
