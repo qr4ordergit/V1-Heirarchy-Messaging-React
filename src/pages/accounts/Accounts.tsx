@@ -60,7 +60,11 @@ import {
 
 import { logout } from "../../api/authApi";
 import { uploadImageToS3Api } from "../../api/profileApi";
-import { useAuthStore, isHubAccount } from "../../store/auth/auth.store";
+import {
+  useAuthStore,
+  isHubAccount,
+  type UserDetails,
+} from "../../store/auth/auth.store";
 import { ROUTES } from "../../router/routes";
 import Avatar from "../../component/avatar/Avatar";
 
@@ -89,7 +93,7 @@ import {
   type UpdatePermissionsProps,
 } from "../../api/services/access.permission.service";
 import { Notification } from "../../utils/notification";
-
+import { fetchUserDetails } from "../../api/userApi";
 //import { useDisableBackButton } from "../../hooks/useDisableBackButton";
 const PASSKEY_PATTERN = /^[a-zA-Z0-9]{4,12}$/;
 
@@ -237,23 +241,25 @@ export default function Accounts() {
     }
   };
 
-  const loadAccounts = async () => {
+  const loadAccounts = async (userDetailsOverride?: UserDetails | null) => {
     setLoading(true);
     setError(null);
 
     try {
       const subAccounts = await fetchAccounts();
+      const effectiveUserDetails = userDetailsOverride ?? userDetails;
 
-      const currentUser: Account | null = userDetails
+      const currentUser: Account | null = effectiveUserDetails
         ? {
-            user_id: userDetails.username,
-            display_name: userDetails.username,
-            email: userDetails.email ?? "",
-            phone_number: userDetails.phone_number ?? "",
-            profile_picture: userDetails.profile_picture ?? null,
+            user_id: effectiveUserDetails.username,
+            display_name: effectiveUserDetails.display_name ?? null,
+            email: effectiveUserDetails.email ?? "",
+            phone_number: effectiveUserDetails.phone_number ?? "",
+            profile_picture: effectiveUserDetails.profile_picture ?? null,
+            description: effectiveUserDetails.description ?? "",
             status: "active",
-            isLocked: false,
-            passkey_hash: "",
+            isLocked: effectiveUserDetails.isLocked ?? false,
+            passkey_hash: effectiveUserDetails.passkey_hash ?? "",
           }
         : null;
 
@@ -341,14 +347,17 @@ export default function Accounts() {
     const isSelf = profileTarget.user_id === userDetails?.username;
 
     try {
-      const payload: UpdateProfilePayload = {
-        display_name: profileForm.display_name?.trim(),
-        description: profileForm.description?.trim(),
-      };
-
-      if (profilePictureFile) {
-        payload.profile_picture = profilePictureFile.name;
-      }
+      const payload: UpdateProfilePayload = Object.fromEntries(
+        Object.entries({
+          display_name: profileForm.display_name?.trim(),
+          description: profileForm.description?.trim(),
+          ...(profilePictureFile
+            ? { profile_picture: profilePictureFile.name }
+            : {}),
+        }).filter(
+          ([_, value]) => typeof value !== "string" || value.trim() !== "",
+        ),
+      ) as UpdateProfilePayload;
 
       const response = await updateUserProfile(
         payload,
@@ -362,6 +371,7 @@ export default function Accounts() {
           response.profile_picture_upload_url,
           profilePictureFile,
         );
+
         uploadedPictureUrl = URL.createObjectURL(profilePictureFile);
       }
 
@@ -563,11 +573,29 @@ export default function Accounts() {
       encryptedPasskey = encryptPasskey(trimmed, lockTarget.user_id);
     }
 
+    const isSelf = lockTarget.user_id === userDetails?.username;
+
     setSavingLock(true);
     try {
       await updateUserLock(lockTarget.user_id, lockEnabled, encryptedPasskey);
       closeLockModal();
-      await loadAccounts();
+
+      if (isSelf) {
+        // The logged-in user's own lock/passkey state comes from
+        // /user-details, not the sub-users list, so refresh it explicitly
+        // and pass it straight through — setUserDetails() won't update the
+        // userDetails this closure already captured this render.
+        try {
+          const refreshedDetails = await fetchUserDetails();
+          setUserDetails(refreshedDetails);
+          await loadAccounts(refreshedDetails);
+        } catch (refreshErr) {
+          console.error("Failed to refresh user details:", refreshErr);
+          await loadAccounts();
+        }
+      } else {
+        await loadAccounts();
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Could not lock.";
       setLockError(message);
@@ -730,8 +758,7 @@ export default function Accounts() {
                   : "";
 
                 if (isHubAccountLoggedIn) {
-                  const emailValue =
-                    account.email || getAccountIdentifier(account);
+                  const identifierValue = getAccountIdentifier(account);
 
                   return (
                     <Card
@@ -757,7 +784,7 @@ export default function Accounts() {
                             Logged in as
                           </Text>
                           <Text size="sm" fw={700}>
-                            {emailValue}
+                            {identifierValue}
                           </Text>
                         </div>
                       </Group>

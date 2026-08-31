@@ -18,14 +18,10 @@ export interface UserDetails {
   email: string;
   group_name: string | null;
   profile_picture: string | null;
+  isLocked?: boolean;
+  passkey_hash?: string | null;
 }
 
-/*
- * group_name identifies what kind of account is logged in:
- *
- *   "hub"          -> Hub account
- *   "sub-account"  -> Sub account
- */
 export const isHubAccount = (details: UserDetails | null | undefined) =>
   details?.group_name === "hub";
 
