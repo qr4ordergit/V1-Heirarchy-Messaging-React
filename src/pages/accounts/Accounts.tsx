@@ -581,10 +581,6 @@ export default function Accounts() {
       closeLockModal();
 
       if (isSelf) {
-        // The logged-in user's own lock/passkey state comes from
-        // /user-details, not the sub-users list, so refresh it explicitly
-        // and pass it straight through — setUserDetails() won't update the
-        // userDetails this closure already captured this render.
         try {
           const refreshedDetails = await fetchUserDetails();
           setUserDetails(refreshedDetails);
@@ -841,7 +837,7 @@ export default function Accounts() {
                                 label={
                                   copiedUserId === account.user_id
                                     ? "Copied!"
-                                    : "username"
+                                    : account.user_id
                                 }
                               >
                                 <ActionIcon
