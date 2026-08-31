@@ -39,6 +39,7 @@ type UserPermissionChanges = Record<string, UpdateUserPermissionsPayload>;
 interface userDetails {
   id: string;
   label: string | null;
+  display_name: string | null;
 }
 
 interface AccessAndPermissionGridProps {
@@ -239,9 +240,22 @@ export default function AccessAndPermission({
                           setOpenedUserAcc(null);
                         }}
                       />
-                      <Text size="xs" fw={"bolder"}>
-                        {user.label}
-                      </Text>
+                    <Stack gap={0}>
+                      {user.display_name !== "" ? (
+                        <>
+                          <Text size="xs" fw={"bolder"}>
+                            {user.display_name}
+                          </Text>
+                          <Text size="xs" c={"gray"}>
+                            {user.label}
+                          </Text>
+                        </>
+                      ) : (
+                        <Text size="xs" fw={"bolder"}>
+                          {user.label}
+                        </Text>
+                      )}
+                    </Stack>
                     </Flex>
                     {!opend ? (
                       <IconChevronDown size={15} />
