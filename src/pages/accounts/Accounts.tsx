@@ -107,7 +107,12 @@ const getAccountIdentifier = (account: Account) => {
   if (account?.phone_number?.trim()) return account.phone_number.trim();
   return account.user_id;
 };
-
+const getHubIdentifier = (account: Account) => {
+  if (account?.display_name?.trim()) return account.display_name.trim();
+  if (account?.email?.trim()) return account.email.trim();
+  if (account?.phone_number?.trim()) return account.phone_number.trim();
+  return account.user_id;
+};
 const statusColor = (status: string | null) => {
   switch (status?.toLowerCase()) {
     case "active":
@@ -604,11 +609,13 @@ export default function Accounts() {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return true;
     const haystack = [
-      getDisplayName(account),
-
+      getAccountIdentifier(account),
+      account.display_name,
+      account.email,
       account.user_id,
       account.phone_number,
     ]
+      .filter(Boolean)
       .join(" ")
       .toLowerCase();
     return haystack.includes(query);
@@ -669,9 +676,7 @@ export default function Accounts() {
       return;
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadAccounts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userDetails]);
   //useDisableBackButton();
   return (
@@ -737,14 +742,24 @@ export default function Accounts() {
         ) : filteredAccounts.length === 0 ? (
           <Card withBorder radius="md" py="xl">
             <Center>
-              <Text c="dimmed" size="sm">
-                No accounts match "{searchQuery}".
-              </Text>
+              <Stack gap="sm" align="center">
+                <Text c="dimmed" size="sm">
+                  No accounts match "{searchQuery}".
+                </Text>
+                <Button
+                  variant="light"
+                  radius="xl"
+                  size="xs"
+                  leftSection={<IconX size={14} />}
+                  onClick={() => setSearchQuery("")}
+                >
+                  Clear search
+                </Button>
+              </Stack>
             </Center>
           </Card>
         ) : (
           <Stack gap="xl">
-            {/* My Account */}
             {filteredAccounts
               .filter((account) => account.user_id === userDetails?.username)
               .map((account) => {
@@ -754,7 +769,7 @@ export default function Accounts() {
                   : "";
 
                 if (isHubAccountLoggedIn) {
-                  const identifierValue = getAccountIdentifier(account);
+                  const identifierValue = getHubIdentifier(account);
 
                   return (
                     <Card
@@ -979,7 +994,7 @@ export default function Accounts() {
             ) && (
               <Stack gap="sm">
                 <Text size="sm" fw={600}>
-                  Associated Accounts
+                  Accounts you can access:
                 </Text>
                 {accounts.length > 0 && (
                   <TextInput
