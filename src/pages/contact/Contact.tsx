@@ -62,6 +62,7 @@ export interface Contact {
   phone: string;
   email: string;
   color: string;
+  profile_picture?: string;
 }
 
 export interface GroupItem {
@@ -533,11 +534,25 @@ const Contact = () => {
                             />
                           )}
 
-                          <Avatar color={contact.color} radius="xl" size={42}>
+                          <Avatar
+                            src={
+                              contact.profile_picture &&
+                              contact.profile_picture !== "NA"
+                                ? contact.profile_picture
+                                : null
+                            }
+                            color={contact.color || "indigo"}
+                            radius="xl"
+                            size={42}
+                          >
                             {contact.name
-                              .split(" ")
-                              .map((x) => x[0])
-                              .join("")}
+                              ? contact.name
+                                  .split(" ")
+                                  .map((x) => x[0])
+                                  .join("")
+                                  .slice(0, 2)
+                                  .toUpperCase()
+                              : "U"}
                           </Avatar>
 
                           <div>

@@ -24,11 +24,17 @@ export default function ConversationPanel() {
   const search = useConversationTypeStore((state) => state.search);
   const setSearch = useConversationTypeStore((state) => state.setSearch);
   const target_user = useAuthStore((state) => state.target_user);
+  const targetUserDetails = useAuthStore((state) => state.targetUserDetails);
   const userDetails = useAuthStore((state) => state.userDetails);
 
   const navigate = useNavigate();
 
-  const activeUsername = target_user || userDetails?.username || "";
+  const activeUsername =
+    targetUserDetails?.display_name ||
+    userDetails?.display_name ||
+    target_user ||
+    userDetails?.username ||
+    "";
 
   const conversationTypes = [
     { label: "DM", value: "dm" },

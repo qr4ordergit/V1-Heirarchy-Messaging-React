@@ -3,7 +3,6 @@ import type { ChangeEvent } from "react";
 import {
   ActionIcon,
   Avatar,
-  Badge,
   Button,
   Card,
   Group,
@@ -21,7 +20,6 @@ import {
   IconChevronRight,
   IconId,
   IconLogout,
-  IconMail,
   IconPencil,
   IconPlus,
   IconTag,
@@ -81,8 +79,6 @@ const Profile = () => {
   const isSubRoute = ["/privacy", "/help", "/about"].includes(
     location.pathname,
   );
-
-  const currentEmail = targetUserDetails?.email || userDetails?.email || "";
 
   const savedDisplayName =
     targetUserDetails?.display_name ?? (userDetails as any)?.display_name ?? "";
@@ -370,7 +366,7 @@ const Profile = () => {
                   onClick={() => setAccountDetailsOpen(!accountDetailsOpen)}
                   className="w-full px-5 py-4 cursor-pointer"
                 >
-                  <Group justify="space-between">
+                  <Group justify="space-between" pr={"xs"}>
                     <Group gap="md">
                       <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600">
                         <IconId size={20} />
@@ -380,7 +376,7 @@ const Profile = () => {
                           Account Details
                         </Text>
                         <Text size="xs" c="dimmed">
-                          Name, description & email
+                          Name, description
                         </Text>
                       </div>
                     </Group>
@@ -443,30 +439,6 @@ const Profile = () => {
                               </Text>
                             </div>
                           </Group>
-                        </div>
-
-                        <div className="flex items-start justify-between p-3 rounded-xl bg-gray-50/70 border border-gray-100">
-                          <Group gap="sm" wrap="nowrap" align="flex-start">
-                            <IconMail
-                              size={18}
-                              className="text-indigo-500 mt-0.5"
-                            />
-                            <div>
-                              <Text size="xs" c="dimmed" fw={600}>
-                                Registered Email
-                              </Text>
-                              <Text
-                                size="sm"
-                                fw={500}
-                                className="text-gray-800"
-                              >
-                                {currentEmail || "—"}
-                              </Text>
-                            </div>
-                          </Group>
-                          <Badge size="xs" color="gray" variant="light">
-                            Read-only
-                          </Badge>
                         </div>
 
                         <Button
@@ -541,7 +513,7 @@ const Profile = () => {
                   onClick={handleToggleTags}
                   className="w-full px-5 py-4 cursor-pointer"
                 >
-                  <Group justify="space-between">
+                  <Group justify="space-between" pr={"xs"}>
                     <Group gap="md">
                       <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600">
                         <IconTag size={20} />
