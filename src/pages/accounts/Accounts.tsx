@@ -130,6 +130,8 @@ const statusColor = (status: string | null) => {
 interface AccessAndPermissionsState {
   open: boolean;
   targetUser: string;
+  label: string | null;
+  display_name: string | null;
 }
 
 export default function Accounts() {
@@ -195,6 +197,8 @@ export default function Accounts() {
     useState<AccessAndPermissionsState>({
       open: false,
       targetUser: "",
+      label : "",
+      display_name: "",
     });
 
   const [loadingSave, setLoadingSave] = useState(false);
@@ -204,10 +208,16 @@ export default function Accounts() {
     permissions: {},
   });
 
-  const onOpenAccessAndPermissions = (user_id: string) => {
+  const onOpenAccessAndPermissions = (
+    user_id: string,
+      label : string | null,
+    display_name: string | null,
+  ) => {
     setAccessAndPermissions({
       open: true,
       targetUser: user_id,
+      label : label,
+      display_name: display_name,
     });
   };
 
@@ -215,6 +225,8 @@ export default function Accounts() {
     setAccessAndPermissions({
       open: false,
       targetUser: "User Permission",
+      label : "",
+      display_name: "",
     });
     setPerType("User Permission");
   };
@@ -228,6 +240,7 @@ export default function Accounts() {
     .map((acc) => ({
       id: acc.user_id,
       label: acc.phone_number !== "" ? acc.phone_number : acc.user_id,
+      display_name: acc.display_name !== "" ? acc.display_name : "",
     }));
 
   const togglePasskeyVisibility = (account: Account) => {
@@ -660,7 +673,7 @@ export default function Accounts() {
     try {
       setLoadingP(true);
       const res = await AcessAndPermissionService.getUserPermission(targetUser);
-
+      delete res.permissions["sub-users"]
       setChanges(res);
     } catch (error) {
       if (error instanceof Error) {
@@ -1211,7 +1224,11 @@ export default function Accounts() {
                                 }}
                                 onClick={() => {
                                   loadPermissions(account.user_id);
-                                  onOpenAccessAndPermissions(account.user_id);
+                                  onOpenAccessAndPermissions(
+                                    account.user_id,
+                                    account.phone_number !== "" ? account.phone_number : account.user_id,
+                                    account.display_name,
+                                  );
                                 }}
                               >
                                 Manage Access & Permissions
@@ -1591,9 +1608,21 @@ export default function Accounts() {
           <Text>
             {" "}
             Manage Access & Permissions of{" "}
-            <span style={{ color: "var(--mantine-color-blue-4)" }}>
-              <b>{accessAndPermissions.targetUser}</b>
-            </span>
+            {accessAndPermissions.display_name !== "" ? (
+              <>
+              <span style={{ color: "var(--mantine-color-blue-4)" }}>
+                <b>{accessAndPermissions.display_name}</b>
+              </span>
+              <span style={{ color: "gray", fontSize: "12px" }}>
+              {" "} | {" "}
+                {accessAndPermissions.label}
+              </span>
+              </>
+            ) : (
+              <span style={{ color: "var(--mantine-color-blue-4)" }}>
+                <b>{accessAndPermissions.label}</b>
+              </span>
+            )}
           </Text>
         }
         fullScreen
