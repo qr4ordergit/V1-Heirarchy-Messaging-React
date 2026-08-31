@@ -17,7 +17,7 @@ function EditChatDialog() {
   const { alterChat } = useChatStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
   const nextPerson = useNextPerson();
-  const { targetUserDetails } = useAuthStore((state) => state);
+  const { target_user } = useAuthStore((state) => state);
 
   const isGroup = chatId?.includes("group");
 
@@ -42,10 +42,16 @@ function EditChatDialog() {
         user: isGroup ? undefined : nextPerson(chatId),
         body: { text: message },
         message_id: triggerPayload?._id,
-        target_user: targetUserDetails?.user_id,
       };
 
-      const endpoint = isGroup ? ENDPOINTS.GROUP_CHAT.PUT : ENDPOINTS.CHAT.PUT;
+      const target_user_param = target_user
+        ? `?target_user=${target_user}`
+        : "";
+
+      const endpoint = isGroup
+        ? `${ENDPOINTS.GROUP_CHAT.PUT}${target_user_param}`
+        : `${ENDPOINTS.CHAT.PUT}${target_user_param}`;
+
       const res = await api.put(endpoint, payload);
 
       if (!res.data?.success) {

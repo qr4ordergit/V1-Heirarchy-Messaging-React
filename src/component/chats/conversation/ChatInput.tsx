@@ -21,6 +21,7 @@ import ReplyInputBoxCard from "./ReplyInputBoxCard";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../utils/constant";
 import { useAuthStore } from "../../../store/auth/auth.store";
+import { E2EHelper } from "../../../utils/e2eHelper";
 
 interface SUBMIT_PAYLOAD {
   [key: string]: unknown;
@@ -32,9 +33,9 @@ export default function ChatInput() {
   const appendChats = useChatStore((state) => state.appendChats);
   const { trigger, triggerPayload, resetTrigger, setTrigger } =
     useTriggerStore();
-  const { userDetails, targetUserDetails } = useAuthStore((state) => state);
+  const { userDetails, target_user } = useAuthStore((state) => state);
 
-  const own_user_id = targetUserDetails?.user_id ?? userDetails?.username;
+  const own_user_id = target_user ?? userDetails?.username;
   const isReply = trigger === TRIGGERS.reply;
   const isGroup = chatId?.includes("group");
 
@@ -61,7 +62,6 @@ export default function ChatInput() {
         type: isReply ? "replay" : "message",
         parent_message_id: triggerPayload?._id ?? undefined,
         text: message,
-        target_user: targetUserDetails?.user_id,
       };
 
       if (trigger === TRIGGERS.privateMessageSender) {
@@ -71,9 +71,13 @@ export default function ChatInput() {
         }
       }
 
+      const target_user_param = target_user
+        ? `?target_user=${target_user}`
+        : "";
+
       const endpoint = isGroup
-        ? ENDPOINTS.GROUP_CHAT.POST
-        : ENDPOINTS.CHAT.SEND;
+        ? `${ENDPOINTS.GROUP_CHAT.POST}${target_user_param}`
+        : `${ENDPOINTS.CHAT.SEND}${target_user_param}`;
 
       const response = await api.post(endpoint, payload);
 
@@ -104,8 +108,7 @@ export default function ChatInput() {
         type: isReply ? "replay" : "message",
         parent_message_id: triggerPayload?._id ?? undefined,
         text: message,
-        files: files.map((file) => file.name),
-        target_user: targetUserDetails?.user_id,
+        files: files.map((file) => `${file.name.split(".")[0]}.json`),
       };
 
       if (trigger === TRIGGERS.privateMessageSender) {
@@ -115,9 +118,13 @@ export default function ChatInput() {
         }
       }
 
+      const target_user_param = target_user
+        ? `?target_user=${target_user}`
+        : "";
+
       const endpoint = isGroup
-        ? ENDPOINTS.GROUP_CHAT.POST
-        : ENDPOINTS.CHAT.SEND;
+        ? `${ENDPOINTS.GROUP_CHAT.POST}${target_user_param}`
+        : `${ENDPOINTS.CHAT.SEND}${target_user_param}`;
       const response = await api.post(endpoint, payload);
 
       if (!response.data?.success) {
@@ -129,18 +136,31 @@ export default function ChatInput() {
         return Notification.error("Something went wrong");
       }
 
+      if (!response.data?.key) {
+        return Notification.error("Something went wrong");
+      }
+
       let urls = response.data?.upload_urls ?? [];
+      let key = response.data?.key ?? "";
+
+      let finalMsg = response.data?.data;
+      finalMsg["double_encryption"] = false;
 
       for (let i = 0; i < urls.length; i++) {
-        await axios.put(urls[i].upload_url, files[i], {
+        const encrypted = await E2EHelper.encryptFile(key, files[i]);
+
+        if (!encrypted) {
+          throw new Error("File encryption failed");
+        }
+
+        await axios.put(urls[i].upload_url, encrypted, {
           headers: {
-            "Content-Type": files[i].type,
+            "Content-Type": "application/json",
           },
         });
       }
 
-      let finalMsg = response.data?.data;
-      finalMsg["double_encryption"] = false;
+      finalMsg["body"]["media_url"] = files;
       appendChats([finalMsg]);
       if (isReply) {
         resetTrigger();
@@ -174,6 +194,8 @@ export default function ChatInput() {
       setTrigger({
         toTrigger: TRIGGERS.isPrivate,
       });
+
+      setFiles([]);
     } else {
       resetTrigger();
     }
@@ -215,7 +237,11 @@ export default function ChatInput() {
         )}
 
         {/* Attachment */}
-        <FileButton onChange={handleFiles} multiple disabled={submitLoader}>
+        <FileButton
+          onChange={handleFiles}
+          multiple
+          disabled={submitLoader || trigger === TRIGGERS.isPrivate}
+        >
           {(props) => (
             <ActionIcon
               {...props}
@@ -223,6 +249,7 @@ export default function ChatInput() {
               radius="xl"
               size={36}
               aria-label="Attach files"
+              disabled={submitLoader || trigger === TRIGGERS.isPrivate}
             >
               <IconPaperclip size={20} stroke={2} />
             </ActionIcon>

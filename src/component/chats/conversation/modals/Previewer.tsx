@@ -25,18 +25,18 @@ function Previewer() {
     >
       <Carousel withIndicators height="70vh" slideSize="100%" slideGap="0">
         {triggerPayload?.body?.media_url?.map((url) => (
-          <Carousel.Slide key={url}>
+          <Carousel.Slide key={url?.name}>
             <div className="w-full h-full flex items-center justify-center">
-              {getMediaType(url) === "image" ? (
+              {getMediaType(url?.name) === "image" ? (
                 <Image
-                  src={url}
+                  src={URL.createObjectURL(url)}
                   alt="Media preview"
                   className="max-w-full max-h-full"
                   fit="contain"
                 />
               ) : (
                 <video
-                  src={url}
+                  src={URL.createObjectURL(url)}
                   className="max-w-full max-h-full rounded-lg object-contain"
                   controls
                   preload="metadata"

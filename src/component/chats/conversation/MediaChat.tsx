@@ -12,7 +12,7 @@ import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../utils/constant";
 
 interface MEDIACHAT {
-  url: string;
+  url: File;
   msg: MESSAGE;
 }
 
@@ -20,9 +20,11 @@ export function MediaChat({ url, msg }: MEDIACHAT) {
   const getMediaType = useExtentionMediaProvider();
   const { setTrigger } = useTriggerStore();
 
-  const mediaType = getMediaType(url);
+  const mediaType = getMediaType(url?.name);
 
   if (!mediaType) return null;
+
+  const fileUrl = URL.createObjectURL(url);
 
   const mediaIcons = {
     document: IconFileTypeDoc,
@@ -47,17 +49,17 @@ export function MediaChat({ url, msg }: MEDIACHAT) {
         {/* Image */}
         {mediaType === "image" && (
           <Image
-            key={url}
+            key={fileUrl}
             radius="md"
             h={"30vh"}
-            src={url}
+            src={fileUrl}
             onClick={onPreview}
           />
         )}
 
         {mediaType === "video" && (
           <video
-            src={url}
+            src={fileUrl}
             className="w-52 object-cover rounded-lg"
             preload="metadata"
             onClick={onPreview}
@@ -68,7 +70,7 @@ export function MediaChat({ url, msg }: MEDIACHAT) {
       {/* documents */}
       {DocumentIcon && (
         <a
-          href={url}
+          href={fileUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="block"

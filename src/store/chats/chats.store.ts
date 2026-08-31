@@ -7,7 +7,7 @@ export interface MESSAGE {
     replied_to?: string;
     body?: {
         text?: string;
-        media_url?: string[];
+        media_url?: File[];
     };
     tag?: string,
     users?: string[],

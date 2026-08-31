@@ -30,13 +30,17 @@ export const useExtentionMediaProvider = () => {
     };
 
     return (url: string): MediaType | undefined => {
-        const extension = url
-            .split("?")[0]
-            .split("#")[0]
-            .split(".")
-            .pop()
-            ?.toLowerCase();
+        try {
+            const extension = url
+                .split("?")[0]
+                .split("#")[0]
+                .split(".")
+                .pop()
+                ?.toLowerCase();
 
-        return extension ? EXTENSION_MEDIA_PROVIDER[extension] : undefined;
+            return extension ? EXTENSION_MEDIA_PROVIDER[extension] : undefined;
+        } catch (error) {
+
+        }
     }
 }
