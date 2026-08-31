@@ -197,7 +197,7 @@ export default function Accounts() {
     useState<AccessAndPermissionsState>({
       open: false,
       targetUser: "",
-      label : "",
+      label: "",
       display_name: "",
     });
 
@@ -210,13 +210,13 @@ export default function Accounts() {
 
   const onOpenAccessAndPermissions = (
     user_id: string,
-      label : string | null,
+    label: string | null,
     display_name: string | null,
   ) => {
     setAccessAndPermissions({
       open: true,
       targetUser: user_id,
-      label : label,
+      label: label,
       display_name: display_name,
     });
   };
@@ -225,7 +225,7 @@ export default function Accounts() {
     setAccessAndPermissions({
       open: false,
       targetUser: "User Permission",
-      label : "",
+      label: "",
       display_name: "",
     });
     setPerType("User Permission");
@@ -673,7 +673,7 @@ export default function Accounts() {
     try {
       setLoadingP(true);
       const res = await AcessAndPermissionService.getUserPermission(targetUser);
-      delete res.permissions["sub-users"]
+      delete res.permissions["sub-users"];
       setChanges(res);
     } catch (error) {
       if (error instanceof Error) {
@@ -1059,19 +1059,8 @@ export default function Accounts() {
                           padding="lg"
                           className={classes.accountCard}
                         >
-                          <Group
-                            justify="space-between"
-                            gap="sm"
-                            className={classes.cardRow}
-                          >
-                            <Group
-                              gap="md"
-                              wrap="nowrap"
-                              style={{
-                                flex: 1,
-                                minWidth: 0,
-                              }}
-                            >
+                          <div className={classes.cardGrid}>
+                            <div className={classes.cardGridAvatar}>
                               <Avatar
                                 name={getInitialsSource(account)}
                                 colorIndex={i + 1}
@@ -1083,157 +1072,111 @@ export default function Accounts() {
                                   navigate(`/${ROUTES.CHATS}`);
                                 }}
                               />
+                            </div>
 
-                              <div className={classes.accountInfo}>
-                                <Group gap={6} wrap="nowrap" align="center">
-                                  <Text
-                                    fw={600}
-                                    truncate="end"
-                                    className={classes.accountName}
-                                    onClick={() => {
-                                      setTargetUser(account.user_id);
-                                      setTargetUserDetails(account);
-                                      navigate(`/${ROUTES.CHATS}`);
-                                    }}
-                                  >
-                                    {getAccountIdentifier(account)}
-                                  </Text>
+                            <div className={classes.cardGridName}>
+                              <Group gap={6} wrap="nowrap" align="center">
+                                <Text
+                                  fw={600}
+                                  truncate="end"
+                                  className={classes.accountName}
+                                  onClick={() => {
+                                    setTargetUser(account.user_id);
+                                    setTargetUserDetails(account);
+                                    navigate(`/${ROUTES.CHATS}`);
+                                  }}
+                                >
+                                  {getAccountIdentifier(account)}
+                                </Text>
 
-                                  <Tooltip
-                                    label={
-                                      copiedUserId === account.user_id
-                                        ? "Copied!"
-                                        : account.user_id
-                                    }
+                                <Tooltip
+                                  label={
+                                    copiedUserId === account.user_id
+                                      ? "Copied!"
+                                      : account.user_id
+                                  }
+                                >
+                                  <ActionIcon
+                                    variant="subtle"
+                                    color="gray"
+                                    radius="xl"
+                                    size="sm"
+                                    aria-label="Copy username"
+                                    onClick={() => handleCopyUsername(account)}
                                   >
+                                    {copiedUserId === account.user_id ? (
+                                      <IconCheck size={14} color="teal" />
+                                    ) : (
+                                      <IconCopy size={14} />
+                                    )}
+                                  </ActionIcon>
+                                </Tooltip>
+
+                                <ActionIcon
+                                  variant="subtle"
+                                  color={account.isLocked ? "dark" : "gray"}
+                                  radius="xl"
+                                  size="sm"
+                                  aria-label={
+                                    account.isLocked
+                                      ? "Account is locked"
+                                      : "Account is unlocked"
+                                  }
+                                  onClick={() => openLockModal(account)}
+                                >
+                                  {account.isLocked ? (
+                                    <IconLock size={14} color="red" />
+                                  ) : (
+                                    <Tooltip label="Lock with passkey">
+                                      <IconLockOpen size={14} />
+                                    </Tooltip>
+                                  )}
+                                </ActionIcon>
+
+                                {account.isLocked && (
+                                  <>
+                                    <Badge
+                                      size="sm"
+                                      variant="light"
+                                      color="red"
+                                      radius="sm"
+                                      onClick={() => openLockModal(account)}
+                                      style={{
+                                        cursor: "pointer",
+                                        fontFamily: "monospace",
+                                      }}
+                                    >
+                                      {isPasskeyVisible
+                                        ? plainPasskey || "—"
+                                        : "••••••"}
+                                    </Badge>
+
                                     <ActionIcon
                                       variant="subtle"
                                       color="gray"
                                       radius="xl"
                                       size="sm"
-                                      aria-label="Copy username"
+                                      aria-label={
+                                        isPasskeyVisible
+                                          ? "Hide passkey"
+                                          : "Show passkey"
+                                      }
                                       onClick={() =>
-                                        handleCopyUsername(account)
+                                        togglePasskeyVisibility(account)
                                       }
                                     >
-                                      {copiedUserId === account.user_id ? (
-                                        <IconCheck size={14} color="teal" />
+                                      {isPasskeyVisible ? (
+                                        <IconEyeOff size={14} />
                                       ) : (
-                                        <IconCopy size={14} />
+                                        <IconEye size={14} />
                                       )}
                                     </ActionIcon>
-                                  </Tooltip>
-
-                                  <ActionIcon
-                                    variant="subtle"
-                                    color={account.isLocked ? "dark" : "gray"}
-                                    radius="xl"
-                                    size="sm"
-                                    aria-label={
-                                      account.isLocked
-                                        ? "Account is locked"
-                                        : "Account is unlocked"
-                                    }
-                                    onClick={() => openLockModal(account)}
-                                  >
-                                    {account.isLocked ? (
-                                      <IconLock size={14} color="red" />
-                                    ) : (
-                                      <Tooltip label="Lock with passkey">
-                                        <IconLockOpen size={14} />
-                                      </Tooltip>
-                                    )}
-                                  </ActionIcon>
-
-                                  {account.isLocked && (
-                                    <>
-                                      <Badge
-                                        size="sm"
-                                        variant="light"
-                                        color="red"
-                                        radius="sm"
-                                        onClick={() => openLockModal(account)}
-                                        style={{
-                                          cursor: "pointer",
-                                          fontFamily: "monospace",
-                                        }}
-                                      >
-                                        {isPasskeyVisible
-                                          ? plainPasskey || "—"
-                                          : "••••••"}
-                                      </Badge>
-
-                                      <ActionIcon
-                                        variant="subtle"
-                                        color="gray"
-                                        radius="xl"
-                                        size="sm"
-                                        aria-label={
-                                          isPasskeyVisible
-                                            ? "Hide passkey"
-                                            : "Show passkey"
-                                        }
-                                        onClick={() =>
-                                          togglePasskeyVisibility(account)
-                                        }
-                                      >
-                                        {isPasskeyVisible ? (
-                                          <IconEyeOff size={14} />
-                                        ) : (
-                                          <IconEye size={14} />
-                                        )}
-                                      </ActionIcon>
-                                    </>
-                                  )}
-                                </Group>
-
-                                {account.status && (
-                                  <Group gap={6} mt={4} align="center">
-                                    <Badge
-                                      size="sm"
-                                      variant="light"
-                                      color={statusColor(account.status)}
-                                      radius="sm"
-                                    >
-                                      {account.status}
-                                    </Badge>
-                                  </Group>
+                                  </>
                                 )}
+                              </Group>
+                            </div>
 
-                                {account.description?.trim() && (
-                                  <Text
-                                    size="xs"
-                                    c="dimmed"
-                                    mt={4}
-                                    truncate="end"
-                                  >
-                                    {account.description}
-                                  </Text>
-                                )}
-                              </div>
-                            </Group>
-
-                            <Group gap="lg" className={classes.cardActions}>
-                              <Text
-                                size="sm"
-                                c="dimmed"
-                                fw={500}
-                                style={{
-                                  cursor: "pointer",
-                                  whiteSpace: "nowrap",
-                                }}
-                                onClick={() => {
-                                  loadPermissions(account.user_id);
-                                  onOpenAccessAndPermissions(
-                                    account.user_id,
-                                    account.phone_number !== "" ? account.phone_number : account.user_id,
-                                    account.display_name,
-                                  );
-                                }}
-                              >
-                                Manage Access & Permissions
-                              </Text>
-
+                            <div className={classes.cardGridKebab}>
                               <Menu
                                 position="bottom-end"
                                 withinPortal
@@ -1280,8 +1223,53 @@ export default function Accounts() {
                                   )}
                                 </Menu.Dropdown>
                               </Menu>
-                            </Group>
-                          </Group>
+                            </div>
+
+                            <div className={classes.cardGridMeta}>
+                              {account.status && (
+                                <Group gap={6} mb={4} align="center">
+                                  <Badge
+                                    size="sm"
+                                    variant="light"
+                                    color={statusColor(account.status)}
+                                    radius="sm"
+                                  >
+                                    {account.status}
+                                  </Badge>
+                                </Group>
+                              )}
+
+                              {account.description?.trim() && (
+                                <Text size="xs" c="dimmed" truncate="end">
+                                  {account.description}
+                                </Text>
+                              )}
+                            </div>
+
+                            <div className={classes.cardGridManage}>
+                              <Text
+                                size="sm"
+                                c="blue"
+                                fw={500}
+                                style={{
+                                  cursor: "pointer",
+                                  whiteSpace: "nowrap",
+                                }}
+                                onClick={() => {
+                                  loadPermissions(account.user_id);
+                                  onOpenAccessAndPermissions(
+                                    account.user_id,
+                                    account.phone_number !== ""
+                                      ? account.phone_number
+                                      : account.user_id,
+                                    account.display_name,
+                                  );
+                                }}
+                              >
+                                Manage Access & Permissions
+                              </Text>
+                            </div>
+                          </div>
                         </Card>
                       );
                     })}
@@ -1610,13 +1598,13 @@ export default function Accounts() {
             Manage Access & Permissions of{" "}
             {accessAndPermissions.display_name !== "" ? (
               <>
-              <span style={{ color: "var(--mantine-color-blue-4)" }}>
-                <b>{accessAndPermissions.display_name}</b>
-              </span>
-              <span style={{ color: "gray", fontSize: "12px" }}>
-              {" "} | {" "}
-                {accessAndPermissions.label}
-              </span>
+                <span style={{ color: "var(--mantine-color-blue-4)" }}>
+                  <b>{accessAndPermissions.display_name}</b>
+                </span>
+                <span style={{ color: "gray", fontSize: "12px" }}>
+                  {" "}
+                  | {accessAndPermissions.label}
+                </span>
               </>
             ) : (
               <span style={{ color: "var(--mantine-color-blue-4)" }}>

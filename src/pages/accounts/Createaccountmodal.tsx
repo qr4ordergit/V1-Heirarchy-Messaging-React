@@ -338,29 +338,43 @@ export default function CreateAccountModal({
       opened={opened}
       onClose={handleClose}
       title={
-        accountStep === "verify"
-          ? "Verify Phone Number"
-          : mode === "bulk"
-            ? "Bulk Upload Accounts"
-            : "Create Account"
+        <Group justify="space-between" wrap="nowrap" style={{ width: "100%" }}>
+          <Text fw={700} size="lg">
+            {accountStep === "verify"
+              ? "Verify Phone Number"
+              : mode === "bulk"
+                ? "Bulk Upload"
+                : "Create Account"}
+          </Text>
+
+          {accountStep === "form" && (
+            <Text
+              component="button"
+              type="button"
+              onClick={() => setMode(mode === "bulk" ? "single" : "bulk")}
+              fw={600}
+              size="sm"
+              c="blue"
+              td="underline"
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "end",
+                marginLeft: "300px",
+              }}
+            >
+              {mode === "bulk" ? "Single Account" : "Bulk Upload"}
+            </Text>
+          )}
+        </Group>
       }
       centered
       radius="md"
       size="lg"
     >
-      {accountStep === "form" && (
-        <SegmentedControl
-          fullWidth
-          mb="md"
-          value={mode}
-          onChange={(value) => setMode(value as AddAccountMode)}
-          data={[
-            { label: "Single Account", value: "single" },
-            { label: "Bulk Upload", value: "bulk" },
-          ]}
-        />
-      )}
-
       {accountStep === "form" && mode === "bulk" ? (
         <BulkUploadPanel onDone={handleClose} onUploaded={onAccountCreated} />
       ) : accountStep === "verify" ? (
