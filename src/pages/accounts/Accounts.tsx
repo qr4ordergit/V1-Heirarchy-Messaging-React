@@ -266,23 +266,24 @@ export default function Accounts() {
     setLoading(true);
     setError(null);
 
+    const effectiveUserDetails = userDetailsOverride ?? userDetails;
+
+    const currentUser: Account | null = effectiveUserDetails
+      ? {
+          user_id: effectiveUserDetails.username,
+          display_name: effectiveUserDetails.display_name ?? null,
+          email: effectiveUserDetails.email ?? "",
+          phone_number: effectiveUserDetails.phone_number ?? "",
+          profile_picture: effectiveUserDetails.profile_picture ?? null,
+          description: effectiveUserDetails.description ?? "",
+          status: "active",
+          isLocked: effectiveUserDetails.isLocked ?? false,
+          passkey_hash: effectiveUserDetails.passkey_hash ?? "",
+        }
+      : null;
+
     try {
       const subAccounts = await fetchAccounts();
-      const effectiveUserDetails = userDetailsOverride ?? userDetails;
-
-      const currentUser: Account | null = effectiveUserDetails
-        ? {
-            user_id: effectiveUserDetails.username,
-            display_name: effectiveUserDetails.display_name ?? null,
-            email: effectiveUserDetails.email ?? "",
-            phone_number: effectiveUserDetails.phone_number ?? "",
-            profile_picture: effectiveUserDetails.profile_picture ?? null,
-            description: effectiveUserDetails.description ?? "",
-            status: "active",
-            isLocked: effectiveUserDetails.isLocked ?? false,
-            passkey_hash: effectiveUserDetails.passkey_hash ?? "",
-          }
-        : null;
 
       const allAccounts = currentUser
         ? [currentUser, ...subAccounts]
@@ -293,13 +294,19 @@ export default function Accounts() {
       const message =
         err instanceof Error ? err.message : "Could not load accounts.";
 
-      setError(message);
+      const isPermissionError = /does not have permission/i.test(message);
 
-      notifications.show({
-        color: "red",
-        title: "Couldn't load accounts",
-        message,
-      });
+      if (isPermissionError && currentUser) {
+        setAccounts([currentUser]);
+      } else {
+        setError(message);
+
+        notifications.show({
+          color: "red",
+          title: "Couldn't load accounts",
+          message,
+        });
+      }
     } finally {
       setLoading(false);
     }

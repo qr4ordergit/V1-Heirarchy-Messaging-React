@@ -125,8 +125,16 @@ export async function fetchSubUserAccessDetail(): Promise<SubUserAccessDetail> {
       (
         data as {
           message?: string;
+          error?: string;
         } | null
-      )?.message || "Could not load accounts.";
+      )?.message ||
+      (
+        data as {
+          message?: string;
+          error?: string;
+        } | null
+      )?.error ||
+      "Could not load accounts.";
 
     throw new Error(message);
   }
