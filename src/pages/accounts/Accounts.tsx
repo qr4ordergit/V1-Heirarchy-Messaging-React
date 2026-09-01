@@ -684,6 +684,8 @@ export default function Accounts() {
       setLoadingP(true);
       const res = await AcessAndPermissionService.getUserPermission(targetUser);
       delete res.permissions["sub-users"];
+      delete res.permissions.keyring;
+      delete res.permissions["users-accesstree"].update;
       setChanges(res);
     } catch (error) {
       if (error instanceof Error) {

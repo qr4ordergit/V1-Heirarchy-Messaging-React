@@ -126,12 +126,12 @@ export const PERMISSIONS = {
     update: false,
     delete: false,
   },
-  keyring: {
-    create: false,
-    read: false,
-    update: false,
-    delete: false,
-  },
+  // keyring: {
+  //   create: false,
+  //   read: false,
+  //   update: false,
+  //   delete: false,
+  // },
   contacts: {
     create: false,
     read: false,
@@ -155,7 +155,7 @@ export const PERMISSIONS = {
   // },
   "users-accesstree": {
     read: false,
-    update: false,
+    // update: false,
   },
   "user-account": {
     "reset-password": false,
