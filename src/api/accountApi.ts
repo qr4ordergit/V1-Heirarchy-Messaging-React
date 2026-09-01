@@ -367,6 +367,8 @@ export async function updateUserProfile(
 
 export interface BulkRegistrationResponse {
   message?: string;
+  total?: number;
+  created?: number;
   success_count?: number;
   failed_count?: number;
   errors?: Array<{ row?: number; username?: string; message: string }>;

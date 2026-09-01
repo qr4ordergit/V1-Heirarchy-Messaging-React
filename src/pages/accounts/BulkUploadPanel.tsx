@@ -46,8 +46,9 @@ export default function BulkUploadPanel({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [resultSummary, setResultSummary] = useState<{
     message?: string;
-    successCount?: number;
-    failedCount?: number;
+    total?: number;
+    created?: number;
+    failed?: number;
     errors?: Array<{ row?: number; username?: string; message: string }>;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -101,10 +102,19 @@ export default function BulkUploadPanel({
     try {
       const response = await bulkRegisterSubUsers(selectedFile);
 
+      const total = response.total ?? undefined;
+      const created = response.created ?? response.success_count ?? undefined;
+      const failed =
+        response.failed_count ??
+        (total !== undefined && created !== undefined
+          ? total - created
+          : response.errors?.length);
+
       setResultSummary({
         message: response.message,
-        successCount: response.success_count,
-        failedCount: response.failed_count,
+        total,
+        created,
+        failed,
         errors: response.errors,
       });
 
@@ -118,12 +128,16 @@ export default function BulkUploadPanel({
       setUploading(false);
       setFinishingUp(true);
 
+      const hasErrors = (response.errors?.length ?? 0) > 0;
+
       window.setTimeout(() => {
         void onUploaded?.();
         setFinishingUp(false);
-        setResultSummary(null);
-        setUploadError(null);
-        onDone();
+        if (!hasErrors) {
+          setResultSummary(null);
+          setUploadError(null);
+          onDone();
+        }
       }, 4000);
     } catch (err) {
       const message =
@@ -154,36 +168,41 @@ export default function BulkUploadPanel({
       {resultSummary && (
         <Alert
           color={
-            resultSummary.failedCount && resultSummary.failedCount > 0
-              ? "yellow"
-              : "teal"
+            resultSummary.failed && resultSummary.failed > 0 ? "yellow" : "teal"
           }
           title="Upload result"
         >
-          <Text size="sm">
-            {resultSummary.successCount !== undefined ||
-            resultSummary.failedCount !== undefined ? (
-              <>
-                {resultSummary.successCount ?? 0} account
-                {resultSummary.successCount === 1 ? "" : "s"} created
-                successfully
-                {resultSummary.failedCount
-                  ? `, ${resultSummary.failedCount} failed.`
-                  : "."}
-              </>
-            ) : (
-              resultSummary.message || "The file was processed successfully."
-            )}
-          </Text>
+          {resultSummary.total !== undefined ||
+          resultSummary.created !== undefined ? (
+            <Stack gap={2}>
+              {resultSummary.total !== undefined && (
+                <Text size="sm">
+                  <strong>Total:</strong> {resultSummary.total}
+                </Text>
+              )}
+              {resultSummary.created !== undefined && (
+                <Text size="sm">
+                  <strong>Created:</strong> {resultSummary.created}
+                </Text>
+              )}
+              {resultSummary.failed !== undefined && (
+                <Text size="sm">
+                  <strong>Failed:</strong> {resultSummary.failed}
+                </Text>
+              )}
+            </Stack>
+          ) : (
+            <Text size="sm">
+              {resultSummary.message || "The file was processed successfully."}
+            </Text>
+          )}
+
           {resultSummary.errors && resultSummary.errors.length > 0 && (
-            <List size="xs" mt={6}>
-              {resultSummary.errors.slice(0, 10).map((e, idx) => (
+            <List size="sm" mt={8} spacing={4}>
+              {resultSummary.errors.map((e, idx) => (
                 <List.Item key={idx}>
-                  {e.username
-                    ? `${e.username}: `
-                    : e.row
-                      ? `Row ${e.row}: `
-                      : ""}
+                  {e.row !== undefined ? `Row ${e.row} — ` : ""}
+                  {e.username ? `${e.username} — ` : ""}
                   {e.message}
                 </List.Item>
               ))}

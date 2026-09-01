@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useNavigate } from "react-router";
 import { notifications } from "@mantine/notifications";
+import { useMediaQuery } from "@mantine/hooks";
 import {
   ActionIcon,
   Alert,
@@ -46,6 +47,7 @@ import {
   IconCopy,
   IconCheck,
   IconPencil,
+  IconShieldLock,
 } from "@tabler/icons-react";
 
 import {
@@ -136,6 +138,7 @@ interface AccessAndPermissionsState {
 
 export default function Accounts() {
   const navigate = useNavigate();
+  const isMobile = useMediaQuery("(max-width: 640px)");
   const userDetails = useAuthStore((state) => state.userDetails);
   const setUserDetails = useAuthStore((state) => state.setUserDetails);
   const clearTokens = useAuthStore((state) => state.clearTokens);
@@ -884,28 +887,30 @@ export default function Accounts() {
                                 </ActionIcon>
                               </Tooltip>
 
-                              <ActionIcon
-                                variant="subtle"
-                                color={account.isLocked ? "dark" : "gray"}
-                                radius="xl"
-                                size="sm"
-                                aria-label={
-                                  account.isLocked
-                                    ? "Account is locked"
-                                    : "Account is unlocked"
-                                }
-                                onClick={() => openLockModal(account)}
-                              >
-                                {account.isLocked ? (
-                                  <IconLock size={14} color="red" />
-                                ) : (
-                                  <Tooltip label="Lock with passkey">
-                                    <IconLockOpen size={14} />
-                                  </Tooltip>
-                                )}
-                              </ActionIcon>
+                              {!isMobile && (
+                                <ActionIcon
+                                  variant="subtle"
+                                  color={account.isLocked ? "dark" : "gray"}
+                                  radius="xl"
+                                  size="sm"
+                                  aria-label={
+                                    account.isLocked
+                                      ? "Account is locked"
+                                      : "Account is unlocked"
+                                  }
+                                  onClick={() => openLockModal(account)}
+                                >
+                                  {account.isLocked ? (
+                                    <IconLock size={14} color="red" />
+                                  ) : (
+                                    <Tooltip label="Lock with passkey">
+                                      <IconLockOpen size={14} />
+                                    </Tooltip>
+                                  )}
+                                </ActionIcon>
+                              )}
 
-                              {account.isLocked && (
+                              {!isMobile && account.isLocked && (
                                 <>
                                   <Badge
                                     size="sm"
@@ -981,6 +986,24 @@ export default function Accounts() {
                             </Menu.Target>
 
                             <Menu.Dropdown>
+                              {isMobile && (
+                                <>
+                                  <Menu.Item
+                                    leftSection={
+                                      account.isLocked ? (
+                                        <IconLock size={14} />
+                                      ) : (
+                                        <IconLockOpen size={14} />
+                                      )
+                                    }
+                                    onClick={() => openLockModal(account)}
+                                  >
+                                    Passkey & Lock
+                                  </Menu.Item>
+                                  <Menu.Divider />
+                                </>
+                              )}
+
                               <Menu.Item
                                 leftSection={<IconUserEdit size={14} />}
                                 onClick={() => openProfileModal(account)}
@@ -1112,28 +1135,30 @@ export default function Accounts() {
                                   </ActionIcon>
                                 </Tooltip>
 
-                                <ActionIcon
-                                  variant="subtle"
-                                  color={account.isLocked ? "dark" : "gray"}
-                                  radius="xl"
-                                  size="sm"
-                                  aria-label={
-                                    account.isLocked
-                                      ? "Account is locked"
-                                      : "Account is unlocked"
-                                  }
-                                  onClick={() => openLockModal(account)}
-                                >
-                                  {account.isLocked ? (
-                                    <IconLock size={14} color="red" />
-                                  ) : (
-                                    <Tooltip label="Lock with passkey">
-                                      <IconLockOpen size={14} />
-                                    </Tooltip>
-                                  )}
-                                </ActionIcon>
+                                {!isMobile && (
+                                  <ActionIcon
+                                    variant="subtle"
+                                    color={account.isLocked ? "dark" : "gray"}
+                                    radius="xl"
+                                    size="sm"
+                                    aria-label={
+                                      account.isLocked
+                                        ? "Account is locked"
+                                        : "Account is unlocked"
+                                    }
+                                    onClick={() => openLockModal(account)}
+                                  >
+                                    {account.isLocked ? (
+                                      <IconLock size={14} color="red" />
+                                    ) : (
+                                      <Tooltip label="Lock with passkey">
+                                        <IconLockOpen size={14} />
+                                      </Tooltip>
+                                    )}
+                                  </ActionIcon>
+                                )}
 
-                                {account.isLocked && (
+                                {!isMobile && account.isLocked && (
                                   <>
                                     <Badge
                                       size="sm"
@@ -1195,6 +1220,41 @@ export default function Accounts() {
                                 </Menu.Target>
 
                                 <Menu.Dropdown>
+                                  {isMobile && (
+                                    <>
+                                      <Menu.Item
+                                        leftSection={
+                                          account.isLocked ? (
+                                            <IconLock size={14} />
+                                          ) : (
+                                            <IconLockOpen size={14} />
+                                          )
+                                        }
+                                        onClick={() => openLockModal(account)}
+                                      >
+                                        Passkey & Lock
+                                      </Menu.Item>
+                                      <Menu.Item
+                                        leftSection={
+                                          <IconShieldLock size={14} />
+                                        }
+                                        onClick={() => {
+                                          loadPermissions(account.user_id);
+                                          onOpenAccessAndPermissions(
+                                            account.user_id,
+                                            account.phone_number !== ""
+                                              ? account.phone_number
+                                              : account.user_id,
+                                            account.display_name,
+                                          );
+                                        }}
+                                      >
+                                        Manage Access & Permissions
+                                      </Menu.Item>
+                                      <Menu.Divider />
+                                    </>
+                                  )}
+
                                   <Menu.Item
                                     leftSection={<IconUserEdit size={14} />}
                                     onClick={() => openProfileModal(account)}
@@ -1246,29 +1306,31 @@ export default function Accounts() {
                               )}
                             </div>
 
-                            <div className={classes.cardGridManage}>
-                              <Text
-                                size="sm"
-                                c="blue"
-                                fw={500}
-                                style={{
-                                  cursor: "pointer",
-                                  whiteSpace: "nowrap",
-                                }}
-                                onClick={() => {
-                                  loadPermissions(account.user_id);
-                                  onOpenAccessAndPermissions(
-                                    account.user_id,
-                                    account.phone_number !== ""
-                                      ? account.phone_number
-                                      : account.user_id,
-                                    account.display_name,
-                                  );
-                                }}
-                              >
-                                Manage Access & Permissions
-                              </Text>
-                            </div>
+                            {!isMobile && (
+                              <div className={classes.cardGridManage}>
+                                <Text
+                                  size="sm"
+                                  c="blue"
+                                  fw={500}
+                                  style={{
+                                    cursor: "pointer",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                  onClick={() => {
+                                    loadPermissions(account.user_id);
+                                    onOpenAccessAndPermissions(
+                                      account.user_id,
+                                      account.phone_number !== ""
+                                        ? account.phone_number
+                                        : account.user_id,
+                                      account.display_name,
+                                    );
+                                  }}
+                                >
+                                  Manage Access & Permissions
+                                </Text>
+                              </div>
+                            )}
                           </div>
                         </Card>
                       );
