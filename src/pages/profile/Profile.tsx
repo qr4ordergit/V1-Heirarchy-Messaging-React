@@ -122,14 +122,14 @@ const Profile = () => {
 
       const res = await updateProfileApi(payload);
 
-      if (targetUserDetails) {
+      if (res?.updated_fields && targetUserDetails) {
         setTargetUserDetails({
           ...targetUserDetails,
           display_name: displayName.trim(),
           description: description.trim(),
         });
       }
-      if (userDetails) {
+      if (res?.updated_fields && userDetails) {
         setUserDetails({
           ...userDetails,
           display_name: displayName.trim(),

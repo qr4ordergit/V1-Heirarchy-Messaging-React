@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import type { ChangeEvent } from "react";
 import {
+  ActionIcon,
   Avatar,
   Button,
   Checkbox,
   FileInput,
   Group,
+  Loader,
   Modal,
   MultiSelect,
   Pill,
@@ -14,14 +16,25 @@ import {
   Text,
   TextInput,
   Textarea,
+  Tooltip,
 } from "@mantine/core";
-import { IconUpload, IconUserPlus, IconUserShield } from "@tabler/icons-react";
+import {
+  IconPlus,
+  IconTag,
+  IconUpload,
+  IconUserPlus,
+  IconUserShield,
+  IconX,
+} from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import type { Contact, GroupItem } from "../../pages/contact/Contact";
 import {
   manageGroupMembers,
   manageGroupAdmins,
   transferGroupOwnership,
+  getGroupTagsApi,
+  createGroupTagApi,
+  deleteGroupTagApi,
 } from "../../api/createGroupModalApi";
 
 interface CreateGroupModalProps {
@@ -55,6 +68,13 @@ const CreateGroupModal = ({
   const [onlyAdminsCanMessage, setOnlyAdminsCanMessage] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
+  const [groupTags, setGroupTags] = useState<string[]>([]);
+  const [loadingTags, setLoadingTags] = useState(false);
+  const [isAddingTag, setIsAddingTag] = useState(false);
+  const [newTagName, setNewTagName] = useState("");
+  const [tagActionLoading, setTagActionLoading] = useState(false);
+  const [deletingTag, setDeletingTag] = useState<string | null>(null);
+
   useEffect(() => {
     if (!opened) return;
 
@@ -80,6 +100,11 @@ const CreateGroupModal = ({
         );
       });
       setMembers(mappedMembers);
+
+      setLoadingTags(true);
+      getGroupTagsApi(initialGroup._id)
+        .then((tags) => setGroupTags(tags))
+        .finally(() => setLoadingTags(false));
     } else {
       setMembers(selectedContacts);
       setGroupName("");
@@ -88,7 +113,11 @@ const CreateGroupModal = ({
       setOnlyAdminsCanMessage(false);
       setAdmins([]);
       setOwner("");
+      setGroupTags([]);
     }
+
+    setIsAddingTag(false);
+    setNewTagName("");
   }, [opened, initialGroup, selectedContacts]);
 
   const handleRemoveMember = async (memberId: string) => {
@@ -170,6 +199,51 @@ const CreateGroupModal = ({
     if (ok) {
       setOwner(newOwnerId);
       onGroupUpdated?.();
+    }
+  };
+
+  const handleAddTag = async () => {
+    const trimmed = newTagName.trim();
+    if (!trimmed) {
+      notifications.show({
+        title: "",
+        message: "Please enter a tag name.",
+        color: "red",
+      });
+      return;
+    }
+
+    if (groupTags.includes(trimmed)) {
+      notifications.show({
+        title: "",
+        message: "This tag is already added.",
+        color: "yellow",
+      });
+      return;
+    }
+
+    if (!initialGroup) return;
+
+    setTagActionLoading(true);
+    const ok = await createGroupTagApi(initialGroup._id, trimmed);
+    setTagActionLoading(false);
+
+    if (ok) {
+      setGroupTags((prev) => [...prev, trimmed]);
+      setNewTagName("");
+      setIsAddingTag(false);
+    }
+  };
+
+  const handleRemoveTag = async (tagToRemove: string) => {
+    if (!initialGroup) return;
+
+    setDeletingTag(tagToRemove);
+    const ok = await deleteGroupTagApi(initialGroup._id, tagToRemove);
+    setDeletingTag(null);
+
+    if (ok) {
+      setGroupTags((prev) => prev.filter((t) => t !== tagToRemove));
     }
   };
 
@@ -414,6 +488,107 @@ const CreateGroupModal = ({
                 leftSection={<IconUserShield size={16} />}
                 comboboxProps={{ withinPortal: true }}
               />
+            )}
+
+            {initialGroup && (
+              <div>
+                <Group justify="space-between" align="center" mb={4}>
+                  <Group gap={4}>
+                    <IconTag size={15} className="text-indigo-600" />
+                    <Text size="xs" fw={500}>
+                      Group Tags ({groupTags.length})
+                    </Text>
+                  </Group>
+
+                  {!isAddingTag && (
+                    <Tooltip label="Add Tag" withArrow position="left">
+                      <ActionIcon
+                        size="xs"
+                        variant="light"
+                        color="indigo"
+                        onClick={() => setIsAddingTag(true)}
+                      >
+                        <IconPlus size={13} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
+                </Group>
+
+                {isAddingTag && (
+                  <div className="flex items-center gap-1.5 p-1.5 mb-2 bg-indigo-50/50 rounded-lg border border-indigo-200">
+                    <TextInput
+                      placeholder="Enter tag name..."
+                      size="xs"
+                      className="flex-1"
+                      autoFocus
+                      value={newTagName}
+                      disabled={tagActionLoading}
+                      onChange={(e) => setNewTagName(e.currentTarget.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddTag();
+                        } else if (e.key === "Escape") {
+                          setIsAddingTag(false);
+                          setNewTagName("");
+                        }
+                      }}
+                    />
+                    <Button
+                      size="xs"
+                      color="indigo"
+                      loading={tagActionLoading}
+                      onClick={handleAddTag}
+                    >
+                      Save
+                    </Button>
+                    <ActionIcon
+                      size="sm"
+                      variant="subtle"
+                      color="gray"
+                      onClick={() => {
+                        setIsAddingTag(false);
+                        setNewTagName("");
+                      }}
+                    >
+                      <IconX size={14} />
+                    </ActionIcon>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-1.5 p-2 bg-gray-50 rounded-lg border border-gray-200 min-h-10.5 max-h-24 overflow-y-auto">
+                  {loadingTags ? (
+                    <Group gap={6} align="center" px="xs" py={2}>
+                      <Loader size="xs" color="indigo" />
+                      <Text size="xs" c="dimmed">
+                        Loading tags...
+                      </Text>
+                    </Group>
+                  ) : groupTags.length > 0 ? (
+                    groupTags.map((tag) => (
+                      <Pill
+                        key={tag}
+                        withRemoveButton
+                        onRemove={() => handleRemoveTag(tag)}
+                        size="sm"
+                        color="indigo"
+                        disabled={deletingTag === tag || isBusy}
+                      >
+                        <Group gap={4} wrap="nowrap">
+                          <IconTag size={12} className="text-indigo-500" />
+                          <Text size="xs" fw={500}>
+                            {tag}
+                          </Text>
+                        </Group>
+                      </Pill>
+                    ))
+                  ) : (
+                    <Text size="xs" c="dimmed" px="xs" py={2}>
+                      No tags assigned to this group
+                    </Text>
+                  )}
+                </div>
+              </div>
             )}
 
             <Checkbox
