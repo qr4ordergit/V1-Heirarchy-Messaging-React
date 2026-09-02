@@ -161,6 +161,7 @@ export const PERMISSIONS = {
   "user-account": {
     "reset-password": false,
     "reset-username-passkey": false,
+    "profile-update" : false,
   },
 };
 export const USER_TO_USER_PERMISSIONS = {
@@ -281,6 +282,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   // Manage Account
   "user-account.reset-password": "Reset Password",
   "user-account.reset-username-passkey": "Set Username Passkey",
+  "user-account.profile-update": "Profile Update",
 };
 
 export const PERMISSION_GROUP_LABELS: Record<string, string> = {
