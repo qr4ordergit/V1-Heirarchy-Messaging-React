@@ -115,25 +115,30 @@ const Profile = () => {
   const handleUpdateAccountDetails = async () => {
     setSavingProfile(true);
     try {
+      const trimmedDisplayName = displayName.trim();
+      const trimmedDescription = description.trim();
+
       const payload = {
-        display_name: displayName.trim(),
-        description: description.trim(),
+        display_name: trimmedDisplayName,
+        description: trimmedDescription,
       };
 
       const res = await updateProfileApi(payload);
 
-      if (res?.updated_fields && targetUserDetails) {
-        setTargetUserDetails({
-          ...targetUserDetails,
-          display_name: displayName.trim(),
-          description: description.trim(),
-        });
-      } else {
-        setUserDetails({
-          ...userDetails,
-          display_name: displayName.trim(),
-          description: description.trim(),
-        } as any);
+      if (res?.updated_fields) {
+        if (target_user && targetUserDetails) {
+          setTargetUserDetails({
+            ...targetUserDetails,
+            display_name: trimmedDisplayName,
+            description: trimmedDescription,
+          });
+        } else if (userDetails) {
+          setUserDetails({
+            ...userDetails,
+            display_name: trimmedDisplayName,
+            description: trimmedDescription,
+          } as any);
+        }
       }
 
       notifications.show({
