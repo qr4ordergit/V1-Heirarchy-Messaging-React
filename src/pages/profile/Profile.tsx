@@ -128,8 +128,7 @@ const Profile = () => {
           display_name: displayName.trim(),
           description: description.trim(),
         });
-      }
-      if (res?.updated_fields && userDetails) {
+      } else {
         setUserDetails({
           ...userDetails,
           display_name: displayName.trim(),
