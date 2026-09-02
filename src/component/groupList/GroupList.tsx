@@ -15,6 +15,7 @@ import {
 } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import GroupsItem from "../groupsItem/GroupsItem";
+import axios from "axios";
 
 interface SelectedGrouptate {
   group_id: string;
@@ -54,7 +55,12 @@ const GroupList = () => {
       const groups = await GroupService.getGroups();
       setGroups(groups.data);
     } catch (error) {
-      if (error instanceof Error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
         Notification.error(error.message);
       }
       reset();
@@ -75,7 +81,12 @@ const GroupList = () => {
       Notification.success(res.message);
       await loadGroups();
     } catch (error) {
-      if (error instanceof Error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
         Notification.error(error.message);
       }
       reset();

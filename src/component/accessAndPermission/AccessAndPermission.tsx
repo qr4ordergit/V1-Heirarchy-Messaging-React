@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 
 import {
-  PERMISSION_GROUP_LABELS,
+  COMMON_PERMISSION_GROUP_LABELS,
   PERMISSION_LABELS,
   USER_TO_USER_PERMISSIONS,
 } from "../../utils/constant";
@@ -28,6 +28,7 @@ import {
 import { Notification } from "../../utils/notification";
 import { AcessAndPermissionService } from "../../api/services/access.permission.service";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+import axios from "axios";
 
 interface UpdateUserPermissionsPayload {
   username: string;
@@ -122,7 +123,12 @@ export default function AccessAndPermission({
 
       Notification.success("Access & Permission updated");
     } catch (error) {
-      if (error instanceof Error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
         Notification.error(error.message);
       }
     } finally {
@@ -140,9 +146,12 @@ export default function AccessAndPermission({
 
       const formattedChanges = res.sub_users.reduce<UserPermissionChanges>(
         (result, user) => {
+          const updatedPermission = structuredClone(user.permissions);
+          delete updatedPermission["sub-users"].read;
+
           result[user.username] = {
             username: user.username,
-            permissions: user.permissions,
+            permissions: updatedPermission,
           };
 
           return result;
@@ -152,9 +161,15 @@ export default function AccessAndPermission({
 
       setChanges(formattedChanges);
     } catch (error) {
-      if (error instanceof Error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
         Notification.error(error.message);
       }
+      setChanges({})
     } finally {
       setLoadingAP(false);
     }
@@ -240,22 +255,22 @@ export default function AccessAndPermission({
                           setOpenedUserAcc(null);
                         }}
                       />
-                    <Stack gap={0}>
-                      {user.display_name !== "" ? (
-                        <>
+                      <Stack gap={0}>
+                        {user.display_name !== "" ? (
+                          <>
+                            <Text size="xs" fw={"bolder"}>
+                              {user.display_name}
+                            </Text>
+                            <Text size="xs" c={"gray"}>
+                              {user.label}
+                            </Text>
+                          </>
+                        ) : (
                           <Text size="xs" fw={"bolder"}>
-                            {user.display_name}
-                          </Text>
-                          <Text size="xs" c={"gray"}>
                             {user.label}
                           </Text>
-                        </>
-                      ) : (
-                        <Text size="xs" fw={"bolder"}>
-                          {user.label}
-                        </Text>
-                      )}
-                    </Stack>
+                        )}
+                      </Stack>
                     </Flex>
                     {!opend ? (
                       <IconChevronDown size={15} />
@@ -312,7 +327,8 @@ export default function AccessAndPermission({
                         ([groupKey, permissions]) => (
                           <Stack key={groupKey} gap="xs">
                             <Text size="xs" fw={"bolder"} c={"gray"}>
-                              {PERMISSION_GROUP_LABELS[groupKey] ?? groupKey}
+                              {COMMON_PERMISSION_GROUP_LABELS[groupKey] ??
+                                groupKey}
                             </Text>
 
                             <Flex gap="md" style={{ flexWrap: "wrap" }}>

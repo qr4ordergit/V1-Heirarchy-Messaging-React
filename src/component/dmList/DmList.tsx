@@ -15,6 +15,7 @@ import {
 import ConversationItem from "../conversationItem/ConversationItem";
 import { IconRefresh } from "@tabler/icons-react";
 import { useConversationTypeStore } from "../../store/conversation/conversation.type.store";
+import axios from "axios";
 
 interface SelectedDMState {
   chatID: string;
@@ -62,7 +63,12 @@ const DmList = () => {
 
       setDMs(dms.data);
     } catch (error) {
-      if (error instanceof Error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
         Notification.error(error.message);
       }
       reset();
@@ -83,7 +89,12 @@ const DmList = () => {
       Notification.success(res.message);
       await loadDMs();
     } catch (error) {
-      if (error instanceof Error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
         Notification.error(error.message);
       }
       reset();

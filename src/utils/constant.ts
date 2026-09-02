@@ -103,7 +103,7 @@ export const TRIGGERS = {
 export const CIPHER_SECRET =
   "a3f9c81e2d4b7f60918c5e3a2b7d4f9c1e6a8b3d5f2c9e4a7b1d8f3c6e9a2b5d";
 
-export const PERMISSIONS = {
+const COMMON_PERMISSION = {
   chat: {
     start: false,
     "history-get": false,
@@ -127,12 +127,6 @@ export const PERMISSIONS = {
     update: false,
     delete: false,
   },
-  // keyring: {
-  //   create: false,
-  //   read: false,
-  //   update: false,
-  //   delete: false,
-  // },
   contacts: {
     create: false,
     read: false,
@@ -145,72 +139,21 @@ export const PERMISSIONS = {
     update: false,
     delete: false,
   },
-  // "sub-users": {
-  //   create: false,
-  //   read: false,
-  //   update: false,
-  //   delete: false,
-  //   // "permission-update": false,
-  //   // "reset-password": false,
-  //   // "reset-username-passkey": false,
-  // },
-  "users-accesstree": {
-    read: false,
-    // update: false,
-  },
+};
+
+export const USER_PERMISSIONS = {
+  ...COMMON_PERMISSION,
   "user-account": {
     "reset-password": false,
     "reset-username-passkey": false,
-    "profile-update" : false,
+    "profile-update": false,
   },
 };
+
 export const USER_TO_USER_PERMISSIONS = {
-  chat: {
-    start: false,
-    "history-get": false,
-    "history-delete": false,
-  },
-  "direct-messages": {
-    create: false,
-    read: false,
-    update: false,
-    delete: false,
-  },
-  groups: {
-    create: false,
-    read: false,
-    update: false,
-    delete: false,
-  },
-  "group-messages": {
-    create: false,
-    read: false,
-    update: false,
-    delete: false,
-  },
-  keyring: {
-    create: false,
-    read: false,
-    update: false,
-    delete: false,
-  },
-  contacts: {
-    create: false,
-    read: false,
-    update: false,
-    delete: false,
-  },
-  tags: {
-    create: false,
-    read: false,
-    update: false,
-    delete: false,
-  },
+  ...COMMON_PERMISSION,
   "sub-users": {
-    // create: false,
-    read: false,
     update: false,
-    // delete: false,
     "permission-update": false,
     "reset-password": false,
     "reset-username-passkey": false,
@@ -219,11 +162,8 @@ export const USER_TO_USER_PERMISSIONS = {
     read: false,
     update: false,
   },
-  // "user-account": {
-  //   "reset-password": false,
-  //   "reset-username-passkey": false,
-  // },
 };
+
 export const PERMISSION_LABELS: Record<string, string> = {
   // Manage Chats
   "chat.start": "Initiate Chat",
@@ -248,12 +188,6 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "group-messages.update": "Update",
   "group-messages.delete": "Delete",
 
-  // Manage Keyring
-  "keyring.create": "Create",
-  "keyring.read": "View",
-  "keyring.update": "Update",
-  "keyring.delete": "Delete",
-
   // Manage Contacts
   "contacts.create": "Add",
   "contacts.read": "View",
@@ -269,13 +203,13 @@ export const PERMISSION_LABELS: Record<string, string> = {
   // Manage Subuser
   "sub-users.create": "Create",
   "sub-users.read": "View",
-  "sub-users.update": "Update",
+  "sub-users.update": "Profile Update",
   "sub-users.delete": "Delete",
   "sub-users.permission-update": "Update Permission",
   "sub-users.reset-password": "Reset Password",
   "sub-users.reset-username-passkey": "Set Username Passkey",
 
-  // Manage Subuser Access
+  // Manage Subuser Access & Permissions
   "users-accesstree.read": "View",
   "users-accesstree.update": "Update",
 
@@ -285,7 +219,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "user-account.profile-update": "Profile Update",
 };
 
-export const PERMISSION_GROUP_LABELS: Record<string, string> = {
+export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
   chat: "Manage Chats",
   "direct-messages": "Direct Messages (DM)",
   groups: "Manage Groups",
@@ -294,9 +228,17 @@ export const PERMISSION_GROUP_LABELS: Record<string, string> = {
   contacts: "Manage Contacts",
   tags: "Manage Tags",
   "sub-users": "Manage Subuser",
-  "users-accesstree": "Manage Subuser Access",
+  "users-accesstree" : "Manage Subuser Access & Permissions",
   "user-account": "Manage Account",
 };
+
+// export const USER_PERMISSION_GROUP_LABELS: Record<string, string> = {
+//   ...COMMON_PERMISSION_GROUP_LABELS,
+// };
+
+// export const USER_TO_USER_PERMISSION_GROUP_LABELS: Record<string, string> = {
+//   ...COMMON_PERMISSION_GROUP_LABELS,
+// };
 
 export const getHeaders = (): Record<string, string> => ({
   Authorization: token ?? "",

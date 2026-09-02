@@ -79,9 +79,9 @@ import AccessAndPermission from "../../component/accessAndPermission/AccessAndPe
 import CreateAccountModal from "./Createaccountmodal";
 
 import {
-  PERMISSION_GROUP_LABELS,
+  COMMON_PERMISSION_GROUP_LABELS,
   PERMISSION_LABELS,
-  PERMISSIONS,
+  USER_PERMISSIONS,
 } from "../../utils/constant";
 import {
   getPermissionValue,
@@ -96,6 +96,7 @@ import {
 } from "../../api/services/access.permission.service";
 import { Notification } from "../../utils/notification";
 import { fetchUserDetails } from "../../api/userApi";
+import axios from "axios";
 //import { useDisableBackButton } from "../../hooks/useDisableBackButton";
 const PASSKEY_PATTERN = /^[a-zA-Z0-9]{4,12}$/;
 
@@ -134,6 +135,12 @@ interface AccessAndPermissionsState {
   targetUser: string;
   label: string | null;
   display_name: string | null;
+}
+
+interface LoadPermissionsProps {
+  user_id?: string;
+  phone_number?: string | null;
+  display_name?: string | null;
 }
 
 export default function Accounts() {
@@ -210,6 +217,15 @@ export default function Accounts() {
     target_user: accessAndPermissions.targetUser,
     permissions: {},
   });
+
+  const [selectedAccountID, setSelectedAccountID] = useState<string>("");
+
+  const resetChanges = () => {
+    setChanges({
+      target_user: accessAndPermissions.targetUser,
+      permissions: {},
+    });
+  };
 
   const onOpenAccessAndPermissions = (
     user_id: string,
@@ -667,7 +683,12 @@ export default function Accounts() {
 
       Notification.success("Access & Permission updated");
     } catch (error) {
-      if (error instanceof Error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
         Notification.error(error.message);
       }
     } finally {
@@ -694,18 +715,34 @@ export default function Accounts() {
     });
   };
 
-  const loadPermissions = async (targetUser: string) => {
+  const loadPermissions = async ({
+    user_id = accessAndPermissions.targetUser,
+    phone_number = accessAndPermissions.label,
+    display_name = accessAndPermissions.display_name,
+  }: LoadPermissionsProps) => {
     try {
+      setSelectedAccountID(user_id);
       setLoadingP(true);
-      const res = await AcessAndPermissionService.getUserPermission(targetUser);
+      const res = await AcessAndPermissionService.getUserPermission(user_id);
       delete res.permissions["sub-users"];
       delete res.permissions.keyring;
-      delete res.permissions["users-accesstree"].update;
+      delete res.permissions["users-accesstree"];
       setChanges(res);
+      onOpenAccessAndPermissions(
+        user_id,
+        phone_number !== "" ? phone_number : user_id,
+        display_name,
+      );
     } catch (error) {
-      if (error instanceof Error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
         Notification.error(error.message);
       }
+      resetChanges();
     } finally {
       setLoadingP(false);
     }
@@ -1263,14 +1300,7 @@ export default function Accounts() {
                                           <IconShieldLock size={14} />
                                         }
                                         onClick={() => {
-                                          loadPermissions(account.user_id);
-                                          onOpenAccessAndPermissions(
-                                            account.user_id,
-                                            account.phone_number !== ""
-                                              ? account.phone_number
-                                              : account.user_id,
-                                            account.display_name,
-                                          );
+                                          loadPermissions(account);
                                         }}
                                       >
                                         Manage Access & Permissions
@@ -1332,27 +1362,25 @@ export default function Accounts() {
 
                             {!isMobile && (
                               <div className={classes.cardGridManage}>
-                                <Text
-                                  size="sm"
-                                  c="blue"
-                                  fw={500}
-                                  style={{
-                                    cursor: "pointer",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                  onClick={() => {
-                                    loadPermissions(account.user_id);
-                                    onOpenAccessAndPermissions(
-                                      account.user_id,
-                                      account.phone_number !== ""
-                                        ? account.phone_number
-                                        : account.user_id,
-                                      account.display_name,
-                                    );
-                                  }}
-                                >
-                                  Manage Access & Permissions
-                                </Text>
+                                {selectedAccountID === account.user_id &&
+                                loadingP ? (
+                                  <Loader size={"sm"}/>
+                                ) : (
+                                  <Text
+                                    size="sm"
+                                    c="blue"
+                                    fw={500}
+                                    style={{
+                                      cursor: "pointer",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                    onClick={() => {
+                                      loadPermissions(account);
+                                    }}
+                                  >
+                                    Manage Access & Permissions
+                                  </Text>
+                                )}
                               </div>
                             )}
                           </div>
@@ -1712,7 +1740,11 @@ export default function Accounts() {
               onClick={() => {
                 setPerType(name);
                 if (name === "User Permission") {
-                  loadPermissions(accessAndPermissions.targetUser);
+                  loadPermissions({
+                    user_id: accessAndPermissions.targetUser,
+                    phone_number: accessAndPermissions.label,
+                    display_name: accessAndPermissions.display_name,
+                  });
                 }
               }}
             >
@@ -1739,7 +1771,7 @@ export default function Accounts() {
                     label="Select All"
                     checked={hasAllPermissions(
                       changes.permissions,
-                      PERMISSIONS,
+                      USER_PERMISSIONS,
                     )}
                     onChange={(event) => {
                       setChanges((prev) => ({
@@ -1752,11 +1784,11 @@ export default function Accounts() {
                     }}
                   />
 
-                  {Object.entries(PERMISSIONS).map(
+                  {Object.entries(USER_PERMISSIONS).map(
                     ([groupKey, permissions]) => (
                       <Stack key={groupKey} gap="xs">
                         <Text size="xs" fw={"bolder"} c={"gray"}>
-                          {PERMISSION_GROUP_LABELS[groupKey] ?? groupKey}
+                          {COMMON_PERMISSION_GROUP_LABELS[groupKey] ?? groupKey}
                         </Text>
 
                         <Flex gap="md" style={{ flexWrap: "wrap" }}>

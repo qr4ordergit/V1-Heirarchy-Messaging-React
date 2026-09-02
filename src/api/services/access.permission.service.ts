@@ -28,7 +28,7 @@ export const AcessAndPermissionService = {
     const res = await api.patch(ENDPOINTS.ACCESS_PERMISSION.PATCH, data);
     return res.data;
   },
-  // single user
+  // user
    getUserPermission: async (target_user: string) => {
     const res = await api.get(
       `${ENDPOINTS.PERMISSION.GET}?target_user=${target_user}`,
