@@ -712,12 +712,15 @@ export default function Accounts() {
   };
 
   useEffect(() => {
+    setTargetUser("");
+    setTargetUserDetails(null);
+
     if (!userDetails) {
       return;
     }
 
     void loadAccounts();
-  }, [userDetails]);
+  }, [userDetails, setTargetUser, setTargetUserDetails]);
   //useDisableBackButton();
   return (
     <div className={classes.wrapper}>
