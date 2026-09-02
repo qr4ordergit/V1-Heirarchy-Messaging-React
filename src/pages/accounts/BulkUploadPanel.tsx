@@ -40,6 +40,7 @@ const SAMPLE_ROWS: string[][] = [
   ["asmith", "Passw0rd!", "", "Support agent"],
 ];
 
+const INITIAL_POLL_DELAY_MS = 5000;
 const POLL_INTERVAL_MS = 2000;
 
 export default function BulkUploadPanel({
@@ -175,7 +176,10 @@ export default function BulkUploadPanel({
       }
     };
 
-    void tick();
+    pollTimeoutRef.current = window.setTimeout(
+      () => void tick(),
+      INITIAL_POLL_DELAY_MS,
+    );
   };
 
   const handleUpload = async () => {
@@ -388,7 +392,13 @@ export default function BulkUploadPanel({
           disabled={!selectedFile}
           onClick={handleUpload}
         >
-          {polling ? "Processing…" : finishingUp ? "Finishing up…" : "Upload"}
+          {uploading
+            ? "Uploading…"
+            : polling
+              ? "Processing…"
+              : finishingUp
+                ? "Finishing up…"
+                : "Upload"}
         </Button>
       </Group>
     </Stack>

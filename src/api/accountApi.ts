@@ -335,20 +335,24 @@ export interface BulkRegistrationUploadResponse {
   job_id: string;
 }
 
+export type BulkRegistrationStatus =
+  | "PROCESSING"
+  | "COMPLETED"
+  | "FAILED"
+  | (string & {});
+
 export interface BulkRegistrationError {
   row?: number;
   username?: string;
   message: string;
 }
 
-export type BulkRegistrationStatus = "PROCESSING" | "COMPLETED" | "FAILED";
-
 export interface BulkRegistrationStatusResponse {
   job_id: string;
-  total: number;
-  created: number;
-  errors: BulkRegistrationError[];
-  status: BulkRegistrationStatus | string;
+  total?: number;
+  created?: number;
+  errors?: BulkRegistrationError[];
+  status: BulkRegistrationStatus;
 }
 
 export async function bulkRegisterSubUsers(
@@ -373,13 +377,7 @@ export async function bulkRegisterSubUsers(
     );
   }
 
-  const result = data as BulkRegistrationUploadResponse | null;
-
-  if (!result?.job_id) {
-    throw new Error("Could not process the bulk upload.");
-  }
-
-  return result;
+  return data as BulkRegistrationUploadResponse;
 }
 
 export async function getBulkRegistrationStatus(
@@ -400,7 +398,7 @@ export async function getBulkRegistrationStatus(
 
   if (!response.ok) {
     throw new Error(
-      extractErrorMessage(data, "Could not check the upload status."),
+      extractErrorMessage(data, "Could not check the bulk upload status."),
     );
   }
 
