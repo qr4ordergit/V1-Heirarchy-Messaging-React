@@ -294,7 +294,8 @@ export default function Accounts() {
       const message =
         err instanceof Error ? err.message : "Could not load accounts.";
 
-      const isPermissionError = /does not have permission/i.test(message);
+      const isPermissionError =
+        /You do not have permission to perform this operation/i.test(message);
 
       if (isPermissionError && currentUser) {
         setAccounts([currentUser]);
