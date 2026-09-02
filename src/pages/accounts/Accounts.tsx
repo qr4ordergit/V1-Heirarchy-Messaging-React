@@ -424,6 +424,11 @@ export default function Accounts() {
       const message =
         err instanceof Error ? err.message : "Could not update profile.";
       setProfileError(message);
+      notifications.show({
+        color: "red",
+        title: "Couldn't update profile",
+        message,
+      });
     } finally {
       setSavingProfile(false);
     }
@@ -605,7 +610,11 @@ export default function Accounts() {
 
     setSavingLock(true);
     try {
-      await updateUserLock(lockTarget.user_id, lockEnabled, encryptedPasskey);
+      await updateUserLock(
+        lockEnabled,
+        encryptedPasskey,
+        isSelf ? undefined : lockTarget.user_id,
+      );
       closeLockModal();
 
       if (isSelf) {
@@ -623,6 +632,11 @@ export default function Accounts() {
     } catch (err) {
       const message = err instanceof Error ? err.message : "Could not lock.";
       setLockError(message);
+      notifications.show({
+        color: "red",
+        title: "Couldn't update lock",
+        message,
+      });
     } finally {
       setSavingLock(false);
     }

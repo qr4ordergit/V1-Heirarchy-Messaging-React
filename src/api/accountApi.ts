@@ -109,6 +109,11 @@ async function parseJson(response: Response): Promise<unknown> {
   }
 }
 
+function extractErrorMessage(data: unknown, fallback: string): string {
+  const parsed = data as { message?: string; error?: string } | null;
+  return parsed?.message || parsed?.error || fallback;
+}
+
 export async function fetchSubUserAccessDetail(): Promise<SubUserAccessDetail> {
   const response = await fetch(API_ENDPOINTS.ACCOUNTS_LIST, {
     method: "GET",
@@ -121,22 +126,7 @@ export async function fetchSubUserAccessDetail(): Promise<SubUserAccessDetail> {
   const data = await parseJson(response);
 
   if (!response.ok) {
-    const message =
-      (
-        data as {
-          message?: string;
-          error?: string;
-        } | null
-      )?.message ||
-      (
-        data as {
-          message?: string;
-          error?: string;
-        } | null
-      )?.error ||
-      "Could not load accounts.";
-
-    throw new Error(message);
+    throw new Error(extractErrorMessage(data, "Could not load accounts."));
   }
 
   return data as SubUserAccessDetail;
@@ -190,14 +180,7 @@ export async function createAccount(
   const data = await parseJson(response);
 
   if (!response.ok) {
-    const message =
-      (
-        data as {
-          message?: string;
-        } | null
-      )?.message || "Could not create account.";
-
-    throw new Error(message);
+    throw new Error(extractErrorMessage(data, "Could not create account."));
   }
 
   return data as CreateAccountResponse;
@@ -224,14 +207,7 @@ export async function verifySubUserOtp(
   const data = await parseJson(response);
 
   if (!response.ok) {
-    const message =
-      (
-        data as {
-          message?: string;
-        } | null
-      )?.message || "Could not verify OTP.";
-
-    throw new Error(message);
+    throw new Error(extractErrorMessage(data, "Could not verify OTP."));
   }
 
   return data as VerifySubUserOtpResponse;
@@ -254,14 +230,7 @@ export async function deleteAccount(
   const data = await parseJson(response);
 
   if (!response.ok) {
-    const message =
-      (
-        data as {
-          message?: string;
-        } | null
-      )?.message || "Could not remove account.";
-
-    throw new Error(message);
+    throw new Error(extractErrorMessage(data, "Could not remove account."));
   }
 
   return data as DeleteAccountResponse;
@@ -291,48 +260,41 @@ export async function changePassword(
   const data = await parseJson(response);
 
   if (!response.ok) {
-    const message =
-      (
-        data as {
-          message?: string;
-        } | null
-      )?.message || "Could not change password.";
-
-    throw new Error(message);
+    throw new Error(extractErrorMessage(data, "Could not change password."));
   }
 
   return data as ChangePasswordResponse;
 }
 
 export async function updateUserLock(
-  userId: string,
   isLocked: boolean,
   encryptedPasskey: string,
+  targetUserId?: string,
 ): Promise<UpdateUserLockResponse> {
-  const response = await fetch(API_ENDPOINTS.USER_HOME, {
+  const body: Record<string, unknown> = {
+    isLocked,
+    passkey_hash: encryptedPasskey,
+  };
+
+  if (targetUserId) {
+    body.target_user = targetUserId;
+  }
+
+  const response = await fetch(API_ENDPOINTS.USER_HOME_PASSKEY, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       ...authHeaders(),
     },
-    body: JSON.stringify({
-      isLocked,
-      passkey_hash: encryptedPasskey,
-      target_user: userId,
-    }),
+    body: JSON.stringify(body),
   });
 
   const data = await parseJson(response);
 
   if (!response.ok) {
-    const message =
-      (
-        data as {
-          message?: string;
-        } | null
-      )?.message || "Could not update lock settings.";
-
-    throw new Error(message);
+    throw new Error(
+      extractErrorMessage(data, "Could not update lock settings."),
+    );
   }
 
   return data as UpdateUserLockResponse;
@@ -360,31 +322,36 @@ export async function updateUserProfile(
   const data = await parseJson(response);
 
   if (!response.ok) {
-    const message =
-      (
-        data as {
-          message?: string;
-        } | null
-      )?.message || "Could not update profile.";
-
-    throw new Error(message);
+    throw new Error(extractErrorMessage(data, "Could not update profile."));
   }
 
   return data as UpdateProfileResponse;
 }
 
-export interface BulkRegistrationResponse {
+export interface BulkRegistrationUploadResponse {
   message?: string;
-  total?: number;
-  created?: number;
-  success_count?: number;
-  failed_count?: number;
-  errors?: Array<{ row?: number; username?: string; message: string }>;
+  job_id: string;
+}
+
+export interface BulkRegistrationError {
+  row?: number;
+  username?: string;
+  message: string;
+}
+
+export type BulkRegistrationStatus = "PROCESSING" | "COMPLETED" | "FAILED";
+
+export interface BulkRegistrationStatusResponse {
+  job_id: string;
+  total: number;
+  created: number;
+  errors: BulkRegistrationError[];
+  status: BulkRegistrationStatus | string;
 }
 
 export async function bulkRegisterSubUsers(
   file: File,
-): Promise<BulkRegistrationResponse> {
+): Promise<BulkRegistrationUploadResponse> {
   const formData = new FormData();
   formData.append("file", file);
 
@@ -399,17 +366,43 @@ export async function bulkRegisterSubUsers(
   const data = await parseJson(response);
 
   if (!response.ok) {
-    const message =
-      (
-        data as {
-          message?: string;
-        } | null
-      )?.message || "Could not process the bulk upload.";
-
-    throw new Error(message);
+    throw new Error(
+      extractErrorMessage(data, "Could not process the bulk upload."),
+    );
   }
 
-  return (data as BulkRegistrationResponse) ?? {};
+  const result = data as BulkRegistrationUploadResponse | null;
+
+  if (!result?.job_id) {
+    throw new Error("Could not process the bulk upload.");
+  }
+
+  return result;
+}
+
+export async function getBulkRegistrationStatus(
+  jobId: string,
+): Promise<BulkRegistrationStatusResponse> {
+  const response = await fetch(
+    `${API_ENDPOINTS.AUTH_SUB_USERS_BULK}/${encodeURIComponent(jobId)}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(),
+      },
+    },
+  );
+
+  const data = await parseJson(response);
+
+  if (!response.ok) {
+    throw new Error(
+      extractErrorMessage(data, "Could not check the upload status."),
+    );
+  }
+
+  return data as BulkRegistrationStatusResponse;
 }
 
 export async function updateUserAccess(
@@ -431,14 +424,9 @@ export async function updateUserAccess(
   const data = await parseJson(response);
 
   if (!response.ok) {
-    const message =
-      (
-        data as {
-          message?: string;
-        } | null
-      )?.message || "Could not update sub-account access.";
-
-    throw new Error(message);
+    throw new Error(
+      extractErrorMessage(data, "Could not update sub-account access."),
+    );
   }
 
   return data as UpdateUserAccessResponse;

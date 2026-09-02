@@ -29,6 +29,7 @@ export const API_ENDPOINTS = {
   CREATE_GROUP: `${API_BASE_URL}/group`,
   SECONDARY_USER_PASSWORD_CHANGE: `${API_BASE_URL}/auth/secondary-user-password-reset`,
   USER_HOME: `${API_BASE_URL}/user-home`,
+  USER_HOME_PASSKEY: `${API_BASE_URL}/user-home/passkey`,
 } as const;
 
 const avatarColors = [

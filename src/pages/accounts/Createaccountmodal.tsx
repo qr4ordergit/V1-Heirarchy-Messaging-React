@@ -291,6 +291,11 @@ export default function CreateAccountModal({
           ? err.message
           : "Verification failed. Please try again.";
       setAccountOtpError(message);
+      notifications.show({
+        color: "red",
+        title: "Verification failed",
+        message,
+      });
     } finally {
       setVerifyingAccountOtp(false);
     }

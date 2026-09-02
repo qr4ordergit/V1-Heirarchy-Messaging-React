@@ -8,6 +8,7 @@ import {
   Group,
   List,
   Loader,
+  Progress,
   Stack,
   Text,
   ThemeIcon,
@@ -17,7 +18,12 @@ import {
   IconFileSpreadsheet,
   IconUpload,
 } from "@tabler/icons-react";
-import { bulkRegisterSubUsers } from "../../api/accountApi";
+import {
+  bulkRegisterSubUsers,
+  getBulkRegistrationStatus,
+  type BulkRegistrationError,
+  type BulkRegistrationStatus,
+} from "../../api/accountApi";
 import classes from "./Accounts.module.css";
 
 interface BulkUploadPanelProps {
@@ -34,6 +40,8 @@ const SAMPLE_ROWS: string[][] = [
   ["asmith", "Passw0rd!", "", "Support agent"],
 ];
 
+const POLL_INTERVAL_MS = 2000;
+
 export default function BulkUploadPanel({
   onUploaded,
   onDone,
@@ -41,21 +49,32 @@ export default function BulkUploadPanel({
 }: BulkUploadPanelProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [polling, setPolling] = useState(false);
   const [finishingUp, setFinishingUp] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [jobStatus, setJobStatus] = useState<BulkRegistrationStatus | null>(
+    null,
+  );
   const [resultSummary, setResultSummary] = useState<{
-    message?: string;
     total?: number;
     created?: number;
-    failed?: number;
-    errors?: Array<{ row?: number; username?: string; message: string }>;
+    errors?: BulkRegistrationError[];
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pollTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-    onBusyChange?.(uploading || finishingUp);
-  }, [uploading, finishingUp, onBusyChange]);
+    onBusyChange?.(uploading || polling || finishingUp);
+  }, [uploading, polling, finishingUp, onBusyChange]);
+
+  useEffect(() => {
+    return () => {
+      if (pollTimeoutRef.current !== null) {
+        window.clearTimeout(pollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const acceptedExtensions = [".xlsx"];
 
@@ -77,6 +96,7 @@ export default function BulkUploadPanel({
     setSelectedFile(file);
     setUploadError(null);
     setResultSummary(null);
+    setJobStatus(null);
   };
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
@@ -92,53 +112,91 @@ export default function BulkUploadPanel({
     XLSX.writeFile(workbook, "bulk_upload_sample.xlsx");
   };
 
+  const pollJobStatus = (jobId: string) => {
+    setPolling(true);
+
+    const tick = async () => {
+      try {
+        const status = await getBulkRegistrationStatus(jobId);
+
+        setJobStatus((status.status as BulkRegistrationStatus) ?? null);
+        setResultSummary({
+          total: status.total,
+          created: status.created,
+          errors: status.errors,
+        });
+
+        const isDone =
+          status.status === "COMPLETED" || status.status === "FAILED";
+
+        if (!isDone) {
+          pollTimeoutRef.current = window.setTimeout(tick, POLL_INTERVAL_MS);
+          return;
+        }
+
+        setPolling(false);
+        setFinishingUp(true);
+
+        await onUploaded?.();
+
+        setFinishingUp(false);
+
+        const hasErrors = (status.errors?.length ?? 0) > 0;
+
+        notifications.show({
+          color: hasErrors ? "yellow" : "teal",
+          title: hasErrors
+            ? "Bulk upload finished with some errors"
+            : "Bulk upload complete",
+          message: `${status.created} of ${status.total} account${
+            status.total === 1 ? "" : "s"
+          } created.`,
+        });
+
+        if (!hasErrors) {
+          setSelectedFile(null);
+          setResultSummary(null);
+          setUploadError(null);
+          setJobStatus(null);
+          onDone();
+        }
+      } catch (err) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Could not check the upload status.";
+        setUploadError(message);
+        setPolling(false);
+        notifications.show({
+          color: "red",
+          title: "Couldn't check upload status",
+          message,
+        });
+      }
+    };
+
+    void tick();
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) return;
 
     setUploading(true);
     setUploadError(null);
     setResultSummary(null);
+    setJobStatus(null);
 
     try {
       const response = await bulkRegisterSubUsers(selectedFile);
 
-      const total = response.total ?? undefined;
-      const created = response.created ?? response.success_count ?? undefined;
-      const failed =
-        response.failed_count ??
-        (total !== undefined && created !== undefined
-          ? total - created
-          : response.errors?.length);
-
-      setResultSummary({
-        message: response.message,
-        total,
-        created,
-        failed,
-        errors: response.errors,
-      });
-
-      notifications.show({
-        color: "teal",
-        title: "Bulk upload processed",
-        message: response.message || "The file was uploaded successfully.",
-      });
-
-      setSelectedFile(null);
       setUploading(false);
-      setFinishingUp(true);
+      notifications.show({
+        color: "blue",
+        title: "Upload received",
+        message: response.message || "Processing your file now…",
+      });
 
-      const hasErrors = (response.errors?.length ?? 0) > 0;
-
-      window.setTimeout(() => {
-        void onUploaded?.();
-        setFinishingUp(false);
-        if (!hasErrors) {
-          setResultSummary(null);
-          setUploadError(null);
-          onDone();
-        }
-      }, 4000);
+      pollJobStatus(response.job_id);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Could not process the file.";
@@ -151,6 +209,8 @@ export default function BulkUploadPanel({
       setUploading(false);
     }
   };
+
+  const isBusy = uploading || polling || finishingUp;
 
   return (
     <Stack gap="md">
@@ -168,34 +228,46 @@ export default function BulkUploadPanel({
       {resultSummary && (
         <Alert
           color={
-            resultSummary.failed && resultSummary.failed > 0 ? "yellow" : "teal"
+            jobStatus === "FAILED"
+              ? "red"
+              : resultSummary.errors && resultSummary.errors.length > 0
+                ? "yellow"
+                : "teal"
           }
-          title="Upload result"
+          title={
+            polling
+              ? "Processing upload…"
+              : jobStatus === "FAILED"
+                ? "Upload failed"
+                : "Upload result"
+          }
         >
-          {resultSummary.total !== undefined ||
-          resultSummary.created !== undefined ? (
-            <Stack gap={2}>
-              {resultSummary.total !== undefined && (
-                <Text size="sm">
-                  <strong>Total:</strong> {resultSummary.total}
-                </Text>
-              )}
-              {resultSummary.created !== undefined && (
-                <Text size="sm">
-                  <strong>Created:</strong> {resultSummary.created}
-                </Text>
-              )}
-              {resultSummary.failed !== undefined && (
-                <Text size="sm">
-                  <strong>Failed:</strong> {resultSummary.failed}
-                </Text>
-              )}
-            </Stack>
-          ) : (
-            <Text size="sm">
-              {resultSummary.message || "The file was processed successfully."}
-            </Text>
-          )}
+          <Stack gap={2}>
+            {resultSummary.total !== undefined && (
+              <Text size="sm">
+                <strong>Total:</strong> {resultSummary.total}
+              </Text>
+            )}
+            {resultSummary.created !== undefined && (
+              <Text size="sm">
+                <strong>Created:</strong> {resultSummary.created}
+              </Text>
+            )}
+          </Stack>
+
+          {polling &&
+            resultSummary.total !== undefined &&
+            resultSummary.total > 0 && (
+              <Progress
+                value={
+                  ((resultSummary.created ?? 0) / resultSummary.total) * 100
+                }
+                mt={8}
+                size="sm"
+                radius="xl"
+                animated
+              />
+            )}
 
           {resultSummary.errors && resultSummary.errors.length > 0 && (
             <List size="sm" mt={8} spacing={4}>
@@ -207,6 +279,15 @@ export default function BulkUploadPanel({
                 </List.Item>
               ))}
             </List>
+          )}
+
+          {polling && (
+            <Group gap={8} mt={10}>
+              <Loader size="xs" />
+              <Text size="xs" c="dimmed">
+                Still processing…
+              </Text>
+            </Group>
           )}
 
           {finishingUp && (
@@ -296,22 +377,18 @@ export default function BulkUploadPanel({
       )}
 
       <Group justify="flex-end" mt="xs">
-        <Button
-          variant="subtle"
-          onClick={onDone}
-          disabled={uploading || finishingUp}
-        >
-          {resultSummary ? "Close" : "Cancel"}
+        <Button variant="subtle" onClick={onDone} disabled={isBusy}>
+          {resultSummary && !polling ? "Close" : "Cancel"}
         </Button>
         <Button
           radius="xl"
           variant="gradient"
-          leftSection={!finishingUp ? <IconUpload size={16} /> : undefined}
-          loading={uploading || finishingUp}
+          leftSection={!isBusy ? <IconUpload size={16} /> : undefined}
+          loading={isBusy}
           disabled={!selectedFile}
           onClick={handleUpload}
         >
-          {finishingUp ? "Finishing up…" : "Upload"}
+          {polling ? "Processing…" : finishingUp ? "Finishing up…" : "Upload"}
         </Button>
       </Group>
     </Stack>
