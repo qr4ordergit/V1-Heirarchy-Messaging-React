@@ -304,19 +304,21 @@ export async function updateUserProfile(
   payload: UpdateProfilePayload,
   targetUserId?: string,
 ): Promise<UpdateProfileResponse> {
-  const body: Record<string, unknown> = { ...payload };
+  const params = new URLSearchParams();
 
   if (targetUserId) {
-    body.target_user = targetUserId;
+    params.set("target_user", targetUserId);
   }
 
-  const response = await fetch(API_ENDPOINTS.USER_HOME, {
+  const url = `${API_ENDPOINTS.USER_HOME}?${params.toString()}`;
+
+  const response = await fetch(url, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       ...authHeaders(),
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(payload),
   });
 
   const data = await parseJson(response);
