@@ -135,7 +135,7 @@ export const manageGroupAdmins = async (
     const payload: Record<string, any> = {
       group_id: groupId,
       operation,
-      ...(operation === "add-members" && { admins: targetAdminIds }),
+      admins: targetAdminIds,
     };
 
     const response = await api.post(

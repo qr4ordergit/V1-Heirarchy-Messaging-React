@@ -251,12 +251,12 @@ const Contact = () => {
     if (!targetUserId) return;
 
     setActiveActionId(contact.id);
-    const ok = await startConversationApi(targetUserId);
+    const res = await startConversationApi(targetUserId);
     setActiveActionId(null);
 
-    if (ok) {
+    if (res?.success && res.conversation_id) {
       setType("dm");
-      navigate(`/chats/${encodeURIComponent(contact.id)}`);
+      navigate(`/chats/${encodeURIComponent(res.conversation_id)}`);
     }
   };
 

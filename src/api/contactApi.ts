@@ -20,6 +20,13 @@ export interface InviteInformation {
   expires_at: string;
 }
 
+export interface StartConversationResponse {
+  success: boolean;
+  conversation_id: string;
+  message?: string;
+  [key: string]: any;
+}
+
 export const getPendingInviteApi = async (
   inviteCode: string,
 ): Promise<InviteInformation | null> => {
@@ -325,14 +332,14 @@ export const leaveGroupApi = async (groupId: string): Promise<boolean> => {
 
 export const startConversationApi = async (
   targetUserId: string,
-): Promise<boolean> => {
+): Promise<StartConversationResponse | null> => {
   try {
     const endpoint = withTargetUser(API_ENDPOINTS.START_CONVERSATION);
     const response = await api.post(endpoint, { user_id: targetUserId });
     const data = response.data;
 
     if (response.status === 201 || data.success) {
-      return true;
+      return data;
     }
 
     notifications.show({
@@ -340,10 +347,10 @@ export const startConversationApi = async (
       message: data.message || "Failed to start conversation.",
       color: "red",
     });
-    return false;
+    return null;
   } catch (error: any) {
     handleApiError(error);
-    return false;
+    return null;
   }
 };
 
