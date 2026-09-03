@@ -159,7 +159,6 @@ export const USER_TO_USER_PERMISSIONS = {
     "reset-username-passkey": false,
   },
   "users-accesstree": {
-    read: false,
     update: false,
   },
 };
@@ -203,7 +202,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   // Manage Subuser
   "sub-users.create": "Create",
   "sub-users.read": "View",
-  "sub-users.update": "Profile Update",
+  "sub-users.update": "Update Profile",
   "sub-users.delete": "Delete",
   "sub-users.permission-update": "Update Permission",
   "sub-users.reset-password": "Reset Password",

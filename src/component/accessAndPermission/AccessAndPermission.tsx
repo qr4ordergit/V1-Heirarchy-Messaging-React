@@ -148,6 +148,7 @@ export default function AccessAndPermission({
         (result, user) => {
           const updatedPermission = structuredClone(user.permissions);
           delete updatedPermission["sub-users"].read;
+          delete updatedPermission["users-accesstree"].read;
 
           result[user.username] = {
             username: user.username,
