@@ -420,15 +420,6 @@ export default function Accounts() {
         uploadedPictureUrl = URL.createObjectURL(profilePictureFile);
       }
 
-      if (isSelf && userDetails) {
-        setUserDetails({
-          ...userDetails,
-          ...(uploadedPictureUrl
-            ? { profile_picture: uploadedPictureUrl }
-            : {}),
-        });
-      }
-
       notifications.show({
         title: "",
         message: response.message || "Profile updated successfully.",
@@ -436,7 +427,41 @@ export default function Accounts() {
       });
 
       closeProfileModal();
-      await loadAccounts();
+
+      if (isSelf) {
+        try {
+          const refreshedDetails = await fetchUserDetails();
+          setUserDetails({
+            ...refreshedDetails,
+            ...(uploadedPictureUrl
+              ? { profile_picture: uploadedPictureUrl }
+              : {}),
+          });
+          await loadAccounts({
+            ...refreshedDetails,
+            ...(uploadedPictureUrl
+              ? { profile_picture: uploadedPictureUrl }
+              : {}),
+          });
+        } catch (refreshErr) {
+          console.error("Failed to refresh user details:", refreshErr);
+          if (userDetails) {
+            setUserDetails({
+              ...userDetails,
+              display_name:
+                profileForm.display_name?.trim() || userDetails.display_name,
+              description:
+                profileForm.description?.trim() ?? userDetails.description,
+              ...(uploadedPictureUrl
+                ? { profile_picture: uploadedPictureUrl }
+                : {}),
+            });
+          }
+          await loadAccounts();
+        }
+      } else {
+        await loadAccounts();
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Could not update profile.";
@@ -632,12 +657,19 @@ export default function Accounts() {
         encryptedPasskey,
         isSelf ? undefined : lockTarget.user_id,
       );
+      notifications.show({
+        color: "teal",
+        title: "Lock updated",
+        message: lockEnabled ? "Account locked" : "Account unlocked",
+      });
+
       closeLockModal();
 
       if (isSelf) {
         try {
           const refreshedDetails = await fetchUserDetails();
           setUserDetails(refreshedDetails);
+
           await loadAccounts(refreshedDetails);
         } catch (refreshErr) {
           console.error("Failed to refresh user details:", refreshErr);
@@ -1367,7 +1399,7 @@ export default function Accounts() {
                               <div className={classes.cardGridManage}>
                                 {selectedAccountID === account.user_id &&
                                 loadingP ? (
-                                  <Loader size={"sm"}/>
+                                  <Loader size={"sm"} />
                                 ) : (
                                   <Text
                                     size="sm"
