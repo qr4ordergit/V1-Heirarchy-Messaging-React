@@ -173,7 +173,7 @@ export default function Chatting() {
         : "";
 
       const response = await api.get(
-        `${ENDPOINTS.TAGS.GET}?for=${chatId.includes("group") ? "GROUP" : "DM"}&tag_id=${triggerPayload?.tag}&scope_id=${encodeURIComponent(chatId)}${target_user}`,
+        `${ENDPOINTS.TAGS_FILTER.GET}?for=${chatId.includes("group") ? "GROUP" : "DM"}&tag_id=${triggerPayload?.tag}&scope_id=${encodeURIComponent(chatId)}${target_user}`,
       );
 
       if (!response.data?.success) {

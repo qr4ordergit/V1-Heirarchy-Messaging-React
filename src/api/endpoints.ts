@@ -28,11 +28,16 @@ export const ENDPOINTS = {
     DELETE: "/groups-message",
     PUT: "/groups-message",
   },
-  TAGS: {
-    POST: "/tags/manage",
+  TAGS_FILTER: {
     GET: "/tags/manage",
+  },
+  TAGS_TO_MSG: {
+    POST: "/tags/manage",
     DELETE: "/tags/manage",
-    EXISTING: "/tags/by_message_id"
+    EXISTING: "/tags/by_message_id",
+  },
+  TAG: {
+    GET: "/tags"
   },
   PRIVATEMSG: {
     DECRYPT: "/groups-message/decrypt"

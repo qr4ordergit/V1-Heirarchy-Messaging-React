@@ -23,20 +23,16 @@ function TagsModal() {
   const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
     (state) => state,
   );
-  const { tags } = useTagStore((state) => state);
+  const { tagsWithCategories } = useTagStore((state) => state);
   const { updateTagStatus } = useChatStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
-  const { targetUserDetails } = useAuthStore((state) => state);
+  const { target_user } = useAuthStore((state) => state);
 
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [oldTags, setOldTags] = useState<string[]>([]);
 
   const [submitLoader, SubmitFn] = useTransition();
   const [fetchLoader, FetchFn] = useTransition();
-
-  const target_user_param = targetUserDetails?.user_id
-    ? `target_user=${targetUserDetails.user_id}`
-    : "";
 
   const onClose = () => {
     setSelectedTags([]);
@@ -53,10 +49,11 @@ function TagsModal() {
         message_id: [triggerPayload?._id],
       };
 
-      const res = await api.post(
-        `${ENDPOINTS.TAGS.POST}?${target_user_param}`,
-        payload,
-      );
+      const res = await api.post(ENDPOINTS.TAGS_TO_MSG.POST, payload, {
+        params: {
+          target_user,
+        },
+      });
 
       if (!res.data?.success) {
         Notification.error("Something went wrong");
@@ -85,9 +82,13 @@ function TagsModal() {
     if (!chatId) return;
 
     try {
-      const res = await api.get(
-        `${ENDPOINTS.TAGS.EXISTING}?scope_id=${encodeURIComponent(chatId)}&message_id=${triggerPayload?._id}&${target_user_param}`,
-      );
+      const res = await api.get(ENDPOINTS.TAGS_TO_MSG.EXISTING, {
+        params: {
+          scope_id: encodeURIComponent(chatId),
+          message_id: triggerPayload?._id,
+          target_user,
+        },
+      });
 
       if (res.data?.success) {
         setSelectedTags(res.data?.document_tagged_in);
@@ -103,6 +104,9 @@ function TagsModal() {
       Promise.all(
         toRemoveTags.map((tag) => {
           const payload: { [key: string]: unknown } = {
+            params: {
+              target_user,
+            },
             data: {
               for: chatId?.includes("group") ? "GROUP" : "DM",
               tag_id: tag,
@@ -110,7 +114,7 @@ function TagsModal() {
             },
           };
 
-          api.delete(`${ENDPOINTS.TAGS.DELETE}?${target_user_param}`, payload);
+          api.delete(ENDPOINTS.TAGS_TO_MSG.DELETE, payload);
         }),
       );
     } catch (error) {}
@@ -148,19 +152,46 @@ function TagsModal() {
           </Group>
         ) : (
           <>
-            {tags.length ? (
-              <ScrollArea h={Math.min(tags.length * 36, 200)}>
-                <Checkbox.Group value={selectedTags} onChange={setSelectedTags}>
+            {chatId?.includes("group") && (
+              <Checkbox.Group
+                value={selectedTags}
+                onChange={setSelectedTags}
+                label="Default group tags"
+              >
+                {tagsWithCategories.group ? (
+                  <ScrollArea
+                    h={Math.min(tagsWithCategories.group?.length * 30, 150)}
+                  >
+                    <Stack gap="sm">
+                      {tagsWithCategories?.group.map((tag) => (
+                        <Checkbox key={tag} value={tag} label={tag} />
+                      ))}
+                    </Stack>
+                  </ScrollArea>
+                ) : (
+                  <Text variant="danger">Tags not available</Text>
+                )}
+              </Checkbox.Group>
+            )}
+            <Checkbox.Group
+              value={selectedTags}
+              onChange={setSelectedTags}
+              label="Tags created by you"
+            >
+              {tagsWithCategories.user ? (
+                <ScrollArea
+                  h={Math.min(tagsWithCategories.user?.length * 30, 150)}
+                >
                   <Stack gap="sm">
-                    {tags.map((tag) => (
+                    {tagsWithCategories?.user.map((tag) => (
                       <Checkbox key={tag} value={tag} label={tag} />
                     ))}
                   </Stack>
-                </Checkbox.Group>
-              </ScrollArea>
-            ) : (
-              <Text className="text-red-500">Tags not found</Text>
-            )}
+                </ScrollArea>
+              ) : (
+                <Text variant="danger">Tags not available</Text>
+              )}
+            </Checkbox.Group>
           </>
         )}
 

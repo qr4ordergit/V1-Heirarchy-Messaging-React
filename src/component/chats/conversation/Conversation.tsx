@@ -1,6 +1,4 @@
 import { useEffect } from "react";
-import { getTagsApi } from "../../../api/profileApi";
-import { useTagStore } from "../../../store/tags/tags.store";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import ChatInput from "./ChatInput";
 import Chatting from "./Chatting";
@@ -15,16 +13,49 @@ import DecryptPrivateMsgDialog from "./dialouges/DecryptPrivateMsgDialog";
 import { api } from "../../../api/axios";
 import { API_ENDPOINTS, withTargetUser } from "../../../utils/constant";
 import useContactStore from "../../../store/contacts/contacts.store";
+import { useAuthStore } from "../../../store/auth/auth.store";
+import { useParams } from "react-router";
+import { ENDPOINTS } from "../../../api/endpoints";
+import { useTagStore } from "../../../store/tags/tags.store";
 
 function Conversation() {
   const { trigger } = useTriggerStore((state) => state);
-  const { storeTags, tags } = useTagStore((state) => state);
   const { storeContacts } = useContactStore((state) => state);
+  const { target_user } = useAuthStore((state) => state);
+  const { chatId } = useParams<{ chatId: string }>();
+  const { storeCategoryTags } = useTagStore((state) => state);
 
   const fetchTagsList = async () => {
     try {
-      const newTags = await getTagsApi();
-      storeTags(Array.isArray(newTags) ? newTags : []);
+      const tagsByCategories = {
+        group: [],
+        user: [],
+      };
+
+      const params = {
+        target_user,
+        group_id: chatId?.includes("group") ? chatId : undefined,
+      };
+
+      if (chatId?.includes("group")) {
+        const res1 = await api.get(ENDPOINTS.TAG.GET, {
+          params,
+        });
+        const group_tags = res1.data?.tag_ids || [];
+
+        tagsByCategories.group = group_tags;
+      }
+
+      delete params.group_id;
+      const res2 = await api.get(ENDPOINTS.TAG.GET, {
+        params,
+      });
+
+      const newTags = res2.data?.tag_ids || [];
+
+      tagsByCategories.user = newTags;
+
+      storeCategoryTags(tagsByCategories);
     } catch (error: any) {
       console.log(error);
     }
@@ -41,9 +72,7 @@ function Conversation() {
   };
 
   useEffect(() => {
-    if (tags.length === 0) {
-      fetchTagsList();
-    }
+    fetchTagsList();
     fetchContacts();
   }, []);
 

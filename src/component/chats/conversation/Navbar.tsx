@@ -15,30 +15,45 @@ import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../utils/constant";
 import { useTagStore } from "../../../store/tags/tags.store";
 
+interface CURRENT_CHAT {
+  display_name?: string;
+  profile_url?: string | null;
+
+  [key: string]: unknown;
+}
+
 function Navbar() {
   const { dms } = useDMListStore((state) => state);
   const { groups } = useGroupListStore((state) => state);
   const { setTrigger, trigger, resetTrigger } = useTriggerStore(
     (state) => state,
   );
-  const { tags } = useTagStore((state) => state);
+  const { tagsWithCategories } = useTagStore((state) => state);
 
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
 
-  const displayName = () => {
-    if (decodeURIComponent(chatId ?? "").includes("group")) {
-      return (
-        groups.find(
-          (userDoc) => userDoc._id === decodeURIComponent(chatId ?? ""),
-        )?.group_name ?? ""
+  const currentChat = (): CURRENT_CHAT => {
+    if (!chatId) return {};
+
+    if (chatId.includes("group")) {
+      const chat = groups.find(
+        (userDoc) => userDoc._id === decodeURIComponent(chatId),
       );
+
+      return {
+        display_name: chat?.group_name,
+        profile_url: chat?.profile_url,
+      };
     }
 
-    return (
-      dms.find((userDoc) => userDoc._id === decodeURIComponent(chatId ?? ""))
-        ?.display_name ?? ""
+    const chat = dms.find(
+      (userDoc) => userDoc._id === decodeURIComponent(chatId),
     );
+    return {
+      display_name: chat?.display_name,
+      profile_url: chat?.profile_url,
+    };
   };
 
   const onRefresh = () => {
@@ -85,10 +100,15 @@ function Navbar() {
             <IconChevronLeft />
           </ActionIcon>
         </div>
-        <Avatar color="cyan" radius="xl">
-          {displayName()[0]?.toUpperCase()}
-        </Avatar>
-        <div className="font-medium">{displayName()}</div>
+        {currentChat().profile_url ? (
+          <Avatar src={currentChat().profile_url} />
+        ) : (
+          <Avatar color="cyan" radius="xl">
+            {currentChat().display_name?.[0]?.toUpperCase()}
+          </Avatar>
+        )}
+
+        <div className="font-medium">{currentChat().display_name}</div>
         <div className="ms-auto">
           <ActionIcon variant="light" radius="xl" size={36} onClick={onRefresh}>
             <IconRefresh />
@@ -118,32 +138,60 @@ function Navbar() {
                     By text
                   </Menu.Item>
 
-                  <Menu.Sub
-                    openDelay={120}
-                    closeDelay={150}
-                    disabled={tags.length === 0}
-                  >
+                  <Menu.Sub openDelay={120} closeDelay={150}>
                     <Menu.Sub.Target>
-                      <Menu.Sub.Item
-                        disabled={tags.length === 0}
-                        leftSection={<IconStar size={14} />}
-                      >
+                      <Menu.Sub.Item leftSection={<IconStar size={14} />}>
                         By tags
                       </Menu.Sub.Item>
                     </Menu.Sub.Target>
 
                     <Menu.Sub.Dropdown miw={150}>
-                      <Menu.Label>Select tag</Menu.Label>
-                      <ScrollArea
-                        h={Math.min(tags.length * 36, 250)}
-                        scrollbarSize={6}
-                      >
-                        {tags.map((tag, i) => (
-                          <Menu.Item onClick={() => onSearchByTag(tag)} key={i}>
-                            {tag}
-                          </Menu.Item>
-                        ))}
-                      </ScrollArea>
+                      {tagsWithCategories.group?.length ? (
+                        <>
+                          <Menu.Label>Select group tag</Menu.Label>
+                          <ScrollArea
+                            h={Math.min(
+                              tagsWithCategories.group?.length * 36,
+                              250,
+                            )}
+                            scrollbarSize={6}
+                          >
+                            {tagsWithCategories.group?.map((tag, i) => (
+                              <Menu.Item
+                                onClick={() => onSearchByTag(tag)}
+                                key={i}
+                              >
+                                {tag}
+                              </Menu.Item>
+                            ))}
+                          </ScrollArea>
+                        </>
+                      ) : (
+                        ""
+                      )}
+                      {tagsWithCategories.user?.length ? (
+                        <>
+                          <Menu.Label>Select your tag</Menu.Label>
+                          <ScrollArea
+                            h={Math.min(
+                              tagsWithCategories.user?.length * 36,
+                              250,
+                            )}
+                            scrollbarSize={6}
+                          >
+                            {tagsWithCategories.user?.map((tag, i) => (
+                              <Menu.Item
+                                onClick={() => onSearchByTag(tag)}
+                                key={i}
+                              >
+                                {tag}
+                              </Menu.Item>
+                            ))}
+                          </ScrollArea>
+                        </>
+                      ) : (
+                        ""
+                      )}
                     </Menu.Sub.Dropdown>
                   </Menu.Sub>
                 </Menu.Sub.Dropdown>

@@ -5,6 +5,7 @@ export interface DM {
   display_name: string;
   unread_count: number;
   last_message_timestamp: string;
+  profile_url?: string | null;
 }
 
 interface DMListState {
