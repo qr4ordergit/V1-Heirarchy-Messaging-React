@@ -201,7 +201,7 @@ export default function Accounts() {
   >({});
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [perType, setPerType] = useState<string>("User Permission");
+  const [perType, setPerType] = useState<string>("User's Account Permissions");
 
   const [accessAndPermissions, setAccessAndPermissions] =
     useState<AccessAndPermissionsState>({
@@ -243,11 +243,11 @@ export default function Accounts() {
   const onCloseAccessAndPermissions = () => {
     setAccessAndPermissions({
       open: false,
-      targetUser: "User Permission",
+      targetUser: "User's Account Permissions",
       label: "",
       display_name: "",
     });
-    setPerType("User Permission");
+    setPerType("User's Account Permissions");
   };
 
   const users = structuredClone(accounts)
@@ -1766,7 +1766,7 @@ export default function Accounts() {
         radius={0}
       >
         <Group gap="xs" mb={"md"}>
-          {["User Permission", "User to User Permission"].map((name) => (
+          {["User's Account Permissions", "User to Subusers Permissions"].map((name) => (
             <Button
               key={name}
               size="compact-xs"
@@ -1774,7 +1774,7 @@ export default function Accounts() {
               variant={perType === name ? "filled" : "outline"}
               onClick={() => {
                 setPerType(name);
-                if (name === "User Permission") {
+                if (name === "User's Account Permissions") {
                   loadPermissions({
                     user_id: accessAndPermissions.targetUser,
                     phone_number: accessAndPermissions.label,
@@ -1787,7 +1787,7 @@ export default function Accounts() {
             </Button>
           ))}
         </Group>
-        {perType === "User Permission" ? (
+        {perType === "User's Account Permissions" ? (
           loadingP ? (
             <Flex justify="center" align="center" h="calc(100dvh - 120px)">
               <Loader size="xs" />

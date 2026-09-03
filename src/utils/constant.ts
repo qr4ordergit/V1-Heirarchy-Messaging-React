@@ -226,8 +226,8 @@ export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
   keyring: "Manage Keyring",
   contacts: "Manage Contacts",
   tags: "Manage Tags",
-  "sub-users": "Manage Subuser",
-  "users-accesstree" : "Manage Subuser Access & Permissions",
+  "sub-users": "Manage Subuser Account",
+  "users-accesstree" : "Manage Subuser's Access & Permissions",
   "user-account": "Manage Account",
 };
 
