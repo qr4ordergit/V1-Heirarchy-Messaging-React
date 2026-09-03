@@ -72,9 +72,12 @@ function Conversation() {
   };
 
   useEffect(() => {
-    fetchTagsList();
     fetchContacts();
   }, []);
+
+  useEffect(() => {
+    fetchTagsList();
+  }, [chatId]);
 
   return (
     <div className="p-2 h-full">
