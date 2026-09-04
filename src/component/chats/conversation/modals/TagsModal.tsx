@@ -51,7 +51,7 @@ function TagsModal() {
 
       const res = await api.post(ENDPOINTS.TAGS_TO_MSG.POST, payload, {
         params: {
-          target_user,
+          target_user: target_user ? target_user : undefined,
         },
       });
 
@@ -86,7 +86,7 @@ function TagsModal() {
         params: {
           scope_id: encodeURIComponent(chatId),
           message_id: triggerPayload?._id,
-          target_user,
+          target_user: target_user ? target_user : undefined,
         },
       });
 
@@ -105,7 +105,7 @@ function TagsModal() {
         toRemoveTags.map((tag) => {
           const payload: { [key: string]: unknown } = {
             params: {
-              target_user,
+              target_user: target_user ? target_user : undefined,
             },
             data: {
               for: chatId?.includes("group") ? "GROUP" : "DM",
@@ -158,7 +158,7 @@ function TagsModal() {
                 onChange={setSelectedTags}
                 label="Default group tags"
               >
-                {tagsWithCategories.group ? (
+                {tagsWithCategories.group?.length ? (
                   <ScrollArea
                     h={Math.min(tagsWithCategories.group?.length * 30, 150)}
                   >
@@ -169,7 +169,9 @@ function TagsModal() {
                     </Stack>
                   </ScrollArea>
                 ) : (
-                  <Text variant="danger">Tags not available</Text>
+                  <Text size="sm" className="text-red-500">
+                    Tags not available
+                  </Text>
                 )}
               </Checkbox.Group>
             )}
@@ -178,7 +180,7 @@ function TagsModal() {
               onChange={setSelectedTags}
               label="Tags created by you"
             >
-              {tagsWithCategories.user ? (
+              {tagsWithCategories.user?.length ? (
                 <ScrollArea
                   h={Math.min(tagsWithCategories.user?.length * 30, 150)}
                 >

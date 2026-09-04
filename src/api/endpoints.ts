@@ -41,5 +41,9 @@ export const ENDPOINTS = {
   },
   PRIVATEMSG: {
     DECRYPT: "/groups-message/decrypt"
+  },
+  EXPORTCHAT: {
+    GENERATE: "/message-reports",
+    STATUS: "/message-reports"
   }
 } as const;

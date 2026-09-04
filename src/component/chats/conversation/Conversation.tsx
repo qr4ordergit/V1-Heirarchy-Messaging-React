@@ -17,6 +17,7 @@ import { useAuthStore } from "../../../store/auth/auth.store";
 import { useParams } from "react-router";
 import { ENDPOINTS } from "../../../api/endpoints";
 import { useTagStore } from "../../../store/tags/tags.store";
+import ExportChatModal from "./modals/ExportChatModal";
 
 function Conversation() {
   const { trigger } = useTriggerStore((state) => state);
@@ -33,7 +34,7 @@ function Conversation() {
       };
 
       const params = {
-        target_user,
+        target_user: target_user ? target_user : undefined,
         group_id: chatId?.includes("group") ? chatId : undefined,
       };
 
@@ -106,6 +107,7 @@ function Conversation() {
       <TagsModal />
       <PrivateMessagePayloadModal />
       <DecryptPrivateMsgDialog />
+      <ExportChatModal />
     </div>
   );
 }

@@ -98,6 +98,7 @@ export const TRIGGERS = {
   privatePayload: "privatePayload",
   privateMessageSender: "privateMessageSender",
   decryptPrivateMsgDialog: "decryptPrivateMsgDialog",
+  exportChatModal: "exportChatModal"
 };
 
 export const CIPHER_SECRET =
@@ -227,7 +228,7 @@ export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
   contacts: "Manage Contacts",
   tags: "Manage Tags",
   "sub-users": "Manage Subuser Account",
-  "users-accesstree" : "Manage Subuser's Access & Permissions",
+  "users-accesstree": "Manage Subuser's Access & Permissions",
   "user-account": "Manage Account",
 };
 
