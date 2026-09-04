@@ -1744,7 +1744,7 @@ export default function Accounts() {
         title={
           <Text>
             {" "}
-            Manage Access & Permissions of{" "}
+            Manage Access & Permissions of user{" "}
             {accessAndPermissions.display_name !== "" ? (
               <>
                 <span style={{ color: "var(--mantine-color-blue-4)" }}>
@@ -1766,7 +1766,7 @@ export default function Accounts() {
         radius={0}
       >
         <Group gap="xs" mb={"md"}>
-          {["User's Account Permissions", "User to Subusers Permissions"].map((name) => (
+          {["User's Account Permissions", "User's Accessed Accounts Permissions"].map((name) => (
             <Button
               key={name}
               size="compact-xs"
