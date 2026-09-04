@@ -405,6 +405,25 @@ export async function getBulkRegistrationStatus(
   return data as BulkRegistrationStatusResponse;
 }
 
+export type BulkJobStatus =
+  | "idle"
+  | "uploading"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "error";
+
+export interface BulkJobState {
+  status: BulkJobStatus;
+  jobId?: string;
+  total?: number;
+  created?: number;
+  errors?: BulkRegistrationError[];
+  errorMessage?: string;
+}
+
+export const IDLE_BULK_JOB: BulkJobState = { status: "idle" };
+
 export async function updateUserAccess(
   targetUserId: string,
   subUserIds: string[],

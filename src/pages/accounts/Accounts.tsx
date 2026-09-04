@@ -29,6 +29,7 @@ import {
   ThemeIcon,
   Textarea,
   UnstyledButton,
+  Indicator,
 } from "@mantine/core";
 import {
   IconDotsVertical,
@@ -48,6 +49,7 @@ import {
   IconCheck,
   IconPencil,
   IconShieldLock,
+  IconBell,
 } from "@tabler/icons-react";
 
 import {
@@ -56,8 +58,12 @@ import {
   changePassword,
   updateUserLock,
   updateUserProfile,
+  bulkRegisterSubUsers,
+  getBulkRegistrationStatus,
+  IDLE_BULK_JOB,
   type Account,
   type UpdateProfilePayload,
+  type BulkJobState,
 } from "../../api/accountApi";
 
 import { logout } from "../../api/authApi";
@@ -110,12 +116,6 @@ const getAccountIdentifier = (account: Account) => {
   if (account?.phone_number?.trim()) return account.phone_number.trim();
   return account.user_id;
 };
-const getHubIdentifier = (account: Account) => {
-  if (account?.display_name?.trim()) return account.display_name.trim();
-  if (account?.email?.trim()) return account.email.trim();
-  if (account?.phone_number?.trim()) return account.phone_number.trim();
-  return account.user_id;
-};
 const statusColor = (status: string | null) => {
   switch (status?.toLowerCase()) {
     case "active":
@@ -162,6 +162,10 @@ export default function Accounts() {
   const [error, setError] = useState<string | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [startInBulkMode, setStartInBulkMode] = useState(false);
+
+  const [bulkJob, setBulkJob] = useState<BulkJobState>(IDLE_BULK_JOB);
+  const bulkPollTimeoutRef = useRef<number | null>(null);
 
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -200,6 +204,7 @@ export default function Accounts() {
     Record<string, boolean>
   >({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState("");
 
   const [perType, setPerType] = useState<string>("User's Account Permissions");
 
@@ -331,8 +336,121 @@ export default function Accounts() {
 
   const handleAccountsChanged = async () => {
     setSearchQuery("");
+    setAppliedSearchQuery("");
     await loadAccounts();
   };
+
+  const BULK_INITIAL_POLL_DELAY_MS = 5000;
+  const BULK_POLL_INTERVAL_MS = 2000;
+
+  const pollBulkJob = (jobId: string) => {
+    const tick = async () => {
+      try {
+        const status = await getBulkRegistrationStatus(jobId);
+        const isDone =
+          status.status === "COMPLETED" || status.status === "FAILED";
+
+        setBulkJob({
+          status: isDone
+            ? status.status === "COMPLETED"
+              ? "completed"
+              : "failed"
+            : "processing",
+          jobId,
+          total: status.total,
+          created: status.created,
+          errors: status.errors,
+        });
+
+        if (!isDone) {
+          bulkPollTimeoutRef.current = window.setTimeout(
+            () => void tick(),
+            BULK_POLL_INTERVAL_MS,
+          );
+          return;
+        }
+
+        await handleAccountsChanged();
+
+        const hasErrors = (status.errors?.length ?? 0) > 0;
+
+        notifications.show({
+          color:
+            status.status === "FAILED" ? "red" : hasErrors ? "yellow" : "teal",
+          title:
+            status.status === "FAILED"
+              ? "Bulk upload failed"
+              : hasErrors
+                ? "Bulk upload finished with some errors"
+                : "Bulk upload complete",
+          message:
+            status.status === "FAILED"
+              ? "The bulk upload job failed. Open Add Account to see details."
+              : `${status.created ?? 0} of ${status.total ?? 0} account${
+                  status.total === 1 ? "" : "s"
+                } created.`,
+        });
+      } catch (err) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Could not check the upload status.";
+
+        setBulkJob({ status: "error", errorMessage: message });
+
+        notifications.show({
+          color: "red",
+          title: "Couldn't check upload status",
+          message,
+        });
+      }
+    };
+
+    bulkPollTimeoutRef.current = window.setTimeout(
+      () => void tick(),
+      BULK_INITIAL_POLL_DELAY_MS,
+    );
+  };
+
+  const startBulkUpload = async (file: File) => {
+    setBulkJob({ status: "uploading" });
+
+    try {
+      const response = await bulkRegisterSubUsers(file);
+
+      notifications.show({
+        color: "blue",
+        title: "Upload received",
+        message: response.message || "Processing your file now…",
+      });
+
+      setBulkJob({ status: "processing", jobId: response.job_id });
+      pollBulkJob(response.job_id);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not process the file.";
+
+      setBulkJob({ status: "error", errorMessage: message });
+
+      notifications.show({
+        color: "red",
+        title: "Couldn't upload file",
+        message,
+      });
+    }
+  };
+
+  const dismissBulkJob = () => {
+    setBulkJob(IDLE_BULK_JOB);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (bulkPollTimeoutRef.current !== null) {
+        window.clearTimeout(bulkPollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const openLockModal = (account: Account) => {
     setLockTarget(account);
@@ -392,17 +510,13 @@ export default function Accounts() {
     const isSelf = profileTarget.user_id === userDetails?.username;
 
     try {
-      const payload: UpdateProfilePayload = Object.fromEntries(
-        Object.entries({
-          display_name: profileForm.display_name?.trim(),
-          description: profileForm.description?.trim(),
-          ...(profilePictureFile
-            ? { profile_picture: profilePictureFile.name }
-            : {}),
-        }).filter(
-          ([_, value]) => typeof value !== "string" || value.trim() !== "",
-        ),
-      ) as UpdateProfilePayload;
+      const payload: UpdateProfilePayload = {
+        display_name: profileForm.display_name?.trim() ?? "",
+        description: profileForm.description?.trim() ?? "",
+        ...(profilePictureFile
+          ? { profile_picture: profilePictureFile.name }
+          : {}),
+      };
 
       const response = await updateUserProfile(
         payload,
@@ -692,13 +806,12 @@ export default function Accounts() {
   };
 
   const filteredAccounts = accounts.filter((account) => {
-    const query = searchQuery.trim().toLowerCase();
+    const query = appliedSearchQuery.trim().toLowerCase();
     if (!query) return true;
     const haystack = [
-      getAccountIdentifier(account),
       account.display_name,
-      account.email,
       account.user_id,
+      account.description,
       account.phone_number,
     ]
       .filter(Boolean)
@@ -706,6 +819,15 @@ export default function Accounts() {
       .toLowerCase();
     return haystack.includes(query);
   });
+
+  const runSearch = () => {
+    setAppliedSearchQuery(searchQuery);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setAppliedSearchQuery("");
+  };
 
   const handleSave = async () => {
     try {
@@ -801,20 +923,95 @@ export default function Accounts() {
           className={classes.headerGroup}
         >
           <div>
-            <Title order={2} className={classes.title} mb={4}>
-              Your Accounts
-            </Title>
-            <Text c="dimmed" size="sm">
-              Create multiple accounts and switch between them easily.
-            </Text>
+            {isHubAccountLoggedIn ? (
+              <Card
+                withBorder
+                radius="xl"
+                padding="sm"
+                className={classes.accountCard}
+                style={{ width: "fit-content" }}
+              >
+                <Group gap="sm" wrap="nowrap">
+                  <ThemeIcon
+                    size={36}
+                    radius="xl"
+                    variant="light"
+                    color="indigo"
+                  >
+                    <IconMail size={18} />
+                  </ThemeIcon>
+
+                  <div>
+                    <Text size="xs" c="dimmed" fw={500}>
+                      Root Account
+                    </Text>
+                    <Text size="sm" fw={700}>
+                      {userDetails?.email || userDetails?.username}
+                    </Text>
+                  </div>
+                </Group>
+              </Card>
+            ) : (
+              <>
+                <Title order={2} className={classes.title} mb={4}>
+                  Your Accounts
+                </Title>
+                <Text c="dimmed" size="sm">
+                  Create multiple accounts and switch between them easily.
+                </Text>
+              </>
+            )}
           </div>
           <Group gap="sm" className={classes.headerActions}>
+            {isHubAccountLoggedIn && bulkJob.status !== "idle" && (
+              <Tooltip label="Bulk upload status">
+                <Indicator
+                  color={
+                    bulkJob.status === "uploading" ||
+                    bulkJob.status === "processing"
+                      ? "blue"
+                      : bulkJob.status === "failed" ||
+                          bulkJob.status === "error"
+                        ? "red"
+                        : "teal"
+                  }
+                  processing={
+                    bulkJob.status === "uploading" ||
+                    bulkJob.status === "processing"
+                  }
+                  size={10}
+                  offset={4}
+                >
+                  <ActionIcon
+                    variant="light"
+                    color="indigo"
+                    radius="xl"
+                    size="lg"
+                    aria-label="Bulk upload status"
+                    onClick={() => {
+                      setStartInBulkMode(true);
+                      setModalOpen(true);
+                    }}
+                  >
+                    <IconBell size={18} />
+                  </ActionIcon>
+                </Indicator>
+              </Tooltip>
+            )}
+
             {isHubAccountLoggedIn && (
               <Button
                 leftSection={<IconPlus size={16} />}
                 radius="xl"
                 variant="gradient"
-                onClick={() => setModalOpen(true)}
+                disabled={
+                  bulkJob.status === "uploading" ||
+                  bulkJob.status === "processing"
+                }
+                onClick={() => {
+                  setStartInBulkMode(false);
+                  setModalOpen(true);
+                }}
               >
                 Add Account
               </Button>
@@ -856,14 +1053,14 @@ export default function Accounts() {
             <Center>
               <Stack gap="sm" align="center">
                 <Text c="dimmed" size="sm">
-                  No accounts match "{searchQuery}".
+                  No accounts match "{appliedSearchQuery}".
                 </Text>
                 <Button
                   variant="light"
                   radius="xl"
                   size="xs"
                   leftSection={<IconX size={14} />}
-                  onClick={() => setSearchQuery("")}
+                  onClick={clearSearch}
                 >
                   Clear search
                 </Button>
@@ -881,37 +1078,15 @@ export default function Accounts() {
                   : "";
 
                 if (isHubAccountLoggedIn) {
-                  const identifierValue = getHubIdentifier(account);
-
                   return (
-                    <Card
-                      key={account.user_id}
-                      withBorder
-                      radius="xl"
-                      padding="md"
-                      className={classes.accountCard}
-                      style={{ width: "fit-content" }}
-                    >
-                      <Group gap="sm" wrap="nowrap">
-                        <ThemeIcon
-                          size={36}
-                          radius="xl"
-                          variant="light"
-                          color="indigo"
-                        >
-                          <IconMail size={18} />
-                        </ThemeIcon>
-
-                        <div>
-                          <Text size="xs" c="dimmed" fw={500}>
-                            Logged in as
-                          </Text>
-                          <Text size="sm" fw={700}>
-                            {identifierValue}
-                          </Text>
-                        </div>
-                      </Group>
-                    </Card>
+                    <div key={account.user_id}>
+                      <Title order={2} className={classes.title} mb={4}>
+                        Your Accounts
+                      </Title>
+                      <Text c="dimmed" size="sm">
+                        Create multiple accounts and switch between them easily.
+                      </Text>
+                    </div>
                   );
                 }
 
@@ -959,6 +1134,17 @@ export default function Accounts() {
                               >
                                 {getAccountIdentifier(account)}
                               </Text>
+
+                              {account.display_name?.trim() && (
+                                <Text
+                                  size="xs"
+                                  c="dimmed"
+                                  truncate="end"
+                                  className={classes.accountUserId}
+                                >
+                                  {account.user_id}
+                                </Text>
+                              )}
 
                               <Tooltip
                                 label={
@@ -1013,7 +1199,7 @@ export default function Accounts() {
                                     variant="light"
                                     color="red"
                                     radius="sm"
-                                    onClick={() => openLockModal(account)}
+                                    // onClick={() => openLockModal(account)}
                                     style={{
                                       cursor: "pointer",
                                       fontFamily: "monospace",
@@ -1023,6 +1209,17 @@ export default function Accounts() {
                                       ? plainPasskey || "—"
                                       : "••••••"}
                                   </Badge>
+
+                                  <ActionIcon
+                                    variant="subtle"
+                                    color="gray"
+                                    radius="xl"
+                                    size="sm"
+                                    aria-label="Edit passkey"
+                                    onClick={() => openLockModal(account)}
+                                  >
+                                    <IconPencil size={14} />
+                                  </ActionIcon>
 
                                   <ActionIcon
                                     variant="subtle"
@@ -1130,8 +1327,19 @@ export default function Accounts() {
                 </Text>
                 {accounts.length > 0 && (
                   <TextInput
-                    placeholder="Search by username"
-                    leftSection={<IconSearch size={16} />}
+                    placeholder="Search by name, user ID, phone or description"
+                    leftSection={
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        radius="xl"
+                        size="sm"
+                        aria-label="Search"
+                        onClick={runSearch}
+                      >
+                        <IconSearch size={16} />
+                      </ActionIcon>
+                    }
                     rightSection={
                       searchQuery ? (
                         <ActionIcon
@@ -1139,7 +1347,7 @@ export default function Accounts() {
                           color="gray"
                           radius="xl"
                           aria-label="Clear search"
-                          onClick={() => setSearchQuery("")}
+                          onClick={clearSearch}
                         >
                           <IconX size={14} />
                         </ActionIcon>
@@ -1147,6 +1355,12 @@ export default function Accounts() {
                     }
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        runSearch();
+                      }
+                    }}
                     radius="xl"
                     // mb="lg"
                     name="account-search"
@@ -1208,6 +1422,17 @@ export default function Accounts() {
                                   {getAccountIdentifier(account)}
                                 </Text>
 
+                                {account.display_name?.trim() && (
+                                  <Text
+                                    size="xs"
+                                    c="dimmed"
+                                    truncate="end"
+                                    className={classes.accountUserId}
+                                  >
+                                    {account.user_id}
+                                  </Text>
+                                )}
+
                                 <Tooltip
                                   label={
                                     copiedUserId === account.user_id
@@ -1261,7 +1486,7 @@ export default function Accounts() {
                                       variant="light"
                                       color="red"
                                       radius="sm"
-                                      onClick={() => openLockModal(account)}
+                                      // onClick={() => openLockModal(account)}
                                       style={{
                                         cursor: "pointer",
                                         fontFamily: "monospace",
@@ -1271,6 +1496,17 @@ export default function Accounts() {
                                         ? plainPasskey || "—"
                                         : "••••••"}
                                     </Badge>
+
+                                    <ActionIcon
+                                      variant="subtle"
+                                      color="gray"
+                                      radius="xl"
+                                      size="sm"
+                                      aria-label="Edit passkey"
+                                      onClick={() => openLockModal(account)}
+                                    >
+                                      <IconPencil size={14} />
+                                    </ActionIcon>
 
                                     <ActionIcon
                                       variant="subtle"
@@ -1431,8 +1667,21 @@ export default function Accounts() {
 
       <CreateAccountModal
         opened={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          setStartInBulkMode(false);
+          if (
+            bulkJob.status === "completed" ||
+            bulkJob.status === "failed" ||
+            bulkJob.status === "error"
+          ) {
+            dismissBulkJob();
+          }
+        }}
         onAccountCreated={handleAccountsChanged}
+        startInBulkMode={startInBulkMode}
+        bulkJob={bulkJob}
+        onBulkUpload={startBulkUpload}
       />
 
       <Modal
@@ -1766,7 +2015,10 @@ export default function Accounts() {
         radius={0}
       >
         <Group gap="xs" mb={"md"}>
-          {["User's Account Permissions", "User's Accessed Accounts Permissions"].map((name) => (
+          {[
+            "User's Account Permissions",
+            "User's Accessed Accounts Permissions",
+          ].map((name) => (
             <Button
               key={name}
               size="compact-xs"

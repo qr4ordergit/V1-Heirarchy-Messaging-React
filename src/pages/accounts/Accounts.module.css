@@ -41,6 +41,10 @@
   text-decoration: underline;
 }
 
+.accountUserId {
+  max-width: 140px;
+}
+
 .headerGroup {
   flex-wrap: wrap;
 }

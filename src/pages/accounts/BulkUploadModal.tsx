@@ -1,37 +1,33 @@
-import { useState } from "react";
 import { Modal } from "@mantine/core";
+import { IDLE_BULK_JOB, type BulkJobState } from "../../api/accountApi";
 import BulkUploadPanel from "./BulkUploadPanel";
 
 interface BulkUploadModalProps {
   opened: boolean;
   onClose: () => void;
-  onUploaded?: () => void | Promise<void>;
+  job?: BulkJobState;
+  onUpload: (file: File) => void;
 }
 
 export default function BulkUploadModal({
   opened,
   onClose,
-  onUploaded,
+  job,
+  onUpload,
 }: BulkUploadModalProps) {
-  const [busy, setBusy] = useState(false);
-
   return (
     <Modal
       opened={opened}
-      onClose={() => {
-        if (!busy) onClose();
-      }}
+      onClose={onClose}
       title="Bulk Upload Accounts"
       centered
       radius="md"
       size="lg"
-      closeOnClickOutside={!busy}
-      closeOnEscape={!busy}
     >
       <BulkUploadPanel
-        onDone={onClose}
-        onUploaded={onUploaded}
-        onBusyChange={setBusy}
+        job={job ?? IDLE_BULK_JOB}
+        onUpload={onUpload}
+        onClose={onClose}
       />
     </Modal>
   );

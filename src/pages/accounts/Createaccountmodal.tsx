@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { notifications } from "@mantine/notifications";
 import {
   Alert,
@@ -20,6 +20,7 @@ import {
   createAccount,
   verifySubUserOtp,
   withCountryCode,
+  type BulkJobState,
 } from "../../api/accountApi";
 import { suggestUsername } from "../../api/authApi";
 import { useAuthStore } from "../../store/auth/auth.store";
@@ -67,16 +68,28 @@ interface CreateAccountModalProps {
   opened: boolean;
   onClose: () => void;
   onAccountCreated: () => void | Promise<void>;
+  startInBulkMode?: boolean;
+  bulkJob?: BulkJobState;
+  onBulkUpload: (file: File) => void;
 }
 
 export default function CreateAccountModal({
   opened,
   onClose,
   onAccountCreated,
+  startInBulkMode = false,
+  bulkJob = { status: "idle" },
+  onBulkUpload,
 }: CreateAccountModalProps) {
   const userDetails = useAuthStore((state) => state.userDetails);
 
   const [mode, setMode] = useState<AddAccountMode>("single");
+
+  useEffect(() => {
+    if (opened && startInBulkMode) {
+      setMode("bulk");
+    }
+  }, [opened, startInBulkMode]);
 
   const [form, setForm] = useState<NewAccountForm>(EMPTY_FORM);
   const [formErrors, setFormErrors] = useState<NewAccountErrors>({});
@@ -381,7 +394,11 @@ export default function CreateAccountModal({
       size="lg"
     >
       {accountStep === "form" && mode === "bulk" ? (
-        <BulkUploadPanel onDone={handleClose} onUploaded={onAccountCreated} />
+        <BulkUploadPanel
+          job={bulkJob}
+          onUpload={onBulkUpload}
+          onClose={handleClose}
+        />
       ) : accountStep === "verify" ? (
         <Stack gap="md" align="center">
           {accountOtpError && (
