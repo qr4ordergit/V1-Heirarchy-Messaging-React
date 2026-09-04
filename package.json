@@ -12,6 +12,7 @@
   "dependencies": {
     "@mantine/carousel": "^9.5.1",
     "@mantine/core": "^9.4.2",
+    "@mantine/dates": "^9.5.1",
     "@mantine/hooks": "^9.4.2",
     "@mantine/notifications": "^9.5.1",
     "@tabler/icons-react": "^3.45.0",

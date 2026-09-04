@@ -2,6 +2,7 @@ import { ActionIcon, Avatar, Menu, ScrollArea } from "@mantine/core";
 import {
   IconChevronLeft,
   IconDotsVertical,
+  IconProgressDown,
   IconRefresh,
   IconSearch,
   IconStar,
@@ -65,6 +66,12 @@ function Navbar() {
   const onSearchByText = () => {
     setTrigger({
       toTrigger: TRIGGERS.searchByText,
+    });
+  };
+
+  const onExportChat = () => {
+    setTrigger({
+      toTrigger: TRIGGERS.exportChatModal,
     });
   };
 
@@ -197,8 +204,13 @@ function Navbar() {
                 </Menu.Sub.Dropdown>
               </Menu.Sub>
 
+              <Menu.Item
+                onClick={onExportChat}
+                leftSection={<IconProgressDown size={14} />}
+              >
+                Export chat
+              </Menu.Item>
               <Menu.Divider />
-
               <Menu.Item color="red" leftSection={<IconTrash size={14} />}>
                 Delete chat
               </Menu.Item>
