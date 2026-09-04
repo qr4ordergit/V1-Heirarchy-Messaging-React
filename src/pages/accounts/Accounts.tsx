@@ -20,7 +20,6 @@ import {
   Stack,
   Text,
   TextInput,
-  Title,
   Switch,
   Tooltip,
   Flex,
@@ -35,7 +34,6 @@ import {
   IconDotsVertical,
   IconKey,
   IconLogout,
-  IconPlus,
   IconTrash,
   IconLock,
   IconLockOpen,
@@ -916,6 +914,39 @@ export default function Accounts() {
   return (
     <div className={classes.wrapper}>
       <Container size="md" py="xl">
+        <Group justify="space-between" align="center" mb="md">
+          <Text className={classes.brand}>Messenger.com</Text>
+
+          {isMobile ? (
+            <ActionIcon
+              variant="light"
+              color="red"
+              radius="xl"
+              size="lg"
+              aria-label="Logout"
+              disabled={loggingOut}
+              onClick={handleLogout}
+            >
+              {loggingOut ? (
+                <Loader size={16} color="red" />
+              ) : (
+                <IconLogout size={18} />
+              )}
+            </ActionIcon>
+          ) : (
+            <Button
+              leftSection={<IconLogout size={16} />}
+              radius="xl"
+              variant="light"
+              color="red"
+              loading={loggingOut}
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+          )}
+        </Group>
+
         <Group
           justify="space-between"
           align="flex-start"
@@ -953,81 +984,15 @@ export default function Accounts() {
               </Card>
             ) : (
               <>
-                <Title order={2} className={classes.title} mb={4}>
+                {/* <Title order={2} className={classes.title} mb={4}>
                   Your Accounts
                 </Title>
                 <Text c="dimmed" size="sm">
                   Create multiple accounts and switch between them easily.
-                </Text>
+                </Text> */}
               </>
             )}
           </div>
-          <Group gap="sm" className={classes.headerActions}>
-            {isHubAccountLoggedIn && bulkJob.status !== "idle" && (
-              <Tooltip label="Bulk upload status">
-                <Indicator
-                  color={
-                    bulkJob.status === "uploading" ||
-                    bulkJob.status === "processing"
-                      ? "blue"
-                      : bulkJob.status === "failed" ||
-                          bulkJob.status === "error"
-                        ? "red"
-                        : "teal"
-                  }
-                  processing={
-                    bulkJob.status === "uploading" ||
-                    bulkJob.status === "processing"
-                  }
-                  size={10}
-                  offset={4}
-                >
-                  <ActionIcon
-                    variant="light"
-                    color="indigo"
-                    radius="xl"
-                    size="lg"
-                    aria-label="Bulk upload status"
-                    onClick={() => {
-                      setStartInBulkMode(true);
-                      setModalOpen(true);
-                    }}
-                  >
-                    <IconBell size={18} />
-                  </ActionIcon>
-                </Indicator>
-              </Tooltip>
-            )}
-
-            {isHubAccountLoggedIn && (
-              <Button
-                leftSection={<IconPlus size={16} />}
-                radius="xl"
-                variant="gradient"
-                disabled={
-                  bulkJob.status === "uploading" ||
-                  bulkJob.status === "processing"
-                }
-                onClick={() => {
-                  setStartInBulkMode(false);
-                  setModalOpen(true);
-                }}
-              >
-                Add Account
-              </Button>
-            )}
-
-            <Button
-              leftSection={<IconLogout size={16} />}
-              radius="xl"
-              variant="light"
-              color="red"
-              loading={loggingOut}
-              onClick={handleLogout}
-            >
-              Logout
-            </Button>
-          </Group>
         </Group>
 
         {error && (
@@ -1080,12 +1045,12 @@ export default function Accounts() {
                 if (isHubAccountLoggedIn) {
                   return (
                     <div key={account.user_id}>
-                      <Title order={2} className={classes.title} mb={4}>
+                      {/* <Title order={2} className={classes.title} mb={4}>
                         Your Accounts
                       </Title>
                       <Text c="dimmed" size="sm">
                         Create multiple accounts and switch between them easily.
-                      </Text>
+                      </Text> */}
                     </div>
                   );
                 }
@@ -1215,17 +1180,6 @@ export default function Accounts() {
                                     color="gray"
                                     radius="xl"
                                     size="sm"
-                                    aria-label="Edit passkey"
-                                    onClick={() => openLockModal(account)}
-                                  >
-                                    <IconPencil size={14} />
-                                  </ActionIcon>
-
-                                  <ActionIcon
-                                    variant="subtle"
-                                    color="gray"
-                                    radius="xl"
-                                    size="sm"
                                     aria-label={
                                       isPasskeyVisible
                                         ? "Hide passkey"
@@ -1240,6 +1194,17 @@ export default function Accounts() {
                                     ) : (
                                       <IconEye size={14} />
                                     )}
+                                  </ActionIcon>
+
+                                  <ActionIcon
+                                    variant="subtle"
+                                    color="gray"
+                                    radius="xl"
+                                    size="sm"
+                                    aria-label="Edit passkey"
+                                    onClick={() => openLockModal(account)}
+                                  >
+                                    <IconPencil size={14} />
                                   </ActionIcon>
                                 </>
                               )}
@@ -1318,13 +1283,83 @@ export default function Accounts() {
                 );
               })}
 
-            {filteredAccounts.some(
-              (account) => account.user_id !== userDetails?.username,
-            ) && (
+            {(isHubAccountLoggedIn ||
+              filteredAccounts.some(
+                (account) => account.user_id !== userDetails?.username,
+              )) && (
               <Stack gap="sm">
-                <Text size="sm" fw={600}>
-                  Accounts you can access:
-                </Text>
+                <Group justify="space-between" align="center" wrap="wrap">
+                  <Text size="sm" fw={600}>
+                    Your Managed Accounts
+                  </Text>
+
+                  {isHubAccountLoggedIn && (
+                    <Group gap="xs" wrap="nowrap">
+                      {bulkJob.status !== "idle" && (
+                        <Tooltip label="Bulk upload status">
+                          <Indicator
+                            color={
+                              bulkJob.status === "uploading" ||
+                              bulkJob.status === "processing"
+                                ? "blue"
+                                : bulkJob.status === "failed" ||
+                                    bulkJob.status === "error"
+                                  ? "red"
+                                  : "teal"
+                            }
+                            processing={
+                              bulkJob.status === "uploading" ||
+                              bulkJob.status === "processing"
+                            }
+                            size={10}
+                            offset={4}
+                          >
+                            <ActionIcon
+                              variant="light"
+                              color="indigo"
+                              radius="xl"
+                              size="md"
+                              aria-label="Bulk upload status"
+                              onClick={() => {
+                                setStartInBulkMode(true);
+                                setModalOpen(true);
+                              }}
+                            >
+                              <IconBell size={16} />
+                            </ActionIcon>
+                          </Indicator>
+                        </Tooltip>
+                      )}
+
+                      <UnstyledButton
+                        disabled={
+                          bulkJob.status === "uploading" ||
+                          bulkJob.status === "processing"
+                        }
+                        onClick={() => {
+                          setStartInBulkMode(false);
+                          setModalOpen(true);
+                        }}
+                        style={{
+                          opacity:
+                            bulkJob.status === "uploading" ||
+                            bulkJob.status === "processing"
+                              ? 0.5
+                              : 1,
+                          cursor:
+                            bulkJob.status === "uploading" ||
+                            bulkJob.status === "processing"
+                              ? "not-allowed"
+                              : "pointer",
+                        }}
+                      >
+                        <Text size="sm" fw={600} c="blue">
+                          Add Account +
+                        </Text>
+                      </UnstyledButton>
+                    </Group>
+                  )}
+                </Group>
                 {accounts.length > 0 && (
                   <TextInput
                     placeholder="Search by name, user ID, phone or description"
@@ -1502,17 +1537,6 @@ export default function Accounts() {
                                       color="gray"
                                       radius="xl"
                                       size="sm"
-                                      aria-label="Edit passkey"
-                                      onClick={() => openLockModal(account)}
-                                    >
-                                      <IconPencil size={14} />
-                                    </ActionIcon>
-
-                                    <ActionIcon
-                                      variant="subtle"
-                                      color="gray"
-                                      radius="xl"
-                                      size="sm"
                                       aria-label={
                                         isPasskeyVisible
                                           ? "Hide passkey"
@@ -1527,6 +1551,17 @@ export default function Accounts() {
                                       ) : (
                                         <IconEye size={14} />
                                       )}
+                                    </ActionIcon>
+
+                                    <ActionIcon
+                                      variant="subtle"
+                                      color="gray"
+                                      radius="xl"
+                                      size="sm"
+                                      aria-label="Edit passkey"
+                                      onClick={() => openLockModal(account)}
+                                    >
+                                      <IconPencil size={14} />
                                     </ActionIcon>
                                   </>
                                 )}
