@@ -46,6 +46,7 @@ export default function ConversationItem({
           radius="xl"
           size={45}
           color={getAvatarColor(conversation.display_name)}
+                    src={conversation.profile_url}
         >
           {conversation.display_name.charAt(0).toUpperCase()}
         </Avatar>
