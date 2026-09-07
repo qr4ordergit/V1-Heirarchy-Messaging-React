@@ -35,7 +35,7 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
       <Paper
         shadow="xs"
         radius="lg"
-        p="sm"
+        p="md"
         maw="70%"
         bg={isMe ? "blue.6" : "white"}
         className="relative"
@@ -73,7 +73,7 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
           <IconChecks size={14} color="#9be7ff" />
         </Group>
         <ChatOptions msg={msg}>
-          <div className="absolute top-0 right-2 cursor-pointer">
+          <div className="absolute top-1 right-1 cursor-pointer">
             <IconCaretDownFilled className="text-gray-300" size={18} />
           </div>
         </ChatOptions>

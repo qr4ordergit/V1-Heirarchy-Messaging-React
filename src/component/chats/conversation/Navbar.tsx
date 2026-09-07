@@ -7,7 +7,6 @@ import {
   IconSearch,
   IconStar,
   IconTextRecognition,
-  IconTrash,
 } from "@tabler/icons-react";
 import { useDMListStore } from "../../../store/dm/dm.list.store";
 import { useNavigate, useParams } from "react-router";
@@ -117,6 +116,69 @@ function Navbar() {
 
         <div className="font-medium">{currentChat().display_name}</div>
         <div className="ms-auto">
+          <Menu width={200} position="bottom-end">
+            <Menu.Target>
+              <ActionIcon variant="light" radius="xl" size={36}>
+                <IconSearch />
+              </ActionIcon>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Item
+                onClick={onSearchByText}
+                leftSection={<IconTextRecognition size={14} />}
+              >
+                By Text
+              </Menu.Item>
+
+              <Menu.Sub openDelay={120} closeDelay={150}>
+                <Menu.Sub.Target>
+                  <Menu.Sub.Item leftSection={<IconStar size={14} />}>
+                    By tags
+                  </Menu.Sub.Item>
+                </Menu.Sub.Target>
+
+                <Menu.Sub.Dropdown>
+                  {tagsWithCategories.group?.length ? (
+                    <>
+                      <Menu.Label>Select group tag</Menu.Label>
+                      <ScrollArea
+                        h={Math.min(tagsWithCategories.group?.length * 36, 250)}
+                        scrollbarSize={6}
+                      >
+                        {tagsWithCategories.group?.map((tag, i) => (
+                          <Menu.Item onClick={() => onSearchByTag(tag)} key={i}>
+                            {tag}
+                          </Menu.Item>
+                        ))}
+                      </ScrollArea>
+                    </>
+                  ) : (
+                    ""
+                  )}
+                  {tagsWithCategories.user?.length ? (
+                    <>
+                      <Menu.Label>Select your tag</Menu.Label>
+                      <ScrollArea
+                        h={Math.min(tagsWithCategories.user?.length * 36, 250)}
+                        scrollbarSize={6}
+                      >
+                        {tagsWithCategories.user?.map((tag, i) => (
+                          <Menu.Item onClick={() => onSearchByTag(tag)} key={i}>
+                            {tag}
+                          </Menu.Item>
+                        ))}
+                      </ScrollArea>
+                    </>
+                  ) : (
+                    ""
+                  )}
+                </Menu.Sub.Dropdown>
+              </Menu.Sub>
+            </Menu.Dropdown>
+          </Menu>
+        </div>
+        <div>
           <ActionIcon variant="light" radius="xl" size={36} onClick={onRefresh}>
             <IconRefresh />
           </ActionIcon>
@@ -130,89 +192,11 @@ function Navbar() {
             </Menu.Target>
 
             <Menu.Dropdown>
-              <Menu.Sub openDelay={120} closeDelay={150}>
-                <Menu.Sub.Target>
-                  <Menu.Sub.Item leftSection={<IconSearch size={14} />}>
-                    Search
-                  </Menu.Sub.Item>
-                </Menu.Sub.Target>
-
-                <Menu.Sub.Dropdown>
-                  <Menu.Item
-                    onClick={onSearchByText}
-                    leftSection={<IconTextRecognition size={14} />}
-                  >
-                    By text
-                  </Menu.Item>
-
-                  <Menu.Sub openDelay={120} closeDelay={150}>
-                    <Menu.Sub.Target>
-                      <Menu.Sub.Item leftSection={<IconStar size={14} />}>
-                        By tags
-                      </Menu.Sub.Item>
-                    </Menu.Sub.Target>
-
-                    <Menu.Sub.Dropdown miw={150}>
-                      {tagsWithCategories.group?.length ? (
-                        <>
-                          <Menu.Label>Select group tag</Menu.Label>
-                          <ScrollArea
-                            h={Math.min(
-                              tagsWithCategories.group?.length * 36,
-                              250,
-                            )}
-                            scrollbarSize={6}
-                          >
-                            {tagsWithCategories.group?.map((tag, i) => (
-                              <Menu.Item
-                                onClick={() => onSearchByTag(tag)}
-                                key={i}
-                              >
-                                {tag}
-                              </Menu.Item>
-                            ))}
-                          </ScrollArea>
-                        </>
-                      ) : (
-                        ""
-                      )}
-                      {tagsWithCategories.user?.length ? (
-                        <>
-                          <Menu.Label>Select your tag</Menu.Label>
-                          <ScrollArea
-                            h={Math.min(
-                              tagsWithCategories.user?.length * 36,
-                              250,
-                            )}
-                            scrollbarSize={6}
-                          >
-                            {tagsWithCategories.user?.map((tag, i) => (
-                              <Menu.Item
-                                onClick={() => onSearchByTag(tag)}
-                                key={i}
-                              >
-                                {tag}
-                              </Menu.Item>
-                            ))}
-                          </ScrollArea>
-                        </>
-                      ) : (
-                        ""
-                      )}
-                    </Menu.Sub.Dropdown>
-                  </Menu.Sub>
-                </Menu.Sub.Dropdown>
-              </Menu.Sub>
-
               <Menu.Item
                 onClick={onExportChat}
                 leftSection={<IconProgressDown size={14} />}
               >
                 Export chat
-              </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item color="red" leftSection={<IconTrash size={14} />}>
-                Delete chat
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
