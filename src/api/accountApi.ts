@@ -420,6 +420,8 @@ export interface BulkJobState {
   created?: number;
   errors?: BulkRegistrationError[];
   errorMessage?: string;
+  sourceHeaders?: string[];
+  sourceRows?: string[][];
 }
 
 export const IDLE_BULK_JOB: BulkJobState = { status: "idle" };

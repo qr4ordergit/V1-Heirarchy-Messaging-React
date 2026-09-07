@@ -3,6 +3,7 @@ import type { ChangeEvent } from "react";
 import { useNavigate } from "react-router";
 import { notifications } from "@mantine/notifications";
 import { useMediaQuery } from "@mantine/hooks";
+import * as XLSX from "xlsx";
 import {
   ActionIcon,
   Alert,
@@ -101,7 +102,7 @@ import {
 import { Notification } from "../../utils/notification";
 import { fetchUserDetails } from "../../api/userApi";
 import axios from "axios";
-//import { useDisableBackButton } from "../../hooks/useDisableBackButton";
+
 const PASSKEY_PATTERN = /^[a-zA-Z0-9]{4,12}$/;
 
 const getDisplayName = (account: Account) =>
@@ -352,7 +353,36 @@ export default function Accounts() {
   const BULK_INITIAL_POLL_DELAY_MS = 5000;
   const BULK_POLL_INTERVAL_MS = 2000;
 
-  const pollBulkJob = (jobId: string) => {
+  const parseBulkUploadFile = async (
+    file: File,
+  ): Promise<{ headers: string[]; rows: string[][] } | null> => {
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const aoa = XLSX.utils.sheet_to_json<string[]>(sheet, {
+        header: 1,
+        raw: false,
+        defval: "",
+      });
+
+      const [headerRow, ...dataRows] = aoa;
+      const headers = (headerRow ?? []).map((h) => String(h ?? ""));
+      const rows = dataRows.map((row) =>
+        headers.map((_, colIndex) => String(row?.[colIndex] ?? "")),
+      );
+
+      return { headers, rows };
+    } catch (err) {
+      console.error("Failed to parse bulk upload file for error export:", err);
+      return null;
+    }
+  };
+
+  const pollBulkJob = (
+    jobId: string,
+    source?: { headers: string[]; rows: string[][] } | null,
+  ) => {
     const tick = async () => {
       try {
         const status = await getBulkRegistrationStatus(jobId);
@@ -369,6 +399,8 @@ export default function Accounts() {
           total: status.total,
           created: status.created,
           errors: status.errors,
+          sourceHeaders: source?.headers,
+          sourceRows: source?.rows,
         });
 
         if (!isDone) {
@@ -424,6 +456,8 @@ export default function Accounts() {
   const startBulkUpload = async (file: File) => {
     setBulkJob({ status: "uploading" });
 
+    const source = await parseBulkUploadFile(file);
+
     try {
       const response = await bulkRegisterSubUsers(file);
 
@@ -433,8 +467,13 @@ export default function Accounts() {
         message: response.message || "Processing your file now…",
       });
 
-      setBulkJob({ status: "processing", jobId: response.job_id });
-      pollBulkJob(response.job_id);
+      setBulkJob({
+        status: "processing",
+        jobId: response.job_id,
+        sourceHeaders: source?.headers,
+        sourceRows: source?.rows,
+      });
+      pollBulkJob(response.job_id, source);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Could not process the file.";
@@ -452,6 +491,11 @@ export default function Accounts() {
   const dismissBulkJob = () => {
     setBulkJob(IDLE_BULK_JOB);
   };
+
+  const isBulkJobTerminal =
+    bulkJob.status === "completed" ||
+    bulkJob.status === "failed" ||
+    bulkJob.status === "error";
 
   useEffect(() => {
     return () => {
@@ -1318,90 +1362,116 @@ export default function Accounts() {
                 (account) => account.user_id !== userDetails?.username,
               )) && (
               <Stack gap="sm">
-                <Group justify="space-between" align="center" wrap="wrap">
-                  <Text size="sm" fw={600}>
-                    {isHubAccountLoggedIn ? (
-                      <>
-                        <Title order={2} className={classes.title} mb={4}>
-                          Your Accounts
-                        </Title>
+                <Stack gap={4}>
+                  {isHubAccountLoggedIn ? (
+                    <>
+                      <Title order={2} className={classes.title} mb={0}>
+                        Your Accounts
+                      </Title>
+
+                      <Group
+                        justify="space-between"
+                        align="center"
+                        wrap="wrap"
+                        gap="xs"
+                      >
                         <Text c="dimmed" size="sm">
                           Create multiple accounts and switch between them
                           easily.
-                        </Text>{" "}
-                      </>
-                    ) : (
-                      <>Your Managed Accounts</>
-                    )}
-                  </Text>
-
-                  {isHubAccountLoggedIn && (
-                    <Group gap="xs" wrap="nowrap">
-                      {bulkJob.status !== "idle" && (
-                        <Tooltip label="Bulk upload status">
-                          <Indicator
-                            color={
-                              bulkJob.status === "uploading" ||
-                              bulkJob.status === "processing"
-                                ? "blue"
-                                : bulkJob.status === "failed" ||
-                                    bulkJob.status === "error"
-                                  ? "red"
-                                  : "teal"
-                            }
-                            processing={
-                              bulkJob.status === "uploading" ||
-                              bulkJob.status === "processing"
-                            }
-                            size={10}
-                            offset={4}
-                          >
-                            <ActionIcon
-                              variant="light"
-                              color="indigo"
-                              radius="xl"
-                              size="md"
-                              aria-label="Bulk upload status"
-                              onClick={() => {
-                                setStartInBulkMode(true);
-                                setModalOpen(true);
-                              }}
-                            >
-                              <IconBell size={16} />
-                            </ActionIcon>
-                          </Indicator>
-                        </Tooltip>
-                      )}
-
-                      <UnstyledButton
-                        disabled={
-                          bulkJob.status === "uploading" ||
-                          bulkJob.status === "processing"
-                        }
-                        onClick={() => {
-                          setStartInBulkMode(false);
-                          setModalOpen(true);
-                        }}
-                        style={{
-                          opacity:
-                            bulkJob.status === "uploading" ||
-                            bulkJob.status === "processing"
-                              ? 0.5
-                              : 1,
-                          cursor:
-                            bulkJob.status === "uploading" ||
-                            bulkJob.status === "processing"
-                              ? "not-allowed"
-                              : "pointer",
-                        }}
-                      >
-                        <Text size="sm" fw={600} c="blue" mt={40}>
-                          Add Account +
                         </Text>
-                      </UnstyledButton>
-                    </Group>
+
+                        <Group gap="xs" wrap="nowrap">
+                          {bulkJob.status !== "idle" && (
+                            <Group gap={2} wrap="nowrap">
+                              <Tooltip label="Bulk upload status">
+                                <Indicator
+                                  color={
+                                    bulkJob.status === "uploading" ||
+                                    bulkJob.status === "processing"
+                                      ? "blue"
+                                      : bulkJob.status === "failed" ||
+                                          bulkJob.status === "error"
+                                        ? "red"
+                                        : "teal"
+                                  }
+                                  processing={
+                                    bulkJob.status === "uploading" ||
+                                    bulkJob.status === "processing"
+                                  }
+                                  size={10}
+                                  offset={4}
+                                >
+                                  <ActionIcon
+                                    variant="light"
+                                    color="indigo"
+                                    radius="xl"
+                                    size="md"
+                                    aria-label="Bulk upload status"
+                                    onClick={() => {
+                                      setStartInBulkMode(true);
+                                      setModalOpen(true);
+                                    }}
+                                  >
+                                    <IconBell size={16} />
+                                  </ActionIcon>
+                                </Indicator>
+                              </Tooltip>
+
+                              {isBulkJobTerminal && (
+                                <Tooltip label="Discard">
+                                  <ActionIcon
+                                    variant="subtle"
+                                    color="gray"
+                                    radius="xl"
+                                    size="sm"
+                                    aria-label="Discard bulk upload status"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      dismissBulkJob();
+                                    }}
+                                  >
+                                    <IconX size={12} />
+                                  </ActionIcon>
+                                </Tooltip>
+                              )}
+                            </Group>
+                          )}
+
+                          <UnstyledButton
+                            disabled={
+                              bulkJob.status === "uploading" ||
+                              bulkJob.status === "processing"
+                            }
+                            onClick={() => {
+                              setStartInBulkMode(false);
+                              setModalOpen(true);
+                            }}
+                            style={{
+                              opacity:
+                                bulkJob.status === "uploading" ||
+                                bulkJob.status === "processing"
+                                  ? 0.5
+                                  : 1,
+                              cursor:
+                                bulkJob.status === "uploading" ||
+                                bulkJob.status === "processing"
+                                  ? "not-allowed"
+                                  : "pointer",
+                            }}
+                          >
+                            <Text size="sm" fw={600} c="blue">
+                              Add Account +
+                            </Text>
+                          </UnstyledButton>
+                        </Group>
+                      </Group>
+                    </>
+                  ) : (
+                    <Text size="sm" fw={600}>
+                      Your Managed Accounts
+                    </Text>
                   )}
-                </Group>
+                </Stack>
                 {accounts.length > 0 && (
                   <div className={classes.searchWrapper}>
                     <TextInput
@@ -1759,18 +1829,12 @@ export default function Accounts() {
         onClose={() => {
           setModalOpen(false);
           setStartInBulkMode(false);
-          if (
-            bulkJob.status === "completed" ||
-            bulkJob.status === "failed" ||
-            bulkJob.status === "error"
-          ) {
-            dismissBulkJob();
-          }
         }}
         onAccountCreated={handleAccountsChanged}
         startInBulkMode={startInBulkMode}
         bulkJob={bulkJob}
         onBulkUpload={startBulkUpload}
+        onDiscardBulkJob={dismissBulkJob}
       />
 
       <Modal

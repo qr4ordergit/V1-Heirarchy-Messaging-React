@@ -71,6 +71,7 @@ interface CreateAccountModalProps {
   startInBulkMode?: boolean;
   bulkJob?: BulkJobState;
   onBulkUpload: (file: File) => void;
+  onDiscardBulkJob?: () => void;
 }
 
 export default function CreateAccountModal({
@@ -80,6 +81,7 @@ export default function CreateAccountModal({
   startInBulkMode = false,
   bulkJob = { status: "idle" },
   onBulkUpload,
+  onDiscardBulkJob,
 }: CreateAccountModalProps) {
   const userDetails = useAuthStore((state) => state.userDetails);
 
@@ -398,6 +400,14 @@ export default function CreateAccountModal({
           job={bulkJob}
           onUpload={onBulkUpload}
           onClose={handleClose}
+          onDiscard={
+            onDiscardBulkJob
+              ? () => {
+                  onDiscardBulkJob();
+                  handleClose();
+                }
+              : undefined
+          }
         />
       ) : accountStep === "verify" ? (
         <Stack gap="md" align="center">

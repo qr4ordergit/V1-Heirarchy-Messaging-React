@@ -9,6 +9,7 @@ import {
   List,
   Loader,
   Progress,
+  ScrollArea,
   Stack,
   Text,
   ThemeIcon,
@@ -17,6 +18,7 @@ import {
   IconDownload,
   IconFileSpreadsheet,
   IconInfoCircle,
+  IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
 import type { BulkJobState } from "../../api/accountApi";
@@ -26,6 +28,7 @@ interface BulkUploadPanelProps {
   job: BulkJobState;
   onUpload: (file: File) => void;
   onClose: () => void;
+  onDiscard?: () => void;
 }
 
 const SAMPLE_ROWS: string[][] = [
@@ -38,6 +41,7 @@ export default function BulkUploadPanel({
   job,
   onUpload,
   onClose,
+  onDiscard,
 }: BulkUploadPanelProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -76,6 +80,67 @@ export default function BulkUploadPanel({
     XLSX.writeFile(workbook, "bulk_upload_sample.xlsx");
   };
 
+  const handleDownloadErrors = () => {
+    if (!job.errors || job.errors.length === 0) return;
+
+    const hasSourceData =
+      !!job.sourceHeaders?.length && !!job.sourceRows?.length;
+
+    let rows: (string | number)[][];
+
+    if (hasSourceData) {
+      const headers = job.sourceHeaders as string[];
+      const sourceRows = job.sourceRows as string[][];
+      const passwordColIndex = headers.findIndex(
+        (h) => h.trim().toLowerCase() === "password",
+      );
+
+      const errorsByRow = new Map<number, string[]>();
+      job.errors.forEach((e) => {
+        if (e.row === undefined) return;
+        const existing = errorsByRow.get(e.row) ?? [];
+        existing.push(e.message);
+        errorsByRow.set(e.row, existing);
+      });
+
+      rows = [
+        [...headers, "Error [Remove this column before re-uploading]"],
+        ...Array.from(errorsByRow.entries())
+          .sort(([a], [b]) => a - b)
+          .map(([row, messages]) => {
+            const originalRow = [
+              ...(sourceRows[row - 2] ?? headers.map(() => "")),
+            ];
+            if (passwordColIndex !== -1) {
+              originalRow[passwordColIndex] = "";
+            }
+            return [...originalRow, messages.join("; ")];
+          }),
+      ];
+    } else {
+      rows = [
+        ["Row", "Username", "Error"],
+        ...job.errors.map((e) => [
+          e.row ?? "",
+          e.username ?? "",
+          e.message ?? "",
+        ]),
+      ];
+    }
+
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+    const colCount = rows[0]?.length ?? 3;
+    worksheet["!cols"] = Array.from({ length: colCount }, (_, i) =>
+      i === colCount - 1 ? { wch: 50 } : { wch: 20 },
+    );
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Failed Accounts");
+
+    const suffix = job.jobId ? job.jobId.slice(0, 8) : "job";
+    XLSX.writeFile(workbook, `bulk_upload_errors_${suffix}.xlsx`);
+  };
+
   const handleUploadClick = () => {
     if (!selectedFile) return;
     onUpload(selectedFile);
@@ -85,6 +150,10 @@ export default function BulkUploadPanel({
   const isBusy = job.status === "uploading" || job.status === "processing";
   const hasResult =
     job.status === "processing" ||
+    job.status === "completed" ||
+    job.status === "failed" ||
+    job.status === "error";
+  const isTerminal =
     job.status === "completed" ||
     job.status === "failed" ||
     job.status === "error";
@@ -151,15 +220,39 @@ export default function BulkUploadPanel({
             )}
 
           {job.errors && job.errors.length > 0 && (
-            <List size="sm" mt={8} spacing={4}>
-              {job.errors.map((e, idx) => (
-                <List.Item key={idx}>
-                  {e.row !== undefined ? `Row ${e.row} — ` : ""}
-                  {e.username ? `${e.username} — ` : ""}
-                  {e.message}
-                </List.Item>
-              ))}
-            </List>
+            <Stack gap={6} mt={8}>
+              <Group justify="space-between" align="center" wrap="nowrap">
+                <Text size="xs" fw={600} c="dimmed">
+                  {job.errors.length} row{job.errors.length === 1 ? "" : "s"}{" "}
+                  failed
+                </Text>
+                <Button
+                  size="compact-xs"
+                  variant="light"
+                  radius="xl"
+                  leftSection={<IconDownload size={14} />}
+                  onClick={handleDownloadErrors}
+                >
+                  Download Errors (.xlsx)
+                </Button>
+              </Group>
+              <Text size="xs" c="dimmed">
+                Passwords are left blank in the download for security — re-enter
+                them before re-uploading.
+              </Text>
+
+              <ScrollArea.Autosize mah={180} type="auto">
+                <List size="sm" spacing={4}>
+                  {job.errors.map((e, idx) => (
+                    <List.Item key={idx}>
+                      {e.row !== undefined ? `Row ${e.row} — ` : ""}
+                      {e.username ? `${e.username} — ` : ""}
+                      {e.message}
+                    </List.Item>
+                  ))}
+                </List>
+              </ScrollArea.Autosize>
+            </Stack>
           )}
 
           {job.status === "processing" && (
@@ -297,6 +390,16 @@ export default function BulkUploadPanel({
       )}
 
       <Group justify="flex-end" mt="xs">
+        {isTerminal && onDiscard && (
+          <Button
+            variant="subtle"
+            color="red"
+            leftSection={<IconTrash size={14} />}
+            onClick={onDiscard}
+          >
+            Discard
+          </Button>
+        )}
         <Button variant="subtle" onClick={onClose}>
           {job.status === "idle" ? "Cancel" : "Close"}
         </Button>
