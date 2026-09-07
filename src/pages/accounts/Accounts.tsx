@@ -1395,7 +1395,7 @@ export default function Accounts() {
                               : "pointer",
                         }}
                       >
-                        <Text size="sm" fw={600} c="blue">
+                        <Text size="sm" fw={600} c="blue" mt={40}>
                           Add Account +
                         </Text>
                       </UnstyledButton>
@@ -1407,7 +1407,13 @@ export default function Accounts() {
                     <TextInput
                       placeholder="Search by username, display name, description, or phone number"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setSearchQuery(value);
+                        if (value === "") {
+                          setAppliedSearchQuery("");
+                        }
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();

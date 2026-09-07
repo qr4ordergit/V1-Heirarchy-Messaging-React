@@ -221,11 +221,21 @@ export default function BulkUploadPanel({
             title="Before you upload"
             py={10}
           >
-            <List size="xs" spacing={4}>
+            <List
+              size="xs"
+              spacing={4}
+              type="unordered"
+              styles={{
+                item: {
+                  listStyleType: "disc",
+                },
+              }}
+            >
               <List.Item>
                 <strong>username</strong> and <strong>password</strong> are
                 mandatory for every row.
               </List.Item>
+
               <List.Item>
                 <strong>password</strong> must be at least 8 characters,
                 alphanumeric, with at least one special character, one number,
@@ -238,6 +248,7 @@ export default function BulkUploadPanel({
               automatically add a prefix & suffix to your username input.
             </Text>
           </Alert>
+
           <input
             ref={fileInputRef}
             type="file"
