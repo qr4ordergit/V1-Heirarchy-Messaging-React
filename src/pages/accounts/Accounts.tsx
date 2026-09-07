@@ -25,10 +25,10 @@ import {
   Flex,
   Checkbox,
   ScrollArea,
-  ThemeIcon,
   Textarea,
   UnstyledButton,
   Indicator,
+  Title,
 } from "@mantine/core";
 import {
   IconDotsVertical,
@@ -41,13 +41,13 @@ import {
   IconEyeOff,
   IconSearch,
   IconX,
-  IconMail,
   IconUserEdit,
   IconCopy,
   IconCheck,
   IconPencil,
   IconShieldLock,
   IconBell,
+  IconChevronDown,
 } from "@tabler/icons-react";
 
 import {
@@ -925,10 +925,77 @@ export default function Accounts() {
   return (
     <div className={classes.wrapper}>
       <Container size="md" py="xl">
-        <Group justify="space-between" align="center" mb="md">
+        <Group justify="space-between" align="center" mb="xl">
           <Text className={classes.brand}>Messenger.com</Text>
 
-          {isMobile ? (
+          {isHubAccountLoggedIn ? (
+            <Menu
+              shadow="lg"
+              width={280}
+              radius="md"
+              position="bottom-end"
+              offset={8}
+              withinPortal
+            >
+              <Menu.Target>
+                <UnstyledButton
+                  className={classes.accountPill}
+                  aria-label="Account menu"
+                >
+                  <Avatar
+                    name={userDetails?.email || userDetails?.username || ""}
+                    size={30}
+                    colorIndex={0}
+                  />
+                  <IconChevronDown
+                    size={14}
+                    color="#9b96b8"
+                    style={{ marginRight: 6 }}
+                  />
+                </UnstyledButton>
+              </Menu.Target>
+
+              <Menu.Dropdown p={0} style={{ overflow: "hidden" }}>
+                <Stack
+                  gap={4}
+                  align="center"
+                  py="lg"
+                  px="md"
+                  className={classes.accountMenuHeader}
+                >
+                  <Avatar
+                    name={userDetails?.email || userDetails?.username || ""}
+                    size={56}
+                    colorIndex={0}
+                  />
+                  <Text size="xs" c="dimmed" fw={600} tt="uppercase" mt={6}>
+                    Root Account
+                  </Text>
+                  <Text
+                    size="sm"
+                    fw={700}
+                    ta="center"
+                    style={{ wordBreak: "break-word" }}
+                  >
+                    {userDetails?.email || userDetails?.username}
+                  </Text>
+                </Stack>
+
+                <Menu.Divider m={0} />
+
+                <Menu.Item
+                  leftSection={<IconLogout size={16} />}
+                  color="red"
+                  disabled={loggingOut}
+                  onClick={handleLogout}
+                  py="sm"
+                  fw={500}
+                >
+                  {loggingOut ? "Logging out…" : "Logout"}
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          ) : isMobile ? (
             <ActionIcon
               variant="light"
               color="red"
@@ -956,54 +1023,6 @@ export default function Accounts() {
               Logout
             </Button>
           )}
-        </Group>
-
-        <Group
-          justify="space-between"
-          align="flex-start"
-          mb="lg"
-          className={classes.headerGroup}
-        >
-          <div>
-            {isHubAccountLoggedIn ? (
-              <Card
-                withBorder
-                radius="xl"
-                padding="sm"
-                className={classes.accountCard}
-                style={{ width: "fit-content" }}
-              >
-                <Group gap="sm" wrap="nowrap">
-                  <ThemeIcon
-                    size={36}
-                    radius="xl"
-                    variant="light"
-                    color="indigo"
-                  >
-                    <IconMail size={18} />
-                  </ThemeIcon>
-
-                  <div>
-                    <Text size="xs" c="dimmed" fw={500}>
-                      Root Account
-                    </Text>
-                    <Text size="sm" fw={700}>
-                      {userDetails?.email || userDetails?.username}
-                    </Text>
-                  </div>
-                </Group>
-              </Card>
-            ) : (
-              <>
-                {/* <Title order={2} className={classes.title} mb={4}>
-                  Your Accounts
-                </Title>
-                <Text c="dimmed" size="sm">
-                  Create multiple accounts and switch between them easily.
-                </Text> */}
-              </>
-            )}
-          </div>
         </Group>
 
         {error && (
@@ -1301,7 +1320,19 @@ export default function Accounts() {
               <Stack gap="sm">
                 <Group justify="space-between" align="center" wrap="wrap">
                   <Text size="sm" fw={600}>
-                    Your Managed Accounts
+                    {isHubAccountLoggedIn ? (
+                      <>
+                        <Title order={2} className={classes.title} mb={4}>
+                          Your Accounts
+                        </Title>
+                        <Text c="dimmed" size="sm">
+                          Create multiple accounts and switch between them
+                          easily.
+                        </Text>{" "}
+                      </>
+                    ) : (
+                      <>Your Managed Accounts</>
+                    )}
                   </Text>
 
                   {isHubAccountLoggedIn && (
@@ -1372,51 +1403,57 @@ export default function Accounts() {
                   )}
                 </Group>
                 {accounts.length > 0 && (
-                  <TextInput
-                    placeholder="Search by name, user ID, phone or description"
-                    leftSection={
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        radius="xl"
-                        size="sm"
-                        aria-label="Search"
-                        onClick={runSearch}
-                      >
-                        <IconSearch size={16} />
-                      </ActionIcon>
-                    }
-                    rightSection={
-                      searchQuery ? (
-                        <ActionIcon
-                          variant="subtle"
-                          color="gray"
-                          radius="xl"
-                          aria-label="Clear search"
-                          onClick={clearSearch}
-                        >
-                          <IconX size={14} />
-                        </ActionIcon>
-                      ) : null
-                    }
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        runSearch();
+                  <div className={classes.searchWrapper}>
+                    <TextInput
+                      placeholder="Search by username, display name, description, or phone number"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          runSearch();
+                        }
+                      }}
+                      radius="xl"
+                      size="md"
+                      name="account-search"
+                      autoComplete="off"
+                      data-1p-ignore
+                      data-lpignore="true"
+                      rightSectionWidth={searchQuery ? 130 : 100}
+                      rightSection={
+                        <Group gap={6} wrap="nowrap" pr={4}>
+                          {searchQuery && (
+                            <ActionIcon
+                              variant="transparent"
+                              radius="xl"
+                              size="sm"
+                              aria-label="Clear search"
+                              onClick={clearSearch}
+                              className={classes.searchClearIcon}
+                            >
+                              <IconX size={16} />
+                            </ActionIcon>
+                          )}
+                          <UnstyledButton
+                            onClick={runSearch}
+                            className={classes.searchButton}
+                            aria-label="Search"
+                          >
+                            <IconSearch size={14} />
+                            <Text size="sm" fw={600}>
+                              Search
+                            </Text>
+                          </UnstyledButton>
+                        </Group>
                       }
-                    }}
-                    radius="xl"
-                    // mb="lg"
-                    name="account-search"
-                    autoComplete="off"
-                    data-1p-ignore
-                    data-lpignore="true"
-                    classNames={{ input: classes.searchInput }}
-                  />
+                      classNames={{
+                        wrapper: classes.searchInputWrapper,
+                        input: classes.searchInput,
+                      }}
+                    />
+                  </div>
                 )}
-
                 <Stack gap="md">
                   {filteredAccounts
                     .filter(
