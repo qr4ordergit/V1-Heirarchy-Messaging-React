@@ -1,3 +1,4 @@
+import { notifications } from "@mantine/notifications";
 import { API_ENDPOINTS, withTargetUser } from "../utils/constant";
 import { api } from "./axios";
 
@@ -13,40 +14,40 @@ export interface ProfileUpdateResponse {
   profile_picture_upload_url?: string;
 }
 
-export const getAdjacencyListApi = async (): Promise<string[]> => {
-  const response = await api.get(withTargetUser(API_ENDPOINTS.ADJACENCY_LIST));
-
-  if (response.status !== 200) {
-    throw new Error(response.data.message || "Failed to fetch accounts list.");
-  }
-
-  return response.data.adjacencylist || response.data || [];
+const showNotification = (message: string) => {
+  notifications.show({
+    title: "",
+    message,
+    color: "red",
+  });
 };
 
 export const getTagsApi = async (): Promise<string[]> => {
   const response = await api.get(withTargetUser(API_ENDPOINTS.TAGS));
 
   if (response.status !== 200) {
-    throw new Error(response.data.message || "Failed to fetch tags list.");
+    showNotification(response.data?.message || "Failed to fetch tags list.");
+    return [];
   }
 
   return response.data.tag_ids || [];
 };
 
-export const createTagApi = async (tagName: string): Promise<any> => {
+export const createTagApi = async (tagName: string): Promise<any | null> => {
   const response = await api.post(withTargetUser(API_ENDPOINTS.TAGS), {
     tag_name: tagName.trim(),
   });
 
   const data = response.data;
   if (response.status !== 201 || data.success === false) {
-    throw new Error(data.message || "Failed to create tag.");
+    showNotification(data?.message || "Failed to create tag.");
+    return null;
   }
 
   return data;
 };
 
-export const deleteTagApi = async (tagId: string): Promise<any> => {
+export const deleteTagApi = async (tagId: string): Promise<any | null> => {
   const response = await api.delete(withTargetUser(API_ENDPOINTS.TAGS), {
     data: {
       tag_id: tagId,
@@ -54,9 +55,9 @@ export const deleteTagApi = async (tagId: string): Promise<any> => {
   });
 
   const data = response.data;
-
   if (response.status !== 200 || data.success === false) {
-    throw new Error(data.message || "Failed to delete tag.");
+    showNotification(data?.message || "Failed to delete tag.");
+    return null;
   }
 
   return data;
@@ -64,16 +65,16 @@ export const deleteTagApi = async (tagId: string): Promise<any> => {
 
 export const updateProfileApi = async (
   payload: UpdateProfilePayload,
-): Promise<ProfileUpdateResponse> => {
+): Promise<ProfileUpdateResponse | null> => {
   const response = await api.patch(
     withTargetUser(API_ENDPOINTS.USER_HOME),
     payload,
   );
 
   const data = response.data;
-
   if (response.status !== 200 || data.success === false) {
-    throw new Error(data.message || "Failed to initiate profile update.");
+    showNotification(data?.message || "Failed to initiate profile update.");
+    return null;
   }
 
   return data;
@@ -82,7 +83,7 @@ export const updateProfileApi = async (
 export const uploadImageToS3Api = async (
   presignedUrl: string,
   file: File,
-): Promise<void> => {
+): Promise<boolean> => {
   const response = await fetch(presignedUrl, {
     method: "PUT",
     headers: {
@@ -92,6 +93,9 @@ export const uploadImageToS3Api = async (
   });
 
   if (!response.ok) {
-    throw new Error("Failed to upload image file to storage.");
+    showNotification("Failed to upload image file to storage.");
+    return false;
   }
+
+  return true;
 };

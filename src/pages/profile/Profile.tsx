@@ -125,6 +125,8 @@ const Profile = () => {
 
       const res = await updateProfileApi(payload);
 
+      if (!res) return;
+
       if (res?.updated_fields) {
         if (target_user && targetUserDetails) {
           setTargetUserDetails({
@@ -220,6 +222,8 @@ const Profile = () => {
         display_name: target_user || userDetails?.username || "",
         profile_picture: file.name,
       });
+
+      if (!patchData) return;
 
       if (patchData.profile_picture_upload_url) {
         await uploadImageToS3Api(patchData.profile_picture_upload_url, file);

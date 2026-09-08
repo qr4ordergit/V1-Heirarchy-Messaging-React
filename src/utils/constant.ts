@@ -9,6 +9,9 @@ dayjs.extend(timezone);
 export const API_BASE_URL =
   "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev/api";
 
+export const SKIN_LANGUAGE_URL =
+  "https://messaging-service-media.s3.ap-south-1.amazonaws.com/skin-languages/messagingApp_skinLanguage_web.txt";
+
 export const API_ENDPOINTS = {
   AUTH: `${API_BASE_URL}/auth`,
   AUTH_USERNAME_SUGGEST: `${API_BASE_URL}/auth/username-suggest`,
@@ -98,7 +101,7 @@ export const TRIGGERS = {
   privatePayload: "privatePayload",
   privateMessageSender: "privateMessageSender",
   decryptPrivateMsgDialog: "decryptPrivateMsgDialog",
-  exportChatModal: "exportChatModal"
+  exportChatModal: "exportChatModal",
 };
 
 export const CIPHER_SECRET =

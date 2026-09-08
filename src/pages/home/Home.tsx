@@ -1,21 +1,24 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import {
+  ActionIcon,
   Badge,
   Button,
   Card,
   Container,
   Group,
   List,
+  Menu,
   Overlay,
   SimpleGrid,
   Stack,
   Text,
   ThemeIcon,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import {
   IconDeviceMobileOff,
-  // IconLock,
   IconEyeOff,
   IconDatabaseOff,
   IconSitemap,
@@ -28,33 +31,129 @@ import {
   IconMessages,
   IconTag,
   IconKey,
+  IconLanguage,
+  IconCheck,
 } from "@tabler/icons-react";
 
 import classes from "./Home.module.css";
 import { ROUTES } from "../../router/routes";
 import { COGNITO_LOGIN_URL } from "../../config/cognito";
+import {
+  useLanguageStore,
+  useTranslation,
+} from "../../store/language/language.store";
+import { handleApiError } from "../../utils/errorHandler";
+import { SKIN_LANGUAGE_URL } from "../../utils/constant";
 
 export default function Home() {
+  const { translation, currentLang, languages, setLanguage } = useTranslation();
+  const setLanguageData = useLanguageStore((state) => state.setLanguageData);
+  const [fetchingLang, setFetchingLang] = useState(false);
+
+  useEffect(() => {
+    const fetchSkinLanguages = async () => {
+      setFetchingLang(true);
+      try {
+        const response = await fetch(SKIN_LANGUAGE_URL);
+        if (response.ok) {
+          const data = await response.json();
+          setLanguageData(data);
+        }
+      } catch (error: any) {
+        handleApiError(error);
+      } finally {
+        setFetchingLang(false);
+      }
+    };
+
+    fetchSkinLanguages();
+  }, [setLanguageData]);
+
+  const availableLanguages = Object.entries(languages);
+
   return (
     <div className={classes.page}>
-      <div className={classes.hero}>
+      <div className={classes.hero} style={{ position: "relative" }}>
         <Overlay
           gradient="linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, .75) 55%)"
           opacity={1}
           zIndex={0}
         />
 
-        <Container size="md" className={classes.heroContent}>
-          <Text className={classes.eyebrow}>Messenger for warriors!</Text>
+        <div
+          style={{
+            position: "absolute",
+            top: 18,
+            right: 22,
+            zIndex: 10,
+          }}
+        >
+          <Menu shadow="md" width={160} position="bottom-end" withinPortal>
+            <Menu.Target>
+              <Tooltip label="Change Language" position="left" withArrow>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray.0"
+                  size="lg"
+                  radius="xl"
+                  loading={fetchingLang}
+                  aria-label="Select Language"
+                  style={{
+                    backgroundColor: "rgba(255, 255, 255, 0.12)",
+                    backdropFilter: "blur(4px)",
+                  }}
+                >
+                  <IconLanguage size={22} />
+                </ActionIcon>
+              </Tooltip>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Label>Select Language</Menu.Label>
+              {availableLanguages.length > 0 ? (
+                availableLanguages.map(([code, label]) => (
+                  <Menu.Item
+                    key={code}
+                    onClick={() => setLanguage(code)}
+                    rightSection={
+                      currentLang === code ? (
+                        <IconCheck
+                          size={16}
+                          color="var(--mantine-color-indigo-6)"
+                        />
+                      ) : null
+                    }
+                    fw={currentLang === code ? 700 : 400}
+                  >
+                    {label}
+                  </Menu.Item>
+                ))
+              ) : (
+                <Menu.Item disabled>Loading languages...</Menu.Item>
+              )}
+            </Menu.Dropdown>
+          </Menu>
+        </div>
+
+        <Container
+          size="md"
+          className={classes.heroContent}
+          style={{ zIndex: 1 }}
+        >
+          <Text className={classes.eyebrow}>
+            {translation("home-page.txtEyebrowMsg", "Messenger for warriors!")}
+          </Text>
           <Title className={classes.title}>
-            All your messenger accounts in one secure Hub. <br />
-            {/* <br />
-            One secure Hub. */}
+            {translation(
+              "home-page.txtTitleMsg",
+              "All your messenger accounts in one secure Hub.",
+            )}
           </Title>
           <Text className={classes.description} size="xl" mt="lg">
-            Tired of carrying multiple phones? Create all your messenger
-            accounts in one Hub — access it from any browser or app, without
-            tying your identity to a single device.
+            {translation(
+              "home-page.txtDescriptionMsg",
+              "Tired of carrying multiple phones? Create all your messenger accounts in one Hub — access it from any browser or app, without tying your identity to a single device.",
+            )}
           </Text>
 
           <Group mt="xl">
@@ -66,7 +165,7 @@ export default function Home() {
               radius="xl"
               className={classes.control}
             >
-              Create Your Hub
+              {translation("home-page.btnCreateHub", "Create Your Hub")}
             </Button>
             <Button
               component="a"
@@ -77,7 +176,7 @@ export default function Home() {
               radius="xl"
               className={classes.control}
             >
-              Login
+              {translation("home-page.btnLogin", "Login")}
             </Button>
           </Group>
         </Container>
@@ -347,7 +446,7 @@ export default function Home() {
               size="xl"
               radius="xl"
             >
-              Create Your Hub
+              {translation("home-page.btnCreateHub", "Create Your Hub")}
             </Button>
             <Button
               component="a"
@@ -356,7 +455,7 @@ export default function Home() {
               size="xl"
               radius="xl"
             >
-              Login
+              {translation("home-page.btnLogin", "Login")}
             </Button>
           </Group>
         </Container>
