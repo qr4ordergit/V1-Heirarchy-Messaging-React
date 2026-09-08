@@ -94,6 +94,7 @@ import {
   hasAnyPermission,
   hasAllPermissions,
   setAllPermissions,
+  isPermissionDisabled,
 } from "../../utils/permission";
 import {
   AcessAndPermissionService,
@@ -234,6 +235,7 @@ export default function Accounts() {
   });
 
   const [selectedAccountID, setSelectedAccountID] = useState<string>("");
+  const [loadingAP, setLoadingAP] = useState(false);
 
   const resetChanges = () => {
     setChanges({
@@ -909,11 +911,33 @@ export default function Accounts() {
     setChanges((previous) => {
       const currentPermissions = previous?.permissions ?? {};
 
-      const updatedPermissions = setPermissionValue(
+      let updatedPermissions = setPermissionValue(
         currentPermissions,
         permissionId,
         checked,
       );
+
+      if (
+        (permissionId.endsWith(".read") && !checked) ||
+        (permissionId.endsWith(".history-get") && !checked)
+      ) {
+        const groupKey = permissionId.split(".")[0];
+
+        const groupPermissions = updatedPermissions[groupKey];
+
+        if (groupPermissions) {
+          updatedPermissions = {
+            ...updatedPermissions,
+            [groupKey]: Object.keys(groupPermissions).reduce(
+              (group, key) => {
+                group[key] = false;
+                return group;
+              },
+              {} as Record<string, boolean>,
+            ),
+          };
+        }
+      }
 
       return {
         target_user,
@@ -928,7 +952,6 @@ export default function Accounts() {
     display_name = accessAndPermissions.display_name,
   }: LoadPermissionsProps) => {
     try {
-      setSelectedAccountID(user_id);
       setLoadingP(true);
       const res = await AcessAndPermissionService.getUserPermission(user_id);
       delete res.permissions["sub-users"];
@@ -952,6 +975,27 @@ export default function Accounts() {
       resetChanges();
     } finally {
       setLoadingP(false);
+    }
+  };
+
+   const loadAccessAndPermissions = async () => {
+    try {
+      setLoadingAP(true);
+
+      await AcessAndPermissionService.getAccessAndPermission(selectedAccountID);
+
+      setPerType("uap");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
+        Notification.error(error.message);
+      }
+    } finally {
+      setLoadingAP(false);
     }
   };
 
@@ -1722,6 +1766,7 @@ export default function Accounts() {
                                           <IconShieldLock size={14} />
                                         }
                                         onClick={() => {
+                                          setSelectedAccountID(account.user_id)
                                           loadPermissions(account);
                                         }}
                                       >
@@ -1798,6 +1843,7 @@ export default function Accounts() {
                                       marginRight: "10px",
                                     }}
                                     onClick={() => {
+                                      setSelectedAccountID(account.user_id)
                                       loadPermissions(account);
                                     }}
                                   >
@@ -2162,24 +2208,27 @@ export default function Accounts() {
       >
         <Group gap="xs" mb={"md"}>
           {perTabs.map((tab) => (
-            <Button
+              <Button
               key={tab.id}
               size="compact-xs"
               radius="xl"
               variant={perType === tab.id ? "filled" : "outline"}
+              loading={tab.id === "uap" && loadingAP}
               onClick={() => {
-                setPerType(tab.id);
                 if (tab.id === "up") {
                   loadPermissions({
                     user_id: accessAndPermissions.targetUser,
                     phone_number: accessAndPermissions.label,
                     display_name: accessAndPermissions.display_name,
                   });
+                  setPerType(tab.id);
+                } else {
+                  loadAccessAndPermissions();
                 }
               }}
             >
               {tab.label}
-            </Button>
+              </Button>
           ))}
         </Group>
         {perType === "up" ? (
@@ -2230,10 +2279,19 @@ export default function Accounts() {
                               path,
                             );
 
+                             const disabled = isPermissionDisabled(
+                              groupKey,
+                              permissionKey,
+                              Object.keys(changes?.permissions).length > 0
+                                ? changes?.permissions
+                                : USER_PERMISSIONS,
+                            );
+
                             return (
                               <Checkbox
                                 key={path}
                                 size="xs"
+                                disabled={disabled}
                                 checked={checked}
                                 label={PERMISSION_LABELS[path] ?? permissionKey}
                                 onChange={(event) =>

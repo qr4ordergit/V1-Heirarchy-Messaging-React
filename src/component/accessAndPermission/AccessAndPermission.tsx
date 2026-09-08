@@ -20,6 +20,7 @@ import {
 import {
   getPermissionValue,
   hasAllPermissions,
+  isPermissionDisabled,
   setAllPermissions,
   setPermissionValue,
   type PermissionsType,
@@ -71,13 +72,35 @@ export default function AccessAndPermission({
     setChanges((previous) => {
       const existingUser = previous[username];
 
-      const currentPermissions = existingUser?.permissions ?? {};
+      const currentPermissions = {
+        ...USER_TO_USER_PERMISSIONS,
+        ...(existingUser?.permissions ?? {}),
+      };
 
-      const updatedPermissions = setPermissionValue(
+      let updatedPermissions = setPermissionValue(
         currentPermissions,
         permissionId,
         checked,
       );
+
+      if ((permissionId.endsWith(".read") && !checked) || permissionId.endsWith(".history-get") && !checked) {
+        const groupKey = permissionId.split(".")[0];
+
+        const groupPermissions = updatedPermissions[groupKey];
+
+        if (groupPermissions) {
+          updatedPermissions = {
+            ...updatedPermissions,
+            [groupKey]: Object.keys(groupPermissions).reduce(
+              (group, key) => {
+                group[key] = false;
+                return group;
+              },
+              {} as Record<string, boolean>,
+            ),
+          };
+        }
+      }
 
       return {
         ...previous,
@@ -148,7 +171,6 @@ export default function AccessAndPermission({
         (result, user) => {
           const updatedPermission = structuredClone(user.permissions);
           delete updatedPermission["sub-users"].read;
-          delete updatedPermission["users-accesstree"].read;
 
           result[user.username] = {
             username: user.username,
@@ -170,7 +192,7 @@ export default function AccessAndPermission({
       } else if (error instanceof Error) {
         Notification.error(error.message);
       }
-      setChanges({})
+      setChanges({});
     } finally {
       setLoadingAP(false);
     }
@@ -341,12 +363,21 @@ export default function AccessAndPermission({
                                   path,
                                 );
 
+                                const disabled = isPermissionDisabled(
+                                  groupKey,
+                                  permissionKey,
+                                  Object.keys(currentUser?.permissions).length >
+                                    0
+                                    ? currentUser?.permissions
+                                    : USER_TO_USER_PERMISSIONS,
+                                );
+
                                 return (
                                   <Checkbox
                                     key={path}
                                     size="xs"
                                     checked={checked}
-                                    disabled={!canUserAccess}
+                                    disabled={disabled}
                                     label={
                                       PERMISSION_LABELS[path] ?? permissionKey
                                     }

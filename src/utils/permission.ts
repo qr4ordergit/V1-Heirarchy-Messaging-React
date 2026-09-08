@@ -69,3 +69,29 @@ export const setAllPermissions = (
 
   return updated;
 };
+
+export const isPermissionDisabled = (
+  groupKey: string,
+  permissionKey: string,
+  permissions: PermissionsType,
+) => {
+  if (permissionKey === "read" || permissionKey === "history-get") {
+    return false;
+  }
+
+  const group = permissions[groupKey];
+
+  if (!group) {
+    return false;
+  }
+
+  if ("read" in group) {
+    return group.read !== true;
+  }
+
+  if ("history-get" in group) {
+    return group["history-get"] !== true;
+  }
+
+  return false;
+};

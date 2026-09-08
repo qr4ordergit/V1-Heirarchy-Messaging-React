@@ -109,37 +109,37 @@ export const CIPHER_SECRET =
 
 const COMMON_PERMISSION = {
   chat: {
-    start: false,
     "history-get": false,
+    start: false,
     "history-delete": false,
   },
   "direct-messages": {
-    create: false,
     read: false,
+    create: false,
     update: false,
     delete: false,
   },
   groups: {
-    create: false,
     read: false,
+    create: false,
     update: false,
     delete: false,
   },
   "group-messages": {
-    create: false,
     read: false,
+    create: false,
     update: false,
     delete: false,
   },
   contacts: {
-    create: false,
     read: false,
+    create: false,
     update: false,
     delete: false,
   },
   tags: {
-    create: false,
     read: false,
+    create: false,
     update: false,
     delete: false,
   },
@@ -163,6 +163,7 @@ export const USER_TO_USER_PERMISSIONS = {
     "reset-username-passkey": false,
   },
   "users-accesstree": {
+    read: false,
     update: false,
   },
 };
@@ -208,18 +209,19 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "sub-users.read": "View",
   "sub-users.update": "Update Profile",
   "sub-users.delete": "Delete",
-  "sub-users.permission-update": "Update Permission",
+  "sub-users.permission-update": "Access & Permissions",
   "sub-users.reset-password": "Reset Password",
   "sub-users.reset-username-passkey": "Set Username Passkey",
-
-  // Manage Subuser Access & Permissions
-  "users-accesstree.read": "View",
-  "users-accesstree.update": "Update",
 
   // Manage Account
   "user-account.reset-password": "Reset Password",
   "user-account.reset-username-passkey": "Set Username Passkey",
   "user-account.profile-update": "Profile Update",
+
+  // Manage Subuser Access & Permissions
+  "users-accesstree.read": "View",
+  "users-accesstree.update": "Update",
+
 };
 
 export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
@@ -231,8 +233,8 @@ export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
   contacts: "Manage Contacts",
   tags: "Manage Tags",
   "sub-users": "Manage Subuser Account",
-  "users-accesstree": "Manage Subuser's Access & Permissions",
   "user-account": "Manage Account",
+  "users-accesstree": "Manage Subuser's Accessed Accounts Access & Permissions",
 };
 
 // export const USER_PERMISSION_GROUP_LABELS: Record<string, string> = {
