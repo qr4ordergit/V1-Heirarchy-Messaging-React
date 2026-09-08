@@ -1491,7 +1491,7 @@ export default function Accounts() {
                       autoComplete="off"
                       data-1p-ignore
                       data-lpignore="true"
-                      rightSectionWidth={searchQuery ? 84 : 52}
+                      rightSectionWidth={searchQuery ? 84 : 60}
                       rightSection={
                         <Group gap={6} wrap="nowrap" justify="flex-end" pr={4}>
                           {searchQuery && (
