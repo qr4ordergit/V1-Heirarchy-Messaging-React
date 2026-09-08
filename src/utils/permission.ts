@@ -7,7 +7,7 @@ export const getPermissionValue = (
   permissions: PermissionsType,
   path: string,
 ): boolean => {
-  const [group, permission] = path.split(".");
+  const [group, permission] = path.split("|");
 
   return permissions[group]?.[permission] ?? false;
 };
@@ -17,7 +17,7 @@ export const setPermissionValue = (
   path: string,
   checked: boolean,
 ): PermissionsType => {
-  const [group, permission] = path.split(".");
+  const [group, permission] = path.split("|");
 
   return {
     ...permissions,

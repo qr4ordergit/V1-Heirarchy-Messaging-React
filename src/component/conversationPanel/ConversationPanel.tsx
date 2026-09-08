@@ -17,6 +17,7 @@ import GroupList from "../groupList/GroupList";
 import { useNavigate } from "react-router";
 import { ROUTES } from "../../router/routes";
 import { useAuthStore } from "../../store/auth/auth.store";
+import { useTranslation } from "../../store/language/language.store";
 
 export default function ConversationPanel() {
   const type = useConversationTypeStore((state) => state.type);
@@ -28,6 +29,7 @@ export default function ConversationPanel() {
   const userDetails = useAuthStore((state) => state.userDetails);
 
   const navigate = useNavigate();
+  const { translation } = useTranslation();
 
   const activeUsername =
     targetUserDetails?.display_name ||
@@ -37,8 +39,8 @@ export default function ConversationPanel() {
     "";
 
   const conversationTypes = [
-    { label: "DM", value: "dm" },
-    { label: "Groups", value: "groups" },
+    { label: translation("chat_page.tab_dm", "DM"), value: "dm" },
+    { label: translation("chat_page.tab_groups", "Groups"), value: "groups" },
   ] as const;
 
   return (
@@ -60,7 +62,9 @@ export default function ConversationPanel() {
         }}
       >
         <Flex align={"center"} gap={"xs"} justify={"space-between"}>
-          <Heading c="var(--mantine-color-blue-4)">Chat Hub</Heading>
+          <Heading c="var(--mantine-color-blue-4)">
+            {translation("chat_page.app_heading", "Chat Hub")}
+          </Heading>
           <Group gap={4} wrap="nowrap">
             <Text size="xs" c={"dimmed"}>
               {activeUsername}
@@ -69,7 +73,7 @@ export default function ConversationPanel() {
         </Flex>
         <Input
           size="xs"
-          placeholder="Search"
+          placeholder={translation("chat_page.search_dm_groups", "Search")}
           leftSection={<IconSearch size={14} />}
           value={search}
           onChange={(e) => setSearch(e.currentTarget.value)}

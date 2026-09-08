@@ -16,6 +16,7 @@ import ConversationItem from "../conversationItem/ConversationItem";
 import { IconRefresh } from "@tabler/icons-react";
 import { useConversationTypeStore } from "../../store/conversation/conversation.type.store";
 import axios from "axios";
+import { useTranslation } from "../../store/language/language.store";
 
 interface SelectedDMState {
   chatID: string;
@@ -27,6 +28,8 @@ const DmList = () => {
   const setDMs = useDMListStore((state) => state.setDMs);
   const reset = useDMListStore((state) => state.reset);
   const search = useConversationTypeStore((state) => state.search);
+
+  const { translation } = useTranslation();
 
   const filteredDMs = dms.filter((dm) =>
     dm.display_name.toLowerCase().includes(search.trim().toLowerCase()),
@@ -137,11 +140,17 @@ const DmList = () => {
             setDeleteOpened(false);
             resetSelectedDM();
           }}
-          title="Delete conversation"
+          title={translation(
+            "chat_page.label_delete_con",
+            "Delete conversation",
+          )}
           centered
         >
           <Text size="xs">
-            Are you sure you want to delete your conversation with{" "}
+            {translation(
+              "chat_page.alert_delete_con",
+              "Are you sure you want to delete your conversation with",
+            )}{" "}
             <b>{selectedDM?.display_name}</b>?
           </Text>
 
@@ -154,7 +163,7 @@ const DmList = () => {
                 deleteDm(0);
               }}
             >
-              Temporary Delete
+              {translation("chat_page.btn_temp_del", "Temporary Delete")}
             </Button>
             <Button
               color="red"
@@ -164,7 +173,7 @@ const DmList = () => {
                 deleteDm(1);
               }}
             >
-              Permanent Delete
+              {translation("chat_page.btn_per_del", "Permanent Delete")}
             </Button>
           </Group>
         </Modal>
@@ -172,7 +181,10 @@ const DmList = () => {
     ) : (
       <Center>
         <Text c="red.6" size="xs">
-          No direct messages found
+          {translation(
+            "chat_page.label_dm_not_found",
+            "No direct messages found",
+          )}
         </Text>
       </Center>
     )

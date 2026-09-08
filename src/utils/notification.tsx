@@ -6,7 +6,7 @@ import {
 } from "@tabler/icons-react";
 
 export const Notification = {
-  success: (message: string, title = "Success") => {
+  success: (message: string, title = "") => {
     notifications.show({
       title,
       message,
@@ -15,7 +15,7 @@ export const Notification = {
     });
   },
 
-  error: (message: string, title = "Error") => {
+  error: (message: string, title = "") => {
     notifications.show({
       title,
       message,
@@ -24,7 +24,7 @@ export const Notification = {
     });
   },
 
-  info: (message: string, title = "Info") => {
+  info: (message: string, title = "") => {
     notifications.show({
       title,
       message,

@@ -38,7 +38,7 @@ export const useLanguageStore = create<LanguageState>()(
     }),
     {
       name: "app_language_storage",
-      partialize: (state) => ({ currentLang: state.currentLang }),
+      partialize: (state) => ({ currentLang: state.currentLang, content : state.content }),
     },
   ),
 );

@@ -14,6 +14,7 @@ import { formatConversationTime, getAvatarColor } from "../../utils/constant";
 import { ROUTES } from "../../router/routes";
 import { IconDotsVertical, IconLogout2 } from "@tabler/icons-react";
 import { useAuthStore } from "../../store/auth/auth.store";
+import { useTranslation } from "../../store/language/language.store";
 
 interface GroupItemProps {
   groups: Groups;
@@ -23,12 +24,13 @@ interface GroupItemProps {
 const GroupsItem = ({ groups, onLeave }: GroupItemProps) => {
   const { chatId } = useParams();
   const navigate = useNavigate();
+  const { translation } = useTranslation();
+
   const { target_user, userDetails } = useAuthStore((state) => state);
   const isAdmin =
-  target_user === ""
-    ? userDetails !== null &&
-      groups.admins.includes(userDetails.username)
-    : groups.admins.includes(target_user);
+    target_user === ""
+      ? userDetails !== null && groups.admins.includes(userDetails.username)
+      : groups.admins.includes(target_user);
 
   return (
     <Group
@@ -60,7 +62,7 @@ const GroupsItem = ({ groups, onLeave }: GroupItemProps) => {
           </Text>
           {groups.only_admins_can_message && (
             <Text c={"dimmed"} size="xs">
-              Channel
+              {translation("chat_page.label_channel", "Channel")}
             </Text>
           )}
         </Stack>
@@ -78,35 +80,40 @@ const GroupsItem = ({ groups, onLeave }: GroupItemProps) => {
               </Badge>
             )}
             {!isAdmin && (
-                  <Menu position="bottom-start" withArrow>
-                    <Menu.Target>
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        size="sm"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          navigate(`/${ROUTES.CHATS}`);
-                        }}
-                      >
-                        <IconDotsVertical size={13} />
-                      </ActionIcon>
-                    </Menu.Target>
+              <Menu position="bottom-start" withArrow>
+                <Menu.Target>
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="sm"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      navigate(`/${ROUTES.CHATS}`);
+                    }}
+                  >
+                    <IconDotsVertical size={13} />
+                  </ActionIcon>
+                </Menu.Target>
 
-                    <Menu.Dropdown>
-                      <Menu.Item
-                        color="red"
-                        leftSection={<IconLogout2 size={13} />}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onLeave();
-                        }}
-                      >
-                        <Text size="xs">Leave Group</Text>
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                )}
+                <Menu.Dropdown>
+                  <Menu.Item
+                    color="red"
+                    leftSection={<IconLogout2 size={13} />}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onLeave();
+                    }}
+                  >
+                    <Text size="xs">
+                      {translation(
+                        "chat_page.label_leave_group",
+                        "Leave Group",
+                      )}
+                    </Text>
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            )}
           </Flex>
         </Stack>
       </Group>

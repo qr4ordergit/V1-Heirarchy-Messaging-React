@@ -8,8 +8,10 @@ import { useState } from "react";
 import { logout } from "../../api/authApi";
 import { IconLogout } from "@tabler/icons-react";
 import { ClearStore } from "../../store/clear.store";
+import { useTranslation } from "../../store/language/language.store";
 export default function Sidebar() {
   const navigate = useNavigate();
+const {translation} = useTranslation()
   const clearTokens = useAuthStore((state) => state.clearTokens);
   const [loggingOut, setLoggingOut] = useState(false);
   const handleLogout = async () => {
@@ -37,7 +39,7 @@ export default function Sidebar() {
         {navigationItems.map((item) => (
           <SidebarItem
             key={item.to}
-            label={item.label}
+            label={translation(`chat_page.${item.lang_id}`,item.label)}
             to={item.to}
             Icon={item.icon}
           />

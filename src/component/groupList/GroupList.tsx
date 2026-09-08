@@ -16,6 +16,7 @@ import {
 import { IconRefresh } from "@tabler/icons-react";
 import GroupsItem from "../groupsItem/GroupsItem";
 import axios from "axios";
+import { useTranslation } from "../../store/language/language.store";
 
 interface SelectedGrouptate {
   group_id: string;
@@ -27,6 +28,8 @@ const GroupList = () => {
   const setGroups = useGroupListStore((state) => state.setGroups);
   const reset = useGroupListStore((state) => state.reset);
   const search = useConversationTypeStore((state) => state.search);
+
+  const {translation} = useTranslation()
 
   const filteredGroups = groups.filter((grp) =>
     grp.group_name.toLowerCase().includes(search.trim().toLowerCase()),
@@ -128,11 +131,18 @@ const GroupList = () => {
             setLeaveOpened(false);
             resetSelectedGroup();
           }}
-          title="Leave Group"
+          title={translation(
+            "chat_page.label_leave_group",
+            "Leave Group",
+          )}
           centered
         >
           <Text size="xs">
-            Are you sure you want to leave the group{" "}
+            {translation(
+            "chat_page.alert_leave_group",
+            "Are you sure you want to leave the group",
+          )}
+            {" "}
             <b>{selectedGroup?.group_name}</b>?
           </Text>
 
@@ -145,7 +155,10 @@ const GroupList = () => {
                 leaveGroup();
               }}
             >
-              Leave
+              {translation(
+            "chat_page.btn_leave",
+            "Leave",
+          )}
             </Button>
           </Group>
         </Modal>
@@ -153,7 +166,10 @@ const GroupList = () => {
     ) : (
       <Center>
         <Text c="red.6" size="xs">
-          No Group found
+          {translation(
+            "chat_page.btn_leave",
+            "No Group found",
+          )}
         </Text>
       </Center>
     )

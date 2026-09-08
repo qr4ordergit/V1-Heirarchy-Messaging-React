@@ -15,18 +15,19 @@ import { formatConversationTime, getAvatarColor } from "../../utils/constant";
 import { useNavigate, useParams } from "react-router";
 import { ROUTES } from "../../router/routes";
 import type { DM } from "../../store/dm/dm.list.store";
+import { useTranslation } from "../../store/language/language.store";
 interface ConversationItemProps {
   conversation: DM;
-  onDelete : () => void
+  onDelete: () => void;
 }
 
 export default function ConversationItem({
   conversation,
-  onDelete
+  onDelete,
 }: ConversationItemProps) {
   const { chatId } = useParams();
   const navigate = useNavigate();
-
+  const { translation } = useTranslation();
   return (
     <Group
       justify="space-between"
@@ -46,7 +47,7 @@ export default function ConversationItem({
           radius="xl"
           size={45}
           color={getAvatarColor(conversation.display_name)}
-                    src={conversation.profile_url}
+          src={conversation.profile_url}
         >
           {conversation.display_name.charAt(0).toUpperCase()}
         </Avatar>
@@ -63,43 +64,47 @@ export default function ConversationItem({
           <Text size="xs" c="dimmed">
             {formatConversationTime(conversation.last_message_timestamp)}
           </Text>
-        <Flex gap={6} align={"center"}>
-          {conversation.unread_count > 0 && (
-            <Badge color="green" radius="lg" variant="filled" size="xs">
-              {conversation.unread_count}
-            </Badge>
-          )}
-        <Menu position="bottom-start" withArrow>
-          <Menu.Target>
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              size="sm"
-              onClick={(event) => {
-                event.stopPropagation();
-                navigate(`/${ROUTES.CHATS}`)
-              }}
-            >
-              <IconDotsVertical size={13} />
-            </ActionIcon>
-          </Menu.Target>
+          <Flex gap={6} align={"center"}>
+            {conversation.unread_count > 0 && (
+              <Badge color="green" radius="lg" variant="filled" size="xs">
+                {conversation.unread_count}
+              </Badge>
+            )}
+            <Menu position="bottom-start" withArrow>
+              <Menu.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    navigate(`/${ROUTES.CHATS}`);
+                  }}
+                >
+                  <IconDotsVertical size={13} />
+                </ActionIcon>
+              </Menu.Target>
 
-          <Menu.Dropdown>
-            <Menu.Item
-              color="red"
-              leftSection={<IconTrash size={13} />}
-              onClick={(event) => {
-                event.stopPropagation();
-                onDelete()
-              }}
-            >
-              <Text size="xs">Delete conversation</Text>
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
-        </Flex>
+              <Menu.Dropdown>
+                <Menu.Item
+                  color="red"
+                  leftSection={<IconTrash size={13} />}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDelete();
+                  }}
+                >
+                  <Text size="xs">
+                    {translation(
+                      "chat_page.label_delete_con",
+                      "Delete conversation",
+                    )}
+                  </Text>
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </Flex>
         </Stack>
-
       </Group>
     </Group>
   );

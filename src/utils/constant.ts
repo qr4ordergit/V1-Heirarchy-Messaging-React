@@ -170,57 +170,57 @@ export const USER_TO_USER_PERMISSIONS = {
 
 export const PERMISSION_LABELS: Record<string, string> = {
   // Manage Chats
-  "chat.start": "Initiate Chat",
-  "chat.history-get": "View Chats",
-  "chat.history-delete": "Delete Chats",
+  "chat|start": "Initiate Chat",
+  "chat|history-get": "View Chats",
+  "chat|history-delete": "Delete Chats",
 
   // Direct Messages (DM)
-  "direct-messages.create": "Write",
-  "direct-messages.read": "View",
-  "direct-messages.update": "Update",
-  "direct-messages.delete": "Delete",
+  "direct-messages|create": "Write",
+  "direct-messages|read": "View",
+  "direct-messages|update": "Update",
+  "direct-messages|delete": "Delete",
 
   // Manage Groups
-  "groups.create": "Create",
-  "groups.read": "View",
-  "groups.update": "Update",
-  "groups.delete": "Delete",
+  "groups|create": "Create",
+  "groups|read": "View",
+  "groups|update": "Update",
+  "groups|delete": "Delete",
 
   // Group Messages
-  "group-messages.create": "Write",
-  "group-messages.read": "View",
-  "group-messages.update": "Update",
-  "group-messages.delete": "Delete",
+  "group-messages|create": "Write",
+  "group-messages|read": "View",
+  "group-messages|update": "Update",
+  "group-messages|delete": "Delete",
 
   // Manage Contacts
-  "contacts.create": "Add",
-  "contacts.read": "View",
-  "contacts.update": "Update",
-  "contacts.delete": "Delete",
+  "contacts|create": "Add",
+  "contacts|read": "View",
+  "contacts|update": "Update",
+  "contacts|delete": "Delete",
 
   // Manage Tags
-  "tags.create": "Create",
-  "tags.read": "View",
-  "tags.update": "Update",
-  "tags.delete": "Delete",
+  "tags|create": "Create",
+  "tags|read": "View",
+  "tags|update": "Update",
+  "tags|delete": "Delete",
 
   // Manage Subuser
-  "sub-users.create": "Create",
-  "sub-users.read": "View",
-  "sub-users.update": "Update Profile",
-  "sub-users.delete": "Delete",
-  "sub-users.permission-update": "Access & Permissions",
-  "sub-users.reset-password": "Reset Password",
-  "sub-users.reset-username-passkey": "Set Username Passkey",
+  "sub-users|create": "Create",
+  "sub-users|read": "View",
+  "sub-users|update": "Update Profile",
+  "sub-users|delete": "Delete",
+  "sub-users|permission-update": "Access & Permissions",
+  "sub-users|reset-password": "Reset Password",
+  "sub-users|reset-username-passkey": "Set Username Passkey",
 
   // Manage Account
-  "user-account.reset-password": "Reset Password",
-  "user-account.reset-username-passkey": "Set Username Passkey",
-  "user-account.profile-update": "Profile Update",
+  "user-account|reset-password": "Reset Password",
+  "user-account|reset-username-passkey": "Set Username Passkey",
+  "user-account|profile-update": "Profile Update",
 
   // Manage Subuser Access & Permissions
-  "users-accesstree.read": "View",
-  "users-accesstree.update": "Update",
+  "users-accesstree|read": "View",
+  "users-accesstree|update": "Update",
 
 };
 

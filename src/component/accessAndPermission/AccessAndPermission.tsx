@@ -30,6 +30,7 @@ import { Notification } from "../../utils/notification";
 import { AcessAndPermissionService } from "../../api/services/access.permission.service";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import axios from "axios";
+import { useTranslation } from "../../store/language/language.store";
 
 interface UpdateUserPermissionsPayload {
   username: string;
@@ -57,6 +58,8 @@ export default function AccessAndPermission({
   users,
   targetUser,
 }: AccessAndPermissionGridProps) {
+  const { translation } = useTranslation();
+
   const [loading, setLoading] = useState(false);
   const [loadingAP, setLoadingAP] = useState(false);
 
@@ -83,8 +86,11 @@ export default function AccessAndPermission({
         checked,
       );
 
-      if ((permissionId.endsWith(".read") && !checked) || permissionId.endsWith(".history-get") && !checked) {
-        const groupKey = permissionId.split(".")[0];
+      if (
+        (permissionId.endsWith("|read") && !checked) ||
+        (permissionId.endsWith("|history-get") && !checked)
+      ) {
+        const groupKey = permissionId.split("|")[0];
 
         const groupPermissions = updatedPermissions[groupKey];
 
@@ -144,7 +150,12 @@ export default function AccessAndPermission({
 
       await AcessAndPermissionService.updateAccessAndPermission(payload);
 
-      Notification.success("Access & Permission updated");
+      Notification.success(
+        translation(
+          "manage_access_permissions_modal.success_msg",
+          "Access & Permission updated",
+        ),
+      );
     } catch (error) {
       if (axios.isAxiosError(error)) {
         Notification.error(
@@ -226,7 +237,10 @@ export default function AccessAndPermission({
         <ScrollArea h="100%" type="auto" scrollbarSize={0} p={"xs"}>
           <Stack gap={"xs"}>
             <Text size="xs" fw={"bolder"} c={"gray"} ms={"xs"}>
-              Access
+              {translation(
+                "manage_access_permissions_modal.label_access",
+                "Access",
+              )}
             </Text>
             {users.map((user) => {
               const currentUser = changes[user.id];
@@ -315,7 +329,10 @@ export default function AccessAndPermission({
                     >
                       <Checkbox
                         size="xs"
-                        label="Select All"
+                        label={translation(
+                          "manage_access_permissions_modal.label_select_all",
+                          "Select All",
+                        )}
                         checked={
                           userHasPermission
                             ? hasAllPermissions(
@@ -350,13 +367,16 @@ export default function AccessAndPermission({
                         ([groupKey, permissions]) => (
                           <Stack key={groupKey} gap="xs">
                             <Text size="xs" fw={"bolder"} c={"gray"}>
-                              {COMMON_PERMISSION_GROUP_LABELS[groupKey] ??
-                                groupKey}
+                              {translation(
+              `permission_group_labels.${groupKey}`,
+              COMMON_PERMISSION_GROUP_LABELS[groupKey] ??
+                                groupKey,
+            )}
                             </Text>
 
                             <Flex gap="md" style={{ flexWrap: "wrap" }}>
                               {Object.keys(permissions).map((permissionKey) => {
-                                const path = `${groupKey}.${permissionKey}`;
+                                const path = `${groupKey}|${permissionKey}`;
 
                                 const checked = getPermissionValue(
                                   currentUser?.permissions ?? {},
@@ -378,9 +398,11 @@ export default function AccessAndPermission({
                                     size="xs"
                                     checked={checked}
                                     disabled={disabled}
-                                    label={
-                                      PERMISSION_LABELS[path] ?? permissionKey
-                                    }
+                                    label=
+                                    {translation(
+              `permission_labels.${path}`,
+              PERMISSION_LABELS[path] ?? permissionKey,
+            )}
                                     onChange={(event) =>
                                       handlePermissionChange(
                                         user.id,
@@ -411,7 +433,10 @@ export default function AccessAndPermission({
           disabled={loading}
           loading={loading}
         >
-          Save changes
+          {translation(
+              "manage_access_permissions_modal.btn_save_changes",
+              "Save changes",
+            )}
         </Button>
       </Flex>
     </Flex>

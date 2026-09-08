@@ -103,6 +103,7 @@ import {
 import { Notification } from "../../utils/notification";
 import { fetchUserDetails } from "../../api/userApi";
 import axios from "axios";
+import { useTranslation } from "../../store/language/language.store";
 
 const PASSKEY_PATTERN = /^[a-zA-Z0-9]{4,12}$/;
 
@@ -153,6 +154,7 @@ export default function Accounts() {
   const setTargetUserDetails = useAuthStore(
     (state) => state.setTargetUserDetails,
   );
+  const { translation } = useTranslation();
 
   const isHubAccountLoggedIn = isHubAccount(userDetails);
 
@@ -210,11 +212,17 @@ export default function Accounts() {
 
   const perTabs = [
     {
-      label: "User's Account Permissions",
+      label: translation(
+        "manage_access_permissions_modal.tab_text_1",
+        "User's Account Permissions",
+      ),
       id: "up",
     },
     {
-      label: "User's Accessed Accounts Permissions",
+      label: translation(
+        "manage_access_permissions_modal.tab_text_2",
+        "User's Accessed Accounts Permissions",
+      ),
       id: "uap",
     },
   ];
@@ -890,7 +898,12 @@ export default function Accounts() {
 
       await AcessAndPermissionService.updatePermission(changes);
 
-      Notification.success("Access & Permission updated");
+      Notification.success(
+        translation(
+          "manage_access_permissions_modal.success_msg",
+          "Access & Permission updated",
+        ),
+      );
     } catch (error) {
       if (axios.isAxiosError(error)) {
         Notification.error(
@@ -918,10 +931,10 @@ export default function Accounts() {
       );
 
       if (
-        (permissionId.endsWith(".read") && !checked) ||
-        (permissionId.endsWith(".history-get") && !checked)
+        (permissionId.endsWith("|read") && !checked) ||
+        (permissionId.endsWith("|history-get") && !checked)
       ) {
-        const groupKey = permissionId.split(".")[0];
+        const groupKey = permissionId.split("|")[0];
 
         const groupPermissions = updatedPermissions[groupKey];
 
@@ -978,7 +991,7 @@ export default function Accounts() {
     }
   };
 
-   const loadAccessAndPermissions = async () => {
+  const loadAccessAndPermissions = async () => {
     try {
       setLoadingAP(true);
 
@@ -1766,7 +1779,7 @@ export default function Accounts() {
                                           <IconShieldLock size={14} />
                                         }
                                         onClick={() => {
-                                          setSelectedAccountID(account.user_id)
+                                          setSelectedAccountID(account.user_id);
                                           loadPermissions(account);
                                         }}
                                       >
@@ -1843,7 +1856,7 @@ export default function Accounts() {
                                       marginRight: "10px",
                                     }}
                                     onClick={() => {
-                                      setSelectedAccountID(account.user_id)
+                                      setSelectedAccountID(account.user_id);
                                       loadPermissions(account);
                                     }}
                                   >
@@ -2185,7 +2198,10 @@ export default function Accounts() {
         title={
           <Text>
             {" "}
-            Manage Access & Permissions of user{" "}
+            {translation(
+              "manage_access_permissions_modal.heading",
+              "Manage Access & Permissions of user",
+            )}{" "}
             {accessAndPermissions.display_name !== "" ? (
               <>
                 <span style={{ color: "var(--mantine-color-blue-4)" }}>
@@ -2208,7 +2224,7 @@ export default function Accounts() {
       >
         <Group gap="xs" mb={"md"}>
           {perTabs.map((tab) => (
-              <Button
+            <Button
               key={tab.id}
               size="compact-xs"
               radius="xl"
@@ -2228,7 +2244,7 @@ export default function Accounts() {
               }}
             >
               {tab.label}
-              </Button>
+            </Button>
           ))}
         </Group>
         {perType === "up" ? (
@@ -2247,7 +2263,10 @@ export default function Accounts() {
                 <Stack p="xs" bg="white" gap={"lg"}>
                   <Checkbox
                     size="xs"
-                    label="Select All"
+                    label={translation(
+                      "manage_access_permissions_modal.label_select_all",
+                      "Select All",
+                    )}
                     checked={hasAllPermissions(
                       changes.permissions,
                       USER_PERMISSIONS,
@@ -2267,19 +2286,23 @@ export default function Accounts() {
                     ([groupKey, permissions]) => (
                       <Stack key={groupKey} gap="xs">
                         <Text size="xs" fw={"bolder"} c={"gray"}>
-                          {COMMON_PERMISSION_GROUP_LABELS[groupKey] ?? groupKey}
+                          {translation(
+                            `permission_group_labels.${groupKey}`,
+                            COMMON_PERMISSION_GROUP_LABELS[groupKey] ??
+                              groupKey,
+                          )}
                         </Text>
 
                         <Flex gap="md" style={{ flexWrap: "wrap" }}>
                           {Object.keys(permissions).map((permissionKey) => {
-                            const path = `${groupKey}.${permissionKey}`;
+                            const path = `${groupKey}|${permissionKey}`;
 
                             const checked = getPermissionValue(
                               changes?.permissions ?? {},
                               path,
                             );
 
-                             const disabled = isPermissionDisabled(
+                            const disabled = isPermissionDisabled(
                               groupKey,
                               permissionKey,
                               Object.keys(changes?.permissions).length > 0
@@ -2293,7 +2316,10 @@ export default function Accounts() {
                                 size="xs"
                                 disabled={disabled}
                                 checked={checked}
-                                label={PERMISSION_LABELS[path] ?? permissionKey}
+                                label={translation(
+                                  `permission_labels.${path}`,
+                                  PERMISSION_LABELS[path] ?? permissionKey,
+                                )}
                                 onChange={(event) =>
                                   handlePermissionChange(
                                     path,
@@ -2316,7 +2342,10 @@ export default function Accounts() {
                   loading={loadingSave}
                   disabled={!hasAnyPermission(changes.permissions)}
                 >
-                  Save changes
+                  {translation(
+                    "manage_access_permissions_modal.btn_save_changes",
+                    "Save changes",
+                  )}
                 </Button>
               </Flex>
             </Flex>
