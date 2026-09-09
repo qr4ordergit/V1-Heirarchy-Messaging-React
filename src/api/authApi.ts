@@ -1,6 +1,8 @@
+import { AxiosError } from "axios";
+import { api } from "./axios";
 import { API_ENDPOINTS } from "../utils/constant";
-import { useAuthStore } from "../store/auth/auth.store";
 import { LOGOUT_REDIRECT_URI } from "../config/cognito";
+
 export interface SignupPayload {
   email: string;
   password: string;
@@ -32,35 +34,34 @@ export interface LogoutResponse {
   message: string;
 }
 
-async function parseJson(response: Response): Promise<unknown> {
-  try {
-    return await response.json();
-  } catch {
-    return null;
+function extractErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof AxiosError) {
+    const data = error.response?.data as
+      | { message?: string; error?: string }
+      | undefined;
+
+    return data?.message || data?.error || fallback;
   }
+
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+
+  return fallback;
 }
 
 async function postAuth<TResponse>(
   body: Record<string, unknown>,
 ): Promise<TResponse> {
-  const response = await fetch(API_ENDPOINTS.AUTH, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  try {
+    const response = await api.post<TResponse>(API_ENDPOINTS.AUTH, body);
 
-  const data = await parseJson(response);
-
-  if (!response.ok) {
-    const errorBody = data as { message?: string; error?: string } | null;
-    const message =
-      errorBody?.message ||
-      errorBody?.error ||
-      "Something went wrong. Please try again.";
-    throw new Error(message);
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      extractErrorMessage(error, "Something went wrong. Please try again."),
+    );
   }
-
-  return data as TResponse;
 }
 
 export function signup(payload: SignupPayload) {
@@ -74,44 +75,28 @@ export function verifyOtp(payload: VerifyOtpPayload) {
 export async function suggestUsername(
   username: string,
 ): Promise<UsernameSuggestResponse> {
-  const response = await fetch(API_ENDPOINTS.AUTH_USERNAME_SUGGEST, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username }),
-  });
+  try {
+    const response = await api.post<UsernameSuggestResponse>(
+      API_ENDPOINTS.AUTH_USERNAME_SUGGEST,
+      { username },
+    );
 
-  const data = await parseJson(response);
-
-  if (!response.ok) {
-    const message =
-      (data as { message?: string } | null)?.message ||
-      "Could not check username.";
-    throw new Error(message);
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Could not check username."));
   }
-
-  return data as UsernameSuggestResponse;
 }
-export async function logout(): Promise<LogoutResponse> {
-  const { accessToken } = useAuthStore.getState();
 
+export async function logout(): Promise<LogoutResponse> {
   const logoutUrl = `${API_ENDPOINTS.AUTH_LOGOUT}?redirect_uri=${encodeURIComponent(LOGOUT_REDIRECT_URI)}`;
 
-  const response = await fetch(logoutUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-    },
-  });
+  try {
+    const response = await api.post<LogoutResponse>(logoutUrl);
 
-  const data = await parseJson(response);
-
-  if (!response.ok) {
-    const message =
-      (data as { message?: string } | null)?.message ||
-      "Could not log out. Please try again.";
-    throw new Error(message);
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      extractErrorMessage(error, "Could not log out. Please try again."),
+    );
   }
-
-  return data as LogoutResponse;
 }
