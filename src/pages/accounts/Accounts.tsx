@@ -51,7 +51,6 @@ import {
   IconBell,
   IconChevronDown,
   IconCrown,
-  IconUsersGroup,
 } from "@tabler/icons-react";
 
 import {
@@ -1056,18 +1055,6 @@ export default function Accounts() {
         <Group justify="space-between" align="center" mb="xl">
           <Group gap="sm" align="center">
             <Text className={classes.brand}>Messenger.com</Text>
-            {!loading && accounts.length > 0 && (
-              <Badge
-                variant="light"
-                color="indigo"
-                radius="xl"
-                size="lg"
-                leftSection={<IconUsersGroup size={13} />}
-              >
-                {accounts.length} account{accounts.length === 1 ? "" : "s"}{" "}
-                total
-              </Badge>
-            )}
           </Group>
 
           {isHubAccountLoggedIn ? (
@@ -1641,7 +1628,7 @@ export default function Accounts() {
                         safeCurrentPage * ACCOUNTS_PAGE_SIZE,
                         totalManagedAccounts,
                       )}{" "}
-                      of {totalManagedAccounts} account
+                      total {totalManagedAccounts} account
                       {totalManagedAccounts === 1 ? "" : "s"}
                     </Text>
                   </Group>

@@ -1,39 +1,19 @@
-import { useAuthStore, type UserDetails } from "../store/auth/auth.store";
+import { AxiosError } from "axios";
+import type { UserDetails } from "../store/auth/auth.store";
+import { api } from "./axios";
 import { API_ENDPOINTS } from "../utils/constant";
 
 export async function fetchUserDetails(): Promise<UserDetails> {
-  const token = useAuthStore.getState().accessToken;
-
-  const response = await fetch(API_ENDPOINTS.USER_DETAILS, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token
-        ? {
-            Authorization: `Bearer ${token}`,
-          }
-        : {}),
-    },
-  });
-
-  let data: unknown = null;
-
   try {
-    data = await response.json();
-  } catch {
-    console.error("Failed to parse JSON response from user details API.");
-  }
+    const response = await api.get<UserDetails>(API_ENDPOINTS.USER_DETAILS);
 
-  if (!response.ok) {
+    return response.data;
+  } catch (error) {
     const message =
-      (
-        data as {
-          message?: string;
-        } | null
-      )?.message || "Could not load user details.";
+      error instanceof AxiosError
+        ? (error.response?.data as { message?: string } | undefined)?.message
+        : undefined;
 
-    throw new Error(message);
+    throw new Error(message || "Could not load user details.");
   }
-
-  return data as UserDetails;
 }

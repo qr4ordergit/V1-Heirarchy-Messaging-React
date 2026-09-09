@@ -1,15 +1,7 @@
+import { AxiosError } from "axios";
+import { api } from "./axios";
 import { useAuthStore } from "../store/auth/auth.store";
 import { API_ENDPOINTS } from "../utils/constant";
-
-function authHeaders(): Record<string, string> {
-  const token = useAuthStore.getState().accessToken;
-
-  return token
-    ? {
-        Authorization: `Bearer ${token}`,
-      }
-    : {};
-}
 
 const DEFAULT_COUNTRY_CODE = "+91";
 
@@ -101,35 +93,32 @@ export interface UpdateProfileResponse {
   profile_picture_upload_url?: string;
 }
 
-async function parseJson(response: Response): Promise<unknown> {
-  try {
-    return await response.json();
-  } catch {
-    return null;
-  }
-}
+function extractErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof AxiosError) {
+    const data = error.response?.data as
+      | { message?: string; error?: string }
+      | undefined;
 
-function extractErrorMessage(data: unknown, fallback: string): string {
-  const parsed = data as { message?: string; error?: string } | null;
-  return parsed?.message || parsed?.error || fallback;
+    return data?.message || data?.error || fallback;
+  }
+
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+
+  return fallback;
 }
 
 export async function fetchSubUserAccessDetail(): Promise<SubUserAccessDetail> {
-  const response = await fetch(API_ENDPOINTS.ACCOUNTS_LIST, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-  });
+  try {
+    const response = await api.get<SubUserAccessDetail>(
+      API_ENDPOINTS.ACCOUNTS_LIST,
+    );
 
-  const data = await parseJson(response);
-
-  if (!response.ok) {
-    throw new Error(extractErrorMessage(data, "Could not load accounts."));
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Could not load accounts."));
   }
-
-  return data as SubUserAccessDetail;
 }
 
 export async function fetchAccounts(): Promise<Account[]> {
@@ -168,72 +157,56 @@ export async function createAccount(
     body.description = payload.description.trim();
   }
 
-  const response = await fetch(API_ENDPOINTS.AUTH_SUB_USERS, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    body: JSON.stringify(body),
-  });
+  try {
+    const response = await api.post<CreateAccountResponse>(
+      API_ENDPOINTS.AUTH_SUB_USERS,
+      body,
+    );
 
-  const data = await parseJson(response);
-
-  if (!response.ok) {
-    throw new Error(extractErrorMessage(data, "Could not create account."));
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Could not create account."));
   }
-
-  return data as CreateAccountResponse;
 }
 
 export async function verifySubUserOtp(
   payload: VerifySubUserOtpPayload,
 ): Promise<VerifySubUserOtpResponse> {
-  const response = await fetch(API_ENDPOINTS.AUTH_SUB_USERS, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    body: JSON.stringify({
-      operation: "verify",
-      email: payload.email,
-      phone_number: withCountryCode(payload.phone),
-      otp: payload.otp,
-      ...(payload.username ? { username: payload.username } : {}),
-    }),
-  });
+  try {
+    const response = await api.post<VerifySubUserOtpResponse>(
+      API_ENDPOINTS.AUTH_SUB_USERS,
+      {
+        operation: "verify",
+        email: payload.email,
+        phone_number: withCountryCode(payload.phone),
+        otp: payload.otp,
+        ...(payload.username ? { username: payload.username } : {}),
+      },
+    );
 
-  const data = await parseJson(response);
-
-  if (!response.ok) {
-    throw new Error(extractErrorMessage(data, "Could not verify OTP."));
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Could not verify OTP."));
   }
-
-  return data as VerifySubUserOtpResponse;
 }
 
 export async function deleteAccount(
   subUserId: string,
 ): Promise<DeleteAccountResponse> {
-  const response = await fetch(API_ENDPOINTS.USER_ACCESS, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    body: JSON.stringify({
-      sub_user_id: subUserId,
-    }),
-  });
+  try {
+    const response = await api.delete<DeleteAccountResponse>(
+      API_ENDPOINTS.USER_ACCESS,
+      {
+        data: {
+          sub_user_id: subUserId,
+        },
+      },
+    );
 
-  const data = await parseJson(response);
-
-  if (!response.ok) {
-    throw new Error(extractErrorMessage(data, "Could not remove account."));
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Could not remove account."));
   }
-
-  return data as DeleteAccountResponse;
 }
 
 export async function changePassword(
@@ -242,28 +215,21 @@ export async function changePassword(
   confirmNewPassword: string,
   isSelf: boolean = false,
 ): Promise<ChangePasswordResponse> {
-  const response = await fetch(API_ENDPOINTS.SECONDARY_USER_PASSWORD_CHANGE, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    body: JSON.stringify({
-      operation: "reset_password",
+  try {
+    const response = await api.post<ChangePasswordResponse>(
+      API_ENDPOINTS.SECONDARY_USER_PASSWORD_CHANGE,
+      {
+        operation: "reset_password",
+        ...(isSelf ? {} : { username: userId }),
+        new_password: newPassword,
+        confirm_password: confirmNewPassword,
+      },
+    );
 
-      ...(isSelf ? {} : { username: userId }),
-      new_password: newPassword,
-      confirm_password: confirmNewPassword,
-    }),
-  });
-
-  const data = await parseJson(response);
-
-  if (!response.ok) {
-    throw new Error(extractErrorMessage(data, "Could not change password."));
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Could not change password."));
   }
-
-  return data as ChangePasswordResponse;
 }
 
 export async function updateUserLock(
@@ -280,24 +246,18 @@ export async function updateUserLock(
     body.target_user = targetUserId;
   }
 
-  const response = await fetch(API_ENDPOINTS.USER_HOME_PASSKEY, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    body: JSON.stringify(body),
-  });
+  try {
+    const response = await api.patch<UpdateUserLockResponse>(
+      API_ENDPOINTS.USER_HOME_PASSKEY,
+      body,
+    );
 
-  const data = await parseJson(response);
-
-  if (!response.ok) {
+    return response.data;
+  } catch (error) {
     throw new Error(
-      extractErrorMessage(data, "Could not update lock settings."),
+      extractErrorMessage(error, "Could not update lock settings."),
     );
   }
-
-  return data as UpdateUserLockResponse;
 }
 
 export async function updateUserProfile(
@@ -312,22 +272,13 @@ export async function updateUserProfile(
 
   const url = `${API_ENDPOINTS.USER_HOME}?${params.toString()}`;
 
-  const response = await fetch(url, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const response = await api.patch<UpdateProfileResponse>(url, payload);
 
-  const data = await parseJson(response);
-
-  if (!response.ok) {
-    throw new Error(extractErrorMessage(data, "Could not update profile."));
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Could not update profile."));
   }
-
-  return data as UpdateProfileResponse;
 }
 
 export interface BulkRegistrationUploadResponse {
@@ -361,48 +312,39 @@ export async function bulkRegisterSubUsers(
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(API_ENDPOINTS.AUTH_SUB_USERS_BULK, {
-    method: "POST",
-    headers: {
-      ...authHeaders(),
-    },
-    body: formData,
-  });
+  try {
+    const response = await api.post<BulkRegistrationUploadResponse>(
+      API_ENDPOINTS.AUTH_SUB_USERS_BULK,
+      formData,
+      {
+        // Let the browser set "multipart/form-data" with the correct
+        // boundary instead of the instance's default JSON content-type.
+        headers: { "Content-Type": undefined },
+      },
+    );
 
-  const data = await parseJson(response);
-
-  if (!response.ok) {
+    return response.data;
+  } catch (error) {
     throw new Error(
-      extractErrorMessage(data, "Could not process the bulk upload."),
+      extractErrorMessage(error, "Could not process the bulk upload."),
     );
   }
-
-  return data as BulkRegistrationUploadResponse;
 }
 
 export async function getBulkRegistrationStatus(
   jobId: string,
 ): Promise<BulkRegistrationStatusResponse> {
-  const response = await fetch(
-    `${API_ENDPOINTS.AUTH_SUB_USERS_BULK}/${encodeURIComponent(jobId)}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        ...authHeaders(),
-      },
-    },
-  );
+  try {
+    const response = await api.get<BulkRegistrationStatusResponse>(
+      `${API_ENDPOINTS.AUTH_SUB_USERS_BULK}/${encodeURIComponent(jobId)}`,
+    );
 
-  const data = await parseJson(response);
-
-  if (!response.ok) {
+    return response.data;
+  } catch (error) {
     throw new Error(
-      extractErrorMessage(data, "Could not check the bulk upload status."),
+      extractErrorMessage(error, "Could not check the bulk upload status."),
     );
   }
-
-  return data as BulkRegistrationStatusResponse;
 }
 
 export type BulkJobStatus =
@@ -430,25 +372,19 @@ export async function updateUserAccess(
   targetUserId: string,
   subUserIds: string[],
 ): Promise<UpdateUserAccessResponse> {
-  const response = await fetch(API_ENDPOINTS.USER_ACCESS, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    body: JSON.stringify({
-      target_user: targetUserId,
-      sub_users: subUserIds,
-    }),
-  });
+  try {
+    const response = await api.patch<UpdateUserAccessResponse>(
+      API_ENDPOINTS.USER_ACCESS,
+      {
+        target_user: targetUserId,
+        sub_users: subUserIds,
+      },
+    );
 
-  const data = await parseJson(response);
-
-  if (!response.ok) {
+    return response.data;
+  } catch (error) {
     throw new Error(
-      extractErrorMessage(data, "Could not update sub-account access."),
+      extractErrorMessage(error, "Could not update sub-account access."),
     );
   }
-
-  return data as UpdateUserAccessResponse;
 }
