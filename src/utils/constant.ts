@@ -28,6 +28,7 @@ export const API_ENDPOINTS = {
   MANAGE_MEMBERS: `${API_BASE_URL}/group/manage-members`,
   CREATE_INVITE_LINK: `${API_BASE_URL}/invites`,
   TAGS: `${API_BASE_URL}/tags`,
+  ACCOUNT_PACKAGES: `${API_BASE_URL}/account-packages`,
   USER_ACCESS: `${API_BASE_URL}/user-access`,
   CREATE_GROUP: `${API_BASE_URL}/group`,
   SECONDARY_USER_PASSWORD_CHANGE: `${API_BASE_URL}/auth/secondary-user-password-reset`,

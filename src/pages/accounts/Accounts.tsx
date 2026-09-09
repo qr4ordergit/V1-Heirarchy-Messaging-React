@@ -50,7 +50,7 @@ import {
   IconShieldLock,
   IconBell,
   IconChevronDown,
-  IconCrown,
+  IconSparkles,
 } from "@tabler/icons-react";
 
 import {
@@ -1111,18 +1111,21 @@ export default function Accounts() {
                 </Stack>
 
                 <Menu.Divider m={0} />
-
                 <Menu.Item
-                  leftSection={<IconCrown size={16} color="#f5a623" />}
-                  onClick={() => setPremiumModalOpen(true)}
+                  leftSection={
+                    <IconSparkles
+                      size={16}
+                      color="var(--mantine-color-indigo-6)"
+                    />
+                  }
+                  onClick={() => navigate("/plans")}
                   py="sm"
                   fw={500}
                 >
-                  Upgrade to Premium
+                  Subscription & Plans
                 </Menu.Item>
 
                 <Menu.Divider m={0} />
-
                 <Menu.Item
                   leftSection={<IconLogout size={16} />}
                   color="red"

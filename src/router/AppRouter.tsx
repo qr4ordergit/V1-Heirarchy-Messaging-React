@@ -14,6 +14,7 @@ const Contact = lazy(() => import("../pages/contact/Contact"));
 const Profile = lazy(() => import("../pages/profile/Profile"));
 const Privacy = lazy(() => import("../pages/profile/Privacy"));
 const About = lazy(() => import("../pages/profile/About"));
+const Plans = lazy(() => import("../pages/plans/Plans"));
 const HelpAndSupport = lazy(() => import("../pages/profile/HelpAndSupport"));
 
 const Accounts = lazy(() => import("../pages/accounts/Accounts"));
@@ -67,7 +68,7 @@ export default function AppRouter() {
 
           <Route element={<RequireAuth />}>
             <Route path={ROUTES.ACCOUNTS} element={<Accounts />} />
-
+            <Route path={ROUTES.PLANS} element={<Plans />} />
             <Route element={<MainLayout />}>
               <Route path={ROUTES.CHATS} element={<ChatsLayout />}>
                 <Route path=":chatId" element={<Conversation />} />
