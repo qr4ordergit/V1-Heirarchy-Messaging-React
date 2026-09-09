@@ -30,6 +30,7 @@ import {
   UnstyledButton,
   Indicator,
   Title,
+  Pagination,
 } from "@mantine/core";
 import {
   IconDotsVertical,
@@ -49,6 +50,8 @@ import {
   IconShieldLock,
   IconBell,
   IconChevronDown,
+  IconCrown,
+  IconUsersGroup,
 } from "@tabler/icons-react";
 
 import {
@@ -82,6 +85,7 @@ import { ClearStore } from "../../store/clear.store";
 import AccessAndPermission from "../../component/accessAndPermission/AccessAndPermission";
 
 import CreateAccountModal from "./Createaccountmodal";
+import UpgradeToPremiumModal from "./Upgradetopremiummodal";
 
 import {
   COMMON_PERMISSION_GROUP_LABELS,
@@ -106,6 +110,7 @@ import axios from "axios";
 import { useTranslation } from "../../store/language/language.store";
 
 const PASSKEY_PATTERN = /^[a-zA-Z0-9]{4,12}$/;
+const ACCOUNTS_PAGE_SIZE = 10;
 
 const getDisplayName = (account: Account) =>
   account.display_name?.trim() || account.user_id;
@@ -207,6 +212,10 @@ export default function Accounts() {
   >({});
   const [searchQuery, setSearchQuery] = useState("");
   const [appliedSearchQuery, setAppliedSearchQuery] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [premiumModalOpen, setPremiumModalOpen] = useState(false);
 
   const [perType, setPerType] = useState<string>("up");
 
@@ -357,6 +366,7 @@ export default function Accounts() {
   const handleAccountsChanged = async () => {
     setSearchQuery("");
     setAppliedSearchQuery("");
+    setCurrentPage(1);
     await loadAccounts();
   };
 
@@ -883,13 +893,30 @@ export default function Accounts() {
     return haystack.includes(query);
   });
 
+  const managedAccounts = filteredAccounts.filter(
+    (account) => account.user_id !== userDetails?.username,
+  );
+
+  const totalManagedAccounts = managedAccounts.length;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(totalManagedAccounts / ACCOUNTS_PAGE_SIZE),
+  );
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedManagedAccounts = managedAccounts.slice(
+    (safeCurrentPage - 1) * ACCOUNTS_PAGE_SIZE,
+    safeCurrentPage * ACCOUNTS_PAGE_SIZE,
+  );
+
   const runSearch = () => {
     setAppliedSearchQuery(searchQuery);
+    setCurrentPage(1);
   };
 
   const clearSearch = () => {
     setSearchQuery("");
     setAppliedSearchQuery("");
+    setCurrentPage(1);
   };
 
   const handleSave = async () => {
@@ -1027,7 +1054,21 @@ export default function Accounts() {
     <div className={classes.wrapper}>
       <Container size="md" py="xl">
         <Group justify="space-between" align="center" mb="xl">
-          <Text className={classes.brand}>Messenger.com</Text>
+          <Group gap="sm" align="center">
+            <Text className={classes.brand}>Messenger.com</Text>
+            {!loading && accounts.length > 0 && (
+              <Badge
+                variant="light"
+                color="indigo"
+                radius="xl"
+                size="lg"
+                leftSection={<IconUsersGroup size={13} />}
+              >
+                {accounts.length} account{accounts.length === 1 ? "" : "s"}{" "}
+                total
+              </Badge>
+            )}
+          </Group>
 
           {isHubAccountLoggedIn ? (
             <Menu
@@ -1081,6 +1122,17 @@ export default function Accounts() {
                     {userDetails?.email || userDetails?.username}
                   </Text>
                 </Stack>
+
+                <Menu.Divider m={0} />
+
+                <Menu.Item
+                  leftSection={<IconCrown size={16} color="#f5a623" />}
+                  onClick={() => setPremiumModalOpen(true)}
+                  py="sm"
+                  fw={500}
+                >
+                  Upgrade to Premium
+                </Menu.Item>
 
                 <Menu.Divider m={0} />
 
@@ -1534,6 +1586,7 @@ export default function Accounts() {
                         setSearchQuery(value);
                         if (value === "") {
                           setAppliedSearchQuery("");
+                          setCurrentPage(1);
                         }
                       }}
                       onKeyDown={(e) => {
@@ -1579,297 +1632,331 @@ export default function Accounts() {
                     />
                   </div>
                 )}
+
+                {totalManagedAccounts > 0 && (
+                  <Group justify="space-between" align="center" wrap="wrap">
+                    <Text size="xs" c="dimmed">
+                      Showing {(safeCurrentPage - 1) * ACCOUNTS_PAGE_SIZE + 1}–
+                      {Math.min(
+                        safeCurrentPage * ACCOUNTS_PAGE_SIZE,
+                        totalManagedAccounts,
+                      )}{" "}
+                      of {totalManagedAccounts} account
+                      {totalManagedAccounts === 1 ? "" : "s"}
+                    </Text>
+                  </Group>
+                )}
+
                 <Stack gap="md">
-                  {filteredAccounts
-                    .filter(
-                      (account) => account.user_id !== userDetails?.username,
-                    )
-                    .map((account, i) => {
-                      const isPasskeyVisible =
-                        !!visiblePasskeys[account.user_id];
+                  {paginatedManagedAccounts.map((account, i) => {
+                    const isPasskeyVisible = !!visiblePasskeys[account.user_id];
 
-                      const plainPasskey = isPasskeyVisible
-                        ? getPlainPasskey(account)
-                        : "";
+                    const plainPasskey = isPasskeyVisible
+                      ? getPlainPasskey(account)
+                      : "";
 
-                      return (
-                        <Card
-                          key={account.user_id}
-                          withBorder
-                          radius="md"
-                          padding="lg"
-                          className={classes.accountCard}
-                        >
-                          <div className={classes.cardGrid}>
-                            <div className={classes.cardGridAvatar}>
-                              <Avatar
-                                name={getInitialsSource(account)}
-                                colorIndex={i + 1}
-                                size={48}
-                                src={account.profile_picture}
+                    return (
+                      <Card
+                        key={account.user_id}
+                        withBorder
+                        radius="md"
+                        padding="lg"
+                        className={classes.accountCard}
+                      >
+                        <div className={classes.cardGrid}>
+                          <div className={classes.cardGridAvatar}>
+                            <Avatar
+                              name={getInitialsSource(account)}
+                              colorIndex={
+                                (safeCurrentPage - 1) * ACCOUNTS_PAGE_SIZE +
+                                i +
+                                1
+                              }
+                              size={48}
+                              src={account.profile_picture}
+                              onClick={() => {
+                                setTargetUser(account.user_id);
+                                setTargetUserDetails(account);
+                                navigate(`/${ROUTES.CHATS}`);
+                              }}
+                            />
+                          </div>
+
+                          <div className={classes.cardGridName}>
+                            <Group gap={6} wrap="nowrap" align="center">
+                              <Text
+                                fw={600}
+                                truncate="end"
+                                className={classes.accountName}
                                 onClick={() => {
                                   setTargetUser(account.user_id);
                                   setTargetUserDetails(account);
                                   navigate(`/${ROUTES.CHATS}`);
                                 }}
-                              />
-                            </div>
-
-                            <div className={classes.cardGridName}>
-                              <Group gap={6} wrap="nowrap" align="center">
-                                <Text
-                                  fw={600}
-                                  truncate="end"
-                                  className={classes.accountName}
-                                  onClick={() => {
-                                    setTargetUser(account.user_id);
-                                    setTargetUserDetails(account);
-                                    navigate(`/${ROUTES.CHATS}`);
-                                  }}
-                                >
-                                  {getAccountIdentifier(account)}
-                                </Text>
-
-                                {account.display_name?.trim() && (
-                                  <Text
-                                    size="xs"
-                                    c="dimmed"
-                                    truncate="end"
-                                    className={classes.accountUserId}
-                                  >
-                                    {account.user_id}
-                                  </Text>
-                                )}
-
-                                <Tooltip
-                                  label={
-                                    copiedUserId === account.user_id
-                                      ? "Copied!"
-                                      : account.user_id
-                                  }
-                                >
-                                  <ActionIcon
-                                    variant="subtle"
-                                    color="gray"
-                                    radius="xl"
-                                    size="sm"
-                                    aria-label="Copy username"
-                                    onClick={() => handleCopyUsername(account)}
-                                  >
-                                    {copiedUserId === account.user_id ? (
-                                      <IconCheck size={14} color="teal" />
-                                    ) : (
-                                      <IconCopy size={14} />
-                                    )}
-                                  </ActionIcon>
-                                </Tooltip>
-
-                                {!isMobile && (
-                                  <ActionIcon
-                                    variant="subtle"
-                                    color={account.isLocked ? "dark" : "gray"}
-                                    radius="xl"
-                                    size="sm"
-                                    aria-label={
-                                      account.isLocked
-                                        ? "Account is locked"
-                                        : "Account is unlocked"
-                                    }
-                                    onClick={() => openLockModal(account)}
-                                  >
-                                    {account.isLocked ? (
-                                      <IconLock size={14} color="red" />
-                                    ) : (
-                                      <Tooltip label="Lock with passkey">
-                                        <IconLockOpen size={14} />
-                                      </Tooltip>
-                                    )}
-                                  </ActionIcon>
-                                )}
-
-                                {!isMobile && account.isLocked && (
-                                  <>
-                                    <Badge
-                                      size="sm"
-                                      variant="light"
-                                      color="red"
-                                      radius="sm"
-                                      // onClick={() => openLockModal(account)}
-                                      style={{
-                                        cursor: "pointer",
-                                        fontFamily: "monospace",
-                                      }}
-                                    >
-                                      {isPasskeyVisible
-                                        ? plainPasskey || "—"
-                                        : "••••••"}
-                                    </Badge>
-
-                                    <ActionIcon
-                                      variant="subtle"
-                                      color="gray"
-                                      radius="xl"
-                                      size="sm"
-                                      aria-label={
-                                        isPasskeyVisible
-                                          ? "Hide passkey"
-                                          : "Show passkey"
-                                      }
-                                      onClick={() =>
-                                        togglePasskeyVisibility(account)
-                                      }
-                                    >
-                                      {isPasskeyVisible ? (
-                                        <IconEyeOff size={14} />
-                                      ) : (
-                                        <IconEye size={14} />
-                                      )}
-                                    </ActionIcon>
-
-                                    <ActionIcon
-                                      variant="subtle"
-                                      color="gray"
-                                      radius="xl"
-                                      size="sm"
-                                      aria-label="Edit passkey"
-                                      onClick={() => openLockModal(account)}
-                                    >
-                                      <IconPencil size={14} />
-                                    </ActionIcon>
-                                  </>
-                                )}
-                              </Group>
-                            </div>
-
-                            <div className={classes.cardGridKebab}>
-                              <Menu
-                                position="bottom-end"
-                                withinPortal
-                                shadow="md"
-                                radius="md"
                               >
-                                <Menu.Target>
-                                  <ActionIcon
-                                    variant="subtle"
-                                    color="gray"
-                                    radius="xl"
-                                    aria-label="Account options"
-                                  >
-                                    <IconDotsVertical size={16} />
-                                  </ActionIcon>
-                                </Menu.Target>
+                                {getAccountIdentifier(account)}
+                              </Text>
 
-                                <Menu.Dropdown>
-                                  {isMobile && (
-                                    <>
-                                      <Menu.Item
-                                        leftSection={
-                                          account.isLocked ? (
-                                            <IconLock size={14} />
-                                          ) : (
-                                            <IconLockOpen size={14} />
-                                          )
-                                        }
-                                        onClick={() => openLockModal(account)}
-                                      >
-                                        Passkey & Lock
-                                      </Menu.Item>
-                                      <Menu.Item
-                                        leftSection={
-                                          <IconShieldLock size={14} />
-                                        }
-                                        onClick={() => {
-                                          setSelectedAccountID(account.user_id);
-                                          loadPermissions(account);
-                                        }}
-                                      >
-                                        Manage Access & Permissions
-                                      </Menu.Item>
-                                      <Menu.Divider />
-                                    </>
+                              {account.display_name?.trim() && (
+                                <Text
+                                  size="xs"
+                                  c="dimmed"
+                                  truncate="end"
+                                  className={classes.accountUserId}
+                                >
+                                  {account.user_id}
+                                </Text>
+                              )}
+
+                              <Tooltip
+                                label={
+                                  copiedUserId === account.user_id
+                                    ? "Copied!"
+                                    : account.user_id
+                                }
+                              >
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="gray"
+                                  radius="xl"
+                                  size="sm"
+                                  aria-label="Copy username"
+                                  onClick={() => handleCopyUsername(account)}
+                                >
+                                  {copiedUserId === account.user_id ? (
+                                    <IconCheck size={14} color="teal" />
+                                  ) : (
+                                    <IconCopy size={14} />
                                   )}
+                                </ActionIcon>
+                              </Tooltip>
 
-                                  <Menu.Item
-                                    leftSection={<IconUserEdit size={14} />}
-                                    onClick={() => openProfileModal(account)}
-                                  >
-                                    Update Profile
-                                  </Menu.Item>
-                                  <Menu.Item
-                                    leftSection={<IconKey size={14} />}
-                                    onClick={() => setPasswordTarget(account)}
-                                  >
-                                    Change Password
-                                  </Menu.Item>
-
-                                  {isHubAccountLoggedIn && (
-                                    <>
-                                      <Menu.Divider />
-
-                                      <Menu.Item
-                                        color="red"
-                                        leftSection={<IconTrash size={14} />}
-                                        onClick={() => setDeleteTarget(account)}
-                                      >
-                                        Remove Account
-                                      </Menu.Item>
-                                    </>
+                              {!isMobile && (
+                                <ActionIcon
+                                  variant="subtle"
+                                  color={account.isLocked ? "dark" : "gray"}
+                                  radius="xl"
+                                  size="sm"
+                                  aria-label={
+                                    account.isLocked
+                                      ? "Account is locked"
+                                      : "Account is unlocked"
+                                  }
+                                  onClick={() => openLockModal(account)}
+                                >
+                                  {account.isLocked ? (
+                                    <IconLock size={14} color="red" />
+                                  ) : (
+                                    <Tooltip label="Lock with passkey">
+                                      <IconLockOpen size={14} />
+                                    </Tooltip>
                                   )}
-                                </Menu.Dropdown>
-                              </Menu>
-                            </div>
+                                </ActionIcon>
+                              )}
 
-                            <div className={classes.cardGridMeta}>
-                              {account.status && (
-                                <Group gap={6} mb={4} align="center">
+                              {!isMobile && account.isLocked && (
+                                <>
                                   <Badge
                                     size="sm"
                                     variant="light"
-                                    color={statusColor(account.status)}
+                                    color="red"
                                     radius="sm"
+                                    // onClick={() => openLockModal(account)}
+                                    style={{
+                                      cursor: "pointer",
+                                      fontFamily: "monospace",
+                                    }}
                                   >
-                                    {account.status}
+                                    {isPasskeyVisible
+                                      ? plainPasskey || "—"
+                                      : "••••••"}
                                   </Badge>
-                                </Group>
-                              )}
 
-                              {account.description?.trim() && (
-                                <Text size="xs" c="dimmed" truncate="end">
-                                  {account.description}
+                                  <ActionIcon
+                                    variant="subtle"
+                                    color="gray"
+                                    radius="xl"
+                                    size="sm"
+                                    aria-label={
+                                      isPasskeyVisible
+                                        ? "Hide passkey"
+                                        : "Show passkey"
+                                    }
+                                    onClick={() =>
+                                      togglePasskeyVisibility(account)
+                                    }
+                                  >
+                                    {isPasskeyVisible ? (
+                                      <IconEyeOff size={14} />
+                                    ) : (
+                                      <IconEye size={14} />
+                                    )}
+                                  </ActionIcon>
+
+                                  <ActionIcon
+                                    variant="subtle"
+                                    color="gray"
+                                    radius="xl"
+                                    size="sm"
+                                    aria-label="Edit passkey"
+                                    onClick={() => openLockModal(account)}
+                                  >
+                                    <IconPencil size={14} />
+                                  </ActionIcon>
+                                </>
+                              )}
+                            </Group>
+                          </div>
+
+                          <div className={classes.cardGridKebab}>
+                            <Menu
+                              position="bottom-end"
+                              withinPortal
+                              shadow="md"
+                              radius="md"
+                            >
+                              <Menu.Target>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="gray"
+                                  radius="xl"
+                                  aria-label="Account options"
+                                >
+                                  <IconDotsVertical size={16} />
+                                </ActionIcon>
+                              </Menu.Target>
+
+                              <Menu.Dropdown>
+                                {isMobile && (
+                                  <>
+                                    <Menu.Item
+                                      leftSection={
+                                        account.isLocked ? (
+                                          <IconLock size={14} />
+                                        ) : (
+                                          <IconLockOpen size={14} />
+                                        )
+                                      }
+                                      onClick={() => openLockModal(account)}
+                                    >
+                                      Passkey & Lock
+                                    </Menu.Item>
+                                    <Menu.Item
+                                      leftSection={<IconShieldLock size={14} />}
+                                      onClick={() => {
+                                        setSelectedAccountID(account.user_id);
+                                        loadPermissions(account);
+                                      }}
+                                    >
+                                      Manage Access & Permissions
+                                    </Menu.Item>
+                                    <Menu.Divider />
+                                  </>
+                                )}
+
+                                <Menu.Item
+                                  leftSection={<IconUserEdit size={14} />}
+                                  onClick={() => openProfileModal(account)}
+                                >
+                                  Update Profile
+                                </Menu.Item>
+                                <Menu.Item
+                                  leftSection={<IconKey size={14} />}
+                                  onClick={() => setPasswordTarget(account)}
+                                >
+                                  Change Password
+                                </Menu.Item>
+
+                                {isHubAccountLoggedIn && (
+                                  <>
+                                    <Menu.Divider />
+
+                                    <Menu.Item
+                                      color="red"
+                                      leftSection={<IconTrash size={14} />}
+                                      onClick={() => setDeleteTarget(account)}
+                                    >
+                                      Remove Account
+                                    </Menu.Item>
+                                  </>
+                                )}
+                              </Menu.Dropdown>
+                            </Menu>
+                          </div>
+
+                          <div className={classes.cardGridMeta}>
+                            {account.status && (
+                              <Group gap={6} mb={4} align="center">
+                                <Badge
+                                  size="sm"
+                                  variant="light"
+                                  color={statusColor(account.status)}
+                                  radius="sm"
+                                >
+                                  {account.status}
+                                </Badge>
+                              </Group>
+                            )}
+
+                            {account.description?.trim() && (
+                              <Text size="xs" c="dimmed" truncate="end">
+                                {account.description}
+                              </Text>
+                            )}
+                          </div>
+
+                          {!isMobile && (
+                            <div className={classes.cardGridManage}>
+                              {selectedAccountID === account.user_id &&
+                              loadingP ? (
+                                <Loader size={"sm"} />
+                              ) : (
+                                <Text
+                                  size="sm"
+                                  c="blue"
+                                  fw={500}
+                                  style={{
+                                    cursor: "pointer",
+                                    whiteSpace: "nowrap",
+                                    marginRight: "10px",
+                                  }}
+                                  onClick={() => {
+                                    setSelectedAccountID(account.user_id);
+                                    loadPermissions(account);
+                                  }}
+                                >
+                                  Manage Access & Permissions
                                 </Text>
                               )}
                             </div>
-
-                            {!isMobile && (
-                              <div className={classes.cardGridManage}>
-                                {selectedAccountID === account.user_id &&
-                                loadingP ? (
-                                  <Loader size={"sm"} />
-                                ) : (
-                                  <Text
-                                    size="sm"
-                                    c="blue"
-                                    fw={500}
-                                    style={{
-                                      cursor: "pointer",
-                                      whiteSpace: "nowrap",
-                                      marginRight: "10px",
-                                    }}
-                                    onClick={() => {
-                                      setSelectedAccountID(account.user_id);
-                                      loadPermissions(account);
-                                    }}
-                                  >
-                                    Manage Access & Permissions
-                                  </Text>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </Card>
-                      );
-                    })}
+                          )}
+                        </div>
+                      </Card>
+                    );
+                  })}
                 </Stack>
+
+                {totalPages > 1 && (
+                  <Center mt="sm" style={{ width: "100%" }}>
+                    <ScrollArea
+                      type="auto"
+                      scrollbarSize={4}
+                      style={{ maxWidth: "100%" }}
+                    >
+                      <Pagination
+                        value={safeCurrentPage}
+                        onChange={setCurrentPage}
+                        total={totalPages}
+                        radius="xl"
+                        size={isMobile ? "xs" : "md"}
+                        siblings={isMobile ? 0 : 1}
+                        boundaries={isMobile ? 1 : 1}
+                        withEdges={!isMobile}
+                        gap={isMobile ? 4 : "sm"}
+                      />
+                    </ScrollArea>
+                  </Center>
+                )}
               </Stack>
             )}
           </Stack>
@@ -2191,6 +2278,11 @@ export default function Accounts() {
           </Group>
         </Stack>
       </Modal>
+
+      <UpgradeToPremiumModal
+        opened={premiumModalOpen}
+        onClose={() => setPremiumModalOpen(false)}
+      />
 
       <Modal
         opened={accessAndPermissions.open}
