@@ -38,7 +38,7 @@ export default function Chatting() {
         ? `&target_user=${targetUserDetails?.user_id}`
         : "";
       const response = await api.get(
-        `${ENDPOINTS.CHAT.GET}${nextPerson(chatId)}${target_user}`,
+        `${ENDPOINTS.CHAT1.GET}${nextPerson(chatId)}${target_user}`,
       );
 
       if (!response.data?.success) {

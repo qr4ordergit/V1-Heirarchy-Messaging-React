@@ -6,6 +6,7 @@ import {
   IconFileTypePdf,
   IconFileTypeXls,
   IconJson,
+  IconZip,
 } from "@tabler/icons-react";
 import type { MESSAGE } from "../../../store/chats/chats.store";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
@@ -32,6 +33,7 @@ export function MediaChat({ url, msg }: MEDIACHAT) {
     excel: IconFileTypeXls,
     json: IconJson,
     code: IconCode,
+    zip: IconZip,
   };
 
   const DocumentIcon = mediaIcons[mediaType as keyof typeof mediaIcons];

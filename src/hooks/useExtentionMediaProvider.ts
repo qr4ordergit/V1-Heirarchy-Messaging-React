@@ -1,6 +1,6 @@
 export const useExtentionMediaProvider = () => {
 
-    type MediaType = "image" | "video" | "audio" | "document" | "excel" | "pdf" | "json" | "code";
+    type MediaType = "image" | "video" | "audio" | "document" | "excel" | "pdf" | "json" | "code" | "zip";
 
     const EXTENSION_MEDIA_PROVIDER: Record<string, MediaType> = {
         png: "image",
@@ -27,6 +27,8 @@ export const useExtentionMediaProvider = () => {
         html: "code",
         css: "code",
         js: "code",
+
+        zip: "zip"
     };
 
     return (url: string): MediaType | undefined => {
