@@ -13,6 +13,7 @@ import { TRIGGERS } from "../../../utils/constant";
 import { useAuthStore } from "../../../store/auth/auth.store";
 import EncryptedChatCard from "./EncryptedChatCard";
 import useMediaDecryptor from "../../../hooks/useMediaDecryptor";
+import { useTranslation } from "../../../store/language/language.store";
 
 export default function Chatting() {
   const messages = useChatStore((state) => state.chats);
@@ -29,6 +30,7 @@ export default function Chatting() {
   const [fetchLoader, FetchFn] = useTransition();
 
   const mediaDecryptor = useMediaDecryptor();
+  const { translation } = useTranslation();
 
   const fetchOneToOneChats = async () => {
     try {
@@ -42,7 +44,9 @@ export default function Chatting() {
       );
 
       if (!response.data?.success) {
-        Notification.error("Something went wrong");
+        Notification.error(
+          translation("noti-chat-121-fail", "Failed to fetch chats"),
+        );
         return;
       }
 
@@ -50,7 +54,9 @@ export default function Chatting() {
 
       addChats(updatedMsgs);
     } catch (error) {
-      Notification.error("something went wrong");
+      Notification.error(
+        translation("noti-chat-121-catch", "Something went wrong"),
+      );
       navigate("/chats");
     }
   };
@@ -68,7 +74,9 @@ export default function Chatting() {
       );
 
       if (!response.data?.success) {
-        Notification.error("Something went wrong");
+        Notification.error(
+          translation("noti-chat-group-fail", "Failed to fetch chats"),
+        );
         return;
       }
 
@@ -76,7 +84,9 @@ export default function Chatting() {
 
       addChats(updatedMsgs);
     } catch (error) {
-      Notification.error("something went wrong");
+      Notification.error(
+        translation("noti-chat-group-catch", "Something went wrong"),
+      );
       navigate("/chats");
     }
   };
@@ -102,7 +112,9 @@ export default function Chatting() {
       );
 
       if (!response.data?.success) {
-        Notification.error("Something went wrong");
+        Notification.error(
+          translation("noti-chat-tags-fail", "Failed to fetch tags"),
+        );
         return;
       }
 
@@ -110,7 +122,9 @@ export default function Chatting() {
 
       addChats(updatedMsgs);
     } catch (error) {
-      Notification.error("something went wrong");
+      Notification.error(
+        translation("noti-chat-tags-catch", "Something went wrong"),
+      );
     }
   };
 

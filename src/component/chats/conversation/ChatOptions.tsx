@@ -12,6 +12,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useAuthStore } from "../../../store/auth/auth.store";
+import { useTranslation } from "../../../store/language/language.store";
 
 interface CHATOPTIONSPROPS {
   children: ReactNode;
@@ -21,6 +22,7 @@ interface CHATOPTIONSPROPS {
 export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
   const { setTrigger } = useTriggerStore((state) => state);
   const { userDetails, targetUserDetails } = useAuthStore((state) => state);
+  const { translation } = useTranslation();
 
   const own_user_id = targetUserDetails?.user_id ?? userDetails?.username;
   const isMe = own_user_id === msg.created_by;
@@ -74,10 +76,14 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
         document.body.removeChild(textarea);
       }
 
-      Notification.success("Content copied");
+      Notification.success(
+        translation("noti-msg-copy-success", "Content copied"),
+      );
     } catch (error) {
       console.error("Failed to copy text:", error);
-      Notification.error("Failed to copy content");
+      Notification.error(
+        translation("noti-msg-copy-fail", "Failed to copy content"),
+      );
     }
   };
 
@@ -134,29 +140,29 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
       <Menu.Target>{children}</Menu.Target>
 
       <Menu.Dropdown>
-        <Menu.Label>Actions</Menu.Label>
+        <Menu.Label>{translation("CO-label", "Actions")}</Menu.Label>
         <Menu.Item
           disabled={optionConditions.edit()}
           onClick={onEdit}
           leftSection={<IconPencil size={14} />}
         >
-          Edit
+          {translation("CO-edit", "Edit")}
         </Menu.Item>
         <Menu.Item
           onClick={onReply}
           leftSection={<IconArrowForward size={14} />}
         >
-          Reply
+          {translation("CO-reply", "Reply")}
         </Menu.Item>
         <Menu.Item
           disabled={optionConditions.copy()}
           onClick={onCopy}
           leftSection={<IconCopy size={14} />}
         >
-          Copy Content
+          {translation("CO-cc", "Copy Content")}
         </Menu.Item>
         <Menu.Item onClick={onTag} leftSection={<IconStar size={14} />}>
-          Add Tags
+          {translation("CO-tag", "Add Tags")}
         </Menu.Item>
         <Menu.Divider />
         <Menu.Item
@@ -165,7 +171,7 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
           color="red"
           leftSection={<IconTrash size={14} />}
         >
-          Delete
+          {translation("CO-delete", "Delete")}
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>

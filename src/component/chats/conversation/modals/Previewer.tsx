@@ -3,6 +3,7 @@ import { useTriggerStore } from "../../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../../utils/constant";
 import { Carousel } from "@mantine/carousel";
 import { useExtentionMediaProvider } from "../../../../hooks/useExtentionMediaProvider";
+import { useTranslation } from "../../../../store/language/language.store";
 
 function Previewer() {
   const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
@@ -10,6 +11,7 @@ function Previewer() {
   );
 
   const getMediaType = useExtentionMediaProvider();
+  const { translation } = useTranslation();
 
   const onClose = () => {
     resetTrigger();
@@ -19,7 +21,7 @@ function Previewer() {
     <Modal
       opened={trigger === TRIGGERS.previewMedia}
       onClose={onClose}
-      title="Media Previewer"
+      title={translation("modal-preview-title", "Media Previewer")}
       size="100%"
       centered
     >

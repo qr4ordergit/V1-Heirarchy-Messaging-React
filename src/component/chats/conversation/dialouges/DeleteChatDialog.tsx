@@ -8,6 +8,7 @@ import { useTransition } from "react";
 import { useChatStore } from "../../../../store/chats/chats.store";
 import { useParams } from "react-router";
 import { useAuthStore } from "../../../../store/auth/auth.store";
+import { useTranslation } from "../../../../store/language/language.store";
 
 function DeleteChatDialog() {
   const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
@@ -16,6 +17,7 @@ function DeleteChatDialog() {
   const { popChat } = useChatStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
   const { targetUserDetails } = useAuthStore((state) => state);
+  const { translation } = useTranslation();
 
   const isGroup = chatId?.includes("group");
 
@@ -73,7 +75,7 @@ function DeleteChatDialog() {
       position={{ bottom: 20, right: 20 }}
     >
       <Text size="sm" mb="xs" fw={500}>
-        Are you sure you want to delete?
+        {translation("modal-delete-title", "Are you sure you want to delete?")}
       </Text>
 
       <Group align="flex-end">
@@ -83,10 +85,10 @@ function DeleteChatDialog() {
           onClick={() => DeleteFn(onDelete)}
           color="red"
         >
-          Delete
+          {translation("modal-delete-btn1", "Delete")}
         </Button>
         <Button disabled={deleteLoader} onClick={onClose} color="gray">
-          Cancel
+          {translation("modal-delete-btn2", "Cancel")}
         </Button>
       </Group>
     </Dialog>

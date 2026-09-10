@@ -9,11 +9,13 @@ import { ENDPOINTS } from "../../../../api/endpoints";
 import { useAuthStore } from "../../../../store/auth/auth.store";
 import { useParams } from "react-router";
 import { Notification } from "../../../../utils/notification";
+import { useTranslation } from "../../../../store/language/language.store";
 
 function ExportChatModal() {
   const { trigger, resetTrigger } = useTriggerStore((state) => state);
   const { target_user } = useAuthStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
+  const { translation } = useTranslation();
 
   const [dateRange, setDateRange] = useState<[string | null, string | null]>([
     null,
@@ -76,13 +78,7 @@ function ExportChatModal() {
 
   const reportStatusChecker = async () => {
     try {
-      if (!chatId) {
-        setStatus("ideal");
-        return;
-      }
-
-      if (!reportId) {
-        Notification.error("Report id not available");
+      if (!chatId || !reportId) {
         setStatus("ideal");
         return;
       }
@@ -145,13 +141,13 @@ function ExportChatModal() {
       case "queued":
         setTimeout(() => {
           reportStatusChecker();
-        }, 2000);
+        }, 4000);
         break;
 
       case "proccessing":
         setTimeout(() => {
           reportStatusChecker();
-        }, 2000);
+        }, 4000);
         break;
 
       case "completed":
@@ -172,16 +168,16 @@ function ExportChatModal() {
   const statusProvider = () => {
     switch (status) {
       case "start":
-        return "Exporting chat...";
+        return translation("modal-export-btn1", "Exporting chat...");
       case "queued":
-        return "Preparing for download...";
+        return translation("modal-export-btn2", "Preparing for download...");
       case "proccessing":
-        return "Processing to download...";
+        return translation("modal-export-btn3", "Processing to download...");
       case "repeat":
-        return "Preparing for download...";
+        return translation("modal-export-btn2", "Preparing for download...");
 
       default:
-        return "Submit";
+        return translation("modal-export-btn4", "Submit");
     }
   };
 
@@ -193,13 +189,13 @@ function ExportChatModal() {
     <Modal
       opened={trigger === TRIGGERS.exportChatModal}
       onClose={onClose}
-      title="Export Chat"
+      title={translation("modal-export-title", "Export Chat")}
     >
-      <Fieldset legend="Generate report">
+      <Fieldset legend={translation("modal-export-legend", "Generate report")}>
         <DatePickerInput
           type="range"
-          label="Pick dates range"
-          placeholder="Pick dates range"
+          label={translation("modal-export-label", "Pick dates range")}
+          placeholder={translation("modal-export-ph", "Pick dates range")}
           value={dateRange}
           onChange={setDateRange}
           maxDate={dayjs().toDate()}

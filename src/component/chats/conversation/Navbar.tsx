@@ -14,6 +14,7 @@ import { useGroupListStore } from "../../../store/groups/group.list.store";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../utils/constant";
 import { useTagStore } from "../../../store/tags/tags.store";
+import { useTranslation } from "../../../store/language/language.store";
 
 interface CURRENT_CHAT {
   display_name?: string;
@@ -29,6 +30,7 @@ function Navbar() {
     (state) => state,
   );
   const { tagsWithCategories } = useTagStore((state) => state);
+  const { translation } = useTranslation();
 
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
@@ -128,20 +130,22 @@ function Navbar() {
                 onClick={onSearchByText}
                 leftSection={<IconTextRecognition size={14} />}
               >
-                By Text
+                {translation("NAV-find-byText", "By Text")}
               </Menu.Item>
 
               <Menu.Sub openDelay={120} closeDelay={150}>
                 <Menu.Sub.Target>
                   <Menu.Sub.Item leftSection={<IconStar size={14} />}>
-                    By tags
+                    {translation("NAV-find-byTags", "By Tags")}
                   </Menu.Sub.Item>
                 </Menu.Sub.Target>
 
                 <Menu.Sub.Dropdown>
                   {tagsWithCategories.group?.length ? (
                     <>
-                      <Menu.Label>Select group tag</Menu.Label>
+                      <Menu.Label>
+                        {translation("NAV-find-Label1", "Select group tag")}
+                      </Menu.Label>
                       <ScrollArea
                         h={Math.min(tagsWithCategories.group?.length * 36, 250)}
                         scrollbarSize={6}
@@ -158,7 +162,9 @@ function Navbar() {
                   )}
                   {tagsWithCategories.user?.length ? (
                     <>
-                      <Menu.Label>Select your tag</Menu.Label>
+                      <Menu.Label>
+                        {translation("NAV-find-Label2", "Select your tag")}
+                      </Menu.Label>
                       <ScrollArea
                         h={Math.min(tagsWithCategories.user?.length * 36, 250)}
                         scrollbarSize={6}
@@ -196,7 +202,7 @@ function Navbar() {
                 onClick={onExportChat}
                 leftSection={<IconProgressDown size={14} />}
               >
-                Export chat
+                {translation("NAV-export", "Export chat")}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>

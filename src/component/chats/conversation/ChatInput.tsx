@@ -21,6 +21,7 @@ import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../utils/constant";
 import { useAuthStore } from "../../../store/auth/auth.store";
 import { E2EHelper } from "../../../utils/e2eHelper";
+import { useTranslation } from "../../../store/language/language.store";
 
 interface SUBMIT_PAYLOAD {
   [key: string]: unknown;
@@ -54,6 +55,7 @@ export default function ChatInput() {
   const { trigger, triggerPayload, resetTrigger, setTrigger } =
     useTriggerStore();
   const { userDetails, target_user } = useAuthStore((state) => state);
+  const { translation } = useTranslation();
 
   const own_user_id = target_user ?? userDetails?.username;
   const isReply = trigger === TRIGGERS.reply;
@@ -102,7 +104,9 @@ export default function ChatInput() {
       const response = await api.post(endpoint, payload);
 
       if (!response.data?.success) {
-        Notification.error("Something went wrong");
+        Notification.error(
+          translation("noti-msg-send-fail", "Failed to send message"),
+        );
         return;
       }
       let finalMsg = response.data?.data;
@@ -114,7 +118,9 @@ export default function ChatInput() {
       setMessage("");
     } catch (error) {
       console.log(error);
-      Notification.error("Something went wrong");
+      Notification.error(
+        translation("noti-msg-send-catch", "Something went wrong"),
+      );
     }
   };
 
@@ -288,7 +294,9 @@ export default function ChatInput() {
       const response = await api.post(endpoint, payload);
 
       if (!response.data?.success) {
-        Notification.error("Something went wrong");
+        Notification.error(
+          translation("noti-msg-media-send-fail", "Failed to send message"),
+        );
         return;
       }
 
@@ -443,7 +451,11 @@ export default function ChatInput() {
           {files.length > 0 && (
             <Group gap={6} mb={6} px={4}>
               <Badge variant="light" leftSection={<IconPaperclip size={13} />}>
-                {files.length} {files.length === 1 ? "file" : "files"} selected
+                {files.length}{" "}
+                {files.length === 1
+                  ? translation("fileBadge1", "FILE")
+                  : translation("fileBadge2", "FILES")}{" "}
+                {translation("fileBadge3", "SELECTED")}
               </Badge>
 
               {files.map((file, index) => (
@@ -467,7 +479,7 @@ export default function ChatInput() {
           )}
 
           <TextInput
-            placeholder="Type a message..."
+            placeholder={translation("phMsgInputBox", "Type a message...")}
             variant="unstyled"
             styles={{
               input: {
