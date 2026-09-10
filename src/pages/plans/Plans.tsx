@@ -25,6 +25,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 import { useAuthStore } from "../../store/auth/auth.store";
+import { useTranslation } from "../../store/language/language.store";
 import {
   getAccountPackagesApi,
   assignAccountPackageApi,
@@ -38,6 +39,7 @@ const Plans = () => {
   const navigate = useNavigate();
   const userDetails = useAuthStore((state) => state.userDetails);
   const setUserDetails = useAuthStore((state) => state.setUserDetails);
+  const { translation } = useTranslation();
 
   const [packages, setPackages] = useState<PackageItem[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(true);
@@ -110,14 +112,18 @@ const Plans = () => {
     <div className="w-full min-h-[calc(100vh-100px)] py-6 px-4 bg-gray-50/50">
       <Container size="lg">
         <div className="flex justify-start mb-4">
-          <Tooltip label="Go back" position="right" withArrow>
+          <Tooltip
+            label={translation("plans.tooltipGoBack", "Go back")}
+            position="right"
+            withArrow
+          >
             <ActionIcon
               variant="default"
               size="lg"
               radius="md"
               className="cursor-pointer border-gray-200 shadow-xs hover:bg-gray-100 transition-colors"
               onClick={() => navigate(-1)}
-              aria-label="Back"
+              aria-label={translation("plans.tooltipGoBack", "Go back")}
             >
               <IconArrowLeft size={18} />
             </ActionIcon>
@@ -132,14 +138,19 @@ const Plans = () => {
             radius="sm"
             leftSection={<IconSparkles size={14} />}
           >
-            Subscription Plans
+            {translation("plans.badgeSubscriptionPlans", "Subscription Plans")}
           </Badge>
           <Title order={2} ta="center" className="text-gray-900 tracking-tight">
-            Choose the Perfect Plan for Your Hub
+            {translation(
+              "plans.titleChoosePlan",
+              "Choose the Perfect Plan for Your Hub",
+            )}
           </Title>
           <Text c="dimmed" size="sm" ta="center" maw={540}>
-            Scale your messenger hub limits. Upgrade anytime to create more
-            users and custom unique handles.
+            {translation(
+              "plans.txtChoosePlanDesc",
+              "Scale your messenger hub limits. Upgrade anytime to create more users and custom unique handles.",
+            )}
           </Text>
         </Stack>
 
@@ -147,7 +158,10 @@ const Plans = () => {
           <div className="flex flex-col justify-center items-center py-20 gap-3">
             <Loader size="md" color="indigo" />
             <Text size="sm" c="dimmed">
-              Loading available subscription packages...
+              {translation(
+                "plans.txtLoadingPackages",
+                "Loading available subscription packages...",
+              )}
             </Text>
           </div>
         ) : packages.length > 0 ? (
@@ -180,7 +194,10 @@ const Plans = () => {
                           size="sm"
                           radius="sm"
                         >
-                          Current Plan
+                          {translation(
+                            "plans.badgeCurrentPlan",
+                            "Current Plan",
+                          )}
                         </Badge>
                       ) : (
                         <Badge
@@ -189,15 +206,21 @@ const Plans = () => {
                           size="sm"
                           radius="sm"
                         >
-                          ID: {pkg._id}
+                          {translation("plans.badgeId", "ID:")} {pkg._id}
                         </Badge>
                       )}
                     </Group>
 
                     <Text size="xs" c="dimmed">
                       {pkg.custom_user_creation_limit > 0
-                        ? "Ideal for growing teams with custom usernames"
-                        : "Essential limits for light messenger usage"}
+                        ? translation(
+                            "plans.txtIdealGrowingTeams",
+                            "Ideal for growing teams with custom usernames",
+                          )
+                        : translation(
+                            "plans.txtEssentialLimits",
+                            "Essential limits for light messenger usage",
+                          )}
                     </Text>
 
                     <Paper
@@ -218,7 +241,10 @@ const Plans = () => {
                               <IconUsers size={14} />
                             </ThemeIcon>
                             <Text size="xs" fw={500} c="dimmed">
-                              Total Users
+                              {translation(
+                                "plans.txtTotalUsers",
+                                "Total Users",
+                              )}
                             </Text>
                           </Group>
                           <Text size="sm" fw={700} className="text-gray-800">
@@ -237,7 +263,10 @@ const Plans = () => {
                               <IconUserCheck size={14} />
                             </ThemeIcon>
                             <Text size="xs" fw={500} c="dimmed">
-                              Custom Users
+                              {translation(
+                                "plans.txtCustomUsers",
+                                "Custom Users",
+                              )}
                             </Text>
                           </Group>
                           <Text size="sm" fw={700} className="text-gray-800">
@@ -251,19 +280,28 @@ const Plans = () => {
                       <Group gap={6}>
                         <IconCheck size={16} className="text-green-600" />
                         <Text size="xs" className="text-gray-700">
-                          Full Hub functionality
+                          {translation(
+                            "plans.txtFullHubFunctionality",
+                            "Full Hub functionality",
+                          )}
                         </Text>
                       </Group>
                       <Group gap={6}>
                         <IconCheck size={16} className="text-green-600" />
                         <Text size="xs" className="text-gray-700">
-                          End-to-end encryption
+                          {translation(
+                            "plans.txtE2eEncryption",
+                            "End-to-end encryption",
+                          )}
                         </Text>
                       </Group>
                       <Group gap={6}>
                         <IconCheck size={16} className="text-green-600" />
                         <Text size="xs" className="text-gray-700">
-                          Group & DM messaging
+                          {translation(
+                            "plans.txtGroupDmMessaging",
+                            "Group & DM messaging",
+                          )}
                         </Text>
                       </Group>
                     </Stack>
@@ -288,10 +326,10 @@ const Plans = () => {
                     onClick={() => handleSelectPackage(pkg)}
                   >
                     {isSelected
-                      ? "Active Plan"
+                      ? translation("plans.btnActivePlan", "Active Plan")
                       : localIsPaid
-                        ? "Switch to Plan"
-                        : "Choose Plan"}
+                        ? translation("plans.btnSwitchToPlan", "Switch to Plan")
+                        : translation("plans.btnChoosePlan", "Choose Plan")}
                   </Button>
                 </Card>
               );
@@ -300,7 +338,10 @@ const Plans = () => {
         ) : (
           <div className="py-20 text-center">
             <Text c="dimmed" size="sm">
-              No packages currently available. Please check back later.
+              {translation(
+                "plans.txtNoPackagesAvailable",
+                "No packages currently available. Please check back later.",
+              )}
             </Text>
           </div>
         )}

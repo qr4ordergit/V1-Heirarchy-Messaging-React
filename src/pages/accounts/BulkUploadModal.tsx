@@ -1,5 +1,6 @@
 import { Modal } from "@mantine/core";
 import { IDLE_BULK_JOB, type BulkJobState } from "../../api/accountApi";
+import { useTranslation } from "../../store/language/language.store";
 import BulkUploadPanel from "./BulkUploadPanel";
 
 interface BulkUploadModalProps {
@@ -15,11 +16,13 @@ export default function BulkUploadModal({
   job,
   onUpload,
 }: BulkUploadModalProps) {
+  const { translation } = useTranslation();
+
   return (
     <Modal
       opened={opened}
       onClose={onClose}
-      title="Bulk Upload Accounts"
+      title={translation("bulk_upload.titleModal", "Bulk Upload Accounts")}
       centered
       radius="md"
       size="lg"

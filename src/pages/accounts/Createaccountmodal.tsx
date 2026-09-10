@@ -24,6 +24,7 @@ import {
 } from "../../api/accountApi";
 import { suggestUsername } from "../../api/authApi";
 import { useAuthStore } from "../../store/auth/auth.store";
+import { useTranslation } from "../../store/language/language.store";
 import { COUNTRY_CODES } from "../../utils/constant";
 import classes from "./Accounts.module.css";
 import BulkUploadPanel from "./BulkUploadPanel";
@@ -83,6 +84,7 @@ export default function CreateAccountModal({
   onBulkUpload,
   onDiscardBulkJob,
 }: CreateAccountModalProps) {
+  const { translation } = useTranslation();
   const userDetails = useAuthStore((state) => state.userDetails);
 
   const [mode, setMode] = useState<AddAccountMode>("single");
@@ -125,13 +127,21 @@ export default function CreateAccountModal({
       setUsernameSuggestions(result.suggestions ?? []);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not check username.";
+        err instanceof Error
+          ? err.message
+          : translation(
+              "create_account_modal.errCouldNotCheckUsername",
+              "Could not check username.",
+            );
 
       setUsernameSuggestions([]);
 
       notifications.show({
         color: "red",
-        title: "Username unavailable",
+        title: translation(
+          "create_account_modal.ntfyUsernameUnavailableTitle",
+          "Username unavailable",
+        ),
         message,
       });
     } finally {
@@ -168,37 +178,70 @@ export default function CreateAccountModal({
     const errors: NewAccountErrors = {};
     if (form.identifierType === "username") {
       if (!form.username.trim()) {
-        errors.username = "Username is required";
+        errors.username = translation(
+          "create_account_modal.errUsernameRequired",
+          "Username is required",
+        );
       } else if (!usernameVerified) {
-        errors.username = "Please select a suggested username";
+        errors.username = translation(
+          "create_account_modal.errSelectSuggestedUsername",
+          "Please select a suggested username",
+        );
       }
     }
     if (form.identifierType === "email") {
       if (!form.email.trim()) {
-        errors.email = "Email is required";
+        errors.email = translation(
+          "create_account_modal.errEmailRequired",
+          "Email is required",
+        );
       } else if (!/^\S+@\S+\.\S+$/.test(form.email)) {
-        errors.email = "Enter a valid email";
+        errors.email = translation(
+          "create_account_modal.errEmailInvalid",
+          "Enter a valid email",
+        );
       }
     }
     if (form.identifierType === "phone") {
       const digits = form.phone.trim();
       if (!digits) {
-        errors.phone = "Phone number is required";
+        errors.phone = translation(
+          "create_account_modal.errPhoneRequired",
+          "Phone number is required",
+        );
       } else if (digits.length < 7) {
-        errors.phone = "Phone number is too short";
+        errors.phone = translation(
+          "create_account_modal.errPhoneTooShort",
+          "Phone number is too short",
+        );
       } else if (digits.length > 12) {
-        errors.phone = "Phone number is too long";
+        errors.phone = translation(
+          "create_account_modal.errPhoneTooLong",
+          "Phone number is too long",
+        );
       }
     }
     if (!form.password) {
-      errors.password = "Password is required";
+      errors.password = translation(
+        "create_account_modal.errPasswordRequired",
+        "Password is required",
+      );
     } else if (form.password.length < 8) {
-      errors.password = "Password must be at least 8 characters";
+      errors.password = translation(
+        "create_account_modal.errPasswordMinLength",
+        "Password must be at least 8 characters",
+      );
     }
     if (!form.confirmPassword) {
-      errors.confirmPassword = "Please confirm the password";
+      errors.confirmPassword = translation(
+        "create_account_modal.errConfirmPasswordRequired",
+        "Please confirm the password",
+      );
     } else if (form.confirmPassword !== form.password) {
-      errors.confirmPassword = "Passwords do not match";
+      errors.confirmPassword = translation(
+        "create_account_modal.errPasswordMismatch",
+        "Passwords do not match",
+      );
     }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -243,26 +286,47 @@ export default function CreateAccountModal({
         setAccountStep("verify");
         notifications.show({
           color: "blue",
-          title: "Verification code sent",
+          title: translation(
+            "create_account_modal.ntfyVerificationCodeSentTitle",
+            "Verification code sent",
+          ),
           message:
-            response.message || "Enter the code sent to the phone number.",
+            response.message ||
+            translation(
+              "create_account_modal.txtEnterCodeSentToPhone",
+              "Enter the code sent to the phone number.",
+            ),
         });
       } else {
         handleClose();
         await onAccountCreated();
         notifications.show({
           color: "teal",
-          title: "Account added",
-          message: "The new account was created successfully.",
+          title: translation(
+            "create_account_modal.ntfyAccountAddedTitle",
+            "Account added",
+          ),
+          message: translation(
+            "create_account_modal.ntfyAccountCreatedMsg",
+            "The new account was created successfully.",
+          ),
         });
       }
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not create account.";
+        err instanceof Error
+          ? err.message
+          : translation(
+              "create_account_modal.errCouldNotCreateAccount",
+              "Could not create account.",
+            );
       setSubmitError(message);
       notifications.show({
         color: "red",
-        title: "Couldn't add account",
+        title: translation(
+          "create_account_modal.ntfyCouldntAddAccountTitle",
+          "Couldn't add account",
+        ),
         message,
       });
     } finally {
@@ -274,7 +338,12 @@ export default function CreateAccountModal({
     setAccountOtpError(null);
 
     if (accountOtp.length < 6) {
-      setAccountOtpError("Enter the 6-digit code sent to the phone number");
+      setAccountOtpError(
+        translation(
+          "create_account_modal.errOtpRequiredPhone",
+          "Enter the 6-digit code sent to the phone number",
+        ),
+      );
       return;
     }
 
@@ -292,23 +361,39 @@ export default function CreateAccountModal({
         await onAccountCreated();
         notifications.show({
           color: "teal",
-          title: "Account added",
-          message: "The new account was verified and created successfully.",
+          title: translation(
+            "create_account_modal.ntfyAccountAddedTitle",
+            "Account added",
+          ),
+          message: translation(
+            "create_account_modal.ntfyAccountVerifiedCreatedMsg",
+            "The new account was verified and created successfully.",
+          ),
         });
       } else {
         setAccountOtpError(
-          response.message || "Verification failed. Please try again.",
+          response.message ||
+            translation(
+              "create_account_modal.errVerificationFailedGeneric",
+              "Verification failed. Please try again.",
+            ),
         );
       }
     } catch (err) {
       const message =
         err instanceof Error
           ? err.message
-          : "Verification failed. Please try again.";
+          : translation(
+              "create_account_modal.errVerificationFailedGeneric",
+              "Verification failed. Please try again.",
+            );
       setAccountOtpError(message);
       notifications.show({
         color: "red",
-        title: "Verification failed",
+        title: translation(
+          "create_account_modal.alertVerificationFailedTitle",
+          "Verification failed",
+        ),
         message,
       });
     } finally {
@@ -333,16 +418,32 @@ export default function CreateAccountModal({
       setAccountOtp("");
       notifications.show({
         color: "blue",
-        title: "Verification code resent",
-        message: response.message || "A new code has been sent.",
+        title: translation(
+          "create_account_modal.ntfyVerificationCodeResentTitle",
+          "Verification code resent",
+        ),
+        message:
+          response.message ||
+          translation(
+            "create_account_modal.txtNewCodeSent",
+            "A new code has been sent.",
+          ),
       });
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not resend the code.";
+        err instanceof Error
+          ? err.message
+          : translation(
+              "create_account_modal.errCouldNotResendCode",
+              "Could not resend the code.",
+            );
       setAccountOtpError(message);
       notifications.show({
         color: "red",
-        title: "Couldn't resend code",
+        title: translation(
+          "create_account_modal.ntfyCouldntResendCodeTitle",
+          "Couldn't resend code",
+        ),
         message,
       });
     } finally {
@@ -361,10 +462,19 @@ export default function CreateAccountModal({
         <Group justify="space-between" wrap="nowrap" style={{ width: "100%" }}>
           <Text fw={700} size="lg">
             {accountStep === "verify"
-              ? "Verify Phone Number"
+              ? translation(
+                  "create_account_modal.titleVerifyPhoneNumber",
+                  "Verify Phone Number",
+                )
               : mode === "bulk"
-                ? "Bulk Upload"
-                : "Create Account"}
+                ? translation(
+                    "create_account_modal.titleBulkUpload",
+                    "Bulk Upload",
+                  )
+                : translation(
+                    "create_account_modal.titleCreateAccount",
+                    "Create Account",
+                  )}
           </Text>
 
           {accountStep === "form" && (
@@ -386,7 +496,15 @@ export default function CreateAccountModal({
                 marginLeft: "300px",
               }}
             >
-              {mode === "bulk" ? "Single Account" : "Bulk Upload"}
+              {mode === "bulk"
+                ? translation(
+                    "create_account_modal.btnSingleAccount",
+                    "Single Account",
+                  )
+                : translation(
+                    "create_account_modal.titleBulkUpload",
+                    "Bulk Upload",
+                  )}
             </Text>
           )}
         </Group>
@@ -412,13 +530,23 @@ export default function CreateAccountModal({
       ) : accountStep === "verify" ? (
         <Stack gap="md" align="center">
           {accountOtpError && (
-            <Alert color="red" title="Verification failed" w="100%">
+            <Alert
+              color="red"
+              title={translation(
+                "create_account_modal.alertVerificationFailedTitle",
+                "Verification failed",
+              )}
+              w="100%"
+            >
               {accountOtpError}
             </Alert>
           )}
 
           <Text c="dimmed" ta="center" size="sm">
-            We sent a code to{" "}
+            {translation(
+              "create_account_modal.txtWeSentCodeTo",
+              "We sent a code to",
+            )}{" "}
             <strong>
               {pendingPhone !== ""
                 ? withCountryCode(pendingPhone)
@@ -442,14 +570,14 @@ export default function CreateAccountModal({
                 setAccountOtpError(null);
               }}
             >
-              Back
+              {translation("create_account_modal.btnBack", "Back")}
             </Button>
             <Button
               variant="subtle"
               loading={resendingAccountOtp}
               onClick={handleResendAccountOtp}
             >
-              Resend Code
+              {translation("create_account_modal.btnResendCode", "Resend Code")}
             </Button>
             <Button
               radius="xl"
@@ -457,29 +585,50 @@ export default function CreateAccountModal({
               loading={verifyingAccountOtp}
               onClick={handleVerifyAccountOtp}
             >
-              Verify & Add Account
+              {translation(
+                "create_account_modal.btnVerifyAndAddAccount",
+                "Verify & Add Account",
+              )}
             </Button>
           </Group>
         </Stack>
       ) : (
         <Stack gap="md">
           {submitError && (
-            <Alert color="red" title="Couldn't add account">
+            <Alert
+              color="red"
+              title={translation(
+                "create_account_modal.ntfyCouldntAddAccountTitle",
+                "Couldn't add account",
+              )}
+            >
               {submitError}
             </Alert>
           )}
 
           <div>
             <Text size="xs" fw={600} tt="uppercase" c="dimmed" mb={6}>
-              Add via
+              {translation("create_account_modal.txtAddVia", "Add via")}
             </Text>
             <SegmentedControl
               fullWidth
               value={form.identifierType}
               onChange={handleIdentifierChange}
               data={[
-                { label: "Username", value: "username" },
-                { label: "Phone", value: "phone" },
+                {
+                  label: translation(
+                    "create_account_modal.labelUsername",
+                    "Username",
+                  ),
+                  value: "username",
+                },
+                {
+                  label: translation(
+                    "create_account_modal.labelPhone",
+                    "Phone",
+                  ),
+                  value: "phone",
+                },
               ]}
             />
           </div>
@@ -487,9 +636,15 @@ export default function CreateAccountModal({
           {form.identifierType === "username" && (
             <div>
               <TextInput
-                label="Username"
+                label={translation(
+                  "create_account_modal.labelUsername",
+                  "Username",
+                )}
                 classNames={{ label: classes.fieldLabel }}
-                placeholder="Enter username"
+                placeholder={translation(
+                  "create_account_modal.placeholderUsername",
+                  "Enter username",
+                )}
                 value={form.username}
                 onChange={(e) => handleUsernameChange(e.target.value)}
                 error={formErrors.username}
@@ -505,7 +660,7 @@ export default function CreateAccountModal({
                         fetchUsernameSuggestionsOnce(form.username)
                       }
                     >
-                      Verify
+                      {translation("create_account_modal.btnVerify", "Verify")}
                     </Button>
                   )
                 }
@@ -516,7 +671,10 @@ export default function CreateAccountModal({
                 <Stack gap={4} mt={6}>
                   {usernameSuggestions && (
                     <Text size="xs" c="dimmed">
-                      {"Choose one of the suggested usernames below"}
+                      {translation(
+                        "create_account_modal.txtChooseSuggestedUsername",
+                        "Choose one of the suggested usernames below",
+                      )}
                     </Text>
                   )}
                   <Group gap={6}>
@@ -545,7 +703,7 @@ export default function CreateAccountModal({
           {form.identifierType === "phone" && (
             <Group gap={8} wrap="nowrap" align="flex-start">
               <Select
-                label="Code"
+                label={translation("create_account_modal.labelCode", "Code")}
                 classNames={{ label: classes.fieldLabel }}
                 data={COUNTRY_CODES}
                 value={form.countryCode}
@@ -556,9 +714,15 @@ export default function CreateAccountModal({
                 styles={{ input: { fontSize: 12 } }}
               />
               <TextInput
-                label="Phone Number"
+                label={translation(
+                  "create_account_modal.labelPhoneNumber",
+                  "Phone Number",
+                )}
                 classNames={{ label: classes.fieldLabel }}
-                placeholder="Enter phone number"
+                placeholder={translation(
+                  "create_account_modal.placeholderPhoneNumber",
+                  "Enter phone number",
+                )}
                 value={form.phone}
                 onChange={(e) =>
                   setField("phone")(
@@ -572,36 +736,66 @@ export default function CreateAccountModal({
           )}
 
           <PasswordInput
-            label="Password"
+            label={translation(
+              "create_account_modal.labelPassword",
+              "Password",
+            )}
             classNames={{ label: classes.fieldLabel }}
-            placeholder="Enter password"
+            placeholder={translation(
+              "create_account_modal.placeholderPassword",
+              "Enter password",
+            )}
             value={form.password}
             onChange={(e) => setField("password")(e.target.value)}
             error={formErrors.password}
           />
 
           <PasswordInput
-            label="Confirm Password"
+            label={translation(
+              "create_account_modal.labelConfirmPassword",
+              "Confirm Password",
+            )}
             classNames={{ label: classes.fieldLabel }}
-            placeholder="Re-enter password"
+            placeholder={translation(
+              "create_account_modal.placeholderConfirmPassword",
+              "Re-enter password",
+            )}
             value={form.confirmPassword}
             onChange={(e) => setField("confirmPassword")(e.target.value)}
             error={formErrors.confirmPassword}
           />
           <TextInput
-            label="Display Name"
-            description="Optional. Shown instead of the username when set."
+            label={translation(
+              "create_account_modal.labelDisplayName",
+              "Display Name",
+            )}
+            description={translation(
+              "create_account_modal.descDisplayNameOptional",
+              "Optional. Shown instead of the username when set.",
+            )}
             classNames={{ label: classes.fieldLabel }}
-            placeholder="Enter display name"
+            placeholder={translation(
+              "create_account_modal.placeholderDisplayName",
+              "Enter display name",
+            )}
             value={form.displayName}
             onChange={(e) => setField("displayName")(e.target.value)}
           />
 
           <Textarea
-            label="Description / Designation "
-            description="Optional. A short note about this account."
+            label={translation(
+              "create_account_modal.labelDescriptionDesignation",
+              "Description / Designation ",
+            )}
+            description={translation(
+              "create_account_modal.descDescriptionOptional",
+              "Optional. A short note about this account.",
+            )}
             classNames={{ label: classes.fieldLabel }}
-            placeholder="Enter description"
+            placeholder={translation(
+              "create_account_modal.placeholderDescription",
+              "Enter description",
+            )}
             value={form.description}
             onChange={(e) => setField("description")(e.target.value)}
             autosize
@@ -610,7 +804,7 @@ export default function CreateAccountModal({
           />
           <Group justify="flex-end" mt="xs">
             <Button variant="subtle" onClick={handleClose}>
-              Cancel
+              {translation("create_account_modal.btnCancel", "Cancel")}
             </Button>
             <Button
               radius="xl"
@@ -619,7 +813,7 @@ export default function CreateAccountModal({
               disabled={form.identifierType === "username" && !usernameVerified}
               onClick={handleSubmit}
             >
-              Add Account
+              {translation("create_account_modal.btnAddAccount", "Add Account")}
             </Button>
           </Group>
         </Stack>

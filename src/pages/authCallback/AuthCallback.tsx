@@ -5,7 +5,7 @@ import { Alert, Center, Loader, Stack, Text } from "@mantine/core";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { fetchUserDetails } from "../../api/userApi";
 import { ROUTES } from "../../router/routes";
-
+import { useTranslation } from "../../store/language/language.store";
 export default function AuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -14,7 +14,7 @@ export default function AuthCallback() {
   const setUserDetails = useAuthStore((state) => state.setUserDetails);
 
   const [error, setError] = useState<string | null>(null);
-
+  const { translation } = useTranslation();
   useEffect(() => {
     const accessToken = searchParams.get("access_token");
     const idToken = searchParams.get("id_token");
@@ -70,7 +70,7 @@ export default function AuthCallback() {
         <Loader />
 
         <Text c="dimmed" size="sm">
-          Signing you in...
+          {translation("signin.title", "Signing you in...")}
         </Text>
       </Stack>
     </Center>

@@ -15,6 +15,7 @@ import {
 import { signup, verifyOtp } from "../../api/authApi";
 import { COGNITO_LOGIN_URL } from "../../config/cognito";
 import HubOrbit from "../../component/hubOrbit/HubOrbit";
+import { useTranslation } from "../../store/language/language.store";
 import classes from "./Signup.module.css";
 
 const GROUP_NAME = "Hub";
@@ -34,6 +35,8 @@ interface SignupFormErrors {
 type Step = "signup" | "verify";
 
 export default function Signup() {
+  const { translation } = useTranslation();
+
   const [step, setStep] = useState<Step>("signup");
   const [values, setValues] = useState<SignupFormValues>({
     email: "",
@@ -59,19 +62,34 @@ export default function Signup() {
     const newErrors: SignupFormErrors = {};
 
     if (!values.email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = translation(
+        "signup.errEmailRequired",
+        "Email is required",
+      );
     } else if (!/^\S+@\S+\.\S+$/.test(values.email)) {
-      newErrors.email = "Enter a valid email";
+      newErrors.email = translation(
+        "signup.errEmailInvalid",
+        "Enter a valid email",
+      );
     }
 
     if (!values.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = translation(
+        "signup.errPasswordRequired",
+        "Password is required",
+      );
     } else if (values.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+      newErrors.password = translation(
+        "signup.errPasswordMinLength",
+        "Password must be at least 8 characters",
+      );
     }
 
     if (values.confirmPassword !== values.password) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = translation(
+        "signup.errPasswordMismatch",
+        "Passwords do not match",
+      );
     }
 
     setErrors(newErrors);
@@ -93,13 +111,20 @@ export default function Signup() {
         group_name: GROUP_NAME,
       });
 
-      setInfoMessage(`${response.message} to your email ${values.email}.`);
+      setInfoMessage(
+        `${response.message} ${translation("signup.txtToYourEmail", "to your email")} ${values.email}.`,
+      );
       //ssetInfoMessage(`Otp has been sent to your email`);
       setStep("verify");
       // window.location.href = COGNITO_LOGIN_URL;
     } catch (err) {
       setApiError(
-        err instanceof Error ? err.message : "Signup failed. Please try again.",
+        err instanceof Error
+          ? err.message
+          : translation(
+              "signup.errSignupFailedGeneric",
+              "Signup failed. Please try again.",
+            ),
       );
     } finally {
       setSubmitting(false);
@@ -111,7 +136,12 @@ export default function Signup() {
     setOtpError(null);
 
     if (otp.length < 6) {
-      setOtpError("Enter the 6-digit code sent to your email");
+      setOtpError(
+        translation(
+          "signup.errOtpRequired",
+          "Enter the 6-digit code sent to your email",
+        ),
+      );
       return;
     }
 
@@ -123,14 +153,21 @@ export default function Signup() {
         window.location.href = COGNITO_LOGIN_URL;
       } else {
         setOtpError(
-          response.message || "Verification failed. Please try again.",
+          response.message ||
+            translation(
+              "signup.errVerificationFailedGeneric",
+              "Verification failed. Please try again.",
+            ),
         );
       }
     } catch (err) {
       setOtpError(
         err instanceof Error
           ? err.message
-          : "Verification failed. Please try again.",
+          : translation(
+              "signup.errVerificationFailedGeneric",
+              "Verification failed. Please try again.",
+            ),
       );
     } finally {
       setSubmitting(false);
@@ -142,17 +179,22 @@ export default function Signup() {
         <HubOrbit />
 
         <Title order={2} ta="center" className={classes.title} mb={8}>
-          {step === "signup" ? "Create Your Hub" : "Verify your email"}
+          {step === "signup"
+            ? translation("signup.titleCreateHub", "Create Your Hub")
+            : translation("signup.titleVerifyEmail", "Verify your email")}
         </Title>
 
         {step === "signup" ? (
           <Text c="dimmed" ta="center" size="sm" mb="lg">
-            This will be your main account. You can create multiple sub accounts
-            with username, email or phone number.
+            {translation(
+              "signup.txtSignupSubtitle",
+              "This will be your main account. You can create multiple sub accounts with username, email or phone number.",
+            )}
           </Text>
         ) : (
           <Text c="dimmed" ta="center" size="sm" mb="lg">
-            We sent a code to <strong>{values.email}</strong>
+            {translation("signup.txtSentCodeTo", "We sent a code to")}{" "}
+            <strong>{values.email}</strong>
           </Text>
         )}
 
@@ -160,33 +202,51 @@ export default function Signup() {
           <form onSubmit={handleSubmit} noValidate>
             <Stack gap="md">
               {apiError && (
-                <Alert color="red" title="Signup failed">
+                <Alert
+                  color="red"
+                  title={translation(
+                    "signup.alertSignupFailedTitle",
+                    "Signup failed",
+                  )}
+                >
                   {apiError}
                 </Alert>
               )}
 
               <TextInput
-                label="Email"
+                label={translation("signup.labelEmail", "Email")}
                 classNames={{ label: classes.fieldLabel }}
-                placeholder="you@example.com"
+                placeholder={translation(
+                  "signup.placeholderEmail",
+                  "you@example.com",
+                )}
                 value={values.email}
                 onChange={handleChange("email")}
                 error={errors.email}
                 required
               />
               <PasswordInput
-                label="Password"
+                label={translation("signup.labelPassword", "Password")}
                 classNames={{ label: classes.fieldLabel }}
-                placeholder="Your password"
+                placeholder={translation(
+                  "signup.placeholderPassword",
+                  "Your password",
+                )}
                 value={values.password}
                 onChange={handleChange("password")}
                 error={errors.password}
                 required
               />
               <PasswordInput
-                label="Confirm password"
+                label={translation(
+                  "signup.labelConfirmPassword",
+                  "Confirm password",
+                )}
                 classNames={{ label: classes.fieldLabel }}
-                placeholder="Confirm your password"
+                placeholder={translation(
+                  "signup.placeholderConfirmPassword",
+                  "Confirm your password",
+                )}
                 value={values.confirmPassword}
                 onChange={handleChange("confirmPassword")}
                 error={errors.confirmPassword}
@@ -201,13 +261,16 @@ export default function Signup() {
                 variant="gradient"
                 loading={submitting}
               >
-                Create Account
+                {translation("signup.btnCreateAccount", "Create Account")}
               </Button>
 
               <Text ta="center" c="dimmed" size="sm">
-                Already have an account?{" "}
+                {translation(
+                  "signup.txtAlreadyHaveAccount",
+                  "Already have an account?",
+                )}{" "}
                 <Anchor href={COGNITO_LOGIN_URL} size="sm" fw={600}>
-                  Login
+                  {translation("signup.btnLogin", "Login")}
                 </Anchor>
               </Text>
             </Stack>
@@ -216,12 +279,26 @@ export default function Signup() {
           <form onSubmit={handleVerify} noValidate>
             <Stack gap="md" align="center">
               {infoMessage && (
-                <Alert color="blue" title="Check your inbox" w="100%">
+                <Alert
+                  color="blue"
+                  title={translation(
+                    "signup.alertCheckInboxTitle",
+                    "Check your inbox",
+                  )}
+                  w="100%"
+                >
                   {infoMessage}
                 </Alert>
               )}
               {otpError && (
-                <Alert color="red" title="Verification failed" w="100%">
+                <Alert
+                  color="red"
+                  title={translation(
+                    "signup.alertVerificationFailedTitle",
+                    "Verification failed",
+                  )}
+                  w="100%"
+                >
                   {otpError}
                 </Alert>
               )}
@@ -241,7 +318,7 @@ export default function Signup() {
                 variant="gradient"
                 loading={submitting}
               >
-                Verify OTP
+                {translation("signup.btnVerifyOtp", "Verify OTP")}
               </Button>
 
               <Anchor
@@ -253,7 +330,7 @@ export default function Signup() {
                 }}
                 style={{ cursor: "pointer" }}
               >
-                Back to signup
+                {translation("signup.linkBackToSignup", "Back to signup")}
               </Anchor>
             </Stack>
           </form>
