@@ -51,6 +51,7 @@ import {
   IconBell,
   IconChevronDown,
   IconSparkles,
+  IconLanguage,
 } from "@tabler/icons-react";
 
 import {
@@ -158,7 +159,7 @@ export default function Accounts() {
   const setTargetUserDetails = useAuthStore(
     (state) => state.setTargetUserDetails,
   );
-  const { translation } = useTranslation();
+  const { translation, currentLang, languages, setLanguage } = useTranslation();
 
   const isHubAccountLoggedIn = isHubAccount(userDetails);
 
@@ -252,6 +253,10 @@ export default function Accounts() {
 
   const [selectedAccountID, setSelectedAccountID] = useState<string>("");
   const [loadingAP, setLoadingAP] = useState(false);
+
+  const availableLanguages: [string, string][] = Object.entries(
+    languages || {},
+  ).filter((entry): entry is [string, string] => typeof entry[1] === "string");
 
   const resetChanges = () => {
     setChanges({
@@ -1057,115 +1062,175 @@ export default function Accounts() {
             <Text className={classes.brand}>Messenger.com</Text>
           </Group>
 
-          {isHubAccountLoggedIn ? (
-            <Menu
-              shadow="lg"
-              width={280}
-              radius="md"
-              position="bottom-end"
-              offset={8}
-              withinPortal
-            >
+          <Group gap="xs" align="center">
+            {isHubAccountLoggedIn ? (
+              <Menu
+                shadow="lg"
+                width={280}
+                radius="md"
+                position="bottom-end"
+                offset={8}
+                withinPortal
+              >
+                <Menu.Target>
+                  <UnstyledButton
+                    className={classes.accountPill}
+                    aria-label="Account menu"
+                  >
+                    <Avatar
+                      name={userDetails?.email || userDetails?.username || ""}
+                      size={30}
+                      colorIndex={0}
+                    />
+                    <IconChevronDown
+                      size={14}
+                      color="#9b96b8"
+                      style={{ marginRight: 6 }}
+                    />
+                  </UnstyledButton>
+                </Menu.Target>
+
+                <Menu.Dropdown p={0} style={{ overflow: "hidden" }}>
+                  <Stack
+                    gap={4}
+                    align="center"
+                    py="lg"
+                    px="md"
+                    className={classes.accountMenuHeader}
+                  >
+                    <Avatar
+                      name={userDetails?.email || userDetails?.username || ""}
+                      size={56}
+                      colorIndex={0}
+                    />
+                    <Text size="xs" c="dimmed" fw={600} tt="uppercase" mt={6}>
+                      Root Account
+                    </Text>
+                    <Text
+                      size="sm"
+                      fw={700}
+                      ta="center"
+                      style={{ wordBreak: "break-word" }}
+                    >
+                      {userDetails?.email || userDetails?.username}
+                    </Text>
+                  </Stack>
+
+                  <Menu.Divider m={0} />
+                  <Menu.Item
+                    leftSection={
+                      <IconSparkles
+                        size={16}
+                        color="var(--mantine-color-indigo-6)"
+                      />
+                    }
+                    onClick={() => navigate("/plans")}
+                    py="sm"
+                    fw={500}
+                  >
+                    Subscription & Plans
+                  </Menu.Item>
+
+                  <Menu.Divider m={0} />
+                  <Menu.Item
+                    leftSection={<IconLogout size={16} />}
+                    color="red"
+                    disabled={loggingOut}
+                    onClick={handleLogout}
+                    py="sm"
+                    fw={500}
+                  >
+                    {loggingOut ? "Logging out…" : "Logout"}
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            ) : isMobile ? (
+              <ActionIcon
+                variant="light"
+                color="red"
+                radius="xl"
+                size="lg"
+                aria-label="Logout"
+                disabled={loggingOut}
+                onClick={handleLogout}
+              >
+                {loggingOut ? (
+                  <Loader size={16} color="red" />
+                ) : (
+                  <IconLogout size={18} />
+                )}
+              </ActionIcon>
+            ) : (
+              <Button
+                leftSection={<IconLogout size={16} />}
+                radius="xl"
+                variant="light"
+                color="red"
+                loading={loggingOut}
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            )}
+
+            <Menu shadow="md" width={160} position="bottom-end" withinPortal>
               <Menu.Target>
-                <UnstyledButton
-                  className={classes.accountPill}
-                  aria-label="Account menu"
+                <Tooltip
+                  label={translation(
+                    "home-page.txtChangeLanguage",
+                    "Change Language",
+                  )}
+                  position="bottom"
+                  withArrow
                 >
-                  <Avatar
-                    name={userDetails?.email || userDetails?.username || ""}
-                    size={30}
-                    colorIndex={0}
-                  />
-                  <IconChevronDown
-                    size={14}
-                    color="#9b96b8"
-                    style={{ marginRight: 6 }}
-                  />
-                </UnstyledButton>
+                  <ActionIcon
+                    variant="default"
+                    size={isMobile ? "lg" : 36}
+                    radius="md"
+                    aria-label="Select Language"
+                    className="border-gray-200 shadow-xs hover:bg-gray-100 transition-colors"
+                  >
+                    <IconLanguage size={18} />
+                  </ActionIcon>
+                </Tooltip>
               </Menu.Target>
 
-              <Menu.Dropdown p={0} style={{ overflow: "hidden" }}>
-                <Stack
-                  gap={4}
-                  align="center"
-                  py="lg"
-                  px="md"
-                  className={classes.accountMenuHeader}
-                >
-                  <Avatar
-                    name={userDetails?.email || userDetails?.username || ""}
-                    size={56}
-                    colorIndex={0}
-                  />
-                  <Text size="xs" c="dimmed" fw={600} tt="uppercase" mt={6}>
-                    Root Account
-                  </Text>
-                  <Text
-                    size="sm"
-                    fw={700}
-                    ta="center"
-                    style={{ wordBreak: "break-word" }}
-                  >
-                    {userDetails?.email || userDetails?.username}
-                  </Text>
-                </Stack>
-
-                <Menu.Divider m={0} />
-                <Menu.Item
-                  leftSection={
-                    <IconSparkles
-                      size={16}
-                      color="var(--mantine-color-indigo-6)"
-                    />
-                  }
-                  onClick={() => navigate("/plans")}
-                  py="sm"
-                  fw={500}
-                >
-                  Subscription & Plans
-                </Menu.Item>
-
-                <Menu.Divider m={0} />
-                <Menu.Item
-                  leftSection={<IconLogout size={16} />}
-                  color="red"
-                  disabled={loggingOut}
-                  onClick={handleLogout}
-                  py="sm"
-                  fw={500}
-                >
-                  {loggingOut ? "Logging out…" : "Logout"}
-                </Menu.Item>
+              <Menu.Dropdown>
+                <Menu.Label>
+                  {translation(
+                    "home-page.txtSelectLanguage",
+                    "Select Language",
+                  )}
+                </Menu.Label>
+                {availableLanguages.length > 0 ? (
+                  availableLanguages.map(([code, label]) => (
+                    <Menu.Item
+                      key={code}
+                      onClick={() => setLanguage(code)}
+                      rightSection={
+                        currentLang === code ? (
+                          <IconCheck
+                            size={16}
+                            color="var(--mantine-color-indigo-6)"
+                          />
+                        ) : null
+                      }
+                      fw={currentLang === code ? 700 : 400}
+                    >
+                      {label}
+                    </Menu.Item>
+                  ))
+                ) : (
+                  <Menu.Item disabled>
+                    {translation(
+                      "home-page.txtLoadingLanguages",
+                      "Loading languages...",
+                    )}
+                  </Menu.Item>
+                )}
               </Menu.Dropdown>
             </Menu>
-          ) : isMobile ? (
-            <ActionIcon
-              variant="light"
-              color="red"
-              radius="xl"
-              size="lg"
-              aria-label="Logout"
-              disabled={loggingOut}
-              onClick={handleLogout}
-            >
-              {loggingOut ? (
-                <Loader size={16} color="red" />
-              ) : (
-                <IconLogout size={18} />
-              )}
-            </ActionIcon>
-          ) : (
-            <Button
-              leftSection={<IconLogout size={16} />}
-              radius="xl"
-              variant="light"
-              color="red"
-              loading={loggingOut}
-              onClick={handleLogout}
-            >
-              Logout
-            </Button>
-          )}
+          </Group>
         </Group>
 
         {error && (

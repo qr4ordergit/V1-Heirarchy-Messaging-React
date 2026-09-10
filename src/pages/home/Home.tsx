@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import {
   ActionIcon,
@@ -38,38 +37,15 @@ import {
 import classes from "./Home.module.css";
 import { ROUTES } from "../../router/routes";
 import { COGNITO_LOGIN_URL } from "../../config/cognito";
-import {
-  useLanguageStore,
-  useTranslation,
-} from "../../store/language/language.store";
-import { handleApiError } from "../../utils/errorHandler";
-import { SKIN_LANGUAGE_URL } from "../../utils/constant";
+import { useTranslation } from "../../store/language/language.store";
 
 export default function Home() {
-  const { translation, currentLang, languages, setLanguage } = useTranslation();
-  const setLanguageData = useLanguageStore((state) => state.setLanguageData);
-  const [fetchingLang, setFetchingLang] = useState(false);
+  const { translation, currentLang, languages, setLanguage, isLoaded } =
+    useTranslation();
 
-  useEffect(() => {
-    const fetchSkinLanguages = async () => {
-      setFetchingLang(true);
-      try {
-        const response = await fetch(SKIN_LANGUAGE_URL);
-        if (response.ok) {
-          const data = await response.json();
-          setLanguageData(data);
-        }
-      } catch (error: any) {
-        handleApiError(error);
-      } finally {
-        setFetchingLang(false);
-      }
-    };
-
-    fetchSkinLanguages();
-  }, [setLanguageData]);
-
-  const availableLanguages = Object.entries(languages);
+  const availableLanguages: [string, string][] = Object.entries(
+    languages || {},
+  ).filter((entry): entry is [string, string] => typeof entry[1] === "string");
 
   return (
     <div className={classes.page}>
@@ -100,17 +76,18 @@ export default function Home() {
               >
                 <ActionIcon
                   variant="subtle"
-                  color="gray.0"
+                  color="gray"
                   size="lg"
                   radius="xl"
-                  loading={fetchingLang}
+                  loading={!isLoaded && availableLanguages.length === 0}
                   aria-label={translation(
                     "home-page.txtSelectLanguage",
                     "Select Language",
                   )}
                   style={{
-                    backgroundColor: "rgba(255, 255, 255, 0.12)",
+                    backgroundColor: "rgba(255, 255, 255, 0.15)",
                     backdropFilter: "blur(4px)",
+                    color: "#ffffff",
                   }}
                 >
                   <IconLanguage size={22} />
@@ -188,10 +165,11 @@ export default function Home() {
               component="a"
               href={COGNITO_LOGIN_URL}
               variant="outline"
-              color="gray.0"
+              color="gray"
               size="xl"
               radius="xl"
               className={classes.control}
+              style={{ color: "#ffffff", borderColor: "rgba(255,255,255,0.6)" }}
             >
               {translation("home-page.btnLogin", "Login")}
             </Button>
