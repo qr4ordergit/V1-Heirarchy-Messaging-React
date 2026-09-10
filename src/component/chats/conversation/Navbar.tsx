@@ -130,13 +130,13 @@ function Navbar() {
                 onClick={onSearchByText}
                 leftSection={<IconTextRecognition size={14} />}
               >
-                {translation("NAV-find-byText", "By Text")}
+                {translation("chat.NAV-find-byText", "By Text")}
               </Menu.Item>
 
               <Menu.Sub openDelay={120} closeDelay={150}>
                 <Menu.Sub.Target>
                   <Menu.Sub.Item leftSection={<IconStar size={14} />}>
-                    {translation("NAV-find-byTags", "By Tags")}
+                    {translation("chat.NAV-find-byTags", "By Tags")}
                   </Menu.Sub.Item>
                 </Menu.Sub.Target>
 
@@ -144,7 +144,10 @@ function Navbar() {
                   {tagsWithCategories.group?.length ? (
                     <>
                       <Menu.Label>
-                        {translation("NAV-find-Label1", "Select group tag")}
+                        {translation(
+                          "chat.NAV-find-Label1",
+                          "Select group tag",
+                        )}
                       </Menu.Label>
                       <ScrollArea
                         h={Math.min(tagsWithCategories.group?.length * 36, 250)}
@@ -163,7 +166,7 @@ function Navbar() {
                   {tagsWithCategories.user?.length ? (
                     <>
                       <Menu.Label>
-                        {translation("NAV-find-Label2", "Select your tag")}
+                        {translation("chat.NAV-find-Label2", "Select your tag")}
                       </Menu.Label>
                       <ScrollArea
                         h={Math.min(tagsWithCategories.user?.length * 36, 250)}
@@ -202,7 +205,7 @@ function Navbar() {
                 onClick={onExportChat}
                 leftSection={<IconProgressDown size={14} />}
               >
-                {translation("NAV-export", "Export chat")}
+                {translation("chat.NAV-export", "Export chat")}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>

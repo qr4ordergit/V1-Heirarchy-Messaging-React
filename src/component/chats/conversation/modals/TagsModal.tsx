@@ -144,7 +144,7 @@ function TagsModal() {
     <Modal
       opened={trigger === TRIGGERS.tagList}
       onClose={onClose}
-      title={translation("modal-tag-title", "Add Tags to message")}
+      title={translation("chat.modal-tag-title", "Add Tags to message")}
     >
       <Stack gap="md">
         {fetchLoader ? (
@@ -152,7 +152,7 @@ function TagsModal() {
             <Loader size={"sm"} />
             <Text>
               {translation(
-                "modal-tag-loader-text",
+                "chat.modal-tag-loader-text",
                 "Fetching exisiting applied tags",
               )}
             </Text>
@@ -163,7 +163,10 @@ function TagsModal() {
               <Checkbox.Group
                 value={selectedTags}
                 onChange={setSelectedTags}
-                label={translation("modal-tag-label1", "Default group tags")}
+                label={translation(
+                  "chat.modal-tag-label1",
+                  "Default group tags",
+                )}
               >
                 {tagsWithCategories.group?.length ? (
                   <ScrollArea
@@ -177,7 +180,7 @@ function TagsModal() {
                   </ScrollArea>
                 ) : (
                   <Text size="sm" className="text-red-500">
-                    {translation("modal-tag-empty1", "Tags not available")}
+                    {translation("chat.modal-tag-empty1", "Tags not available")}
                   </Text>
                 )}
               </Checkbox.Group>
@@ -185,7 +188,10 @@ function TagsModal() {
             <Checkbox.Group
               value={selectedTags}
               onChange={setSelectedTags}
-              label={translation("modal-tag-label2", "Tags created by you")}
+              label={translation(
+                "chat.modal-tag-label2",
+                "Tags created by you",
+              )}
             >
               {tagsWithCategories.user?.length ? (
                 <ScrollArea
@@ -199,7 +205,7 @@ function TagsModal() {
                 </ScrollArea>
               ) : (
                 <Text variant="danger">
-                  {translation("modal-tag-empty2", "Tags not available")}
+                  {translation("chat.modal-tag-empty2", "Tags not available")}
                 </Text>
               )}
             </Checkbox.Group>
@@ -212,7 +218,7 @@ function TagsModal() {
             loading={submitLoader}
             loaderProps={{ type: "dots" }}
           >
-            {translation("modal-tag-addBtn", "Add")}
+            {translation("chat.modal-tag-addBtn", "Add")}
           </Button>
           <Button
             onClick={removeAll}
@@ -221,7 +227,7 @@ function TagsModal() {
             loaderProps={{ type: "dots" }}
             variant="outline"
           >
-            {translation("modal-tag-removeBtn", "Remove all")}
+            {translation("chat.modal-tag-removeBtn", "Remove all")}
           </Button>
         </Group>
       </Stack>

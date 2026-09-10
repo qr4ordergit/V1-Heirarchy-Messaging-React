@@ -99,7 +99,7 @@ function DecryptPrivateMsgDialog() {
     <Modal
       opened={trigger === TRIGGERS.decryptPrivateMsgDialog}
       onClose={onClose}
-      title={translation("modal-decrypt-tile", "Decrypting message")}
+      title={translation("chat.modal-decrypt-tile", "Decrypting message")}
     >
       <div>
         {decryptLoader1 ? (
@@ -107,7 +107,7 @@ function DecryptPrivateMsgDialog() {
             <Loader color="blue" size={"sm"} />
             <Text>
               {translation(
-                "modal-decrypt-loading",
+                "chat.modal-decrypt-loading",
                 "Message is decrypting... Please wait",
               )}
             </Text>
@@ -118,7 +118,10 @@ function DecryptPrivateMsgDialog() {
               <TextInput
                 readOnly={decryptLoader2}
                 disabled={decryptLoader1}
-                placeholder={translation("modal-decrypt-ph1", "Enter password")}
+                placeholder={translation(
+                  "chat.modal-decrypt-ph1",
+                  "Enter password",
+                )}
                 style={{ flex: 1 }}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -131,13 +134,13 @@ function DecryptPrivateMsgDialog() {
                 loaderProps={{ type: "dots" }}
                 onClick={() => handleDecrypt("manual")}
               >
-                {translation("modal-decrypt-btn", "Submit")}
+                {translation("chat.modal-decrypt-btn", "Submit")}
               </Button>
             </Group>
             {isPasswordIncorrect && (
               <Text size="sm" className="text-red-500">
                 {translation(
-                  "modal-decrypt-error-password",
+                  "chat.modal-decrypt-error-password",
                   "Incorrect password",
                 )}
               </Text>

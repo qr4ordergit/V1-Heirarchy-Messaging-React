@@ -45,7 +45,7 @@ export default function Chatting() {
 
       if (!response.data?.success) {
         Notification.error(
-          translation("noti-chat-121-fail", "Failed to fetch chats"),
+          translation("chat.noti-chat-121-fail", "Failed to fetch chats"),
         );
         return;
       }
@@ -55,7 +55,7 @@ export default function Chatting() {
       addChats(updatedMsgs);
     } catch (error) {
       Notification.error(
-        translation("noti-chat-121-catch", "Something went wrong"),
+        translation("chat.noti-chat-121-catch", "Something went wrong"),
       );
       navigate("/chats");
     }
@@ -75,7 +75,7 @@ export default function Chatting() {
 
       if (!response.data?.success) {
         Notification.error(
-          translation("noti-chat-group-fail", "Failed to fetch chats"),
+          translation("chat.noti-chat-group-fail", "Failed to fetch chats"),
         );
         return;
       }
@@ -85,7 +85,7 @@ export default function Chatting() {
       addChats(updatedMsgs);
     } catch (error) {
       Notification.error(
-        translation("noti-chat-group-catch", "Something went wrong"),
+        translation("chat.noti-chat-group-catch", "Something went wrong"),
       );
       navigate("/chats");
     }
@@ -113,7 +113,7 @@ export default function Chatting() {
 
       if (!response.data?.success) {
         Notification.error(
-          translation("noti-chat-tags-fail", "Failed to fetch tags"),
+          translation("chat.noti-chat-tags-fail", "Failed to fetch tags"),
         );
         return;
       }
@@ -123,7 +123,7 @@ export default function Chatting() {
       addChats(updatedMsgs);
     } catch (error) {
       Notification.error(
-        translation("noti-chat-tags-catch", "Something went wrong"),
+        translation("chat.noti-chat-tags-catch", "Something went wrong"),
       );
     }
   };

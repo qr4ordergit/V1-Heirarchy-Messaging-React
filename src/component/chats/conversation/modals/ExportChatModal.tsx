@@ -168,16 +168,25 @@ function ExportChatModal() {
   const statusProvider = () => {
     switch (status) {
       case "start":
-        return translation("modal-export-btn1", "Exporting chat...");
+        return translation("chat.modal-export-btn1", "Exporting chat...");
       case "queued":
-        return translation("modal-export-btn2", "Preparing for download...");
+        return translation(
+          "chat.modal-export-btn2",
+          "Preparing for download...",
+        );
       case "proccessing":
-        return translation("modal-export-btn3", "Processing to download...");
+        return translation(
+          "chat.modal-export-btn3",
+          "Processing to download...",
+        );
       case "repeat":
-        return translation("modal-export-btn2", "Preparing for download...");
+        return translation(
+          "chat.modal-export-btn2",
+          "Preparing for download...",
+        );
 
       default:
-        return translation("modal-export-btn4", "Submit");
+        return translation("chat.modal-export-btn4", "Submit");
     }
   };
 
@@ -189,13 +198,15 @@ function ExportChatModal() {
     <Modal
       opened={trigger === TRIGGERS.exportChatModal}
       onClose={onClose}
-      title={translation("modal-export-title", "Export Chat")}
+      title={translation("chat.modal-export-title", "Export Chat")}
     >
-      <Fieldset legend={translation("modal-export-legend", "Generate report")}>
+      <Fieldset
+        legend={translation("chat.modal-export-legend", "Generate report")}
+      >
         <DatePickerInput
           type="range"
-          label={translation("modal-export-label", "Pick dates range")}
-          placeholder={translation("modal-export-ph", "Pick dates range")}
+          label={translation("chat.modal-export-label", "Pick dates range")}
+          placeholder={translation("chat.modal-export-ph", "Pick dates range")}
           value={dateRange}
           onChange={setDateRange}
           maxDate={dayjs().toDate()}

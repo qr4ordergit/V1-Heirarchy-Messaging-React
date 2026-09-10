@@ -105,7 +105,7 @@ export default function ChatInput() {
 
       if (!response.data?.success) {
         Notification.error(
-          translation("noti-msg-send-fail", "Failed to send message"),
+          translation("chat.noti-msg-send-fail", "Failed to send message"),
         );
         return;
       }
@@ -119,7 +119,7 @@ export default function ChatInput() {
     } catch (error) {
       console.log(error);
       Notification.error(
-        translation("noti-msg-send-catch", "Something went wrong"),
+        translation("chat.noti-msg-send-catch", "Something went wrong"),
       );
     }
   };
@@ -295,7 +295,10 @@ export default function ChatInput() {
 
       if (!response.data?.success) {
         Notification.error(
-          translation("noti-msg-media-send-fail", "Failed to send message"),
+          translation(
+            "chat.noti-msg-media-send-fail",
+            "Failed to send message",
+          ),
         );
         return;
       }
@@ -453,9 +456,9 @@ export default function ChatInput() {
               <Badge variant="light" leftSection={<IconPaperclip size={13} />}>
                 {files.length}{" "}
                 {files.length === 1
-                  ? translation("fileBadge1", "FILE")
-                  : translation("fileBadge2", "FILES")}{" "}
-                {translation("fileBadge3", "SELECTED")}
+                  ? translation("chat.fileBadge1", "FILE")
+                  : translation("chat.fileBadge2", "FILES")}{" "}
+                {translation("chat.fileBadge3", "SELECTED")}
               </Badge>
 
               {files.map((file, index) => (
@@ -479,7 +482,7 @@ export default function ChatInput() {
           )}
 
           <TextInput
-            placeholder={translation("phMsgInputBox", "Type a message...")}
+            placeholder={translation("chat.phMsgInputBox", "Type a message...")}
             variant="unstyled"
             styles={{
               input: {
