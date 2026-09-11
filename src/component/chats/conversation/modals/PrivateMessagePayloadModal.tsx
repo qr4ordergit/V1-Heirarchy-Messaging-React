@@ -14,6 +14,7 @@ import { useParams } from "react-router";
 import { useEffect, useState, useTransition } from "react";
 import { useAuthStore } from "../../../../store/auth/auth.store";
 import { Notification } from "../../../../utils/notification";
+import { useTranslation } from "../../../../store/language/language.store";
 
 interface MembersResponse {
   data: [
@@ -27,6 +28,7 @@ function PrivateMessagePayloadModal() {
   const { trigger, resetTrigger, setTrigger } = useTriggerStore();
   const { chatId } = useParams<{ chatId: string }>();
   const { userDetails, targetUserDetails } = useAuthStore((state) => state);
+  const { translation } = useTranslation();
 
   const [members, setMembers] = useState<string[]>([]);
   const [password, setPassword] = useState<string>("");
@@ -91,18 +93,35 @@ function PrivateMessagePayloadModal() {
     <Modal
       opened={trigger === TRIGGERS.privateMessageModal}
       onClose={onClose}
-      title="Enter password to make message & select group members if you want to mention"
+      title={translation(
+        "chat_historymodal-e2e-title",
+        "Enter password to make message & select group members if you want to mention",
+      )}
     >
-      <Fieldset legend="Private message information">
+      <Fieldset
+        legend={translation(
+          "chat_historymodal-e2e-legend",
+          "Private message information",
+        )}
+      >
         <TextInput
-          label="Private password"
-          placeholder="Enter password"
+          label={translation(
+            "chat_historymodal-e2e-label1",
+            "Private password",
+          )}
+          placeholder={translation(
+            "chat_historymodal-e2e-ph1",
+            "Enter password",
+          )}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
         <MultiSelect
-          label="Select group members"
-          placeholder="Select"
+          label={translation(
+            "chat_historymodal-e2e-label2",
+            "Select group members",
+          )}
+          placeholder={translation("chat_historymodal-e2e-ph2", "Select")}
           data={members}
           clearable
           loading={fetchLoader}
@@ -110,7 +129,9 @@ function PrivateMessagePayloadModal() {
           onChange={setSelectedMembers}
         />
         <Group justify="flex-end" mt="md">
-          <Button onClick={onSubmit}>Submit</Button>
+          <Button onClick={onSubmit}>
+            {translation("chat_historymodal-e2e-btn", "Submit")}
+          </Button>
         </Group>
       </Fieldset>
     </Modal>

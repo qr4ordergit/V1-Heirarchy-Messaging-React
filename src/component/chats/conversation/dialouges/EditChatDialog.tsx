@@ -9,6 +9,7 @@ import { useChatStore } from "../../../../store/chats/chats.store";
 import { useNextPerson } from "../../../../hooks/useNextPerson";
 import { useParams } from "react-router";
 import { useAuthStore } from "../../../../store/auth/auth.store";
+import { useTranslation } from "../../../../store/language/language.store";
 
 function EditChatDialog() {
   const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
@@ -18,6 +19,7 @@ function EditChatDialog() {
   const { chatId } = useParams<{ chatId: string }>();
   const nextPerson = useNextPerson();
   const { target_user } = useAuthStore((state) => state);
+  const { translation } = useTranslation();
 
   const isGroup = chatId?.includes("group");
 
@@ -87,8 +89,8 @@ function EditChatDialog() {
     >
       <TextInput
         autoFocus
-        label="Enter new message"
-        placeholder="Enter text"
+        label={translation("chat_historymodal-edit-label", "Enter new message")}
+        placeholder={translation("chat_historymodal-edit-ph", "Enter text")}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         readOnly={editLoader}
@@ -99,7 +101,7 @@ function EditChatDialog() {
           loaderProps={{ type: "dots" }}
           onClick={() => EditFn(onEdit)}
         >
-          Update
+          {translation("chat_historymodal-edit-btn", "Update")}
         </Button>
       </Group>
     </Dialog>

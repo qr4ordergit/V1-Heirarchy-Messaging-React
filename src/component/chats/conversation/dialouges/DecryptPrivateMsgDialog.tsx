@@ -8,6 +8,7 @@ import { useParams } from "react-router";
 import { useEffect, useState, useTransition } from "react";
 import { useChatStore } from "../../../../store/chats/chats.store";
 import { useAuthStore } from "../../../../store/auth/auth.store";
+import { useTranslation } from "../../../../store/language/language.store";
 
 interface DECRYPT_PAYLOAD {
   [key: string]: unknown;
@@ -20,6 +21,7 @@ function DecryptPrivateMsgDialog() {
   const { updateDecryptedMsg } = useChatStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
   const { targetUserDetails } = useAuthStore((state) => state);
+  const { translation } = useTranslation();
 
   const [password, setPassword] = useState<string>("");
   const [isPasswordIncorrect, setIsPasswordIncorrect] =
@@ -97,13 +99,21 @@ function DecryptPrivateMsgDialog() {
     <Modal
       opened={trigger === TRIGGERS.decryptPrivateMsgDialog}
       onClose={onClose}
-      title="Decrypting message"
+      title={translation(
+        "chat_historymodal-decrypt-tile",
+        "Decrypting message",
+      )}
     >
       <div>
         {decryptLoader1 ? (
           <Group>
             <Loader color="blue" size={"sm"} />
-            <Text>Message is decrypting... Please wait</Text>
+            <Text>
+              {translation(
+                "chat_historymodal-decrypt-loading",
+                "Message is decrypting... Please wait",
+              )}
+            </Text>
           </Group>
         ) : (
           <div>
@@ -111,7 +121,10 @@ function DecryptPrivateMsgDialog() {
               <TextInput
                 readOnly={decryptLoader2}
                 disabled={decryptLoader1}
-                placeholder="Enter password"
+                placeholder={translation(
+                  "chat_historymodal-decrypt-ph1",
+                  "Enter password",
+                )}
                 style={{ flex: 1 }}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -124,12 +137,15 @@ function DecryptPrivateMsgDialog() {
                 loaderProps={{ type: "dots" }}
                 onClick={() => handleDecrypt("manual")}
               >
-                Submit
+                {translation("chat_historymodal-decrypt-btn", "Submit")}
               </Button>
             </Group>
             {isPasswordIncorrect && (
               <Text size="sm" className="text-red-500">
-                Incorrect password
+                {translation(
+                  "chat_historymodal-decrypt-error-password",
+                  "Incorrect password",
+                )}
               </Text>
             )}
           </div>

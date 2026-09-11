@@ -98,3 +98,62 @@
 .ctaSection :global(.mantine-Text-root) {
   color: rgba(255, 255, 255, 0.85);
 }
+
+/* Tablet and below */
+@media (max-width: 62em) {
+  .title {
+    font-size: 44px;
+  }
+
+  .section,
+  .altSection,
+  .ctaSection {
+    padding: 72px 0;
+  }
+}
+
+/* Mobile */
+@media (max-width: 48em) {
+  .hero {
+    height: auto;
+    min-height: 100dvh;
+    padding: 96px 0 56px;
+  }
+
+  .title {
+    font-size: 32px;
+    margin-top: 8px;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+  }
+
+  .description {
+    font-size: 15px !important;
+  }
+
+  .section,
+  .altSection,
+  .ctaSection {
+    padding: 56px 0;
+  }
+
+  .control {
+    --button-height: 46px;
+    --button-fz: 15px;
+    --button-padding-x: 22px;
+    width: 100%;
+  }
+}
+
+/* Small phones */
+@media (max-width: 30em) {
+  .title {
+    font-size: 26px;
+  }
+
+  .description {
+    font-size: 14px !important;
+  }
+}

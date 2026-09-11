@@ -18,6 +18,7 @@ import { Notification } from "../../../../utils/notification";
 import { useChatStore } from "../../../../store/chats/chats.store";
 import { useParams } from "react-router";
 import { useAuthStore } from "../../../../store/auth/auth.store";
+import { useTranslation } from "../../../../store/language/language.store";
 
 function TagsModal() {
   const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
@@ -27,6 +28,7 @@ function TagsModal() {
   const { updateTagStatus } = useChatStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
   const { target_user } = useAuthStore((state) => state);
+  const { translation } = useTranslation();
 
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [oldTags, setOldTags] = useState<string[]>([]);
@@ -142,13 +144,18 @@ function TagsModal() {
     <Modal
       opened={trigger === TRIGGERS.tagList}
       onClose={onClose}
-      title="Add Tags to message"
+      title={translation("chat_historymodal-tag-title", "Add Tags to message")}
     >
       <Stack gap="md">
         {fetchLoader ? (
           <Group>
             <Loader size={"sm"} />
-            <Text>Fetching exisiting applied tags</Text>
+            <Text>
+              {translation(
+                "chat_historymodal-tag-loader-text",
+                "Fetching exisiting applied tags",
+              )}
+            </Text>
           </Group>
         ) : (
           <>
@@ -156,7 +163,10 @@ function TagsModal() {
               <Checkbox.Group
                 value={selectedTags}
                 onChange={setSelectedTags}
-                label="Default group tags"
+                label={translation(
+                  "chat_historymodal-tag-label1",
+                  "Default group tags",
+                )}
               >
                 {tagsWithCategories.group?.length ? (
                   <ScrollArea
@@ -170,7 +180,10 @@ function TagsModal() {
                   </ScrollArea>
                 ) : (
                   <Text size="sm" className="text-red-500">
-                    Tags not available
+                    {translation(
+                      "chat_historymodal-tag-empty1",
+                      "Tags not available",
+                    )}
                   </Text>
                 )}
               </Checkbox.Group>
@@ -178,7 +191,10 @@ function TagsModal() {
             <Checkbox.Group
               value={selectedTags}
               onChange={setSelectedTags}
-              label="Tags created by you"
+              label={translation(
+                "chat_historymodal-tag-label2",
+                "Tags created by you",
+              )}
             >
               {tagsWithCategories.user?.length ? (
                 <ScrollArea
@@ -191,7 +207,12 @@ function TagsModal() {
                   </Stack>
                 </ScrollArea>
               ) : (
-                <Text variant="danger">Tags not available</Text>
+                <Text variant="danger">
+                  {translation(
+                    "chat_historymodal-tag-empty2",
+                    "Tags not available",
+                  )}
+                </Text>
               )}
             </Checkbox.Group>
           </>
@@ -203,7 +224,7 @@ function TagsModal() {
             loading={submitLoader}
             loaderProps={{ type: "dots" }}
           >
-            Add
+            {translation("chat_historymodal-tag-addBtn", "Add")}
           </Button>
           <Button
             onClick={removeAll}
@@ -212,7 +233,7 @@ function TagsModal() {
             loaderProps={{ type: "dots" }}
             variant="outline"
           >
-            Remove all
+            {translation("chat_historymodal-tag-removeBtn", "Remove all")}
           </Button>
         </Group>
       </Stack>

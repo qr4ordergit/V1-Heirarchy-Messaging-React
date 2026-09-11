@@ -22,6 +22,7 @@ import {
   IconUpload,
 } from "@tabler/icons-react";
 import type { BulkJobState } from "../../api/accountApi";
+import { useTranslation } from "../../store/language/language.store";
 import classes from "./Accounts.module.css";
 
 interface BulkUploadPanelProps {
@@ -43,6 +44,8 @@ export default function BulkUploadPanel({
   onClose,
   onDiscard,
 }: BulkUploadPanelProps) {
+  const { translation } = useTranslation();
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,8 +61,14 @@ export default function BulkUploadPanel({
     if (!isAcceptedFile(file)) {
       notifications.show({
         color: "red",
-        title: "Couldn't select file",
-        message: "Please choose an .xlsx file.",
+        title: translation(
+          "bulk_upload.ntfyCouldntSelectFileTitle",
+          "Couldn't select file",
+        ),
+        message: translation(
+          "bulk_upload.errChooseXlsxFile",
+          "Please choose an .xlsx file.",
+        ),
       });
       return;
     }
@@ -164,13 +173,21 @@ export default function BulkUploadPanel({
     <Stack gap="md">
       {job.status === "idle" && (
         <Text size="sm" c="dimmed">
-          Add multiple accounts at once. Start by downloading the sample file,
-          fill in the details, save it as .xlsx, then upload it here.
+          {translation(
+            "bulk_upload.txtIntro",
+            "Add multiple accounts at once. Start by downloading the sample file, fill in the details, save it as .xlsx, then upload it here.",
+          )}
         </Text>
       )}
 
       {job.status === "error" && (
-        <Alert color="red" title="Couldn't upload file">
+        <Alert
+          color="red"
+          title={translation(
+            "bulk_upload.alertCouldntUploadFileTitle",
+            "Couldn't upload file",
+          )}
+        >
           {job.errorMessage}
         </Alert>
       )}
@@ -188,21 +205,28 @@ export default function BulkUploadPanel({
           }
           title={
             job.status === "processing"
-              ? "Processing upload…"
+              ? translation(
+                  "bulk_upload.titleProcessingUpload",
+                  "Processing upload…",
+                )
               : job.status === "failed"
-                ? "Upload failed"
-                : "Upload result"
+                ? translation("bulk_upload.titleUploadFailed", "Upload failed")
+                : translation("bulk_upload.titleUploadResult", "Upload result")
           }
         >
           <Stack gap={2}>
             {job.total !== undefined && (
               <Text size="sm">
-                <strong>Total:</strong> {job.total}
+                <strong>{translation("bulk_upload.txtTotal", "Total:")}</strong>{" "}
+                {job.total}
               </Text>
             )}
             {job.created !== undefined && (
               <Text size="sm">
-                <strong>Created:</strong> {job.created}
+                <strong>
+                  {translation("bulk_upload.txtCreated", "Created:")}
+                </strong>{" "}
+                {job.created}
               </Text>
             )}
           </Stack>
@@ -223,8 +247,10 @@ export default function BulkUploadPanel({
             <Stack gap={6} mt={8}>
               <Group justify="space-between" align="center" wrap="nowrap">
                 <Text size="xs" fw={600} c="dimmed">
-                  {job.errors.length} row{job.errors.length === 1 ? "" : "s"}{" "}
-                  failed
+                  {job.errors.length}{" "}
+                  {job.errors.length === 1
+                    ? translation("bulk_upload.txtRowFailed", "row failed")
+                    : translation("bulk_upload.txtRowsFailed", "rows failed")}
                 </Text>
                 <Button
                   size="compact-xs"
@@ -233,19 +259,26 @@ export default function BulkUploadPanel({
                   leftSection={<IconDownload size={14} />}
                   onClick={handleDownloadErrors}
                 >
-                  Download Errors (.xlsx)
+                  {translation(
+                    "bulk_upload.btnDownloadErrors",
+                    "Download Errors (.xlsx)",
+                  )}
                 </Button>
               </Group>
               <Text size="xs" c="dimmed">
-                Passwords are left blank in the download for security — re-enter
-                them before re-uploading.
+                {translation(
+                  "bulk_upload.txtPasswordsBlankNote",
+                  "Passwords are left blank in the download for security — re-enter them before re-uploading.",
+                )}
               </Text>
 
               <ScrollArea.Autosize mah={180} type="auto">
                 <List size="sm" spacing={4}>
                   {job.errors.map((e, idx) => (
                     <List.Item key={idx}>
-                      {e.row !== undefined ? `Row ${e.row} — ` : ""}
+                      {e.row !== undefined
+                        ? `${translation("bulk_upload.txtRow", "Row")} ${e.row} — `
+                        : ""}
                       {e.username ? `${e.username} — ` : ""}
                       {e.message}
                     </List.Item>
@@ -259,8 +292,10 @@ export default function BulkUploadPanel({
             <Group gap={8} mt={10}>
               <Loader size="xs" />
               <Text size="xs" c="dimmed">
-                Still processing… you can close this and keep working, we'll
-                notify you when it's done.
+                {translation(
+                  "bulk_upload.txtStillProcessing",
+                  "Still processing… you can close this and keep working, we'll notify you when it's done.",
+                )}
               </Text>
             </Group>
           )}
@@ -271,7 +306,10 @@ export default function BulkUploadPanel({
         <Group gap={8}>
           <Loader size="xs" />
           <Text size="sm" c="dimmed">
-            Uploading your file…
+            {translation(
+              "bulk_upload.txtUploadingFile",
+              "Uploading your file…",
+            )}
           </Text>
         </Group>
       )}
@@ -291,7 +329,10 @@ export default function BulkUploadPanel({
               </ThemeIcon>
               <div>
                 <Text size="sm" fw={600}>
-                  Sample template
+                  {translation(
+                    "bulk_upload.txtSampleTemplate",
+                    "Sample template",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed">
                   username, password, display_name, description
@@ -304,14 +345,17 @@ export default function BulkUploadPanel({
               leftSection={<IconDownload size={16} />}
               onClick={handleDownloadSample}
             >
-              Download Sample
+              {translation("bulk_upload.btnDownloadSample", "Download Sample")}
             </Button>
           </Group>
           <Alert
             variant="light"
             color="gray"
             icon={<IconInfoCircle size={16} />}
-            title="Before you upload"
+            title={translation(
+              "bulk_upload.titleBeforeYouUpload",
+              "Before you upload",
+            )}
             py={10}
           >
             <List
@@ -325,20 +369,30 @@ export default function BulkUploadPanel({
               }}
             >
               <List.Item>
-                <strong>username</strong> and <strong>password</strong> are
-                mandatory for every row.
+                <strong>username</strong>{" "}
+                {translation("bulk_upload.txtAnd", "and")}{" "}
+                <strong>password</strong>{" "}
+                {translation(
+                  "bulk_upload.txtMandatoryForEveryRow",
+                  "are mandatory for every row.",
+                )}
               </List.Item>
 
               <List.Item>
-                <strong>password</strong> must be at least 8 characters,
-                alphanumeric, with at least one special character, one number,
-                and one uppercase letter.
+                <strong>password</strong>{" "}
+                {translation(
+                  "bulk_upload.txtPasswordRequirements",
+                  "must be at least 8 characters, alphanumeric, with at least one special character, one number, and one uppercase letter.",
+                )}
               </List.Item>
             </List>
 
             <Text size="xs" c="dimmed" mt={8}>
-              <strong>Note:</strong> To maintain uniqueness, the system will
-              automatically add a prefix & suffix to your username input.
+              <strong>{translation("bulk_upload.txtNote", "Note:")}</strong>{" "}
+              {translation(
+                "bulk_upload.txtUsernamePrefixSuffixNote",
+                "To maintain uniqueness, the system will automatically add a prefix & suffix to your username input.",
+              )}
             </Text>
           </Alert>
 
@@ -372,18 +426,35 @@ export default function BulkUploadPanel({
                 <Text size="sm" fw={600} ta="center">
                   {selectedFile
                     ? selectedFile.name
-                    : "Drag file here or click to browse"}
+                    : translation(
+                        "bulk_upload.txtDragOrClick",
+                        "Drag file here or click to browse",
+                      )}
                 </Text>
                 <Text size="xs" c="dimmed" ta="center" mt={4}>
-                  .xlsx only, up to 5MB
+                  {translation(
+                    "bulk_upload.txtXlsxOnly",
+                    ".xlsx only, up to 5MB",
+                  )}
                 </Text>
               </div>
             </Group>
           </div>
 
           {selectedFile && (
-            <Alert color="blue" title="File selected" variant="light">
-              {selectedFile.name} is ready to upload.
+            <Alert
+              color="blue"
+              title={translation(
+                "bulk_upload.alertFileSelectedTitle",
+                "File selected",
+              )}
+              variant="light"
+            >
+              {selectedFile.name}{" "}
+              {translation(
+                "bulk_upload.txtReadyToUpload",
+                "is ready to upload.",
+              )}
             </Alert>
           )}
         </>
@@ -397,11 +468,13 @@ export default function BulkUploadPanel({
             leftSection={<IconTrash size={14} />}
             onClick={onDiscard}
           >
-            Discard
+            {translation("bulk_upload.btnDiscard", "Discard")}
           </Button>
         )}
         <Button variant="subtle" onClick={onClose}>
-          {job.status === "idle" ? "Cancel" : "Close"}
+          {job.status === "idle"
+            ? translation("bulk_upload.btnCancel", "Cancel")
+            : translation("bulk_upload.btnClose", "Close")}
         </Button>
         {job.status === "idle" && (
           <Button
@@ -412,7 +485,7 @@ export default function BulkUploadPanel({
             disabled={!selectedFile}
             onClick={handleUploadClick}
           >
-            Upload
+            {translation("bulk_upload.btnUpload", "Upload")}
           </Button>
         )}
       </Group>

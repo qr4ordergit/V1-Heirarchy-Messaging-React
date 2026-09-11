@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../utils/constant";
 import { useChatStore } from "../../../store/chats/chats.store";
+import { useTranslation } from "../../../store/language/language.store";
 
 export default function TextFilterInputBox() {
   const [message, setMessage] = useState<string>("");
@@ -13,6 +14,7 @@ export default function TextFilterInputBox() {
   const { filterChatsByText, emptyOGList, ogChats } = useChatStore(
     (state) => state,
   );
+  const { translation } = useTranslation();
 
   const resetFilter = () => {
     if (ogChats.length > 0) {
@@ -57,7 +59,7 @@ export default function TextFilterInputBox() {
 
         <div style={{ flex: 1 }}>
           <TextInput
-            placeholder="Type to filter..."
+            placeholder={translation("filter-ph", "Type to filter...")}
             variant="unstyled"
             styles={{
               input: {

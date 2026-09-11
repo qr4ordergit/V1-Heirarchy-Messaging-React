@@ -28,11 +28,13 @@ export const API_ENDPOINTS = {
   MANAGE_MEMBERS: `${API_BASE_URL}/group/manage-members`,
   CREATE_INVITE_LINK: `${API_BASE_URL}/invites`,
   TAGS: `${API_BASE_URL}/tags`,
+  ACCOUNT_PACKAGES: `${API_BASE_URL}/account-packages`,
   USER_ACCESS: `${API_BASE_URL}/user-access`,
   CREATE_GROUP: `${API_BASE_URL}/group`,
   SECONDARY_USER_PASSWORD_CHANGE: `${API_BASE_URL}/auth/secondary-user-password-reset`,
   USER_HOME: `${API_BASE_URL}/user-home`,
   USER_HOME_PASSKEY: `${API_BASE_URL}/user-home/passkey`,
+  AUTH_GET_NEW_TOKEN: `${API_BASE_URL}/auth/get_new_token`,
 } as const;
 
 const avatarColors = [
@@ -221,7 +223,6 @@ export const PERMISSION_LABELS: Record<string, string> = {
   // Manage Subuser Access & Permissions
   "users-accesstree|read": "View",
   "users-accesstree|update": "Update",
-
 };
 
 export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {

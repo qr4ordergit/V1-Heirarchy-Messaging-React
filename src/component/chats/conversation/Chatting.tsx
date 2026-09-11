@@ -13,6 +13,7 @@ import { TRIGGERS } from "../../../utils/constant";
 import { useAuthStore } from "../../../store/auth/auth.store";
 import EncryptedChatCard from "./EncryptedChatCard";
 import useMediaDecryptor from "../../../hooks/useMediaDecryptor";
+import { useTranslation } from "../../../store/language/language.store";
 
 export default function Chatting() {
   const messages = useChatStore((state) => state.chats);
@@ -29,6 +30,7 @@ export default function Chatting() {
   const [fetchLoader, FetchFn] = useTransition();
 
   const mediaDecryptor = useMediaDecryptor();
+  const { translation } = useTranslation();
 
   const fetchOneToOneChats = async () => {
     try {
@@ -38,11 +40,16 @@ export default function Chatting() {
         ? `&target_user=${targetUserDetails?.user_id}`
         : "";
       const response = await api.get(
-        `${ENDPOINTS.CHAT.GET}${nextPerson(chatId)}${target_user}`,
+        `${ENDPOINTS.CHAT1.GET}${nextPerson(chatId)}${target_user}`,
       );
 
       if (!response.data?.success) {
-        Notification.error("Something went wrong");
+        Notification.error(
+          translation(
+            "chat_historynoti-chat-121-fail",
+            "Failed to fetch chats",
+          ),
+        );
         return;
       }
 
@@ -50,7 +57,9 @@ export default function Chatting() {
 
       addChats(updatedMsgs);
     } catch (error) {
-      Notification.error("something went wrong");
+      Notification.error(
+        translation("chat_historynoti-chat-121-catch", "Something went wrong"),
+      );
       navigate("/chats");
     }
   };
@@ -68,7 +77,12 @@ export default function Chatting() {
       );
 
       if (!response.data?.success) {
-        Notification.error("Something went wrong");
+        Notification.error(
+          translation(
+            "chat_historynoti-chat-group-fail",
+            "Failed to fetch chats",
+          ),
+        );
         return;
       }
 
@@ -76,7 +90,12 @@ export default function Chatting() {
 
       addChats(updatedMsgs);
     } catch (error) {
-      Notification.error("something went wrong");
+      Notification.error(
+        translation(
+          "chat_historynoti-chat-group-catch",
+          "Something went wrong",
+        ),
+      );
       navigate("/chats");
     }
   };
@@ -102,7 +121,12 @@ export default function Chatting() {
       );
 
       if (!response.data?.success) {
-        Notification.error("Something went wrong");
+        Notification.error(
+          translation(
+            "chat_historynoti-chat-tags-fail",
+            "Failed to fetch tags",
+          ),
+        );
         return;
       }
 
@@ -110,7 +134,9 @@ export default function Chatting() {
 
       addChats(updatedMsgs);
     } catch (error) {
-      Notification.error("something went wrong");
+      Notification.error(
+        translation("chat_historynoti-chat-tags-catch", "Something went wrong"),
+      );
     }
   };
 

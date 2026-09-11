@@ -1,9 +1,13 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { SKIN_LANGUAGE_URL } from "../../utils/constant";
+
+const STORAGE_LANG_KEY = "app_selected_lang";
+const STORAGE_DATA_KEY = "app_skin_language_data";
 
 export interface SkinLanguageData {
-  skinLanguageContent: Record<string, any>;
-  skinLanguageList: Record<string, string>;
+  skinLanguageContent?: Record<string, any>;
+  skinLanguageList?: Record<string, string>;
+  [key: string]: any;
 }
 
 interface LanguageState {
@@ -11,37 +15,103 @@ interface LanguageState {
   languages: Record<string, string>;
   content: Record<string, any>;
   isLoaded: boolean;
-  setLanguageData: (data: SkinLanguageData) => void;
   setLanguage: (lang: string) => void;
+  fetchSkinLanguages: () => Promise<void>;
 }
 
-export const useLanguageStore = create<LanguageState>()(
-  persist(
-    (set) => ({
-      currentLang: "en",
-      languages: {},
+const getInitialData = (): {
+  currentLang: string;
+  languages: Record<string, string>;
+  content: Record<string, any>;
+} => {
+  try {
+    const savedLang = localStorage.getItem(STORAGE_LANG_KEY) || "en";
+    const rawData = localStorage.getItem(STORAGE_DATA_KEY);
+    if (rawData) {
+      const parsed = JSON.parse(rawData);
+      return {
+        currentLang: savedLang,
+        languages: parsed.languages || { en: "English" },
+        content: parsed.content || {},
+      };
+    }
+    return {
+      currentLang: savedLang,
+      languages: { en: "English" },
       content: {},
-      isLoaded: false,
+    };
+  } catch (e) {
+    return {
+      currentLang: "en",
+      languages: { en: "English" },
+      content: {},
+    };
+  }
+};
 
-      setLanguageData: (data: SkinLanguageData) =>
-        set((state) => ({
-          languages: data.skinLanguageList || {},
-          content: data.skinLanguageContent || {},
-          isLoaded: true,
-          currentLang:
-            data.skinLanguageList && data.skinLanguageList[state.currentLang]
-              ? state.currentLang
-              : Object.keys(data.skinLanguageList || {})[0] || "en",
-        })),
+const initial = getInitialData();
 
-      setLanguage: (lang: string) => set({ currentLang: lang }),
-    }),
-    {
-      name: "app_language_storage",
-      partialize: (state) => ({ currentLang: state.currentLang, content : state.content }),
-    },
-  ),
-);
+export const useLanguageStore = create<LanguageState>((set, get) => ({
+  currentLang: initial.currentLang,
+  languages: initial.languages,
+  content: initial.content,
+  isLoaded: Object.keys(initial.content).length > 0,
+
+  setLanguage: (lang: string) => {
+    localStorage.setItem(STORAGE_LANG_KEY, lang);
+    set({ currentLang: lang });
+  },
+
+  fetchSkinLanguages: async () => {
+    try {
+      const response = await fetch(SKIN_LANGUAGE_URL);
+      if (!response.ok) return;
+
+      const data: SkinLanguageData = await response.json();
+
+      const rawList = data?.skinLanguageList || {};
+      const cleanLanguages: Record<string, string> = {};
+
+      if (rawList && typeof rawList === "object") {
+        Object.entries(rawList).forEach(([code, label]) => {
+          if (typeof label === "string") {
+            cleanLanguages[code] = label;
+          }
+        });
+      }
+
+      const finalLanguages =
+        Object.keys(cleanLanguages).length > 0
+          ? cleanLanguages
+          : { en: "English" };
+      const finalContent = data?.skinLanguageContent || {};
+
+      localStorage.setItem(
+        STORAGE_DATA_KEY,
+        JSON.stringify({
+          languages: finalLanguages,
+          content: finalContent,
+        }),
+      );
+
+      const activeLang = get().currentLang;
+      const validLang = finalLanguages[activeLang]
+        ? activeLang
+        : Object.keys(finalLanguages)[0] || "en";
+
+      localStorage.setItem(STORAGE_LANG_KEY, validLang);
+
+      set({
+        languages: finalLanguages,
+        content: finalContent,
+        currentLang: validLang,
+        isLoaded: true,
+      });
+    } catch (error) {
+      console.error("Failed to load skin languages:", error);
+    }
+  },
+}));
 
 export const useTranslation = () => {
   const currentLang = useLanguageStore((state) => state.currentLang);
@@ -67,5 +137,12 @@ export const useTranslation = () => {
     return typeof current === "string" ? current : fallback;
   };
 
-  return { translation, currentLang, languages, setLanguage, isLoaded };
+  return {
+    translation,
+    t: translation,
+    currentLang,
+    languages,
+    setLanguage,
+    isLoaded,
+  };
 };
