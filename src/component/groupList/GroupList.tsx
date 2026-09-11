@@ -167,7 +167,7 @@ const GroupList = () => {
       <Center>
         <Text c="red.6" size="xs">
           {translation(
-            "chat_page.btn_leave",
+            "chat_page.label_group_not_found",
             "No Group found",
           )}
         </Text>
