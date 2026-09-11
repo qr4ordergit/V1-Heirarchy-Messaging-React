@@ -421,17 +421,6 @@ export default function ChatInput() {
           gap: 8,
         }}
       >
-        {chatId?.includes("group") && (
-          <ActionIcon
-            variant={trigger.includes("secret_007") ? "filled" : "subtle"}
-            radius="xl"
-            size={36}
-            onClick={togglePrivate}
-          >
-            <IconLock size={20} stroke={2} />
-          </ActionIcon>
-        )}
-
         {/* Attachment */}
         <FileButton
           onChange={handleFiles}
@@ -502,6 +491,17 @@ export default function ChatInput() {
             readOnly={submitLoader}
           />
         </div>
+
+        {chatId?.includes("group") && (
+          <ActionIcon
+            variant={trigger.includes("secret_007") ? "filled" : "subtle"}
+            radius="xl"
+            size={36}
+            onClick={togglePrivate}
+          >
+            <IconLock size={20} stroke={2} />
+          </ActionIcon>
+        )}
 
         {/* Send */}
         <ActionIcon
