@@ -1027,7 +1027,7 @@
         "btnChoosePlan": "Вибрати план",
         "txtNoPackagesAvailable": "Наразі немає доступних пакетів. Будь ласка, перевірте пізніше."
       },
-      "chat": {
+      "chat_history": {
         "phMsgInputBox": "Введіть повідомлення...",
         "fileBadge1": "ФАЙЛ",
         "fileBadge2": "ФАЙЛИ",
