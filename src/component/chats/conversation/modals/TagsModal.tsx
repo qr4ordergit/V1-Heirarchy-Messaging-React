@@ -144,7 +144,7 @@ function TagsModal() {
     <Modal
       opened={trigger === TRIGGERS.tagList}
       onClose={onClose}
-      title={translation("chat.modal-tag-title", "Add Tags to message")}
+      title={translation("chat_historymodal-tag-title", "Add Tags to message")}
     >
       <Stack gap="md">
         {fetchLoader ? (
@@ -152,7 +152,7 @@ function TagsModal() {
             <Loader size={"sm"} />
             <Text>
               {translation(
-                "chat.modal-tag-loader-text",
+                "chat_historymodal-tag-loader-text",
                 "Fetching exisiting applied tags",
               )}
             </Text>
@@ -164,7 +164,7 @@ function TagsModal() {
                 value={selectedTags}
                 onChange={setSelectedTags}
                 label={translation(
-                  "chat.modal-tag-label1",
+                  "chat_historymodal-tag-label1",
                   "Default group tags",
                 )}
               >
@@ -180,7 +180,10 @@ function TagsModal() {
                   </ScrollArea>
                 ) : (
                   <Text size="sm" className="text-red-500">
-                    {translation("chat.modal-tag-empty1", "Tags not available")}
+                    {translation(
+                      "chat_historymodal-tag-empty1",
+                      "Tags not available",
+                    )}
                   </Text>
                 )}
               </Checkbox.Group>
@@ -189,7 +192,7 @@ function TagsModal() {
               value={selectedTags}
               onChange={setSelectedTags}
               label={translation(
-                "chat.modal-tag-label2",
+                "chat_historymodal-tag-label2",
                 "Tags created by you",
               )}
             >
@@ -205,7 +208,10 @@ function TagsModal() {
                 </ScrollArea>
               ) : (
                 <Text variant="danger">
-                  {translation("chat.modal-tag-empty2", "Tags not available")}
+                  {translation(
+                    "chat_historymodal-tag-empty2",
+                    "Tags not available",
+                  )}
                 </Text>
               )}
             </Checkbox.Group>
@@ -218,7 +224,7 @@ function TagsModal() {
             loading={submitLoader}
             loaderProps={{ type: "dots" }}
           >
-            {translation("chat.modal-tag-addBtn", "Add")}
+            {translation("chat_historymodal-tag-addBtn", "Add")}
           </Button>
           <Button
             onClick={removeAll}
@@ -227,7 +233,7 @@ function TagsModal() {
             loaderProps={{ type: "dots" }}
             variant="outline"
           >
-            {translation("chat.modal-tag-removeBtn", "Remove all")}
+            {translation("chat_historymodal-tag-removeBtn", "Remove all")}
           </Button>
         </Group>
       </Stack>

@@ -168,25 +168,28 @@ function ExportChatModal() {
   const statusProvider = () => {
     switch (status) {
       case "start":
-        return translation("chat.modal-export-btn1", "Exporting chat...");
+        return translation(
+          "chat_historymodal-export-btn1",
+          "Exporting chat...",
+        );
       case "queued":
         return translation(
-          "chat.modal-export-btn2",
+          "chat_historymodal-export-btn2",
           "Preparing for download...",
         );
       case "proccessing":
         return translation(
-          "chat.modal-export-btn3",
+          "chat_historymodal-export-btn3",
           "Processing to download...",
         );
       case "repeat":
         return translation(
-          "chat.modal-export-btn2",
+          "chat_historymodal-export-btn2",
           "Preparing for download...",
         );
 
       default:
-        return translation("chat.modal-export-btn4", "Submit");
+        return translation("chat_historymodal-export-btn4", "Submit");
     }
   };
 
@@ -198,15 +201,24 @@ function ExportChatModal() {
     <Modal
       opened={trigger === TRIGGERS.exportChatModal}
       onClose={onClose}
-      title={translation("chat.modal-export-title", "Export Chat")}
+      title={translation("chat_historymodal-export-title", "Export Chat")}
     >
       <Fieldset
-        legend={translation("chat.modal-export-legend", "Generate report")}
+        legend={translation(
+          "chat_historymodal-export-legend",
+          "Generate report",
+        )}
       >
         <DatePickerInput
           type="range"
-          label={translation("chat.modal-export-label", "Pick dates range")}
-          placeholder={translation("chat.modal-export-ph", "Pick dates range")}
+          label={translation(
+            "chat_historymodal-export-label",
+            "Pick dates range",
+          )}
+          placeholder={translation(
+            "chat_historymodal-export-ph",
+            "Pick dates range",
+          )}
           value={dateRange}
           onChange={setDateRange}
           maxDate={dayjs().toDate()}

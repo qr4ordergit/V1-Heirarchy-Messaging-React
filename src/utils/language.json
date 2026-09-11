@@ -481,7 +481,7 @@
         "btnChoosePlan": "Choose Plan",
         "txtNoPackagesAvailable": "No packages currently available. Please check back later."
       },
-      "chat": {
+      "chat_history": {
         "phMsgInputBox": "Type a message...",
         "fileBadge1": "FILE",
         "fileBadge2": "FILES",
