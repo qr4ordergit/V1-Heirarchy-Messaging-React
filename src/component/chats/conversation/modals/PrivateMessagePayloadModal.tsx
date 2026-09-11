@@ -94,23 +94,23 @@ function PrivateMessagePayloadModal() {
       opened={trigger === TRIGGERS.privateMessageModal}
       onClose={onClose}
       title={translation(
-        "chat_historymodal-e2e-title",
+        "chat_history.modal-e2e-title",
         "Enter password to make message & select group members if you want to mention",
       )}
     >
       <Fieldset
         legend={translation(
-          "chat_historymodal-e2e-legend",
+          "chat_history.modal-e2e-legend",
           "Private message information",
         )}
       >
         <TextInput
           label={translation(
-            "chat_historymodal-e2e-label1",
+            "chat_history.modal-e2e-label1",
             "Private password",
           )}
           placeholder={translation(
-            "chat_historymodal-e2e-ph1",
+            "chat_history.modal-e2e-ph1",
             "Enter password",
           )}
           value={password}
@@ -118,10 +118,10 @@ function PrivateMessagePayloadModal() {
         />
         <MultiSelect
           label={translation(
-            "chat_historymodal-e2e-label2",
+            "chat_history.modal-e2e-label2",
             "Select group members",
           )}
-          placeholder={translation("chat_historymodal-e2e-ph2", "Select")}
+          placeholder={translation("chat_history.modal-e2e-ph2", "Select")}
           data={members}
           clearable
           loading={fetchLoader}
@@ -130,7 +130,7 @@ function PrivateMessagePayloadModal() {
         />
         <Group justify="flex-end" mt="md">
           <Button onClick={onSubmit}>
-            {translation("chat_historymodal-e2e-btn", "Submit")}
+            {translation("chat_history.modal-e2e-btn", "Submit")}
           </Button>
         </Group>
       </Fieldset>

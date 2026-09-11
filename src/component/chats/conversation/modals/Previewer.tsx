@@ -21,7 +21,7 @@ function Previewer() {
     <Modal
       opened={trigger === TRIGGERS.previewMedia}
       onClose={onClose}
-      title={translation("chat_historymodal-preview-title", "Media Previewer")}
+      title={translation("chat_history.modal-preview-title", "Media Previewer")}
       size="100%"
       centered
     >

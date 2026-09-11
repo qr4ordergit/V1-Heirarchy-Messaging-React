@@ -89,8 +89,11 @@ function EditChatDialog() {
     >
       <TextInput
         autoFocus
-        label={translation("chat_historymodal-edit-label", "Enter new message")}
-        placeholder={translation("chat_historymodal-edit-ph", "Enter text")}
+        label={translation(
+          "chat_history.modal-edit-label",
+          "Enter new message",
+        )}
+        placeholder={translation("chat_history.modal-edit-ph", "Enter text")}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         readOnly={editLoader}
@@ -101,7 +104,7 @@ function EditChatDialog() {
           loaderProps={{ type: "dots" }}
           onClick={() => EditFn(onEdit)}
         >
-          {translation("chat_historymodal-edit-btn", "Update")}
+          {translation("chat_history.modal-edit-btn", "Update")}
         </Button>
       </Group>
     </Dialog>

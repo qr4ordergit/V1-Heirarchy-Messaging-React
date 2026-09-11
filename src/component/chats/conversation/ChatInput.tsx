@@ -106,7 +106,7 @@ export default function ChatInput() {
       if (!response.data?.success) {
         Notification.error(
           translation(
-            "chat_historynoti-msg-send-fail",
+            "chat_history.noti-msg-send-fail",
             "Failed to send message",
           ),
         );
@@ -122,7 +122,7 @@ export default function ChatInput() {
     } catch (error) {
       console.log(error);
       Notification.error(
-        translation("chat_historynoti-msg-send-catch", "Something went wrong"),
+        translation("chat_history.noti-msg-send-catch", "Something went wrong"),
       );
     }
   };
@@ -299,7 +299,7 @@ export default function ChatInput() {
       if (!response.data?.success) {
         Notification.error(
           translation(
-            "chat_historynoti-msg-media-send-fail",
+            "chat_history.noti-msg-media-send-fail",
             "Failed to send message",
           ),
         );
@@ -459,9 +459,9 @@ export default function ChatInput() {
               <Badge variant="light" leftSection={<IconPaperclip size={13} />}>
                 {files.length}{" "}
                 {files.length === 1
-                  ? translation("chat_historyfileBadge1", "FILE")
-                  : translation("chat_historyfileBadge2", "FILES")}{" "}
-                {translation("chat_historyfileBadge3", "SELECTED")}
+                  ? translation("chat_history.fileBadge1", "FILE")
+                  : translation("chat_history.fileBadge2", "FILES")}{" "}
+                {translation("chat_history.fileBadge3", "SELECTED")}
               </Badge>
 
               {files.map((file, index) => (
@@ -486,7 +486,7 @@ export default function ChatInput() {
 
           <TextInput
             placeholder={translation(
-              "chat_historyphMsgInputBox",
+              "chat_history.phMsgInputBox",
               "Type a message...",
             )}
             variant="unstyled"

@@ -100,7 +100,7 @@ function DecryptPrivateMsgDialog() {
       opened={trigger === TRIGGERS.decryptPrivateMsgDialog}
       onClose={onClose}
       title={translation(
-        "chat_historymodal-decrypt-tile",
+        "chat_history.modal-decrypt-tile",
         "Decrypting message",
       )}
     >
@@ -110,7 +110,7 @@ function DecryptPrivateMsgDialog() {
             <Loader color="blue" size={"sm"} />
             <Text>
               {translation(
-                "chat_historymodal-decrypt-loading",
+                "chat_history.modal-decrypt-loading",
                 "Message is decrypting... Please wait",
               )}
             </Text>
@@ -122,7 +122,7 @@ function DecryptPrivateMsgDialog() {
                 readOnly={decryptLoader2}
                 disabled={decryptLoader1}
                 placeholder={translation(
-                  "chat_historymodal-decrypt-ph1",
+                  "chat_history.modal-decrypt-ph1",
                   "Enter password",
                 )}
                 style={{ flex: 1 }}
@@ -137,13 +137,13 @@ function DecryptPrivateMsgDialog() {
                 loaderProps={{ type: "dots" }}
                 onClick={() => handleDecrypt("manual")}
               >
-                {translation("chat_historymodal-decrypt-btn", "Submit")}
+                {translation("chat_history.modal-decrypt-btn", "Submit")}
               </Button>
             </Group>
             {isPasswordIncorrect && (
               <Text size="sm" className="text-red-500">
                 {translation(
-                  "chat_historymodal-decrypt-error-password",
+                  "chat_history.modal-decrypt-error-password",
                   "Incorrect password",
                 )}
               </Text>

@@ -169,27 +169,27 @@ function ExportChatModal() {
     switch (status) {
       case "start":
         return translation(
-          "chat_historymodal-export-btn1",
+          "chat_history.modal-export-btn1",
           "Exporting chat...",
         );
       case "queued":
         return translation(
-          "chat_historymodal-export-btn2",
+          "chat_history.modal-export-btn2",
           "Preparing for download...",
         );
       case "proccessing":
         return translation(
-          "chat_historymodal-export-btn3",
+          "chat_history.modal-export-btn3",
           "Processing to download...",
         );
       case "repeat":
         return translation(
-          "chat_historymodal-export-btn2",
+          "chat_history.modal-export-btn2",
           "Preparing for download...",
         );
 
       default:
-        return translation("chat_historymodal-export-btn4", "Submit");
+        return translation("chat_history.modal-export-btn4", "Submit");
     }
   };
 
@@ -201,22 +201,22 @@ function ExportChatModal() {
     <Modal
       opened={trigger === TRIGGERS.exportChatModal}
       onClose={onClose}
-      title={translation("chat_historymodal-export-title", "Export Chat")}
+      title={translation("chat_history.modal-export-title", "Export Chat")}
     >
       <Fieldset
         legend={translation(
-          "chat_historymodal-export-legend",
+          "chat_history.modal-export-legend",
           "Generate report",
         )}
       >
         <DatePickerInput
           type="range"
           label={translation(
-            "chat_historymodal-export-label",
+            "chat_history.modal-export-label",
             "Pick dates range",
           )}
           placeholder={translation(
-            "chat_historymodal-export-ph",
+            "chat_history.modal-export-ph",
             "Pick dates range",
           )}
           value={dateRange}

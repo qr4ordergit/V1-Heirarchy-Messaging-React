@@ -76,7 +76,7 @@ function DeleteChatDialog() {
     >
       <Text size="sm" mb="xs" fw={500}>
         {translation(
-          "chat_historymodal-delete-title",
+          "chat_history.modal-delete-title",
           "Are you sure you want to delete?",
         )}
       </Text>
@@ -88,10 +88,10 @@ function DeleteChatDialog() {
           onClick={() => DeleteFn(onDelete)}
           color="red"
         >
-          {translation("chat_historymodal-delete-btn1", "Delete")}
+          {translation("chat_history.modal-delete-btn1", "Delete")}
         </Button>
         <Button disabled={deleteLoader} onClick={onClose} color="gray">
-          {translation("chat_historymodal-delete-btn2", "Cancel")}
+          {translation("chat_history.modal-delete-btn2", "Cancel")}
         </Button>
       </Group>
     </Dialog>

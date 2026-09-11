@@ -77,12 +77,15 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
       }
 
       Notification.success(
-        translation("chat_historynoti-msg-copy-success", "Content copied"),
+        translation("chat_history.noti-msg-copy-success", "Content copied"),
       );
     } catch (error) {
       console.error("Failed to copy text:", error);
       Notification.error(
-        translation("chat_historynoti-msg-copy-fail", "Failed to copy content"),
+        translation(
+          "chat_history.noti-msg-copy-fail",
+          "Failed to copy content",
+        ),
       );
     }
   };
@@ -141,30 +144,30 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
 
       <Menu.Dropdown>
         <Menu.Label>
-          {translation("chat_historyCO-label", "Actions")}
+          {translation("chat_history.CO-label", "Actions")}
         </Menu.Label>
         <Menu.Item
           disabled={optionConditions.edit()}
           onClick={onEdit}
           leftSection={<IconPencil size={14} />}
         >
-          {translation("chat_historyCO-edit", "Edit")}
+          {translation("chat_history.CO-edit", "Edit")}
         </Menu.Item>
         <Menu.Item
           onClick={onReply}
           leftSection={<IconArrowForward size={14} />}
         >
-          {translation("chat_historyCO-reply", "Reply")}
+          {translation("chat_history.CO-reply", "Reply")}
         </Menu.Item>
         <Menu.Item
           disabled={optionConditions.copy()}
           onClick={onCopy}
           leftSection={<IconCopy size={14} />}
         >
-          {translation("chat_historyCO-cc", "Copy Content")}
+          {translation("chat_history.CO-cc", "Copy Content")}
         </Menu.Item>
         <Menu.Item onClick={onTag} leftSection={<IconStar size={14} />}>
-          {translation("chat_historyCO-tag", "Add Tags")}
+          {translation("chat_history.CO-tag", "Add Tags")}
         </Menu.Item>
         <Menu.Divider />
         <Menu.Item
@@ -173,7 +176,7 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
           color="red"
           leftSection={<IconTrash size={14} />}
         >
-          {translation("chat_historyCO-delete", "Delete")}
+          {translation("chat_history.CO-delete", "Delete")}
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>

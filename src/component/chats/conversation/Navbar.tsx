@@ -130,13 +130,13 @@ function Navbar() {
                 onClick={onSearchByText}
                 leftSection={<IconTextRecognition size={14} />}
               >
-                {translation("chat_historyNAV-find-byText", "By Text")}
+                {translation("chat_history.NAV-find-byText", "By Text")}
               </Menu.Item>
 
               <Menu.Sub openDelay={120} closeDelay={150}>
                 <Menu.Sub.Target>
                   <Menu.Sub.Item leftSection={<IconStar size={14} />}>
-                    {translation("chat_historyNAV-find-byTags", "By Tags")}
+                    {translation("chat_history.NAV-find-byTags", "By Tags")}
                   </Menu.Sub.Item>
                 </Menu.Sub.Target>
 
@@ -145,7 +145,7 @@ function Navbar() {
                     <>
                       <Menu.Label>
                         {translation(
-                          "chat_historyNAV-find-Label1",
+                          "chat_history.NAV-find-Label1",
                           "Select group tag",
                         )}
                       </Menu.Label>
@@ -167,7 +167,7 @@ function Navbar() {
                     <>
                       <Menu.Label>
                         {translation(
-                          "chat_historyNAV-find-Label2",
+                          "chat_history.NAV-find-Label2",
                           "Select your tag",
                         )}
                       </Menu.Label>
@@ -208,7 +208,7 @@ function Navbar() {
                 onClick={onExportChat}
                 leftSection={<IconProgressDown size={14} />}
               >
-                {translation("chat_historyNAV-export", "Export chat")}
+                {translation("chat_history.NAV-export", "Export chat")}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
