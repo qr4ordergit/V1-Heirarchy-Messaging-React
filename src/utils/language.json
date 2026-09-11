@@ -515,7 +515,11 @@
         "btnActivePlan": "Active Plan",
         "btnSwitchToPlan": "Switch to Plan",
         "btnChoosePlan": "Choose Plan",
-        "txtNoPackagesAvailable": "No packages currently available. Please check back later."
+        "txtNoPackagesAvailable": "No packages currently available. Please check back later.",
+        "planSubscribed": "Plan subscribed successfully!",
+        "planSubscribeFailed": "Failed to subscribe to plan. Please try again.",
+        "planUpdated": "Plan updated successfully!",
+        "planUpdateFailed": "Failed to update plan. Please try again."
       },
       "chat_history": {
         "phMsgInputBox": "Type a message...",
@@ -1097,7 +1101,11 @@
         "btnActivePlan": "Активний план",
         "btnSwitchToPlan": "Перейти на план",
         "btnChoosePlan": "Вибрати план",
-        "txtNoPackagesAvailable": "Наразі немає доступних пакетів. Будь ласка, перевірте пізніше."
+        "txtNoPackagesAvailable": "Наразі немає доступних пакетів. Будь ласка, перевірте пізніше.",
+        "planSubscribed": "Plan subscribed successfully!",
+        "planSubscribeFailed": "Failed to subscribe to plan. Please try again.",
+        "planUpdated": "Plan updated successfully!",
+        "planUpdateFailed": "Failed to update plan. Please try again."
       },
       "chat_history": {
         "phMsgInputBox": "Введіть повідомлення...",

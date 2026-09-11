@@ -1,7 +1,7 @@
 import { notifications } from "@mantine/notifications";
 import { API_ENDPOINTS, withTargetUser } from "../utils/constant";
 import { api } from "./axios";
-import { useTranslation } from "../store/language/language.store";
+import { getTranslation } from "../store/language/language.store";
 
 export interface UpdateProfilePayload {
   display_name?: string;
@@ -23,15 +23,13 @@ const showNotification = (message: string) => {
   });
 };
 
-const { translation } = useTranslation();
-
 export const getTagsApi = async (): Promise<string[]> => {
   const response = await api.get(withTargetUser(API_ENDPOINTS.TAGS));
 
   if (response.status !== 200) {
     showNotification(
       response.data?.message ||
-        translation(
+        getTranslation(
           "profile.notificationFailedFetchTagList",
           "Failed to fetch tags list.",
         ),
@@ -51,7 +49,7 @@ export const createTagApi = async (tagName: string): Promise<any | null> => {
   if (response.status !== 201 || data.success === false) {
     showNotification(
       data?.message ||
-        translation(
+        getTranslation(
           "profile.notificationFailedToCreateTag",
           "Failed to create tag.",
         ),
@@ -73,7 +71,7 @@ export const deleteTagApi = async (tagId: string): Promise<any | null> => {
   if (response.status !== 200 || data.success === false) {
     showNotification(
       data?.message ||
-        translation(
+        getTranslation(
           "profile.notificationFailedToDeleteTag",
           "Failed to delete tag.",
         ),
@@ -96,7 +94,7 @@ export const updateProfileApi = async (
   if (response.status !== 200 || data.success === false) {
     showNotification(
       data?.message ||
-        translation(
+        getTranslation(
           "profile.notificationFailedToUpdateProfile",
           "Failed to initiate profile update.",
         ),
@@ -121,7 +119,7 @@ export const uploadImageToS3Api = async (
 
   if (!response.ok) {
     showNotification(
-      translation(
+      getTranslation(
         "profile.notificationFailedToUploadImg",
         "Failed to upload image file to storage.",
       ),

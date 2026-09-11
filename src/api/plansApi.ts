@@ -1,6 +1,7 @@
 import { notifications } from "@mantine/notifications";
 import { API_ENDPOINTS } from "../utils/constant";
 import { api } from "./axios";
+import { getTranslation } from "../store/language/language.store";
 
 export interface PackageItem {
   _id: string;
@@ -46,7 +47,10 @@ export const assignAccountPackageApi = async (
     if (response.status === 200 || response.status === 201 || data.success) {
       notifications.show({
         title: "",
-        message: data.message || "Plan subscribed successfully!",
+        message: getTranslation(
+          "plans.planSubscribed",
+          "Plan subscribed successfully!",
+        ),
         color: "green",
       });
       return true;
@@ -54,7 +58,10 @@ export const assignAccountPackageApi = async (
 
     notifications.show({
       title: "",
-      message: data.message || "Failed to subscribe to plan.",
+      message: getTranslation(
+        "plans.planSubscribeFailed",
+        "Failed to subscribe to plan.",
+      ),
       color: "red",
     });
     return false;
@@ -80,7 +87,10 @@ export const updateAccountPackagesApi = async (
     if (response.status === 200 || response.status === 204 || data.success) {
       notifications.show({
         title: "",
-        message: data.message || "Plan updated successfully!",
+        message: getTranslation(
+          "plans.planUpdated",
+          "Plan updated successfully!",
+        ),
         color: "green",
       });
       return true;
@@ -88,7 +98,10 @@ export const updateAccountPackagesApi = async (
 
     notifications.show({
       title: "",
-      message: data.message || "Failed to update plan.",
+      message: getTranslation(
+        "plans.planUpdateFailed",
+        "Failed to update plan. Please try again.",
+      ),
       color: "red",
     });
     return false;

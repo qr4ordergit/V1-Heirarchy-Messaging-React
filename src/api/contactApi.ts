@@ -8,7 +8,7 @@ import type {
   ContactFormValues,
   GroupItem,
 } from "../pages/contact/Contact";
-import { useTranslation } from "../store/language/language.store";
+import { getTranslation } from "../store/language/language.store";
 
 export interface InviteInformation {
   status: string;
@@ -27,8 +27,6 @@ export interface StartConversationResponse {
   message?: string;
   [key: string]: any;
 }
-
-const { translation } = useTranslation();
 
 export const getPendingInviteApi = async (
   inviteCode: string,
@@ -66,7 +64,7 @@ export const acceptInviteApi = async (
     if (response.status === 200 || response.status === 201 || data.success) {
       notifications.show({
         title: "",
-        message: translation(
+        message: getTranslation(
           "contact.inviteGroupAccepted",
           "Group invite accepted successfully!",
         ),
@@ -77,7 +75,7 @@ export const acceptInviteApi = async (
 
     notifications.show({
       title: "",
-      message: translation(
+      message: getTranslation(
         "contact.inviteAcceptFailed",
         "Failed to accept invite.",
       ),
@@ -101,7 +99,7 @@ export const rejectInviteApi = async (inviteCode: string): Promise<boolean> => {
     if (response.status === 200 || response.status === 204 || data.success) {
       notifications.show({
         title: "",
-        message: translation("contact.inviteRejected", "Invite rejected."),
+        message: getTranslation("contact.inviteRejected", "Invite rejected."),
         color: "blue",
       });
       return true;
@@ -109,7 +107,7 @@ export const rejectInviteApi = async (inviteCode: string): Promise<boolean> => {
 
     notifications.show({
       title: "",
-      message: translation(
+      message: getTranslation(
         "contact.inviteRejectFailed",
         "Failed to reject invite.",
       ),
@@ -138,7 +136,7 @@ export const getContactsApi = async (): Promise<Contact[] | null> => {
     }
     notifications.show({
       title: "",
-      message: translation(
+      message: getTranslation(
         "contact.failedToFetchContacts",
         "Failed to fetch contacts.",
       ),
@@ -160,7 +158,7 @@ export const getGroupsApi = async (): Promise<GroupItem[] | null> => {
     }
     notifications.show({
       title: "",
-      message: translation(
+      message: getTranslation(
         "contact.failedToFetchGroups",
         "Failed to fetch groups.",
       ),
@@ -185,7 +183,7 @@ export const getContactDetailsApi = async (
     }
     notifications.show({
       title: "",
-      message: translation(
+      message: getTranslation(
         "contact.failedToFetchContactDetails",
         "Failed to fetch contact details.",
       ),
@@ -232,11 +230,14 @@ export const saveContactApi = async (
       notifications.show({
         title: "",
         message: isEdit
-          ? translation(
+          ? getTranslation(
               "contact.contactUpdated",
               "Contact updated successfully",
             )
-          : translation("contact.contactAdded", "Contact added successfully"),
+          : getTranslation(
+              "contact.contactAdded",
+              "Contact added successfully",
+            ),
 
         color: "green",
       });
@@ -245,7 +246,7 @@ export const saveContactApi = async (
 
     notifications.show({
       title: "",
-      message: translation(
+      message: getTranslation(
         isEdit ? "contact.contactUpdateFailed" : "contact.contactAddFailed",
         `Failed to ${isEdit ? "update" : "add"} contact.`,
       ),
@@ -278,7 +279,7 @@ export const deleteContactApi = async (
     if (data.success || response.status === 200 || response.status === 201) {
       notifications.show({
         title: "",
-        message: translation(
+        message: getTranslation(
           "contact.contactDeleted",
           "Contact deleted successfully",
         ),
@@ -289,7 +290,7 @@ export const deleteContactApi = async (
 
     notifications.show({
       title: "",
-      message: translation(
+      message: getTranslation(
         "contact.contactDeleteFailed",
         "Failed to delete contact.",
       ),
@@ -311,7 +312,7 @@ export const deleteGroupApi = async (groupId: string): Promise<boolean> => {
     if (response.status === 200 || response.status === 201 || data.success) {
       notifications.show({
         title: "",
-        message: translation(
+        message: getTranslation(
           "group.groupDeleted",
           "Group deleted successfully",
         ),
@@ -322,7 +323,7 @@ export const deleteGroupApi = async (groupId: string): Promise<boolean> => {
 
     notifications.show({
       title: "",
-      message: translation(
+      message: getTranslation(
         "group.groupDeleteFailed",
         "Failed to delete group.",
       ),
@@ -351,7 +352,7 @@ export const leaveGroupApi = async (groupId: string): Promise<boolean> => {
     if (response.status === 200 || data.success) {
       notifications.show({
         title: "",
-        message: translation("group.leftGroup", "You have left the group."),
+        message: getTranslation("group.leftGroup", "You have left the group."),
         color: "green",
       });
       return true;
@@ -359,7 +360,10 @@ export const leaveGroupApi = async (groupId: string): Promise<boolean> => {
 
     notifications.show({
       title: "",
-      message: translation("group.leaveGroupFailed", "Failed to leave group."),
+      message: getTranslation(
+        "group.leaveGroupFailed",
+        "Failed to leave group.",
+      ),
       color: "red",
     });
     return false;
@@ -383,7 +387,7 @@ export const startConversationApi = async (
 
     notifications.show({
       title: "",
-      message: translation(
+      message: getTranslation(
         "conversation.startConversationFailed",
         "Failed to start conversation.",
       ),
@@ -485,8 +489,8 @@ export const saveGroupPayloadApi = async (
       notifications.show({
         title: "",
         message: isEdit
-          ? translation("group.groupUpdated", "Group updated successfully!")
-          : translation("group.groupCreated", "Group created successfully!"),
+          ? getTranslation("group.groupUpdated", "Group updated successfully!")
+          : getTranslation("group.groupCreated", "Group created successfully!"),
         color: "green",
       });
       return true;
@@ -495,8 +499,8 @@ export const saveGroupPayloadApi = async (
     notifications.show({
       title: "",
       message: isEdit
-        ? translation("group.groupUpdateFailed", "Failed to update group.")
-        : translation("group.groupCreateFailed", "Failed to create group."),
+        ? getTranslation("group.groupUpdateFailed", "Failed to update group.")
+        : getTranslation("group.groupCreateFailed", "Failed to create group."),
       color: "red",
     });
     return false;

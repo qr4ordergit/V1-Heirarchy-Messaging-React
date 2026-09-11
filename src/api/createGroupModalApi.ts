@@ -1,10 +1,8 @@
 import { api } from "../api/axios";
-import { useTranslation } from "../store/language/language.store";
+import { getTranslation } from "../store/language/language.store";
 import { API_ENDPOINTS, withTargetUser } from "../utils/constant";
 import { handleApiError } from "../utils/errorHandler";
 import { notifications } from "@mantine/notifications";
-
-const { translation } = useTranslation();
 
 export const getGroupTagsApi = async (groupId: string): Promise<string[]> => {
   try {
@@ -34,7 +32,7 @@ export const createGroupTagApi = async (
     if (response.status === 201 || response.status === 200 || data.success) {
       notifications.show({
         title: "",
-        message: translation("contact.tagAdded", "Tag added successfully."),
+        message: getTranslation("contact.tagAdded", "Tag added successfully."),
         color: "green",
       });
       return true;
@@ -42,7 +40,7 @@ export const createGroupTagApi = async (
 
     notifications.show({
       title: "",
-      message: translation("contact.tagAddFailed", "Failed to add tag."),
+      message: getTranslation("contact.tagAddFailed", "Failed to add tag."),
       color: "red",
     });
     return false;
@@ -68,7 +66,10 @@ export const deleteGroupTagApi = async (
     if (response.status === 200 || data.success) {
       notifications.show({
         title: "",
-        message: translation("contact.tagDeleted", "Tag removed successfully."),
+        message: getTranslation(
+          "contact.tagDeleted",
+          "Tag removed successfully.",
+        ),
         color: "green",
       });
       return true;
@@ -76,7 +77,10 @@ export const deleteGroupTagApi = async (
 
     notifications.show({
       title: "",
-      message: translation("contact.tagDeleteFailed", "Failed to delete tag."),
+      message: getTranslation(
+        "contact.tagDeleteFailed",
+        "Failed to delete tag.",
+      ),
       color: "red",
     });
     return false;
@@ -107,7 +111,7 @@ export const manageGroupMembers = async (
     if (response.status !== 200 || data.success === false) {
       notifications.show({
         title: "",
-        message: translation(
+        message: getTranslation(
           "contact.manageMembersFailed",
           "Something went wrong.",
         ),
@@ -120,8 +124,11 @@ export const manageGroupMembers = async (
       title: "",
       message:
         operation === "add-members"
-          ? translation("contact.membersAdded", "Member(s) added successfully.")
-          : translation(
+          ? getTranslation(
+              "contact.membersAdded",
+              "Member(s) added successfully.",
+            )
+          : getTranslation(
               "contact.memberRemoved",
               "Member removed successfully.",
             ),
@@ -155,7 +162,7 @@ export const manageGroupAdmins = async (
     if (response.status !== 200 || data.success === false) {
       notifications.show({
         title: "",
-        message: translation(
+        message: getTranslation(
           "contact.manageAdminsFailed",
           "Something went wrong.",
         ),
@@ -168,11 +175,14 @@ export const manageGroupAdmins = async (
       title: "",
       message:
         operation === "add-members"
-          ? translation(
+          ? getTranslation(
               "contact.adminsPromoted",
               "Admin(s) promoted successfully.",
             )
-          : translation("contact.adminDemoted", "Admin demoted successfully."),
+          : getTranslation(
+              "contact.adminDemoted",
+              "Admin demoted successfully.",
+            ),
       color: "green",
     });
     return true;
@@ -202,7 +212,7 @@ export const transferGroupOwnership = async (
     if (response.status !== 200 || data.success === false) {
       notifications.show({
         title: "",
-        message: translation(
+        message: getTranslation(
           "contact.transferOwnershipFailed",
           "Failed to transfer ownership.",
         ),
@@ -213,7 +223,7 @@ export const transferGroupOwnership = async (
 
     notifications.show({
       title: "",
-      message: translation(
+      message: getTranslation(
         "contact.ownershipTransferred",
         "Ownership transferred successfully.",
       ),

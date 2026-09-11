@@ -146,3 +146,23 @@ export const useTranslation = () => {
     isLoaded,
   };
 };
+
+export const getTranslation = (path: string, fallback: string = ""): string => {
+  const state = useLanguageStore.getState();
+  const { content, currentLang } = state;
+
+  if (!content || !content[currentLang]) return fallback;
+
+  const keys = path.split(".");
+  let current: any = content[currentLang];
+
+  for (const key of keys) {
+    if (current && typeof current === "object" && key in current) {
+      current = current[key];
+    } else {
+      return fallback;
+    }
+  }
+
+  return typeof current === "string" ? current : fallback;
+};
