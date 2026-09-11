@@ -8,6 +8,7 @@ import type {
   ContactFormValues,
   GroupItem,
 } from "../pages/contact/Contact";
+import { useTranslation } from "../store/language/language.store";
 
 export interface InviteInformation {
   status: string;
@@ -26,6 +27,8 @@ export interface StartConversationResponse {
   message?: string;
   [key: string]: any;
 }
+
+const { translation } = useTranslation();
 
 export const getPendingInviteApi = async (
   inviteCode: string,
@@ -63,7 +66,10 @@ export const acceptInviteApi = async (
     if (response.status === 200 || response.status === 201 || data.success) {
       notifications.show({
         title: "",
-        message: data.message || "Group invite accepted successfully!",
+        message: translation(
+          "contact.inviteGroupAccepted",
+          "Group invite accepted successfully!",
+        ),
         color: "green",
       });
       return true;
@@ -71,7 +77,10 @@ export const acceptInviteApi = async (
 
     notifications.show({
       title: "",
-      message: data.message || "Failed to accept invite.",
+      message: translation(
+        "contact.inviteAcceptFailed",
+        "Failed to accept invite.",
+      ),
       color: "red",
     });
     return false;
@@ -92,7 +101,7 @@ export const rejectInviteApi = async (inviteCode: string): Promise<boolean> => {
     if (response.status === 200 || response.status === 204 || data.success) {
       notifications.show({
         title: "",
-        message: data.message || "Invite rejected.",
+        message: translation("contact.inviteRejected", "Invite rejected."),
         color: "blue",
       });
       return true;
@@ -100,7 +109,10 @@ export const rejectInviteApi = async (inviteCode: string): Promise<boolean> => {
 
     notifications.show({
       title: "",
-      message: data.message || "Failed to reject invite.",
+      message: translation(
+        "contact.inviteRejectFailed",
+        "Failed to reject invite.",
+      ),
       color: "red",
     });
     return false;
@@ -126,7 +138,10 @@ export const getContactsApi = async (): Promise<Contact[] | null> => {
     }
     notifications.show({
       title: "",
-      message: "Failed to fetch contacts.",
+      message: translation(
+        "contact.failedToFetchContacts",
+        "Failed to fetch contacts.",
+      ),
       color: "red",
     });
     return null;
@@ -145,7 +160,10 @@ export const getGroupsApi = async (): Promise<GroupItem[] | null> => {
     }
     notifications.show({
       title: "",
-      message: "Failed to fetch groups.",
+      message: translation(
+        "contact.failedToFetchGroups",
+        "Failed to fetch groups.",
+      ),
       color: "red",
     });
     return null;
@@ -167,7 +185,10 @@ export const getContactDetailsApi = async (
     }
     notifications.show({
       title: "",
-      message: data.message || "Failed to fetch contact details.",
+      message: translation(
+        "contact.failedToFetchContactDetails",
+        "Failed to fetch contact details.",
+      ),
       color: "red",
     });
     return null;
@@ -210,9 +231,13 @@ export const saveContactApi = async (
     if (data.success || response.status === 200 || response.status === 201) {
       notifications.show({
         title: "",
-        message:
-          data.message ||
-          `Contact ${isEdit ? "updated" : "added"} successfully`,
+        message: isEdit
+          ? translation(
+              "contact.contactUpdated",
+              "Contact updated successfully",
+            )
+          : translation("contact.contactAdded", "Contact added successfully"),
+
         color: "green",
       });
       return true;
@@ -220,8 +245,10 @@ export const saveContactApi = async (
 
     notifications.show({
       title: "",
-      message:
-        data.message || `Failed to ${isEdit ? "update" : "add"} contact.`,
+      message: translation(
+        isEdit ? "contact.contactUpdateFailed" : "contact.contactAddFailed",
+        `Failed to ${isEdit ? "update" : "add"} contact.`,
+      ),
       color: "red",
     });
     return false;
@@ -251,7 +278,10 @@ export const deleteContactApi = async (
     if (data.success || response.status === 200 || response.status === 201) {
       notifications.show({
         title: "",
-        message: data.message || "Contact deleted successfully",
+        message: translation(
+          "contact.contactDeleted",
+          "Contact deleted successfully",
+        ),
         color: "green",
       });
       return true;
@@ -259,7 +289,10 @@ export const deleteContactApi = async (
 
     notifications.show({
       title: "",
-      message: data.message || "Failed to delete contact.",
+      message: translation(
+        "contact.contactDeleteFailed",
+        "Failed to delete contact.",
+      ),
       color: "red",
     });
     return false;
@@ -278,7 +311,10 @@ export const deleteGroupApi = async (groupId: string): Promise<boolean> => {
     if (response.status === 200 || response.status === 201 || data.success) {
       notifications.show({
         title: "",
-        message: data.message || "Group deleted successfully",
+        message: translation(
+          "group.groupDeleted",
+          "Group deleted successfully",
+        ),
         color: "green",
       });
       return true;
@@ -286,7 +322,10 @@ export const deleteGroupApi = async (groupId: string): Promise<boolean> => {
 
     notifications.show({
       title: "",
-      message: data.message || "Failed to delete group",
+      message: translation(
+        "group.groupDeleteFailed",
+        "Failed to delete group.",
+      ),
       color: "red",
     });
     return false;
@@ -312,7 +351,7 @@ export const leaveGroupApi = async (groupId: string): Promise<boolean> => {
     if (response.status === 200 || data.success) {
       notifications.show({
         title: "",
-        message: data.message || "You have left the group.",
+        message: translation("group.leftGroup", "You have left the group."),
         color: "green",
       });
       return true;
@@ -320,7 +359,7 @@ export const leaveGroupApi = async (groupId: string): Promise<boolean> => {
 
     notifications.show({
       title: "",
-      message: data.message || "Failed to leave group.",
+      message: translation("group.leaveGroupFailed", "Failed to leave group."),
       color: "red",
     });
     return false;
@@ -344,7 +383,10 @@ export const startConversationApi = async (
 
     notifications.show({
       title: "",
-      message: data.message || "Failed to start conversation.",
+      message: translation(
+        "conversation.startConversationFailed",
+        "Failed to start conversation.",
+      ),
       color: "red",
     });
     return null;
@@ -442,9 +484,9 @@ export const saveGroupPayloadApi = async (
 
       notifications.show({
         title: "",
-        message:
-          data.message ||
-          `Group ${isEdit ? "updated" : "created"} successfully!`,
+        message: isEdit
+          ? translation("group.groupUpdated", "Group updated successfully!")
+          : translation("group.groupCreated", "Group created successfully!"),
         color: "green",
       });
       return true;
@@ -452,8 +494,9 @@ export const saveGroupPayloadApi = async (
 
     notifications.show({
       title: "",
-      message:
-        data.message || `Failed to ${isEdit ? "update" : "create"} group.`,
+      message: isEdit
+        ? translation("group.groupUpdateFailed", "Failed to update group.")
+        : translation("group.groupCreateFailed", "Failed to create group."),
       color: "red",
     });
     return false;

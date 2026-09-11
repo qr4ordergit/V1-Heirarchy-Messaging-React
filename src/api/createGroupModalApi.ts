@@ -1,7 +1,10 @@
 import { api } from "../api/axios";
+import { useTranslation } from "../store/language/language.store";
 import { API_ENDPOINTS, withTargetUser } from "../utils/constant";
 import { handleApiError } from "../utils/errorHandler";
 import { notifications } from "@mantine/notifications";
+
+const { translation } = useTranslation();
 
 export const getGroupTagsApi = async (groupId: string): Promise<string[]> => {
   try {
@@ -31,7 +34,7 @@ export const createGroupTagApi = async (
     if (response.status === 201 || response.status === 200 || data.success) {
       notifications.show({
         title: "",
-        message: data.message || "Tag added successfully.",
+        message: translation("contact.tagAdded", "Tag added successfully."),
         color: "green",
       });
       return true;
@@ -39,7 +42,7 @@ export const createGroupTagApi = async (
 
     notifications.show({
       title: "",
-      message: data.message || "Failed to add tag.",
+      message: translation("contact.tagAddFailed", "Failed to add tag."),
       color: "red",
     });
     return false;
@@ -65,7 +68,7 @@ export const deleteGroupTagApi = async (
     if (response.status === 200 || data.success) {
       notifications.show({
         title: "",
-        message: data.message || "Tag removed successfully.",
+        message: translation("contact.tagDeleted", "Tag removed successfully."),
         color: "green",
       });
       return true;
@@ -73,7 +76,7 @@ export const deleteGroupTagApi = async (
 
     notifications.show({
       title: "",
-      message: data.message || "Failed to delete tag.",
+      message: translation("contact.tagDeleteFailed", "Failed to delete tag."),
       color: "red",
     });
     return false;
@@ -104,7 +107,10 @@ export const manageGroupMembers = async (
     if (response.status !== 200 || data.success === false) {
       notifications.show({
         title: "",
-        message: data.message || "Something went wrong.",
+        message: translation(
+          "contact.manageMembersFailed",
+          "Something went wrong.",
+        ),
         color: "red",
       });
       return false;
@@ -113,10 +119,12 @@ export const manageGroupMembers = async (
     notifications.show({
       title: "",
       message:
-        data.message ||
-        (operation === "add-members"
-          ? "Member(s) added successfully."
-          : "Member removed successfully."),
+        operation === "add-members"
+          ? translation("contact.membersAdded", "Member(s) added successfully.")
+          : translation(
+              "contact.memberRemoved",
+              "Member removed successfully.",
+            ),
       color: "green",
     });
     return true;
@@ -147,7 +155,10 @@ export const manageGroupAdmins = async (
     if (response.status !== 200 || data.success === false) {
       notifications.show({
         title: "",
-        message: data.message || "Something went wrong.",
+        message: translation(
+          "contact.manageAdminsFailed",
+          "Something went wrong.",
+        ),
         color: "red",
       });
       return false;
@@ -156,10 +167,12 @@ export const manageGroupAdmins = async (
     notifications.show({
       title: "",
       message:
-        data.message ||
-        (operation === "add-members"
-          ? "Admin(s) promoted successfully."
-          : "Admin demoted successfully."),
+        operation === "add-members"
+          ? translation(
+              "contact.adminsPromoted",
+              "Admin(s) promoted successfully.",
+            )
+          : translation("contact.adminDemoted", "Admin demoted successfully."),
       color: "green",
     });
     return true;
@@ -189,7 +202,10 @@ export const transferGroupOwnership = async (
     if (response.status !== 200 || data.success === false) {
       notifications.show({
         title: "",
-        message: data.message || "Failed to transfer ownership.",
+        message: translation(
+          "contact.transferOwnershipFailed",
+          "Failed to transfer ownership.",
+        ),
         color: "red",
       });
       return false;
@@ -197,7 +213,10 @@ export const transferGroupOwnership = async (
 
     notifications.show({
       title: "",
-      message: data.message || "Ownership transferred successfully.",
+      message: translation(
+        "contact.ownershipTransferred",
+        "Ownership transferred successfully.",
+      ),
       color: "green",
     });
     return true;

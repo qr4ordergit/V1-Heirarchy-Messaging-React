@@ -7,6 +7,7 @@ import { IconX } from "@tabler/icons-react";
 import { API_ENDPOINTS, withTargetUser } from "../../utils/constant";
 import { api } from "../../api/axios";
 import { handleApiError } from "../../utils/errorHandler";
+import { useTranslation } from "../../store/language/language.store";
 
 interface ContactModalProps {
   opened: boolean;
@@ -35,6 +36,8 @@ const ContactModal = ({
 
   const [showPassKeyField, setShowPassKeyField] = useState<boolean>(false);
   const [verifying, setVerifying] = useState<boolean>(false);
+
+  const { translation } = useTranslation();
 
   useEffect(() => {
     if (contact) {
@@ -109,8 +112,11 @@ const ContactModal = ({
           if (data.pass_needed) {
             setShowPassKeyField(true);
             notifications.show({
-              title: "Pass Key Required",
-              message: "Please enter the pass key to add this contact.",
+              title: translation("contact.titlePasskey", "Pass Key Required"),
+              message: translation(
+                "contact.msgPasskey",
+                "Please enter the pass key to add this contact.",
+              ),
               color: "blue",
             });
           } else {
@@ -119,7 +125,10 @@ const ContactModal = ({
         } else {
           notifications.show({
             title: "",
-            message: data.message || "Failed to verify user.",
+            message: translation(
+              "contact.notificationVerifyUserFailed",
+              data.message || "Failed to verify user.",
+            ),
             color: "red",
             icon: <IconX size={18} />,
           });
@@ -133,7 +142,10 @@ const ContactModal = ({
       if (!form.passKey?.trim()) {
         notifications.show({
           title: "",
-          message: "Please enter the required pass key.",
+          message: translation(
+            "contact.notificationPasskeyRequired",
+            "Please enter the required pass key.",
+          ),
           color: "red",
           icon: <IconX size={18} />,
         });
@@ -152,7 +164,9 @@ const ContactModal = ({
       size="lg"
       title={
         <span style={{ fontSize: 26, fontWeight: 700 }}>
-          {contact ? "Edit Contact" : "Add Contact"}
+          {contact
+            ? translation("contact.modalHeaderEditContact", "Edit Contact")
+            : translation("contact.modalHeaderAddContact", "Add Contact")}
         </span>
       }
     >
@@ -160,8 +174,11 @@ const ContactModal = ({
         <Grid>
           <Grid.Col span={{ base: 12, sm: 6 }}>
             <TextInput
-              label="Username"
-              placeholder="Enter username"
+              label={translation("contact.labelUsername", "Username")}
+              placeholder={translation(
+                "contact.placeholderUsername",
+                "Enter username...",
+              )}
               value={form.username}
               onChange={(e: ChangeEvent<HTMLInputElement>) => {
                 handleChange("username", e.target.value);
@@ -173,8 +190,11 @@ const ContactModal = ({
 
           <Grid.Col span={{ base: 12, sm: 6 }}>
             <TextInput
-              label="Name"
-              placeholder="Enter name"
+              label={translation("contact.labelName", "Name")}
+              placeholder={translation(
+                "contact.placeholderName",
+                "Enter name...",
+              )}
               value={form.name}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange("name", e.target.value)
@@ -184,8 +204,11 @@ const ContactModal = ({
 
           <Grid.Col span={{ base: 12, sm: 6 }}>
             <TextInput
-              label="Phone Number"
-              placeholder="Enter phone number"
+              label={translation("contact.labelPhoneNumber", "Phone Number")}
+              placeholder={translation(
+                "contact.placeholderPhoneNumber",
+                "Enter phone number...",
+              )}
               value={form.phone}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange("phone", e.target.value)
@@ -195,8 +218,11 @@ const ContactModal = ({
 
           <Grid.Col span={{ base: 12, sm: 6 }}>
             <TextInput
-              label="Email"
-              placeholder="Enter email"
+              label={translation("contact.labelEmail", "Email")}
+              placeholder={translation(
+                "contact.placeholderEmail",
+                "Enter email...",
+              )}
               value={form.email}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange("email", e.target.value)
@@ -207,8 +233,11 @@ const ContactModal = ({
           {!contact && showPassKeyField && (
             <Grid.Col span={{ base: 12, sm: 12 }}>
               <TextInput
-                label="Pass Key"
-                placeholder="Enter pass key"
+                label={translation("contact.labelPasskey", "Pass Key")}
+                placeholder={translation(
+                  "contact.placeholderPasskey",
+                  "Enter pass key",
+                )}
                 required
                 value={form.passKey || ""}
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -226,10 +255,13 @@ const ContactModal = ({
           onClick={handleSubmit}
         >
           {contact
-            ? "Save Changes"
+            ? translation("contact.btnSaveChanges", "Save Changes")
             : showPassKeyField
-              ? "Submit Contact with Pass Key"
-              : "Save Contact"}
+              ? translation(
+                  "contact.btnSubmitPasskey",
+                  "Submit Contact with Pass Key",
+                )
+              : translation("contact.btnSaveContact", "Save Contact")}
         </Button>
       </Stack>
     </Modal>

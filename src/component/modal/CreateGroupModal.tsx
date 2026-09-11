@@ -36,6 +36,7 @@ import {
   createGroupTagApi,
   deleteGroupTagApi,
 } from "../../api/createGroupModalApi";
+import { useTranslation } from "../../store/language/language.store";
 
 interface CreateGroupModalProps {
   opened: boolean;
@@ -74,6 +75,8 @@ const CreateGroupModal = ({
   const [newTagName, setNewTagName] = useState("");
   const [tagActionLoading, setTagActionLoading] = useState(false);
   const [deletingTag, setDeletingTag] = useState<string | null>(null);
+
+  const { translation } = useTranslation();
 
   useEffect(() => {
     if (!opened) return;
@@ -207,7 +210,10 @@ const CreateGroupModal = ({
     if (!trimmed) {
       notifications.show({
         title: "",
-        message: "Please enter a tag name.",
+        message: translation(
+          "contact.notificationEnterTagName",
+          "Please enter a tag name.",
+        ),
         color: "red",
       });
       return;
@@ -216,7 +222,10 @@ const CreateGroupModal = ({
     if (groupTags.includes(trimmed)) {
       notifications.show({
         title: "",
-        message: "This tag is already added.",
+        message: translation(
+          "contact.notificationTagAlreadyExists",
+          "This tag is already added.",
+        ),
         color: "yellow",
       });
       return;
@@ -266,7 +275,10 @@ const CreateGroupModal = ({
         if (!groupName.trim()) {
           notifications.show({
             title: "",
-            message: "Group name cannot be empty.",
+            message: translation(
+              "contact.notificationGroupNameNotEmpty",
+              "Group name cannot be empty.",
+            ),
             color: "red",
           });
           return;
@@ -303,7 +315,10 @@ const CreateGroupModal = ({
     if (!groupName.trim()) {
       notifications.show({
         title: "",
-        message: "Please enter a group name.",
+        message: translation(
+          "contact.notificationEnterGroupName",
+          "Please enter a group name.",
+        ),
         color: "red",
       });
       return;
@@ -312,7 +327,10 @@ const CreateGroupModal = ({
     if (members.length === 0) {
       notifications.show({
         title: "",
-        message: "At least one member is required.",
+        message: translation(
+          "contact.notificationAtleastOneMember",
+          "At least one member is required.",
+        ),
         color: "red",
       });
       return;
@@ -379,7 +397,9 @@ const CreateGroupModal = ({
       }}
       title={
         <Text fw={700} size="lg">
-          {initialGroup ? "Edit Group" : "Create New Group"}
+          {initialGroup
+            ? translation("contact.modalHeaderEditGroup", "Edit Group")
+            : translation("contact.txtCreateNewGroup", "Create New Group")}
         </Text>
       }
     >
@@ -387,8 +407,11 @@ const CreateGroupModal = ({
         <div className="flex-1 overflow-y-auto pr-1">
           <Stack gap="xs">
             <TextInput
-              label="Group Name"
-              placeholder="Enter group name"
+              label={translation("contact.labelGroupName", "Group Name")}
+              placeholder={translation(
+                "contact.placeholderGroupName",
+                "Enter group name",
+              )}
               required
               size="sm"
               value={groupName}
@@ -398,8 +421,14 @@ const CreateGroupModal = ({
             />
 
             <Textarea
-              label="Description"
-              placeholder="Enter group description"
+              label={translation(
+                "contact.labelGroupDescription",
+                "Group Description",
+              )}
+              placeholder={translation(
+                "contact.placeholderGroupDescription",
+                "Enter group description",
+              )}
               rows={2}
               size="sm"
               value={description}
@@ -409,7 +438,7 @@ const CreateGroupModal = ({
             />
 
             <FileInput
-              label="Group Image"
+              label={translation("contact.labelGroupImage", "Group Image")}
               placeholder={initialGroup?.group_image || "Upload picture"}
               size="sm"
               leftSection={<IconUpload size={16} />}
@@ -420,7 +449,8 @@ const CreateGroupModal = ({
 
             <div>
               <Text size="xs" fw={500} mb={2}>
-                Group Members ({members.length})
+                {translation("contact.txtGroupMembers", "Group Members")} (
+                {members.length})
               </Text>
               <div className="flex flex-wrap gap-1.5 p-2 bg-gray-50 rounded-lg border border-gray-200 max-h-24 overflow-y-auto">
                 {members.length > 0 ? (
@@ -445,7 +475,10 @@ const CreateGroupModal = ({
                   ))
                 ) : (
                   <Text size="xs" c="dimmed">
-                    No members selected
+                    {translation(
+                      "contact.txtNoMembersSelected",
+                      "No members selected",
+                    )}
                   </Text>
                 )}
               </div>
@@ -453,8 +486,14 @@ const CreateGroupModal = ({
 
             {availableToAdd.length > 0 && (
               <MultiSelect
-                label="Add New Members"
-                placeholder="Select contacts to add..."
+                label={translation(
+                  "contact.labelAddNewMember",
+                  "Add New Member",
+                )}
+                placeholder={translation(
+                  "contact.placeholderSelectContactToAdd",
+                  "Select contacts to add...",
+                )}
                 size="sm"
                 data={availableToAdd}
                 value={[]}
@@ -466,8 +505,11 @@ const CreateGroupModal = ({
             )}
 
             <MultiSelect
-              label="Group Admins"
-              placeholder="Select admin(s)"
+              label={translation("contact.labelGroupAdmins", "Group Admins")}
+              placeholder={translation(
+                "contact.placeholderSelectAdminToAdd",
+                "Select admin(s)",
+              )}
               size="sm"
               data={adminOptions}
               value={admins}
@@ -478,8 +520,14 @@ const CreateGroupModal = ({
 
             {initialGroup && transferOptions.length > 0 && (
               <Select
-                label="Transfer Ownership"
-                placeholder="Select an admin"
+                label={translation(
+                  "contact.labelTransferOwnership",
+                  "Transfer Ownership",
+                )}
+                placeholder={translation(
+                  "contact.placeholderSelectNewOwner",
+                  "Select new owner",
+                )}
                 size="sm"
                 data={transferOptions}
                 value={owner}
@@ -496,12 +544,17 @@ const CreateGroupModal = ({
                   <Group gap={4}>
                     <IconTag size={15} className="text-indigo-600" />
                     <Text size="xs" fw={500}>
-                      Group Tags ({groupTags.length})
+                      {translation("contact.txtGroupTags", "Group Tags")} (
+                      {groupTags.length})
                     </Text>
                   </Group>
 
                   {!isAddingTag && (
-                    <Tooltip label="Add Tag" withArrow position="left">
+                    <Tooltip
+                      label={translation("contact.tooltipAddTag", "Add Tag")}
+                      withArrow
+                      position="left"
+                    >
                       <ActionIcon
                         size="xs"
                         variant="light"
@@ -517,7 +570,10 @@ const CreateGroupModal = ({
                 {isAddingTag && (
                   <div className="flex items-center gap-1.5 p-1.5 mb-2 bg-indigo-50/50 rounded-lg border border-indigo-200">
                     <TextInput
-                      placeholder="Enter tag name..."
+                      placeholder={translation(
+                        "contact.placeholderEnterTagName",
+                        "Enter tag name...",
+                      )}
                       size="xs"
                       className="flex-1"
                       autoFocus
@@ -540,7 +596,7 @@ const CreateGroupModal = ({
                       loading={tagActionLoading}
                       onClick={handleAddTag}
                     >
-                      Save
+                      {translation("contact.btnSave", "Save")}
                     </Button>
                     <ActionIcon
                       size="sm"
@@ -561,7 +617,10 @@ const CreateGroupModal = ({
                     <Group gap={6} align="center" px="xs" py={2}>
                       <Loader size="xs" color="indigo" />
                       <Text size="xs" c="dimmed">
-                        Loading tags...
+                        {translation(
+                          "contact.txtLoadingTags",
+                          "Loading tags...",
+                        )}
                       </Text>
                     </Group>
                   ) : groupTags.length > 0 ? (
@@ -584,7 +643,10 @@ const CreateGroupModal = ({
                     ))
                   ) : (
                     <Text size="xs" c="dimmed" px="xs" py={2}>
-                      No tags assigned to this group
+                      {translation(
+                        "contact.txtNoTagsAssigned",
+                        "No tags assigned to this group",
+                      )}
                     </Text>
                   )}
                 </div>
@@ -592,7 +654,10 @@ const CreateGroupModal = ({
             )}
 
             <Checkbox
-              label="Only admins can send messages"
+              label={translation(
+                "contact.checkboxAdminCanMsg",
+                "Allow admins to send messages",
+              )}
               size="xs"
               checked={onlyAdminsCanMessage}
               onChange={(e) => setOnlyAdminsCanMessage(e.currentTarget.checked)}
@@ -610,9 +675,9 @@ const CreateGroupModal = ({
           >
             {initialGroup
               ? hasFormFieldsChanged()
-                ? "Update Group"
-                : "Done"
-              : "Create Group"}
+                ? translation("contact.btnUpdateGroup", "Update Group")
+                : translation("contact.btnDone", "Done")
+              : translation("contact.btnCreateGroup", "Create Group")}
           </Button>
         </div>
       </div>

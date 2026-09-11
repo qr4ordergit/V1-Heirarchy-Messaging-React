@@ -41,10 +41,12 @@ import {
 import { ROUTES } from "../../router/routes";
 import { notifications } from "@mantine/notifications";
 import { handleApiError } from "../../utils/errorHandler";
+import { useTranslation } from "../../store/language/language.store";
 
 const Profile = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { translation } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const clearTokens = useAuthStore((state) => state.clearTokens);
@@ -145,7 +147,10 @@ const Profile = () => {
 
       notifications.show({
         title: "",
-        message: res.message || "Account details updated successfully.",
+        message: translation(
+          "profile.notificationAccUpdated",
+          "Account details updated successfully.",
+        ),
         color: "green",
         icon: <IconCheck size={18} />,
       });
@@ -168,7 +173,10 @@ const Profile = () => {
     if (!trimmedTag) {
       notifications.show({
         title: "",
-        message: "Please enter a tag name.",
+        message: translation(
+          "profile.alertEnterTag",
+          "Please enter a tag name.",
+        ),
         color: "red",
         icon: <IconX size={18} />,
       });
@@ -177,10 +185,13 @@ const Profile = () => {
 
     setCreatingTag(true);
     try {
-      const res = await createTagApi(trimmedTag);
+      await createTagApi(trimmedTag);
       notifications.show({
         title: "",
-        message: res.message || "Tag created successfully.",
+        message: translation(
+          "profile.notificationTagCreated",
+          "Tag created successfully.",
+        ),
         color: "green",
       });
 
@@ -197,10 +208,13 @@ const Profile = () => {
   const handleDeleteTag = async (tagIdentifier: string) => {
     setDeletingTagId(tagIdentifier);
     try {
-      const res = await deleteTagApi(tagIdentifier);
+      await deleteTagApi(tagIdentifier);
       notifications.show({
         title: "",
-        message: res.message || "Tag deleted successfully.",
+        message: translation(
+          "profile.notificationTagDeleted",
+          "Tag deleted successfully.",
+        ),
         color: "green",
       });
 
@@ -245,7 +259,10 @@ const Profile = () => {
 
       notifications.show({
         title: "",
-        message: patchData.message || "Profile picture updated successfully.",
+        message: translation(
+          "profile.notificationProfilePicUpdated",
+          "Profile picture updated successfully.",
+        ),
         color: "green",
       });
     } catch (error: any) {
@@ -381,10 +398,16 @@ const Profile = () => {
                       </div>
                       <div>
                         <Text fw={600} size="sm" className="text-gray-900">
-                          Account Details
+                          {translation(
+                            "profile.txtAccDetails",
+                            "Account Details",
+                          )}
                         </Text>
                         <Text size="xs" c="dimmed">
-                          Name, description
+                          {translation(
+                            "profile.txtNameDesc",
+                            "Name, description",
+                          )}
                         </Text>
                       </div>
                     </Group>
@@ -408,7 +431,10 @@ const Profile = () => {
                             />
                             <div>
                               <Text size="xs" c="dimmed" fw={600}>
-                                Display Name
+                                {translation(
+                                  "profile.txtDisplayName",
+                                  "Display Name",
+                                )}
                               </Text>
                               <Text
                                 size="sm"
@@ -417,7 +443,10 @@ const Profile = () => {
                               >
                                 {savedDisplayName || (
                                   <span className="text-gray-400 font-normal italic">
-                                    Not set
+                                    {translation(
+                                      "profile.txtNotSet",
+                                      "Not set",
+                                    )}
                                   </span>
                                 )}
                               </Text>
@@ -433,7 +462,10 @@ const Profile = () => {
                             />
                             <div>
                               <Text size="xs" c="dimmed" fw={600}>
-                                Description / Bio
+                                {translation(
+                                  "profile.txtDescBio",
+                                  "Description / Bio",
+                                )}
                               </Text>
                               <Text
                                 size="sm"
@@ -441,7 +473,10 @@ const Profile = () => {
                               >
                                 {savedDescription || (
                                   <span className="text-gray-400 italic">
-                                    No description provided
+                                    {translation(
+                                      "profile.txtNoDescProvided",
+                                      "No description provided",
+                                    )}
                                   </span>
                                 )}
                               </Text>
@@ -458,14 +493,23 @@ const Profile = () => {
                           fullWidth
                           className="mt-1"
                         >
-                          Edit Profile Details
+                          {translation(
+                            "profile.btnEditProfileDetails",
+                            "Edit Profile Details",
+                          )}
                         </Button>
                       </Stack>
                     ) : (
                       <Stack gap="sm">
                         <TextInput
-                          label="Display Name"
-                          placeholder="e.g. John Doe"
+                          label={translation(
+                            "profile.labelDisplayName",
+                            "Display Name",
+                          )}
+                          placeholder={translation(
+                            "profile.placeholderDisplayName",
+                            "e.g. John Doe",
+                          )}
                           size="sm"
                           value={displayName}
                           disabled={savingProfile}
@@ -475,8 +519,14 @@ const Profile = () => {
                         />
 
                         <Textarea
-                          label="Description"
-                          placeholder="A short note about yourself..."
+                          label={translation(
+                            "profile.labelDescription",
+                            "Description",
+                          )}
+                          placeholder={translation(
+                            "profile.placeholderDescription",
+                            "A short note about yourself...",
+                          )}
                           size="sm"
                           rows={3}
                           value={description}
@@ -493,7 +543,7 @@ const Profile = () => {
                             disabled={savingProfile}
                             onClick={handleCancelAccountEdit}
                           >
-                            Cancel
+                            {translation("profile.btnCancel", "Cancel")}
                           </Button>
                           <Button
                             size="xs"
@@ -502,7 +552,10 @@ const Profile = () => {
                             disabled={!isProfileChanged}
                             onClick={handleUpdateAccountDetails}
                           >
-                            Save Changes
+                            {translation(
+                              "profile.btnSaveChanges",
+                              "Save Changes",
+                            )}
                           </Button>
                         </Group>
                       </Stack>
@@ -528,11 +581,12 @@ const Profile = () => {
                       </div>
                       <div>
                         <Text fw={600} size="sm" className="text-gray-900">
-                          Tags List
+                          {translation("profile.txtTagList", "Tags List")}
                         </Text>
                         <Text size="xs" c="dimmed">
                           {tagsList.length}{" "}
-                          {tagsList.length === 1 ? "tag" : "tags"} configured
+                          {tagsList.length === 1 ? "tag" : "tags"}{" "}
+                          {translation("profile.txtConfigured", "configured")}
                         </Text>
                       </div>
                     </Group>
@@ -549,7 +603,10 @@ const Profile = () => {
                     {isAddingTag ? (
                       <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50 border border-gray-200">
                         <TextInput
-                          placeholder="Tag name..."
+                          placeholder={translation(
+                            "profile.placeholderTagName",
+                            "Tag name...",
+                          )}
                           size="xs"
                           className="flex-1"
                           autoFocus
@@ -571,7 +628,7 @@ const Profile = () => {
                           loading={creatingTag}
                           onClick={handleCreateTag}
                         >
-                          Save
+                          {translation("profile.btnSave", "Save")}
                         </Button>
                         <ActionIcon
                           size="sm"
@@ -595,7 +652,7 @@ const Profile = () => {
                         fullWidth
                         className="border border-dashed border-indigo-200 bg-indigo-50/40 hover:bg-indigo-50"
                       >
-                        Add New Tag
+                        {translation("profile.btnAddNewTag", "Add New Tag")}
                       </Button>
                     )}
 
@@ -628,7 +685,10 @@ const Profile = () => {
                               radius="md"
                               loading={deletingTagId === tag}
                               onClick={() => handleDeleteTag(tag)}
-                              title="Delete Tag"
+                              title={translation(
+                                "profile.titleDeleteTag",
+                                "Delete Tag",
+                              )}
                             >
                               <IconTrash size={15} />
                             </ActionIcon>
@@ -638,7 +698,10 @@ const Profile = () => {
                     ) : (
                       <div className="py-2 text-center">
                         <Text size="xs" c="dimmed">
-                          No tags created yet.
+                          {translation(
+                            "profile.txtNoTagsCreated",
+                            "No tags created yet.",
+                          )}
                         </Text>
                       </div>
                     )}
@@ -662,7 +725,7 @@ const Profile = () => {
                         <IconLogout size={20} />
                       </div>
                       <Text fw={600} size="sm" className="text-red-500">
-                        Logout
+                        {translation("profile.txtLogout", "Logout")}
                       </Text>
                     </Group>
                   </Group>
@@ -676,19 +739,19 @@ const Profile = () => {
               onClick={() => navigate("/privacy")}
               className="text-xs font-medium text-gray-500 hover:text-indigo-600 underline underline-offset-4 transition-colors cursor-pointer"
             >
-              Privacy
+              {translation("profile.txtPrivacy", "Privacy")}
             </button>
             <button
               onClick={() => navigate("/help")}
               className="text-xs font-medium text-gray-500 hover:text-indigo-600 underline underline-offset-4 transition-colors cursor-pointer"
             >
-              Help & Support
+              {translation("profile.txtHelpSupport", "Help & Support")}
             </button>
             <button
               onClick={() => navigate("/about")}
               className="text-xs font-medium text-gray-500 hover:text-indigo-600 underline underline-offset-4 transition-colors cursor-pointer"
             >
-              About
+              {translation("profile.txtAbout", "About")}
             </button>
           </div>
 
@@ -703,19 +766,19 @@ const Profile = () => {
               onClick={() => navigate("/privacy")}
               className="text-xs font-medium text-gray-500 hover:text-indigo-600 underline underline-offset-4 transition-colors cursor-pointer"
             >
-              Privacy
+              {translation("profile.txtPrivacy", "Privacy")}
             </button>
             <button
               onClick={() => navigate("/help")}
               className="text-xs font-medium text-gray-500 hover:text-indigo-600 underline underline-offset-4 transition-colors cursor-pointer"
             >
-              Help & Support
+              {translation("profile.txtHelpSupport", "Help & Support")}
             </button>
             <button
               onClick={() => navigate("/about")}
               className="text-xs font-medium text-gray-500 hover:text-indigo-600 underline underline-offset-4 transition-colors cursor-pointer"
             >
-              About
+              {translation("profile.txtAbout", "About")}
             </button>
           </div>
         </div>

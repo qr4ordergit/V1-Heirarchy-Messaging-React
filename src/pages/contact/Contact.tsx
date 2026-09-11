@@ -54,6 +54,7 @@ import {
   copyToClipboardSafely,
 } from "../../api/contactApi";
 import { notifications } from "@mantine/notifications";
+import { useTranslation } from "../../store/language/language.store";
 
 export interface Contact {
   id: string;
@@ -112,6 +113,7 @@ const Contact = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const { translation } = useTranslation();
   const isDetailActive = location.pathname.split("/").length > 3;
 
   const userDetails = useAuthStore((state) => state.userDetails);
@@ -191,8 +193,10 @@ const Contact = () => {
       if (navigator.share) {
         try {
           await navigator.share({
-            title: `Join ${group.group_name}`,
-            text: `Join our group "${group.group_name}" on Chat Hub:`,
+            title:
+              `${translation("contact.shareLinkTitle", "Join")}` +
+              ` ${group.group_name}`,
+            text: `${translation("contact.shareLinkText1", "Join our group")} "${group.group_name}" ${translation("contact.shareLinkText2", "on Chat Hub:")}`,
             url: inviteUrl,
           });
           return;
@@ -204,7 +208,10 @@ const Contact = () => {
       if (copied) {
         notifications.show({
           title: "",
-          message: "Invite link copied to clipboard!",
+          message: translation(
+            "contact.shareLinkMsg",
+            "Invite link copied to clipboard!",
+          ),
           color: "green",
           icon: <IconCheck size={18} />,
         });
@@ -216,7 +223,9 @@ const Contact = () => {
 
   const handleLeaveGroup = async (group: GroupItem) => {
     if (
-      !window.confirm(`Are you sure you want to leave "${group.group_name}"?`)
+      !window.confirm(
+        `${translation("contact.txtLeaveGroupAlert", "Are you sure you want to leave")} "${group.group_name}"?`,
+      )
     )
       return;
     setActiveActionId(group._id);
@@ -228,7 +237,7 @@ const Contact = () => {
   const handleDeleteGroup = async (group: GroupItem) => {
     if (
       !window.confirm(
-        `Are you sure you want to delete group "${group.group_name}"?`,
+        `${translation("contact.txtDeleteGroupAlert", "Are you sure you want to delete group")} "${group.group_name}"?`,
       )
     )
       return;
@@ -264,7 +273,9 @@ const Contact = () => {
     const contactUserId = contact.username || contact.id.split("#")[1];
     if (
       !contactUserId ||
-      !window.confirm(`Are you sure you want to delete ${contact.name}?`)
+      !window.confirm(
+        `${translation("contact.txtDeleteContactAlert", "Are you sure you want to delete")} ${contact.name}?`,
+      )
     )
       return;
 
@@ -386,7 +397,7 @@ const Contact = () => {
                       : undefined
                   }
                 >
-                  Contact List
+                  {translation("contact.tabContactList", "Contact List")}
                 </Tabs.Tab>
 
                 <Tabs.Tab
@@ -415,7 +426,7 @@ const Contact = () => {
                       : undefined
                   }
                 >
-                  Group List
+                  {translation("contact.tabGroupList", "Group List")}
                 </Tabs.Tab>
               </Tabs.List>
             </Tabs>
@@ -426,7 +437,10 @@ const Contact = () => {
                   {isCreatingGroup && (
                     <Group justify="space-between">
                       <Text size="xs" fw={600} c="indigo">
-                        Select members for group
+                        {translation(
+                          "contact.txtSelectMembersGroup",
+                          "Select members for group",
+                        )}
                       </Text>
                       <Group gap="xs">
                         <Button
@@ -438,7 +452,11 @@ const Contact = () => {
                             setGroupModalOpened(true);
                           }}
                         >
-                          Create Group ({selectedGroupContacts.length})
+                          {translation(
+                            "contact.txtCreateGroup",
+                            "Create Group",
+                          )}{" "}
+                          ({selectedGroupContacts.length})
                         </Button>
                         <ActionIcon
                           variant="subtle"
@@ -478,7 +496,10 @@ const Contact = () => {
                     radius="md"
                     size="md"
                     leftSection={<IconSearch size={18} />}
-                    placeholder="Search contacts"
+                    placeholder={translation(
+                      "contact.placeholderSearchContact",
+                      "Search contacts",
+                    )}
                     value={search}
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                       setSearch(e.target.value)
@@ -498,7 +519,8 @@ const Contact = () => {
                 >
                   {loading ? (
                     <Text ta="center" py={60} c="dimmed">
-                      Loading contacts...
+                      translation("contact.txtLoadingContacts", "Loading
+                      contacts...")
                     </Text>
                   ) : filteredContacts.length > 0 ? (
                     filteredContacts.map((contact) => (
@@ -568,7 +590,13 @@ const Contact = () => {
                         {!isCreatingGroup && (
                           <>
                             <Group gap="xs" visibleFrom="sm">
-                              <Tooltip label="Edit Contact" withArrow>
+                              <Tooltip
+                                label={translation(
+                                  "contact.tooltipEditContact",
+                                  "Edit Contact",
+                                )}
+                                withArrow
+                              >
                                 <ActionIcon
                                   variant="subtle"
                                   size="md"
@@ -583,7 +611,13 @@ const Contact = () => {
                                 </ActionIcon>
                               </Tooltip>
 
-                              <Tooltip label="Delete Contact" withArrow>
+                              <Tooltip
+                                label={translation(
+                                  "contact.tooltipDeleteContact",
+                                  "Delete Contact",
+                                )}
+                                withArrow
+                              >
                                 <ActionIcon
                                   variant="subtle"
                                   color="red"
@@ -625,14 +659,14 @@ const Contact = () => {
                                   leftSection={<IconEdit size={16} />}
                                   onClick={() => handleEditContact(contact)}
                                 >
-                                  Edit
+                                  {translation("contact.txtEdit", "Edit")}
                                 </Menu.Item>
                                 <Menu.Item
                                   color="red"
                                   leftSection={<IconTrash size={16} />}
                                   onClick={() => handleDeleteContact(contact)}
                                 >
-                                  Delete
+                                  {translation("contact.txtDelete", "Delete")}
                                 </Menu.Item>
                               </Menu.Dropdown>
                             </Menu>
@@ -642,7 +676,10 @@ const Contact = () => {
                     ))
                   ) : (
                     <Text ta="center" py={60} c="dimmed">
-                      No contacts found
+                      {translation(
+                        "contact.txtNoContactsFound",
+                        "No contacts found",
+                      )}
                     </Text>
                   )}
                 </Card>
@@ -655,7 +692,10 @@ const Contact = () => {
                   radius="md"
                   size="md"
                   leftSection={<IconSearch size={18} />}
-                  placeholder="Search groups"
+                  placeholder={translation(
+                    "contact.placeholderSearchGroup",
+                    "Search groups",
+                  )}
                   value={search}
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setSearch(e.target.value)
@@ -682,17 +722,26 @@ const Contact = () => {
                                   .group_name}
                             </Text>
                             <Badge size="xs" variant="light" color="indigo">
-                              Invite
+                              {translation("contact.txtInviteBadge", "Invite")}
                             </Badge>
                           </Group>
                           <Text size="xs" c="dimmed">
-                            You were invited to join this group
+                            {translation(
+                              "contact.txtInvitedToJoin",
+                              "You were invited to join this group",
+                            )}
                           </Text>
                         </div>
                       </Group>
 
                       <Group gap={6} wrap="nowrap">
-                        <Tooltip label="Accept Invite" withArrow>
+                        <Tooltip
+                          label={translation(
+                            "contact.tooltipAcceptInvite",
+                            "Accept Invite",
+                          )}
+                          withArrow
+                        >
                           <ActionIcon
                             variant="filled"
                             color="green"
@@ -705,7 +754,13 @@ const Contact = () => {
                           </ActionIcon>
                         </Tooltip>
 
-                        <Tooltip label="Decline Invite" withArrow>
+                        <Tooltip
+                          label={translation(
+                            "contact.tooltipDeclineInvite",
+                            "Decline Invite",
+                          )}
+                          withArrow
+                        >
                           <ActionIcon
                             variant="light"
                             color="red"
@@ -734,7 +789,10 @@ const Contact = () => {
                 >
                   {groupsLoading ? (
                     <Text ta="center" py={60} c="dimmed">
-                      Loading groups...
+                      {translation(
+                        "contact.txtLoadingGroups",
+                        "Loading groups...",
+                      )}
                     </Text>
                   ) : filteredGroups.length > 0 ? (
                     filteredGroups.map((group) => {
@@ -783,15 +841,24 @@ const Contact = () => {
                               <Text size="xs" c="dimmed">
                                 {group.member_count}{" "}
                                 {group.member_count === 1
-                                  ? "member"
-                                  : "members"}
+                                  ? translation("contact.txtMember", "member")
+                                  : translation(
+                                      "contact.txtMembers",
+                                      "members",
+                                    )}
                               </Text>
                             </div>
                           </Group>
 
                           <Group gap="xs" visibleFrom="sm">
                             {isAdmin && (
-                              <Tooltip label="Edit Group" withArrow>
+                              <Tooltip
+                                label={translation(
+                                  "contact.tooltipEditGroup",
+                                  "Edit Group",
+                                )}
+                                withArrow
+                              >
                                 <ActionIcon
                                   variant="subtle"
                                   size="md"
@@ -808,7 +875,13 @@ const Contact = () => {
                             )}
 
                             {isCreator && (
-                              <Tooltip label="Delete Group" withArrow>
+                              <Tooltip
+                                label={translation(
+                                  "contact.tooltipDeleteGroup",
+                                  "Delete Group",
+                                )}
+                                withArrow
+                              >
                                 <ActionIcon
                                   variant="subtle"
                                   color="red"
@@ -825,7 +898,13 @@ const Contact = () => {
                               </Tooltip>
                             )}
 
-                            <Tooltip label="Invite Link" withArrow>
+                            <Tooltip
+                              label={translation(
+                                "contact.tooltipInviteLink",
+                                "Invite Link",
+                              )}
+                              withArrow
+                            >
                               <ActionIcon
                                 variant="subtle"
                                 color="blue"
@@ -841,7 +920,13 @@ const Contact = () => {
                               </ActionIcon>
                             </Tooltip>
 
-                            <Tooltip label="Leave Group" withArrow>
+                            <Tooltip
+                              label={translation(
+                                "contact.tooltipLeaveGroup",
+                                "Leave Group",
+                              )}
+                              withArrow
+                            >
                               <ActionIcon
                                 variant="subtle"
                                 color="orange"
@@ -886,7 +971,10 @@ const Contact = () => {
                                     setGroupModalOpened(true);
                                   }}
                                 >
-                                  Edit Group
+                                  {translation(
+                                    "contact.txtEditGroup",
+                                    "Edit Group",
+                                  )}
                                 </Menu.Item>
                               )}
 
@@ -894,7 +982,10 @@ const Contact = () => {
                                 leftSection={<IconLink size={16} />}
                                 onClick={() => handleShareGroup(group)}
                               >
-                                Invite Link
+                                {translation(
+                                  "contact.txtInviteLink",
+                                  "Invite Link",
+                                )}
                               </Menu.Item>
 
                               <Menu.Item
@@ -902,7 +993,10 @@ const Contact = () => {
                                 leftSection={<IconDoorExit size={16} />}
                                 onClick={() => handleLeaveGroup(group)}
                               >
-                                Leave Group
+                                {translation(
+                                  "contact.txtLeaveGroup",
+                                  "Leave Group",
+                                )}
                               </Menu.Item>
 
                               {isCreator && (
@@ -911,7 +1005,10 @@ const Contact = () => {
                                   leftSection={<IconTrash size={16} />}
                                   onClick={() => handleDeleteGroup(group)}
                                 >
-                                  Delete Group
+                                  {translation(
+                                    "contact.txtDeleteGroup",
+                                    "Delete Group",
+                                  )}
                                 </Menu.Item>
                               )}
                             </Menu.Dropdown>
@@ -921,7 +1018,10 @@ const Contact = () => {
                     })
                   ) : (
                     <Text ta="center" py={60} c="dimmed">
-                      No groups found
+                      {translation(
+                        "contact.txtNoGroupsFound",
+                        "No groups found",
+                      )}
                     </Text>
                   )}
                 </Card>
