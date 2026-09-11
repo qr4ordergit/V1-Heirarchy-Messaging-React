@@ -1706,7 +1706,7 @@ export default function Accounts() {
                           )}
                         </Text>
 
-                        <Group gap="xs" wrap="nowrap">
+                        <Group gap="xs" wrap="nowrap" ml="auto">
                           {bulkJob.status !== "idle" && (
                             <Group gap={2} wrap="nowrap">
                               <Tooltip
@@ -1855,7 +1855,7 @@ export default function Accounts() {
                       autoComplete="off"
                       data-1p-ignore
                       data-lpignore="true"
-                      rightSectionWidth={searchQuery ? 84 : 60}
+                      rightSectionWidth={searchQuery ? 84 : 45}
                       rightSection={
                         <Group gap={6} wrap="nowrap" justify="flex-end" pr={4}>
                           {searchQuery && (
@@ -2412,7 +2412,7 @@ export default function Accounts() {
             )}
             value={confirmNewPassword}
             onChange={(e) => setConfirmNewPassword(e.target.value)}
-            name="confirm-new-account-password"
+            name="confirm-account-password"
             autoComplete="new-password"
             data-1p-ignore
             data-lpignore="true"
