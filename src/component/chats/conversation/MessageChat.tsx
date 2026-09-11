@@ -51,8 +51,8 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
         )}
 
         {msg.body?.media_url
-          ? msg.body?.media_url?.map((url) => (
-              <MediaChat key={url.name} url={url} msg={msg} />
+          ? msg.body?.media_url?.map((url, i) => (
+              <MediaChat key={i} url={url} msg={msg} />
             ))
           : ""}
 

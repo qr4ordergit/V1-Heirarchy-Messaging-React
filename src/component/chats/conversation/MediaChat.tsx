@@ -11,6 +11,7 @@ import {
 import type { MESSAGE } from "../../../store/chats/chats.store";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../utils/constant";
+import { useMemo } from "react";
 
 interface MEDIACHAT {
   url: File;
@@ -25,7 +26,7 @@ export function MediaChat({ url, msg }: MEDIACHAT) {
 
   if (!mediaType) return null;
 
-  const fileUrl = URL.createObjectURL(url);
+  const fileUrl = useMemo(() => URL.createObjectURL(url), []);
 
   const mediaIcons = {
     document: IconFileTypeDoc,
