@@ -210,7 +210,7 @@ export default function Chatting() {
       h={"100%"}
       scrollbarSize={8}
       offsetScrollbars
-      className="py-2"
+      className="pb-2"
       viewportRef={viewport}
     >
       <Stack py="md" gap="sm" className="h-100">

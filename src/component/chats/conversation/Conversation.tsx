@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import ChatInput from "./ChatInput";
 import Chatting from "./Chatting";
@@ -18,6 +18,9 @@ import { useParams } from "react-router";
 import { ENDPOINTS } from "../../../api/endpoints";
 import { useTagStore } from "../../../store/tags/tags.store";
 import ExportChatModal from "./modals/ExportChatModal";
+import DisappearMsgsModal from "./modals/DisappearMsgsModal";
+import { useDMListStore } from "../../../store/dm/dm.list.store";
+import { useGroupListStore } from "../../../store/groups/group.list.store";
 
 function Conversation() {
   const { trigger } = useTriggerStore((state) => state);
@@ -25,6 +28,8 @@ function Conversation() {
   const { target_user } = useAuthStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
   const { storeCategoryTags } = useTagStore((state) => state);
+  const { dms } = useDMListStore((state) => state);
+  const { groups } = useGroupListStore((state) => state);
 
   const fetchTagsList = async () => {
     try {
@@ -72,6 +77,34 @@ function Conversation() {
     } catch (error) {}
   };
 
+  const disappearingMsgModeChecker = () => {
+    if (!chatId) return false;
+
+    if (chatId.includes("group")) {
+      const group = groups.find(
+        (userDoc) => userDoc._id === decodeURIComponent(chatId),
+      );
+
+      if (group?.disappearing_messages?.enabled) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    const chat = dms.find(
+      (userDoc) => userDoc._id === decodeURIComponent(chatId),
+    );
+
+    if (chat?.disappearing_messages?.enabled) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const disappearingMode = useMemo(disappearingMsgModeChecker, [dms, groups]);
+
   useEffect(() => {
     fetchContacts();
   }, []);
@@ -87,6 +120,11 @@ function Conversation() {
           <div className="w-full lg:w-8/12">
             <div className="flex flex-col h-full">
               <Navbar />
+              {disappearingMode && (
+                <div className="text-center text-gray-400 text-[12px]">
+                  Disappearing messages mode enabled
+                </div>
+              )}
               <div className="flex-1 min-h-0">
                 <Chatting />
               </div>
@@ -108,6 +146,7 @@ function Conversation() {
       <PrivateMessagePayloadModal />
       <DecryptPrivateMsgDialog />
       <ExportChatModal />
+      <DisappearMsgsModal />
     </div>
   );
 }

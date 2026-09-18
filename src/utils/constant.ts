@@ -104,6 +104,7 @@ export const TRIGGERS = {
   privateMessageSender: "privateMessageSender",
   decryptPrivateMsgDialog: "decryptPrivateMsgDialog",
   exportChatModal: "exportChatModal",
+  disappearChatModal: "disappearChatModal"
 };
 
 export const CIPHER_SECRET =

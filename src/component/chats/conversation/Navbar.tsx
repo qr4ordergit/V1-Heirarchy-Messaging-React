@@ -2,6 +2,7 @@ import { ActionIcon, Avatar, Menu, ScrollArea } from "@mantine/core";
 import {
   IconChevronLeft,
   IconDotsVertical,
+  IconMessageDots,
   IconProgressDown,
   IconRefresh,
   IconSearch,
@@ -73,6 +74,12 @@ function Navbar() {
   const onExportChat = () => {
     setTrigger({
       toTrigger: TRIGGERS.exportChatModal,
+    });
+  };
+
+  const onDisappear = () => {
+    setTrigger({
+      toTrigger: TRIGGERS.disappearChatModal,
     });
   };
 
@@ -204,6 +211,12 @@ function Navbar() {
             </Menu.Target>
 
             <Menu.Dropdown>
+              <Menu.Item
+                onClick={onDisappear}
+                leftSection={<IconMessageDots size={14} />}
+              >
+                {translation("chat_history.NAV-exportsd", "Disappear Messages")}
+              </Menu.Item>
               <Menu.Item
                 onClick={onExportChat}
                 leftSection={<IconProgressDown size={14} />}

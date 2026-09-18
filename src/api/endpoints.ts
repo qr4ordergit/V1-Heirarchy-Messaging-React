@@ -60,5 +60,8 @@ export const ENDPOINTS = {
   EXPORTCHAT: {
     GENERATE: "/message-reports",
     STATUS: "/message-reports"
+  },
+  MESSAGES: {
+    DISAPPEAR: "/disappear"
   }
 } as const;
