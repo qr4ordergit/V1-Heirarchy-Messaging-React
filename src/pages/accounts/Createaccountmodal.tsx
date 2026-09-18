@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { notifications } from "@mantine/notifications";
 import {
   Alert,
@@ -85,7 +86,9 @@ export default function CreateAccountModal({
   onDiscardBulkJob,
 }: CreateAccountModalProps) {
   const { translation } = useTranslation();
+  const navigate = useNavigate();
   const userDetails = useAuthStore((state) => state.userDetails);
+  const isPaidUser = Boolean(userDetails?.is_paid);
 
   const [mode, setMode] = useState<AddAccountMode>("single");
 
@@ -116,6 +119,19 @@ export default function CreateAccountModal({
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const composedPhone = () => `${form.countryCode}${form.phone.trim()}`;
+
+  const getEffectiveDisplayName = () => {
+    const typed = form.displayName.trim();
+    const fallback =
+      form.identifierType === "username"
+        ? form.username.trim()
+        : form.identifierType === "email"
+          ? form.email.trim()
+          : composedPhone();
+    const base = typed || fallback;
+
+    if (isPaidUser || !base) return typed;
+  };
 
   const fetchUsernameSuggestionsOnce = async (rawUsername: string) => {
     const trimmed = rawUsername.trim().replace(/-/g, "");
@@ -263,6 +279,11 @@ export default function CreateAccountModal({
     setPendingUsername("");
   };
 
+  const handleUpgradeClick = () => {
+    handleClose();
+    navigate("/plans");
+  };
+
   const handleSubmit = async () => {
     setSubmitError(null);
     if (!validate()) return;
@@ -276,7 +297,7 @@ export default function CreateAccountModal({
         email: form.email.trim(),
         phone: trimmedPhone,
         password: form.password,
-        displayName: form.displayName,
+        displayName: getEffectiveDisplayName(),
         description: form.description,
       });
 
@@ -411,7 +432,7 @@ export default function CreateAccountModal({
         email: form.email.trim(),
         phone: pendingPhone,
         password: form.password,
-        displayName: form.displayName,
+        displayName: getEffectiveDisplayName(),
         description: form.description,
       });
       setPendingUsername(response.username || response.id || pendingUsername);
@@ -698,6 +719,35 @@ export default function CreateAccountModal({
                 </Stack>
               )}
             </div>
+          )}
+
+          {!isPaidUser && (
+            <Text size="xs" c="dimmed">
+              {translation(
+                "create_account_modal.txtFreeAccountSuffix",
+                "Premium account is available for paid users. Non-premium accounts get a default suffix.",
+              )}{" "}
+              <Text
+                component="button"
+                type="button"
+                onClick={handleUpgradeClick}
+                span
+                size="xs"
+                c="blue"
+                fw={600}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                }}
+              >
+                {translation(
+                  "create_account_modal.btnBecomePaidUser",
+                  "Become a paid user",
+                )}
+              </Text>
+            </Text>
           )}
 
           {form.identifierType === "phone" && (

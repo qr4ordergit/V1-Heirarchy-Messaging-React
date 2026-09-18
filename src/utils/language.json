@@ -495,7 +495,9 @@
         "ntfyVerificationCodeResentTitle": "Verification code resent",
         "txtNewCodeSent": "A new code has been sent.",
         "errCouldNotResendCode": "Could not resend the code.",
-        "ntfyCouldntResendCodeTitle": "Couldn't resend code"
+        "ntfyCouldntResendCodeTitle": "Couldn't resend code",
+        "txtFreeAccountSuffix": "Premium account is available for paid users. Non-premium accounts get a default suffix.",
+        "btnBecomePaidUser": "Become a paid user"
       },
       "plans": {
         "tooltipGoBack": "Go back",
@@ -1081,7 +1083,9 @@
         "ntfyVerificationCodeResentTitle": "Код підтвердження надіслано повторно",
         "txtNewCodeSent": "Новий код було надіслано.",
         "errCouldNotResendCode": "Не вдалося повторно надіслати код.",
-        "ntfyCouldntResendCodeTitle": "Не вдалося повторно надіслати код"
+        "ntfyCouldntResendCodeTitle": "Не вдалося повторно надіслати код",
+        "txtFreeAccountSuffix": "Premium account is available for paid users. Non-premium accounts get a default suffix.",
+        "btnBecomePaidUser": "Become a paid user"
       },
       "plans": {
         "tooltipGoBack": "Назад",

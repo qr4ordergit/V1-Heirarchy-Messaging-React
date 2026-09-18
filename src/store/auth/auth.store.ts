@@ -20,6 +20,7 @@ export interface UserDetails {
   profile_picture: string | null;
   isLocked?: boolean;
   passkey_hash?: string | null;
+  is_paid?: boolean;
 }
 
 export const isHubAccount = (details: UserDetails | null | undefined) =>
