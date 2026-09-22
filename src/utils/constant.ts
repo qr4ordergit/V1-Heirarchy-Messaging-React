@@ -104,7 +104,7 @@ export const TRIGGERS = {
   privateMessageSender: "privateMessageSender",
   decryptPrivateMsgDialog: "decryptPrivateMsgDialog",
   exportChatModal: "exportChatModal",
-  disappearChatModal: "disappearChatModal"
+  disappearChatModal: "disappearChatModal",
 };
 
 export const CIPHER_SECRET =
@@ -145,6 +145,19 @@ const COMMON_PERMISSION = {
     create: false,
     update: false,
     delete: false,
+  },
+  "scheduled-messages": {
+    read: false,
+    create: false,
+    update: false,
+    delete: false,
+  },
+  "disappearing-messages": {
+    create: false,
+  },
+  "chat-export": {
+    read: false,
+    create: false,
   },
 };
 
@@ -207,6 +220,19 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "tags|update": "Update",
   "tags|delete": "Delete",
 
+  // Scheduled Messages
+  "scheduled-messages|read": "View",
+  "scheduled-messages|create": "Allow",
+  "scheduled-messages|update": "Update",
+  "scheduled-messages|delete": "Delete",
+
+  // Disappearing Messages
+  "disappearing-messages|create": "Allow",
+
+  // Export Chats
+  "chat-export|read": "View",
+  "chat-export|create": "Allow",
+
   // Manage Subuser
   "sub-users|create": "Create",
   "sub-users|read": "View",
@@ -234,6 +260,9 @@ export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
   keyring: "Manage Keyring",
   contacts: "Manage Contacts",
   tags: "Manage Tags",
+  "scheduled-messages": "Scheduled Messages",
+  "disappearing-messages": "Disappearing Messages",
+  "chat-export": "Export Chats",
   "sub-users": "Manage Subuser Account",
   "user-account": "Manage Account",
   "users-accesstree": "Manage Subuser's Accessed Accounts Access & Permissions",
