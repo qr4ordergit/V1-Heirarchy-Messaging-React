@@ -197,8 +197,8 @@ export async function deleteAccount(
     const response = await api.delete<DeleteAccountResponse>(
       API_ENDPOINTS.USER_ACCESS,
       {
-        data: {
-          sub_user_id: subUserId,
+        params: {
+          target_user: subUserId,
         },
       },
     );
@@ -206,6 +206,55 @@ export async function deleteAccount(
     return response.data;
   } catch (error) {
     throw new Error(extractErrorMessage(error, "Could not remove account."));
+  }
+}
+
+export interface UpdateAccountStatusResponse {
+  message?: string;
+  status?: string;
+}
+
+export async function activateAccount(
+  subUserId: string,
+): Promise<UpdateAccountStatusResponse> {
+  try {
+    const response = await api.patch<UpdateAccountStatusResponse>(
+      `${API_ENDPOINTS.USER_ACCESS}/activate`,
+      { status: "activate" },
+      {
+        params: {
+          target_user: subUserId,
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      extractErrorMessage(error, "Could not reactivate account."),
+    );
+  }
+}
+
+export async function deactivateAccount(
+  subUserId: string,
+): Promise<UpdateAccountStatusResponse> {
+  try {
+    const response = await api.patch<UpdateAccountStatusResponse>(
+      `${API_ENDPOINTS.USER_ACCESS}/deactivate`,
+      undefined,
+      {
+        params: {
+          target_user: subUserId,
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      extractErrorMessage(error, "Could not deactivate account."),
+    );
   }
 }
 

@@ -157,3 +157,150 @@
     font-size: 14px !important;
   }
 }
+
+/* Intro video trigger */
+.introVideoBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+  transition:
+    transform 150ms ease,
+    background 150ms ease;
+  flex-shrink: 0;
+}
+
+.introVideoBtn:hover {
+  background: rgba(255, 255, 255, 0.24);
+  transform: scale(1.05);
+}
+
+.introVideoBtn svg {
+  margin-left: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+.introVideoPulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.65);
+  animation: introPulse 2.2s ease-out infinite;
+}
+
+@keyframes introPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.introVideoLabel {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  opacity: 0.92;
+  transition: opacity 150ms ease;
+}
+
+.introVideoLabel:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* Full-screen intro video overlay */
+.videoOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(6, 8, 18, 0.94);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: videoOverlayIn 200ms ease;
+}
+
+@keyframes videoOverlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.videoPlayer {
+  width: 100%;
+  max-width: 1100px;
+  max-height: 88vh;
+  border-radius: 14px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  background: #000000;
+  animation: videoPopIn 220ms ease;
+}
+
+@keyframes videoPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.videoCloseBtn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    transform 150ms ease;
+}
+
+.videoCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: scale(1.05);
+}
+
+@media (max-width: 48em) {
+  .introVideoBtn {
+    width: 46px;
+    height: 46px;
+  }
+
+  .introVideoLabel {
+    font-size: 13px;
+  }
+
+  .videoCloseBtn {
+    top: 14px;
+    right: 14px;
+  }
+}

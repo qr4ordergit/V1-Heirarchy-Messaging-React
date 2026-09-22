@@ -57,6 +57,8 @@ import {
 import {
   fetchAccounts,
   deleteAccount,
+  activateAccount,
+  deactivateAccount,
   changePassword,
   updateUserLock,
   updateUserProfile,
@@ -121,6 +123,9 @@ const getAccountIdentifier = (account: Account) => {
   if (account?.phone_number?.trim()) return account.phone_number.trim();
   return account.user_id;
 };
+const isInactiveStatus = (status: string | null) =>
+  status?.toLowerCase() === "deactive";
+
 const statusColor = (status: string | null) => {
   switch (status?.toLowerCase()) {
     case "active":
@@ -128,7 +133,7 @@ const statusColor = (status: string | null) => {
     case "pending":
       return "yellow";
     case "suspended":
-    case "inactive":
+    case "deactive":
       return "red";
     default:
       return "gray";
@@ -178,6 +183,9 @@ export default function Accounts() {
   const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [manageAction, setManageAction] = useState<
+    "delete" | "deactivate" | "reactivate" | null
+  >(null);
 
   const [passwordTarget, setPasswordTarget] = useState<Account | null>(null);
   const [newPassword, setNewPassword] = useState("");
@@ -779,6 +787,12 @@ export default function Accounts() {
     }
   };
 
+  const closeManageAccountModal = () => {
+    setDeleteTarget(null);
+    setDeleteError(null);
+    setManageAction(null);
+  };
+
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
 
@@ -786,7 +800,7 @@ export default function Accounts() {
     setDeleteError(null);
     try {
       await deleteAccount(deleteTarget.user_id);
-      setDeleteTarget(null);
+      closeManageAccountModal();
       await loadAccounts();
       notifications.show({
         color: "teal",
@@ -808,6 +822,80 @@ export default function Accounts() {
         title: translation(
           "accounts_page.alertCouldntRemoveAccountTitle",
           "Couldn't remove account",
+        ),
+        message,
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeactivateConfirm = async () => {
+    if (!deleteTarget) return;
+
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deactivateAccount(deleteTarget.user_id);
+      closeManageAccountModal();
+      await loadAccounts();
+      notifications.show({
+        color: "teal",
+        title: translation(
+          "accounts_page.ntfyAccountDeactivatedTitle",
+          "Account deactivated",
+        ),
+        message: translation(
+          "accounts_page.ntfyAccountDeactivatedMsg",
+          "The account was deactivated successfully.",
+        ),
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not deactivate account.";
+      setDeleteError(message);
+      notifications.show({
+        color: "red",
+        title: translation(
+          "accounts_page.alertCouldntDeactivateAccountTitle",
+          "Couldn't deactivate account",
+        ),
+        message,
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleReactivateConfirm = async () => {
+    if (!deleteTarget) return;
+
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await activateAccount(deleteTarget.user_id);
+      closeManageAccountModal();
+      await loadAccounts();
+      notifications.show({
+        color: "teal",
+        title: translation(
+          "accounts_page.ntfyAccountReactivatedTitle",
+          "Account reactivated",
+        ),
+        message: translation(
+          "accounts_page.ntfyAccountReactivatedMsg",
+          "The account was reactivated successfully.",
+        ),
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not reactivate account.";
+      setDeleteError(message);
+      notifications.show({
+        color: "red",
+        title: translation(
+          "accounts_page.alertCouldntReactivateAccountTitle",
+          "Couldn't reactivate account",
         ),
         message,
       });
@@ -2176,7 +2264,11 @@ export default function Accounts() {
                                     <Menu.Item
                                       color="red"
                                       leftSection={<IconTrash size={14} />}
-                                      onClick={() => setDeleteTarget(account)}
+                                      onClick={() => {
+                                        setDeleteTarget(account);
+                                        setManageAction(null);
+                                        setDeleteError(null);
+                                      }}
                                     >
                                       {translation(
                                         "accounts_page.menuRemoveAccount",
@@ -2286,14 +2378,25 @@ export default function Accounts() {
 
       <Modal
         opened={deleteTarget !== null}
-        onClose={() => {
-          setDeleteTarget(null);
-          setDeleteError(null);
-        }}
-        title={translation(
-          "accounts_page.titleRemoveAccount",
-          "Remove Account",
-        )}
+        onClose={closeManageAccountModal}
+        title={
+          manageAction === "delete"
+            ? translation("accounts_page.titleRemoveAccount", "Remove Account")
+            : manageAction === "deactivate"
+              ? translation(
+                  "accounts_page.titleDeactivateAccount",
+                  "Deactivate Account",
+                )
+              : manageAction === "reactivate"
+                ? translation(
+                    "accounts_page.titleReactivateAccount",
+                    "Reactivate Account",
+                  )
+                : translation(
+                    "accounts_page.titleManageAccount",
+                    "Manage Account",
+                  )
+        }
         centered
         radius="md"
       >
@@ -2301,51 +2404,203 @@ export default function Accounts() {
           {deleteError && (
             <Alert
               color="red"
-              title={translation(
-                "accounts_page.alertCouldntRemoveAccountTitle",
-                "Couldn't remove account",
-              )}
+              title={
+                manageAction === "deactivate"
+                  ? translation(
+                      "accounts_page.alertCouldntDeactivateAccountTitle",
+                      "Couldn't deactivate account",
+                    )
+                  : manageAction === "reactivate"
+                    ? translation(
+                        "accounts_page.alertCouldntReactivateAccountTitle",
+                        "Couldn't reactivate account",
+                      )
+                    : translation(
+                        "accounts_page.alertCouldntRemoveAccountTitle",
+                        "Couldn't remove account",
+                      )
+              }
             >
               {deleteError}
             </Alert>
           )}
 
-          <Text size="sm">
-            {translation(
-              "accounts_page.txtRemoveConfirm1",
-              "Are you sure you want to remove",
-            )}{" "}
-            <strong>
-              {deleteTarget ? getAccountIdentifier(deleteTarget) : ""}
-            </strong>{" "}
-            {translation(
-              "accounts_page.txtRemoveConfirm2",
-              "from your hub? This can't be undone.",
-            )}
-          </Text>
+          {manageAction === null && (
+            <>
+              <Text size="sm" c="dimmed">
+                {translation(
+                  "accounts_page.txtChooseAccountAction",
+                  "Choose what you'd like to do with",
+                )}{" "}
+                <strong>
+                  {deleteTarget ? getAccountIdentifier(deleteTarget) : ""}
+                </strong>
+                .
+              </Text>
 
-          <Group justify="flex-end" mt="xs">
-            <Button
-              variant="subtle"
-              onClick={() => {
-                setDeleteTarget(null);
-                setDeleteError(null);
-              }}
-            >
-              {translation("accounts_page.btnCancel", "Cancel")}
-            </Button>
-            <Button
-              color="red"
-              radius="xl"
-              loading={deleting}
-              onClick={handleDeleteConfirm}
-            >
-              {translation(
-                "accounts_page.titleRemoveAccount",
-                "Remove Account",
-              )}
-            </Button>
-          </Group>
+              <Stack gap="xs">
+                {isInactiveStatus(deleteTarget?.status ?? null) ? (
+                  <Button
+                    variant="light"
+                    color="teal"
+                    radius="md"
+                    justify="space-between"
+                    fullWidth
+                    leftSection={<IconLockOpen size={16} />}
+                    onClick={() => setManageAction("reactivate")}
+                  >
+                    {translation(
+                      "accounts_page.btnReactivateAccount",
+                      "Reactivate Account",
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="light"
+                    color="yellow"
+                    radius="md"
+                    justify="space-between"
+                    fullWidth
+                    leftSection={<IconLock size={16} />}
+                    onClick={() => setManageAction("deactivate")}
+                  >
+                    {translation(
+                      "accounts_page.btnDeactivateAccount",
+                      "Deactivate Account",
+                    )}
+                  </Button>
+                )}
+
+                <Button
+                  variant="light"
+                  color="red"
+                  radius="md"
+                  justify="space-between"
+                  fullWidth
+                  leftSection={<IconTrash size={16} />}
+                  onClick={() => setManageAction("delete")}
+                >
+                  {translation(
+                    "accounts_page.btnDeleteAccount",
+                    "Delete Account",
+                  )}
+                </Button>
+              </Stack>
+
+              <Group justify="flex-end" mt="xs">
+                <Button variant="subtle" onClick={closeManageAccountModal}>
+                  {translation("accounts_page.btnCancel", "Cancel")}
+                </Button>
+              </Group>
+            </>
+          )}
+
+          {manageAction === "delete" && (
+            <>
+              <Text size="sm">
+                {translation(
+                  "accounts_page.txtRemoveConfirm1",
+                  "Are you sure you want to remove",
+                )}{" "}
+                <strong>
+                  {deleteTarget ? getAccountIdentifier(deleteTarget) : ""}
+                </strong>{" "}
+                {translation(
+                  "accounts_page.txtRemoveConfirm2",
+                  "from your hub? This can't be undone.",
+                )}
+              </Text>
+
+              <Group justify="flex-end" mt="xs">
+                <Button variant="subtle" onClick={() => setManageAction(null)}>
+                  {translation("accounts_page.btnBack", "Back")}
+                </Button>
+                <Button
+                  color="red"
+                  radius="xl"
+                  loading={deleting}
+                  onClick={handleDeleteConfirm}
+                >
+                  {translation(
+                    "accounts_page.titleRemoveAccount",
+                    "Remove Account",
+                  )}
+                </Button>
+              </Group>
+            </>
+          )}
+
+          {manageAction === "deactivate" && (
+            <>
+              <Text size="sm">
+                {translation(
+                  "accounts_page.txtDeactivateConfirm1",
+                  "Are you sure you want to deactivate",
+                )}{" "}
+                <strong>
+                  {deleteTarget ? getAccountIdentifier(deleteTarget) : ""}
+                </strong>
+                ?{" "}
+                {translation(
+                  "accounts_page.txtDeactivateConfirm2",
+                  "They won't be able to sign in until the account is reactivated.",
+                )}
+              </Text>
+
+              <Group justify="flex-end" mt="xs">
+                <Button variant="subtle" onClick={() => setManageAction(null)}>
+                  {translation("accounts_page.btnBack", "Back")}
+                </Button>
+                <Button
+                  color="yellow"
+                  radius="xl"
+                  loading={deleting}
+                  onClick={handleDeactivateConfirm}
+                >
+                  {translation(
+                    "accounts_page.btnDeactivateAccount",
+                    "Deactivate Account",
+                  )}
+                </Button>
+              </Group>
+            </>
+          )}
+
+          {manageAction === "reactivate" && (
+            <>
+              <Text size="sm">
+                {translation(
+                  "accounts_page.txtReactivateConfirm1",
+                  "Are you sure you want to reactivate",
+                )}{" "}
+                <strong>
+                  {deleteTarget ? getAccountIdentifier(deleteTarget) : ""}
+                </strong>
+                ?{" "}
+                {translation(
+                  "accounts_page.txtReactivateConfirm2",
+                  "They will regain access immediately.",
+                )}
+              </Text>
+
+              <Group justify="flex-end" mt="xs">
+                <Button variant="subtle" onClick={() => setManageAction(null)}>
+                  {translation("accounts_page.btnBack", "Back")}
+                </Button>
+                <Button
+                  color="teal"
+                  radius="xl"
+                  loading={deleting}
+                  onClick={handleReactivateConfirm}
+                >
+                  {translation(
+                    "accounts_page.btnReactivateAccount",
+                    "Reactivate Account",
+                  )}
+                </Button>
+              </Group>
+            </>
+          )}
         </Stack>
       </Modal>
 

@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { useEffect, useRef, useState } from "react";
 import {
   ActionIcon,
   Badge,
@@ -15,6 +16,7 @@ import {
   ThemeIcon,
   Title,
   Tooltip,
+  UnstyledButton,
 } from "@mantine/core";
 import {
   IconDeviceMobileOff,
@@ -32,16 +34,57 @@ import {
   IconKey,
   IconLanguage,
   IconCheck,
+  IconPlayerPlayFilled,
+  IconX,
 } from "@tabler/icons-react";
 
 import classes from "./Home.module.css";
 import { ROUTES } from "../../router/routes";
 import { COGNITO_LOGIN_URL } from "../../config/cognito";
 import { useTranslation } from "../../store/language/language.store";
+import introVideoSrc from "../../assets/intro.mp4";
+import introVideoPoster from "../../assets/intro.jpg";
 
 export default function Home() {
   const { translation, currentLang, languages, setLanguage, isLoaded } =
     useTranslation();
+
+  const [videoOpen, setVideoOpen] = useState(false);
+  const videoOverlayRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const openIntroVideo = () => setVideoOpen(true);
+  const closeIntroVideo = () => setVideoOpen(false);
+
+  useEffect(() => {
+    if (!videoOpen) return;
+
+    document.body.style.overflow = "hidden";
+
+    const el = videoOverlayRef.current;
+    if (el?.requestFullscreen) {
+      el.requestFullscreen().catch(() => {});
+    }
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeIntroVideo();
+    };
+    const onFullscreenChange = () => {
+      if (!document.fullscreenElement) closeIntroVideo();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    };
+  }, [videoOpen]);
 
   const availableLanguages: [string, string][] = Object.entries(
     languages || {},
@@ -150,32 +193,92 @@ export default function Home() {
             )}
           </Text>
 
-          <Group mt="xl">
-            <Button
-              component={Link}
-              to={ROUTES.REGISTER}
-              variant="gradient"
-              size="xl"
-              radius="xl"
-              className={classes.control}
-            >
-              {translation("home-page.btnCreateHub", "Create Your Hub")}
-            </Button>
-            <Button
-              component="a"
-              href={COGNITO_LOGIN_URL}
-              variant="outline"
-              color="gray"
-              size="xl"
-              radius="xl"
-              className={classes.control}
-              style={{ color: "#ffffff", borderColor: "rgba(255,255,255,0.6)" }}
-            >
-              {translation("home-page.btnLogin", "Login")}
-            </Button>
+          <Group mt="xl" gap="lg" align="center">
+            <Group gap="md" wrap="wrap">
+              <Button
+                component={Link}
+                to={ROUTES.REGISTER}
+                variant="gradient"
+                size="xl"
+                radius="xl"
+                className={classes.control}
+              >
+                {translation("home-page.btnCreateHub", "Create Your Hub")}
+              </Button>
+              <Button
+                component="a"
+                href={COGNITO_LOGIN_URL}
+                variant="outline"
+                color="gray"
+                size="xl"
+                radius="xl"
+                className={classes.control}
+                style={{
+                  color: "#ffffff",
+                  borderColor: "rgba(255,255,255,0.6)",
+                }}
+              >
+                {translation("home-page.btnLogin", "Login")}
+              </Button>
+            </Group>
+
+            <Group gap={10} align="center" wrap="nowrap">
+              <UnstyledButton
+                onClick={openIntroVideo}
+                className={classes.introVideoBtn}
+                aria-label={translation(
+                  "home-page.ariaWatchIntro",
+                  "Watch intro video",
+                )}
+              >
+                <span className={classes.introVideoPulse} />
+                <IconPlayerPlayFilled size={16} />
+              </UnstyledButton>
+              <UnstyledButton
+                onClick={openIntroVideo}
+                className={classes.introVideoLabel}
+              >
+                {translation("home-page.txtWatchIntro", "Watch Intro")}
+              </UnstyledButton>
+            </Group>
           </Group>
         </Container>
       </div>
+
+      {videoOpen && (
+        <div
+          ref={videoOverlayRef}
+          className={classes.videoOverlay}
+          onClick={closeIntroVideo}
+        >
+          <button
+            type="button"
+            className={classes.videoCloseBtn}
+            onClick={(e) => {
+              e.stopPropagation();
+              closeIntroVideo();
+            }}
+            aria-label={translation("home-page.ariaCloseVideo", "Close video")}
+          >
+            <IconX size={22} />
+          </button>
+          <video
+            ref={videoRef}
+            className={classes.videoPlayer}
+            src={introVideoSrc}
+            poster={introVideoPoster}
+            controls
+            autoPlay
+            playsInline
+            onClick={(e) => e.stopPropagation()}
+          >
+            {translation(
+              "home-page.txtVideoNotSupported",
+              "Your browser does not support embedded videos.",
+            )}
+          </video>
+        </div>
+      )}
 
       <Container size="lg" className={classes.section}>
         <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="xl">
