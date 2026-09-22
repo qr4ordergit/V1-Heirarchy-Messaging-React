@@ -1224,13 +1224,13 @@ export default function Accounts() {
                         color="var(--mantine-color-indigo-6)"
                       />
                     }
-                    onClick={() => navigate("/plans")}
+                    onClick={() => navigate("/usage-billing")}
                     py="sm"
                     fw={500}
                   >
                     {translation(
-                      "accounts_page.menuSubscriptionPlans",
-                      "Subscription & Plans",
+                      "accounts_page.menuAccountBilling",
+                      "Account Billing",
                     )}
                   </Menu.Item>
 

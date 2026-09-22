@@ -8,7 +8,7 @@ export const ROUTES = {
   PROFILE: "profile",
   PRIVACY: "privacy",
   ABOUT: "about",
-  PLANS: "plans",
+  UsageBilling: "usage-billing",
   HELPANDSUPPORT: "help",
   CONVERSATION_ID: ":conversationId",
   DASHBOARD: "/dashboard",
