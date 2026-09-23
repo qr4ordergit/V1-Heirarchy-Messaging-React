@@ -63,7 +63,9 @@ export default function Home() {
 
     const el = videoOverlayRef.current;
     if (el?.requestFullscreen) {
-      el.requestFullscreen().catch(() => {});
+      el.requestFullscreen().catch(() => {
+        /* fullscreen not available/allowed — overlay still covers the viewport */
+      });
     }
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -128,8 +130,7 @@ export default function Home() {
                     "Select Language",
                   )}
                   style={{
-                    backgroundColor: "rgba(255, 255, 255, 0.15)",
-                    backdropFilter: "blur(4px)",
+                    backgroundColor: "rgba(20, 20, 30, 0.45)",
                     color: "#ffffff",
                   }}
                 >

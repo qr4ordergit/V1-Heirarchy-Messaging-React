@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Alert, Center, Loader, Stack, Text } from "@mantine/core";
 
-import { useAuthStore } from "../../store/auth/auth.store";
+import { useAuthStore, isAdminAccount } from "../../store/auth/auth.store";
 import { fetchUserDetails } from "../../api/userApi";
 import { ROUTES } from "../../router/routes";
 import { useTranslation } from "../../store/language/language.store";
@@ -37,7 +37,7 @@ export default function AuthCallback() {
 
         setUserDetails(details);
 
-        navigate(ROUTES.ACCOUNTS, {
+        navigate(isAdminAccount(details) ? ROUTES.ADMIN : ROUTES.ACCOUNTS, {
           replace: true,
         });
       } catch (err) {

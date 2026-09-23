@@ -24,7 +24,7 @@ const ChatsLayout = lazy(() => import("../layouts/chatsLayout/ChatsLayout"));
 const InviteRedirectHandler = lazy(
   () => import("../component/inviteRedirectHandler/InviteRedirectHandler"),
 );
-
+const Admin = lazy(() => import("../pages/admin/Admin"));
 function useCaptureTokensAnywhere() {
   const setTokens = useAuthStore((state) => state.setTokens);
 
@@ -89,6 +89,7 @@ export default function AppRouter() {
             </Route>
           </Route>
           <Route path={ROUTES.INVITE} element={<InviteRedirectHandler />} />
+          <Route path={ROUTES.ADMIN} element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

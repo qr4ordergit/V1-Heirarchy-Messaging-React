@@ -26,6 +26,9 @@ export interface UserDetails {
 export const isHubAccount = (details: UserDetails | null | undefined) =>
   details?.group_name === "hub";
 
+export const isAdminAccount = (details: UserDetails | null | undefined) =>
+  details?.group_name === "admins";
+
 interface AuthState {
   accessToken: string | null;
   idToken: string | null;
