@@ -4,10 +4,10 @@ import {
   Button,
   Container,
   Group,
-  Loader,
+  Select,
   Stack,
-  Text,
   Title,
+  type ComboboxItem,
 } from "@mantine/core";
 import { IconLogout, IconShieldLock } from "@tabler/icons-react";
 
@@ -15,6 +15,9 @@ import { logout } from "../../api/authApi";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { ClearStore } from "../../store/clear.store";
 import { ROUTES } from "../../router/routes";
+import ManageLanguages from "./manageLanguages/ManageLanguages";
+import UploadIntroVideos from "./uploadIntroVideos/UploadIntroVideos";
+import ManageBillings from "./manageBillings/ManageBillings";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -22,6 +25,12 @@ export default function Admin() {
   const clearTokens = useAuthStore((state) => state.clearTokens);
 
   const [loggingOut, setLoggingOut] = useState(false);
+  const [value, setValue] = useState<ComboboxItem | null>(null);
+  const data = [
+    { value: "language", label: "Manage languages" },
+    { value: "intro_video", label: "Upload Intro videos" },
+    { value: "billing", label: "Manage Billing" },
+  ] as const;
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -39,19 +48,20 @@ export default function Admin() {
 
   return (
     <Container size="lg" py="xl">
-      <Group justify="space-between" align="flex-start" mb="xl">
+      <Group justify="space-between" align="flex-start" mb="xs">
         <Stack gap={4}>
           <Group gap="xs">
-            <IconShieldLock size={22} />
-            <Title order={2}>Admin Dashboard</Title>
+            <IconShieldLock size={18} />
+            <Title order={5}>Admin Dashboard</Title>
           </Group>
         </Stack>
 
         <Button
+          size="xs"
           variant="outline"
           color="red"
           radius="xl"
-          leftSection={<IconLogout size={16} />}
+          leftSection={<IconLogout size={14} />}
           onClick={handleLogout}
           loading={loggingOut}
         >
@@ -59,20 +69,20 @@ export default function Admin() {
         </Button>
       </Group>
 
-      <Stack gap="xs"></Stack>
+      <Select
+        size="xs"
+        mb={"md"}
+        style={{ maxWidth: "300px" }}
+        label="Select setting"
+        placeholder="Settings"
+        data={data}
+        value={value ? value.value : null}
+        onChange={(_value, option) => setValue(option)}
+      />
 
-      <Text c="dimmed" size="sm" mt="xl">
-        Website under construction!!.
-      </Text>
-
-      {loggingOut && (
-        <Group mt="md">
-          <Loader size="xs" />
-          <Text size="sm" c="dimmed">
-            Signing out...
-          </Text>
-        </Group>
-      )}
+      {value !== null && value.value === "language" && <ManageLanguages />}
+      {value !== null && value.value === "intro_video" && <UploadIntroVideos />}
+      {value !== null && value.value === "billing" && <ManageBillings />}
     </Container>
   );
 }
