@@ -2381,7 +2381,10 @@ export default function Accounts() {
         onClose={closeManageAccountModal}
         title={
           manageAction === "delete"
-            ? translation("accounts_page.titleRemoveAccount", "Remove Account")
+            ? translation(
+                "accounts_page.titleRemoveAccountModal",
+                "Remove Account",
+              )
             : manageAction === "deactivate"
               ? translation(
                   "accounts_page.titleDeactivateAccount",
@@ -2416,7 +2419,7 @@ export default function Accounts() {
                         "Couldn't reactivate account",
                       )
                     : translation(
-                        "accounts_page.alertCouldntRemoveAccountTitle",
+                        "accounts_page.alertCouldntRemoveAccountTitleModal",
                         "Couldn't remove account",
                       )
               }
