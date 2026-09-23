@@ -1,4 +1,4 @@
-import { Group, Paper, Text } from "@mantine/core";
+import { Flex, Group, Paper, Text } from "@mantine/core";
 import {
   IconCaretDownFilled,
   IconChecks,
@@ -50,11 +50,15 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
           <ReplyChat replied_to={msg.replied_to} onReplyClick={onReplyClick} />
         )}
 
-        {msg.body?.media_url
-          ? msg.body?.media_url?.map((url, i) => (
+        {msg.body?.media_url ? (
+          <Flex gap={6} justify={"center"} wrap={"wrap"}>
+            {msg.body?.media_url?.map((url, i) => (
               <MediaChat key={i} url={url} msg={msg} />
-            ))
-          : ""}
+            ))}
+          </Flex>
+        ) : (
+          ""
+        )}
 
         <Text
           c={isMe ? "white" : "dark"}

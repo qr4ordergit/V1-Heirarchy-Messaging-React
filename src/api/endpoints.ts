@@ -14,12 +14,6 @@ export const ENDPOINTS = {
     DELETE: "/message",
     PUT: "/message"
   },
-  CHAT1: {
-    SEND: "/message-v1",
-    GET: "/message-v1?other_user=",
-    DELETE: "/message",
-    PUT: "/message"
-  },
   ACCESS_PERMISSION: {
     GET: "/user-access/sub-users-permissions",
     PATCH: "/user-access"
@@ -31,12 +25,6 @@ export const ENDPOINTS = {
   GROUP_CHAT: {
     GET: "/groups-message?group_id=",
     POST: "/groups-message",
-    DELETE: "/groups-message",
-    PUT: "/groups-message",
-  },
-  GROUP_CHAT1: {
-    GET: "/groups-message-v1?group_id=",
-    POST: "/groups-message-v1",
     DELETE: "/groups-message",
     PUT: "/groups-message",
   },
@@ -62,6 +50,9 @@ export const ENDPOINTS = {
     STATUS: "/message-reports"
   },
   MESSAGES: {
-    DISAPPEAR: "/disappear"
+    DISAPPEAR: "/disappear",
+    SCHEDULED_GET: "/schedule-message",
+    SCHEDULED_PUT: "/schedule-message",
+    SCHEDULED_DELETE: "/schedule-message"
   }
 } as const;

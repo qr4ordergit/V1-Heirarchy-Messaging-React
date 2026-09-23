@@ -43,6 +43,14 @@ function PrivateMessagePayloadModal() {
   const fetchGroupMembers = async () => {
     if (!chatId) return;
 
+    if (!chatId.includes("group")) {
+      const id = decodeURIComponent(chatId);
+
+      const member = id.split("#").filter((u) => u !== userDetails?.username);
+      setMembers(member);
+      return;
+    }
+
     try {
       const target_user = targetUserDetails?.user_id
         ? `&target_user=${targetUserDetails?.user_id}`
