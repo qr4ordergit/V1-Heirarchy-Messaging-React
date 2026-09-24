@@ -16,7 +16,7 @@ import { useAuthStore } from "../../store/auth/auth.store";
 import { ClearStore } from "../../store/clear.store";
 import { ROUTES } from "../../router/routes";
 import ManageLanguages from "./manageLanguages/ManageLanguages";
-import UploadIntroVideos from "./uploadIntroVideos/UploadIntroVideos";
+import UploadIntroVideos from "./ManageVideos/ManageVideos";
 import ManageBillings from "./manageBillings/ManageBillings";
 
 export default function Admin() {
@@ -28,7 +28,7 @@ export default function Admin() {
   const [value, setValue] = useState<ComboboxItem | null>(null);
   const data = [
     { value: "language", label: "Manage languages" },
-    { value: "intro_video", label: "Upload Intro videos" },
+    { value: "manage_video", label: "Manage videos" },
     { value: "billing", label: "Manage Billing" },
   ] as const;
 
@@ -80,7 +80,9 @@ export default function Admin() {
       />
 
       {value !== null && value.value === "language" && <ManageLanguages />}
-      {value !== null && value.value === "intro_video" && <UploadIntroVideos />}
+      {value !== null && value.value === "manage_video" && (
+        <UploadIntroVideos />
+      )}
       {value !== null && value.value === "billing" && <ManageBillings />}
     </Container>
   );
