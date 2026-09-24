@@ -49,6 +49,9 @@ const ManageLanguages = () => {
         data: JSON.parse(value),
         file: `${fileName}.json`,
       });
+      if (active !== "languages") {
+        await loadJSON(active)
+      }
       Notification.success("Changes Saved Successfully");
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -124,7 +127,11 @@ const ManageLanguages = () => {
             value={selectedLang ? selectedLang.value : null}
             onChange={(_value, option) => {
               setSelectedLang(option);
-              loadJSON(active, option.value);
+              if(option !== null){
+                loadJSON(active, option.value);
+              }else{
+                setValue("")
+              }
             }}
           />
         )}
