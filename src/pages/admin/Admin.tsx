@@ -16,7 +16,7 @@ import { useAuthStore } from "../../store/auth/auth.store";
 import { ClearStore } from "../../store/clear.store";
 import { ROUTES } from "../../router/routes";
 import ManageLanguages from "./manageLanguages/ManageLanguages";
-import UploadIntroVideos from "./ManageVideos/ManageVideos";
+import ManageVideo from "./ManageVideos/ManageVideos";
 import ManageBillings from "./manageBillings/ManageBillings";
 
 export default function Admin() {
@@ -80,9 +80,7 @@ export default function Admin() {
       />
 
       {value !== null && value.value === "language" && <ManageLanguages />}
-      {value !== null && value.value === "manage_video" && (
-        <UploadIntroVideos />
-      )}
+      {value !== null && value.value === "manage_video" && <ManageVideo />}
       {value !== null && value.value === "billing" && <ManageBillings />}
     </Container>
   );

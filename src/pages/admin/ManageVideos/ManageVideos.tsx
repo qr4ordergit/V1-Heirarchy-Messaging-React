@@ -1,4 +1,4 @@
-const UploadIntroVideos = () => {
-  return <h6>UploadVideos</h6>;
+const ManageVideos = () => {
+  return <h6>ManageVideos</h6>;
 };
-export default UploadIntroVideos;
+export default ManageVideos;
