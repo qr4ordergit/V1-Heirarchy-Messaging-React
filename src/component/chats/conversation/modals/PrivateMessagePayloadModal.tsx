@@ -15,6 +15,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useAuthStore } from "../../../../store/auth/auth.store";
 import { Notification } from "../../../../utils/notification";
 import { useTranslation } from "../../../../store/language/language.store";
+import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
 
 interface MembersResponse {
   data: [
@@ -66,7 +67,9 @@ function PrivateMessagePayloadModal() {
         mems = mems.filter((user) => user !== own_user_id);
         setMembers(mems);
       }
-    } catch {}
+    } catch (error) {
+      Notification.error(getApiErrorMessage(error));
+    }
   };
 
   const onSubmit = async () => {
@@ -86,8 +89,7 @@ function PrivateMessagePayloadModal() {
       setPassword("");
       setSelectedMembers([]);
     } catch (error) {
-      console.log(error);
-      Notification.error("Failed to add password");
+      Notification.error(getApiErrorMessage(error));
     }
   };
 

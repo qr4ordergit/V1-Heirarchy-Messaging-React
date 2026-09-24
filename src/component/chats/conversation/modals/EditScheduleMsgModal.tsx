@@ -22,6 +22,7 @@ import { Notification } from "../../../../utils/notification";
 import { useScheduleMsgsStore } from "../../../../store/schedules/schedules.store";
 import { DateTimePicker, TimePicker } from "@mantine/dates";
 import dayjs from "dayjs";
+import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
 
 function EditScheduleMsgModal() {
   const { openers, popOpener } = useOpenerStore((state) => state);
@@ -168,7 +169,7 @@ function EditScheduleMsgModal() {
       setTime("");
       onClose();
     } catch (error) {
-      console.log(error);
+      Notification.error(getApiErrorMessage(error));
     }
   };
 

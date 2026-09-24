@@ -592,7 +592,24 @@
         "noti-msg-copy-fail": "Failed to copy content",
         "noti-msg-send-fail": "Failed to send message",
         "noti-msg-send-catch": "Something went wrong",
-        "noti-msg-media-send-fail": "Failed to send message"
+        "noti-msg-media-send-fail": "Failed to send message",
+        "NAV-menu-disappear": "Disappear Messages",
+        "NAV-menu-scheduled": "Scheduled Messages List",
+        "modal-schedule-th-msg": "Message",
+        "modal-schedule-th-media": "Media",
+        "modal-schedule-th-action": "Action",
+        "modal-schedule-th-frequency": "Frequency",
+        "modal-schedule-th-loader": "Fetching scheduled messages. Please wait...",
+        "modal-schedule-th-empty": "No scheduled messages found",
+        "modal-schedule-td-action1": "Edit",
+        "modal-schedule-td-action2": "Delete",
+        "modal-schedule-timmer-heading": "Set time to schedule message",
+        "modal-schedule-timmer-tab1": "No repeat",
+        "modal-schedule-timmer-tab2": "Daily",
+        "modal-schedule-timmer-tab3": "Weekly",
+        "modal-schedule-timmer-tab4": "Monthly",
+        "modal-schedule-timmer-btn": "Set",
+        "noti-schedule-send": "Message scheduled successfully"
       }
     },
     "uk": {
@@ -1187,7 +1204,24 @@
         "noti-msg-copy-fail": "Не вдалося скопіювати вміст",
         "noti-msg-send-fail": "Не вдалося надіслати повідомлення",
         "noti-msg-send-catch": "Щось пішло не так",
-        "noti-msg-media-send-fail": "Не вдалося надіслати повідомлення"
+        "noti-msg-media-send-fail": "Не вдалося надіслати повідомлення",
+        "NAV-menu-disappear": "Disappear Messages",
+        "NAV-menu-scheduled": "Scheduled Messages List",
+        "modal-schedule-th-msg": "Message",
+        "modal-schedule-th-media": "Media",
+        "modal-schedule-th-action": "Action",
+        "modal-schedule-th-frequency": "Frequency",
+        "modal-schedule-th-loader": "Fetching scheduled messages. Please wait...",
+        "modal-schedule-th-empty": "No scheduled messages found",
+        "modal-schedule-td-action1": "Edit",
+        "modal-schedule-td-action2": "Delete",
+        "modal-schedule-timmer-heading": "Set time to schedule message",
+        "modal-schedule-timmer-tab1": "No repeat",
+        "modal-schedule-timmer-tab2": "Daily",
+        "modal-schedule-timmer-tab3": "Weekly",
+        "modal-schedule-timmer-tab4": "Monthly",
+        "modal-schedule-timmer-btn": "Set",
+        "noti-schedule-send": "Message scheduled successfully"
       }
     }
   },

@@ -3,6 +3,8 @@ import { useAuthStore } from "../store/auth/auth.store";
 import { api } from "../api/axios";
 import { E2EHelper } from "../utils/e2eHelper";
 import type { SCHEDULED_MESSAGE } from "../store/schedules/schedules.store";
+import { getApiErrorMessage } from "../api/getApiErrorMessage";
+import { Notification } from "../utils/notification";
 
 const useScheduleMediaDecryptor = () => {
     const { target_user, userDetails } = useAuthStore((state) => state);
@@ -61,7 +63,7 @@ const useScheduleMediaDecryptor = () => {
                     continue;
                 }
             } catch (error) {
-                console.error("Failed to get encryption key:", error);
+                Notification.error(getApiErrorMessage(error));
 
                 updatedMessages.push(message);
 

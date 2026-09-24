@@ -14,6 +14,8 @@ import { useTagStore } from "../../../store/tags/tags.store";
 import { useDMListStore } from "../../../store/dm/dm.list.store";
 import { useGroupListStore } from "../../../store/groups/group.list.store";
 import ChatModalsProvider from "./modals/ChatModalsProvider";
+import { getApiErrorMessage } from "../../../api/getApiErrorMessage";
+import { Notification } from "../../../utils/notification";
 
 function Conversation() {
   const { trigger } = useTriggerStore((state) => state);
@@ -56,7 +58,7 @@ function Conversation() {
 
       storeCategoryTags(tagsByCategories);
     } catch (error: any) {
-      console.log(error);
+      Notification.error(getApiErrorMessage(error));
     }
   };
 
@@ -67,7 +69,9 @@ function Conversation() {
       if (response.data?.success) {
         storeContacts(response.data?.contacts);
       }
-    } catch (error) {}
+    } catch (error) {
+      Notification.error(getApiErrorMessage(error));
+    }
   };
 
   const disappearingMsgModeChecker = () => {

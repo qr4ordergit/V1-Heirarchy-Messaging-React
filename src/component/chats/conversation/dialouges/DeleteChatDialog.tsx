@@ -9,6 +9,7 @@ import { useChatStore } from "../../../../store/chats/chats.store";
 import { useParams } from "react-router";
 import { useAuthStore } from "../../../../store/auth/auth.store";
 import { useTranslation } from "../../../../store/language/language.store";
+import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
 
 function DeleteChatDialog() {
   const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
@@ -60,8 +61,7 @@ function DeleteChatDialog() {
       Notification.success("Chat deleted successfully");
       resetTrigger();
     } catch (error) {
-      console.log(error);
-      Notification.error("Something went wrong");
+      Notification.error(getApiErrorMessage(error));
       resetTrigger();
     }
   };

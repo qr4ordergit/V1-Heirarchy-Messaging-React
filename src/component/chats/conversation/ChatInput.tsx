@@ -28,6 +28,7 @@ import { TRIGGERS } from "../../../utils/constant";
 import { useAuthStore } from "../../../store/auth/auth.store";
 import { E2EHelper } from "../../../utils/e2eHelper";
 import { useTranslation } from "../../../store/language/language.store";
+import { getApiErrorMessage } from "../../../api/getApiErrorMessage";
 
 interface SUBMIT_PAYLOAD {
   [key: string]: unknown;
@@ -131,15 +132,19 @@ export default function ChatInput() {
 
       if (finalMsg?.type !== "schedule") {
         appendChats([finalMsg]);
+      } else {
+        Notification.success(
+          translation(
+            "chat_history.noti-schedule-send",
+            "Message scheduled successfully",
+          ),
+        );
       }
 
       resetTrigger();
       setMessage("");
     } catch (error) {
-      console.log(error);
-      Notification.error(
-        translation("chat_history.noti-msg-send-catch", "Something went wrong"),
-      );
+      Notification.error(getApiErrorMessage(error));
     }
   };
 
@@ -382,6 +387,8 @@ export default function ChatInput() {
         finalMsg["body"]["media_url"] = files;
         if (finalMsg?.type !== "schedule") {
           appendChats([finalMsg]);
+        } else {
+          Notification.success("Message scheduled successfully");
         }
       }
 
@@ -389,7 +396,7 @@ export default function ChatInput() {
       resetTrigger();
       setFiles([]);
     } catch (error) {
-      console.log(error);
+      Notification.error(getApiErrorMessage(error));
     }
   };
 

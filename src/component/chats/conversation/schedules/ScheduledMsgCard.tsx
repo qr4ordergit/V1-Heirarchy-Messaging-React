@@ -1,9 +1,8 @@
-import { Button, Divider, Flex, Group, Paper } from "@mantine/core";
+import { Button, Flex, Group, Table } from "@mantine/core";
 import {
   useScheduleMsgsStore,
   type SCHEDULED_MESSAGE,
 } from "../../../../store/schedules/schedules.store";
-import { IconClockHour10 } from "@tabler/icons-react";
 import { useOpenerStore } from "../../../../store/openers/opener.store";
 import { OPENERS } from "../../../../utils/constant";
 import { useAuthStore } from "../../../../store/auth/auth.store";
@@ -11,6 +10,10 @@ import { api } from "../../../../api/axios";
 import { ENDPOINTS } from "../../../../api/endpoints";
 import { useTransition } from "react";
 import { MediaChat } from "../MediaChat";
+import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
+import { Notification } from "../../../../utils/notification";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { useTranslation } from "../../../../store/language/language.store";
 
 interface MSG {
   msg: SCHEDULED_MESSAGE;
@@ -22,6 +25,8 @@ function ScheduledMsgCard({ msg }: MSG) {
   const { deleteScheduleMsg } = useScheduleMsgsStore((state) => state);
 
   const [deleteLoader, DeleteFn] = useTransition();
+
+  const { translation } = useTranslation();
 
   const onEdit = () => {
     insertOpener({
@@ -45,7 +50,7 @@ function ScheduledMsgCard({ msg }: MSG) {
         deleteScheduleMsg(msg._id);
       }
     } catch (error) {
-      console.log(error);
+      Notification.error(getApiErrorMessage(error));
     }
   };
 
@@ -54,56 +59,43 @@ function ScheduledMsgCard({ msg }: MSG) {
   };
 
   return (
-    <Paper
-      shadow="xs"
-      radius="lg"
-      p="md"
-      maw="70%"
-      bg={"blue.6"}
-      className="relative text-white w-fit"
-    >
-      {msg?.media_url ? (
-        <Flex gap={6} justify={"center"} wrap={"wrap"}>
-          {msg?.media_url?.map((url, i) => (
-            <MediaChat key={i} url={url} msg={msg} />
-          ))}
-        </Flex>
-      ) : (
-        ""
-      )}
-      <div>{msg.text}</div>
-      <Divider my={"md"} />
-      <Group>
-        <Button
-          variant="outline"
-          color="white"
-          size="compact-sm"
-          onClick={onEdit}
-        >
-          Edit Scheduled Message
-        </Button>
-        <Button
-          variant="outline"
-          color="white"
-          size="compact-sm"
-          onClick={handleDelete}
-          loading={deleteLoader}
-          loaderProps={{ type: "dots" }}
-        >
-          Delete
-        </Button>
-      </Group>
-      <Flex
-        gap={4}
-        justify={"end"}
-        align={"center"}
-        className="text-gray-200 text-[12px] mt-2"
-      >
-        <IconClockHour10 size={12} />
-        <div>{msg.schedule_date}</div>
-        <div>{msg.schedule_time}</div>
-      </Flex>
-    </Paper>
+    <Table.Tr>
+      <Table.Td>{msg.text}</Table.Td>
+      <Table.Td className="overflow-auto text-center">
+        {msg?.media_url?.length > 0 ? (
+          <Flex gap={6} justify={"center"}>
+            {msg?.media_url?.map((url, i) => (
+              <MediaChat key={i} url={url} msg={msg} />
+            ))}
+          </Flex>
+        ) : (
+          "-"
+        )}
+      </Table.Td>
+      <Table.Td>
+        <Group gap={4}>
+          <Button
+            variant="outline"
+            size="compact-sm"
+            onClick={onEdit}
+            leftSection={<IconEdit size={16} />}
+          >
+            {translation("chat_history.modal-schedule-td-action1", "Edit")}
+          </Button>
+          <Button
+            variant="outline"
+            size="compact-sm"
+            onClick={handleDelete}
+            loading={deleteLoader}
+            loaderProps={{ type: "dots" }}
+            leftSection={<IconTrash size={16} />}
+          >
+            {translation("chat_history.modal-schedule-td-action2", "Delete")}
+          </Button>
+        </Group>
+      </Table.Td>
+      <Table.Td>{msg.repeat}</Table.Td>
+    </Table.Tr>
   );
 }
 

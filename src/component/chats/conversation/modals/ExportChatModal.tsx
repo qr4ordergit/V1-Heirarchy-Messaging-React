@@ -10,6 +10,7 @@ import { useAuthStore } from "../../../../store/auth/auth.store";
 import { useParams } from "react-router";
 import { Notification } from "../../../../utils/notification";
 import { useTranslation } from "../../../../store/language/language.store";
+import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
 
 function ExportChatModal() {
   const { trigger, resetTrigger } = useTriggerStore((state) => state);
@@ -71,7 +72,7 @@ function ExportChatModal() {
       setReportId(res.data?.report_id);
       setStatus(res.data?.status);
     } catch (error) {
-      console.log(error);
+      Notification.error(getApiErrorMessage(error));
       setStatus("ideal");
     }
   };
@@ -102,6 +103,7 @@ function ExportChatModal() {
         }
       }
     } catch (error) {
+      Notification.error(getApiErrorMessage(error));
       setStatus("ideal");
     }
   };
@@ -127,8 +129,7 @@ function ExportChatModal() {
       set_download_url("");
       setDateRange([null, null]);
     } catch (error) {
-      console.log(error);
-      Notification.error("Downloading failed. Try again");
+      Notification.error(getApiErrorMessage(error));
     }
   };
 

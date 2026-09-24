@@ -238,7 +238,7 @@ function Navbar() {
           </ActionIcon>
         </div>
         <div>
-          <Menu width={200} position="bottom-end">
+          <Menu position="bottom-end">
             <Menu.Target>
               <ActionIcon variant="light" radius="xl" size={36}>
                 <IconDotsVertical />
@@ -251,14 +251,20 @@ function Navbar() {
                   onClick={onDisappear}
                   leftSection={<IconMessageDots size={14} />}
                 >
-                  Disappear Messages
+                  {translation(
+                    "chat_history.NAV-menu-disappear",
+                    "Disappear Messages",
+                  )}
                 </Menu.Item>
               )}
               <Menu.Item
                 onClick={onSchedule}
                 leftSection={<IconClockHour10 size={14} />}
               >
-                Scheduled Messages
+                {translation(
+                  "chat_history.NAV-menu-scheduled",
+                  "Scheduled Messages List",
+                )}
               </Menu.Item>
               <Menu.Item
                 onClick={onExportChat}

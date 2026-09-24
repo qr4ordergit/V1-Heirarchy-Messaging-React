@@ -4,6 +4,7 @@ import { useTriggerStore } from "../../../../store/trigger/trigger.store";
 import { DateTimePicker, TimePicker } from "@mantine/dates";
 import { useState } from "react";
 import dayjs from "dayjs";
+import { useTranslation } from "../../../../store/language/language.store";
 
 interface PAYLOAD {
   schedule_time?: string;
@@ -16,6 +17,7 @@ function MsgSchedulerTimeModal() {
   const { trigger, resetTrigger, setTrigger } = useTriggerStore(
     (state) => state,
   );
+  const { translation } = useTranslation();
 
   const presets = [
     {
@@ -114,15 +116,32 @@ function MsgSchedulerTimeModal() {
     <Modal
       opened={trigger === TRIGGERS.schedulePayload}
       onClose={onClose}
-      title={"Set time to schedule message"}
+      title={translation(
+        "chat_history.modal-schedule-timmer-heading",
+        "Set time to schedule message",
+      )}
     >
       <Stack>
         <Tabs value={activeTab} onChange={setActiveTab}>
           <Tabs.List>
-            <Tabs.Tab value="no_repeat">No repeat</Tabs.Tab>
-            <Tabs.Tab value="daily">Daily</Tabs.Tab>
-            <Tabs.Tab value="weekly">Weekly</Tabs.Tab>
-            <Tabs.Tab value="monthly">Monthly</Tabs.Tab>
+            <Tabs.Tab value="no_repeat">
+              {translation(
+                "chat_history.modal-schedule-timmer-tab1",
+                "No repeat",
+              )}
+            </Tabs.Tab>
+            <Tabs.Tab value="daily">
+              {translation("chat_history.modal-schedule-timmer-tab2", "Daily")}
+            </Tabs.Tab>
+            <Tabs.Tab value="weekly">
+              {translation("chat_history.modal-schedule-timmer-tab3", "Weekly")}
+            </Tabs.Tab>
+            <Tabs.Tab value="monthly">
+              {translation(
+                "chat_history.modal-schedule-timmer-tab4",
+                "Monthly",
+              )}
+            </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="no_repeat">
@@ -183,7 +202,9 @@ function MsgSchedulerTimeModal() {
             />
           </Tabs.Panel>
         </Tabs>
-        <Button onClick={onSubmit}>Set</Button>
+        <Button onClick={onSubmit}>
+          {translation("chat_history.modal-schedule-timmer-btn", "Set")}
+        </Button>
       </Stack>
     </Modal>
   );

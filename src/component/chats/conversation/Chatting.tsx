@@ -14,6 +14,7 @@ import { useAuthStore } from "../../../store/auth/auth.store";
 import EncryptedChatCard from "./EncryptedChatCard";
 import useMediaDecryptor from "../../../hooks/useMediaDecryptor";
 import { useTranslation } from "../../../store/language/language.store";
+import { getApiErrorMessage } from "../../../api/getApiErrorMessage";
 
 export default function Chatting() {
   const messages = useChatStore((state) => state.chats);
@@ -57,9 +58,7 @@ export default function Chatting() {
 
       addChats(updatedMsgs);
     } catch (error) {
-      Notification.error(
-        translation("chat_history.noti-chat-121-catch", "Something went wrong"),
-      );
+      Notification.error(getApiErrorMessage(error));
       navigate("/chats");
     }
   };
@@ -90,12 +89,7 @@ export default function Chatting() {
 
       addChats(updatedMsgs);
     } catch (error) {
-      Notification.error(
-        translation(
-          "chat_history.noti-chat-group-catch",
-          "Something went wrong",
-        ),
-      );
+      Notification.error(getApiErrorMessage(error));
       navigate("/chats");
     }
   };
@@ -134,12 +128,7 @@ export default function Chatting() {
 
       addChats(updatedMsgs);
     } catch (error) {
-      Notification.error(
-        translation(
-          "chat_history.noti-chat-tags-catch",
-          "Something went wrong",
-        ),
-      );
+      Notification.error(getApiErrorMessage(error));
     }
   };
 

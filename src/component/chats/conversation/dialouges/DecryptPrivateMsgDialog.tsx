@@ -9,6 +9,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useChatStore } from "../../../../store/chats/chats.store";
 import { useAuthStore } from "../../../../store/auth/auth.store";
 import { useTranslation } from "../../../../store/language/language.store";
+import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
 
 interface DECRYPT_PAYLOAD {
   [key: string]: unknown;
@@ -73,9 +74,8 @@ function DecryptPrivateMsgDialog() {
       }
       resetTrigger();
     } catch (error) {
-      console.log(error);
+      Notification.error(getApiErrorMessage(error));
       if (mode === "manual") {
-        Notification.error("Failed to decrypt message");
         resetTrigger();
       }
     }

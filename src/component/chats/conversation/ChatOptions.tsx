@@ -13,6 +13,7 @@ import {
 } from "@tabler/icons-react";
 import { useAuthStore } from "../../../store/auth/auth.store";
 import { useTranslation } from "../../../store/language/language.store";
+import { getApiErrorMessage } from "../../../api/getApiErrorMessage";
 
 interface CHATOPTIONSPROPS {
   children: ReactNode;
@@ -80,13 +81,7 @@ export function ChatOptions({ children, msg }: CHATOPTIONSPROPS) {
         translation("chat_history.noti-msg-copy-success", "Content copied"),
       );
     } catch (error) {
-      console.error("Failed to copy text:", error);
-      Notification.error(
-        translation(
-          "chat_history.noti-msg-copy-fail",
-          "Failed to copy content",
-        ),
-      );
+      Notification.error(getApiErrorMessage(error));
     }
   };
 

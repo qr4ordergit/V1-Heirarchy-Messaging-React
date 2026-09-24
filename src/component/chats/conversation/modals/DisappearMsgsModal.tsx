@@ -9,6 +9,7 @@ import { api } from "../../../../api/axios";
 import { ENDPOINTS } from "../../../../api/endpoints";
 import { useDMListStore } from "../../../../store/dm/dm.list.store";
 import { useGroupListStore } from "../../../../store/groups/group.list.store";
+import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
 
 interface TIMMER {
   days: number;
@@ -150,7 +151,7 @@ function DisappearMsgsModal() {
 
       onClose();
     } catch (error) {
-      console.log(error);
+      Notification.error(getApiErrorMessage(error));
     }
   };
 
@@ -196,7 +197,7 @@ function DisappearMsgsModal() {
 
       onClose();
     } catch (error) {
-      console.log(error);
+      Notification.error(getApiErrorMessage(error));
     }
   };
 

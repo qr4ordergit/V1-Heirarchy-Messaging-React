@@ -19,6 +19,7 @@ import { useChatStore } from "../../../../store/chats/chats.store";
 import { useParams } from "react-router";
 import { useAuthStore } from "../../../../store/auth/auth.store";
 import { useTranslation } from "../../../../store/language/language.store";
+import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
 
 function TagsModal() {
   const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
@@ -72,7 +73,7 @@ function TagsModal() {
       Notification.success("Tags added successfully");
       onClose();
     } catch (error) {
-      Notification.error("Something went wrong");
+      Notification.error(getApiErrorMessage(error));
     }
   };
 
@@ -96,7 +97,9 @@ function TagsModal() {
         setSelectedTags(res.data?.document_tagged_in);
         setOldTags(res.data?.document_tagged_in);
       }
-    } catch (error) {}
+    } catch (error) {
+      Notification.error(getApiErrorMessage(error));
+    }
   };
 
   const removeTags = async (toRemoveTags: string[]) => {
@@ -119,7 +122,9 @@ function TagsModal() {
           api.delete(ENDPOINTS.TAGS_TO_MSG.DELETE, payload);
         }),
       );
-    } catch (error) {}
+    } catch (error) {
+      Notification.error(getApiErrorMessage(error));
+    }
   };
 
   const removeAll = () => {
