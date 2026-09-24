@@ -34,12 +34,6 @@ export const ENDPOINTS = {
     DELETE: "/groups-message",
     PUT: "/groups-message",
   },
-  GROUP_CHAT1: {
-    GET: "/groups-message-v1?group_id=",
-    POST: "/groups-message-v1",
-    DELETE: "/groups-message",
-    PUT: "/groups-message",
-  },
   MEDIA: {
     COMPLETE_MULTIPART: "/multi-file-merge",
   },
@@ -63,6 +57,9 @@ export const ENDPOINTS = {
   },
   MESSAGES: {
     DISAPPEAR: "/disappear",
+    SCHEDULED_GET: "/schedule-message",
+    SCHEDULED_PUT: "/schedule-message",
+    SCHEDULED_DELETE: "/schedule-message"
   },
   MANAGE_LANGUAGES: {
     UPDATE: "/upload-language",

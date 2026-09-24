@@ -198,7 +198,8 @@
         "feature6_title": "And Much More",
         "feature6_desc": "This is just the start — your Hub keeps growing with new, secure ways to stay connected.",
         "ctaTitle": "Ready to create your Hub?",
-        "ctaDesc": "Set up your account in minutes — no phone or email required to get started."
+        "ctaDesc": "Set up your account in minutes — no phone or email required to get started.",
+        "txtWatchIntro": "Watch Intro"
       },
       "signup": {
         "titleCreateHub": "Create Your Hub",
@@ -325,7 +326,26 @@
         "ntfyCouldntCheckStatusTitle": "Couldn't check upload status",
         "ntfyCouldntUploadFileTitle": "Couldn't upload file",
         "ntfyLogoutIssueTitle": "Logout issue",
-        "ntfyLogoutIssueMsg": "You've been signed out locally, but the server logout failed."
+        "ntfyLogoutIssueMsg": "You've been signed out locally, but the server logout failed.",
+        "titleRemoveAccountModal": "Remove Account",
+        "titleDeactivateAccount": "Deactivate Account",
+        "titleReactivateAccount": "Reactivate Account",
+        "titleManageAccount": "Manage Account",
+        "alertCouldntDeactivateAccountTitle": "Couldn't deactivate account",
+        "alertCouldntReactivateAccountTitle": "Couldn't reactivate account",
+        "alertCouldntRemoveAccountTitleModal": "Couldn't remove account",
+        "txtChooseAccountAction": "Choose what you'd like to do with",
+        "btnReactivateAccount": "Reactivate Account",
+        "btnDeactivateAccount": "Deactivate Account",
+        "tnDeleteAccount": "Delete Account",
+        "btnCancelRemoveAccount": "Cancel",
+        "txtRemoveConfirm1RemoveAccount": "Are you sure you want to remove",
+        "txtRemoveConfirm2RemoveAccount": "from your hub? This can't be undone.",
+        "btnBack": "Back",
+        "txtDeactivateConfirm1": "Are you sure you want to deactivate",
+        "txtDeactivateConfirm2": "They won't be able to sign in until the account is reactivated.",
+        "txtReactivateConfirm1": "Are you sure you want to reactivate",
+        "txtReactivateConfirm2": "They will regain access immediately."
       },
       "manage_access_permissions_modal": {
         "heading": "Manage Access & Permissions of user",
@@ -773,7 +793,8 @@
         "feature6_title": "І це ще не все",
         "feature6_desc": "Це лише початок — ваш Хаб постійно поповнюється новими безпечними способами залишатися на зв’язку.",
         "ctaTitle": "Готові створити свій Хаб?",
-        "ctaDesc": "Налаштуйте свій акаунт за кілька хвилин — телефон чи електронна пошта не потрібні, щоб почати."
+        "ctaDesc": "Налаштуйте свій акаунт за кілька хвилин — телефон чи електронна пошта не потрібні, щоб почати.",
+        "txtWatchIntro": "Watch Intro"
       },
       "signup": {
         "titleCreateHub": "Створити свій Хаб",
@@ -900,7 +921,26 @@
         "ntfyCouldntCheckStatusTitle": "Не вдалося перевірити статус завантаження",
         "ntfyCouldntUploadFileTitle": "Не вдалося завантажити файл",
         "ntfyLogoutIssueTitle": "Проблема з виходом",
-        "ntfyLogoutIssueMsg": "Вас вийшли локально, але вихід на сервері не вдався."
+        "ntfyLogoutIssueMsg": "Вас вийшли локально, але вихід на сервері не вдався.",
+        "titleRemoveAccountModal": "Remove Account",
+        "titleDeactivateAccount": "Deactivate Account",
+        "titleReactivateAccount": "Reactivate Account",
+        "titleManageAccount": "Manage Account",
+        "alertCouldntDeactivateAccountTitle": "Couldn't deactivate account",
+        "alertCouldntReactivateAccountTitle": "Couldn't reactivate account",
+        "alertCouldntRemoveAccountTitleModal": "Couldn't remove account",
+        "txtChooseAccountAction": "Choose what you'd like to do with",
+        "btnReactivateAccount": "Reactivate Account",
+        "btnDeactivateAccount": "Deactivate Account",
+        "tnDeleteAccount": "Delete Account",
+        "btnCancelRemoveAccount": "Cancel",
+        "txtRemoveConfirm1RemoveAccount": "Are you sure you want to remove",
+        "txtRemoveConfirm2RemoveAccount": "from your hub? This can't be undone.",
+        "btnBack": "Back",
+        "txtDeactivateConfirm1": "Are you sure you want to deactivate",
+        "txtDeactivateConfirm2": "They won't be able to sign in until the account is reactivated.",
+        "txtReactivateConfirm1": "Are you sure you want to reactivate",
+        "txtReactivateConfirm2": "They will regain access immediately."
       },
       "manage_access_permissions_modal": {
         "heading": "Керування доступом і дозволами користувача",

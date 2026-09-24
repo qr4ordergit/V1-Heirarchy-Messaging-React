@@ -8,7 +8,13 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { IconLock, IconPaperclip, IconSend, IconX } from "@tabler/icons-react";
+import {
+  IconClockHour10,
+  IconLock,
+  IconPaperclip,
+  IconSend,
+  IconX,
+} from "@tabler/icons-react";
 import { useEffect, useState, useTransition } from "react";
 import { api } from "../../../api/axios";
 import { ENDPOINTS } from "../../../api/endpoints";
@@ -57,7 +63,7 @@ export default function ChatInput() {
   const { userDetails, target_user } = useAuthStore((state) => state);
   const { translation } = useTranslation();
 
-  const own_user_id = target_user ?? userDetails?.username;
+  const own_user_id = target_user ? target_user : userDetails?.username;
   const isReply = trigger === TRIGGERS.reply;
   const isGroup = chatId?.includes("group");
 
@@ -93,6 +99,14 @@ export default function ChatInput() {
         }
       }
 
+      if (trigger.includes("schedulePayload")) {
+        payload["schedule_time"] = triggerPayload?.schedule_time;
+        payload["schedule_date"] = triggerPayload?.schedule_date;
+        payload["repeat"] = triggerPayload?.repeat;
+        payload["days"] = triggerPayload?.days;
+        payload["type"] = "schedule";
+      }
+
       const target_user_param = target_user
         ? `?target_user=${target_user}`
         : "";
@@ -114,10 +128,12 @@ export default function ChatInput() {
       }
       let finalMsg = response.data?.data;
       finalMsg["double_encryption"] = false;
-      appendChats([finalMsg]);
-      if (isReply) {
-        resetTrigger();
+
+      if (finalMsg?.type !== "schedule") {
+        appendChats([finalMsg]);
       }
+
+      resetTrigger();
       setMessage("");
     } catch (error) {
       console.log(error);
@@ -287,13 +303,21 @@ export default function ChatInput() {
         }
       }
 
+      if (trigger.includes("schedulePayload")) {
+        payload["schedule_time"] = triggerPayload?.schedule_time;
+        payload["schedule_date"] = triggerPayload?.schedule_date;
+        payload["repeat"] = triggerPayload?.repeat;
+        payload["days"] = triggerPayload?.days;
+        payload["type"] = "schedule";
+      }
+
       const target_user_param = target_user
         ? `?target_user=${target_user}`
         : "";
 
       const endpoint = isGroup
-        ? `${ENDPOINTS.GROUP_CHAT1.POST}${target_user_param}`
-        : `${ENDPOINTS.CHAT1.SEND}${target_user_param}`;
+        ? `${ENDPOINTS.GROUP_CHAT.POST}${target_user_param}`
+        : `${ENDPOINTS.CHAT.SEND}${target_user_param}`;
       const response = await api.post(endpoint, payload);
 
       if (!response.data?.success) {
@@ -356,13 +380,13 @@ export default function ChatInput() {
       if (finalMsg) {
         finalMsg["double_encryption"] = false;
         finalMsg["body"]["media_url"] = files;
-        appendChats([finalMsg]);
+        if (finalMsg?.type !== "schedule") {
+          appendChats([finalMsg]);
+        }
       }
 
-      if (isReply) {
-        resetTrigger();
-      }
       setMessage("");
+      resetTrigger();
       setFiles([]);
     } catch (error) {
       console.log(error);
@@ -397,6 +421,12 @@ export default function ChatInput() {
     }
   };
 
+  const toggleSchedule = () => {
+    setTrigger({
+      toTrigger: TRIGGERS.schedulePayload,
+    });
+  };
+
   const triggerHandler = () => {
     switch (trigger) {
       case TRIGGERS.privateMessageSender:
@@ -418,7 +448,7 @@ export default function ChatInput() {
         style={{
           display: "flex",
           alignItems: "flex-end",
-          gap: 8,
+          gap: 2,
         }}
       >
         {/* Attachment */}
@@ -492,16 +522,23 @@ export default function ChatInput() {
           />
         </div>
 
-        {chatId?.includes("group") && (
-          <ActionIcon
-            variant={trigger.includes("secret_007") ? "filled" : "subtle"}
-            radius="xl"
-            size={36}
-            onClick={togglePrivate}
-          >
-            <IconLock size={20} stroke={2} />
-          </ActionIcon>
-        )}
+        <ActionIcon
+          variant={trigger.includes("secret_007") ? "filled" : "subtle"}
+          radius="xl"
+          size={36}
+          onClick={togglePrivate}
+        >
+          <IconLock size={20} stroke={2} />
+        </ActionIcon>
+
+        <ActionIcon
+          variant={trigger.includes("schedulePayload") ? "filled" : "subtle"}
+          radius="xl"
+          size={36}
+          onClick={toggleSchedule}
+        >
+          <IconClockHour10 size={20} stroke={2} />
+        </ActionIcon>
 
         {/* Send */}
         <ActionIcon

@@ -63,9 +63,7 @@ export default function Home() {
 
     const el = videoOverlayRef.current;
     if (el?.requestFullscreen) {
-      el.requestFullscreen().catch(() => {
-        /* fullscreen not available/allowed — overlay still covers the viewport */
-      });
+      el.requestFullscreen().catch(() => {});
     }
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -227,12 +225,8 @@ export default function Home() {
               <UnstyledButton
                 onClick={openIntroVideo}
                 className={classes.introVideoBtn}
-                aria-label={translation(
-                  "home-page.ariaWatchIntro",
-                  "Watch intro video",
-                )}
+                aria-label={"Watch intro video"}
               >
-                <span className={classes.introVideoPulse} />
                 <IconPlayerPlayFilled size={16} />
               </UnstyledButton>
               <UnstyledButton

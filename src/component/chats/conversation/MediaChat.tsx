@@ -40,6 +40,7 @@ export function MediaChat({ url, msg }: MEDIACHAT) {
   const DocumentIcon = mediaIcons[mediaType as keyof typeof mediaIcons];
 
   const onPreview = () => {
+    if (msg?.repeat) return;
     setTrigger({
       toTrigger: TRIGGERS.previewMedia,
       payload: msg,
@@ -54,7 +55,8 @@ export function MediaChat({ url, msg }: MEDIACHAT) {
           <Image
             key={fileUrl}
             radius="md"
-            h={"30vh"}
+            h={"100px"}
+            w={"100px"}
             src={fileUrl}
             onClick={onPreview}
           />
@@ -63,7 +65,7 @@ export function MediaChat({ url, msg }: MEDIACHAT) {
         {mediaType === "video" && (
           <video
             src={fileUrl}
-            className="w-52 object-cover rounded-lg"
+            className="w-25 h-25 object-cover rounded-lg"
             preload="metadata"
             onClick={onPreview}
           />
@@ -79,7 +81,7 @@ export function MediaChat({ url, msg }: MEDIACHAT) {
           className="block"
         >
           {" "}
-          <div className="bg-blue-950 h-32 w-32 rounded-md relative">
+          <div className="bg-blue-950 h-25 w-25 rounded-md relative">
             {" "}
             <DocumentIcon
               stroke={2}

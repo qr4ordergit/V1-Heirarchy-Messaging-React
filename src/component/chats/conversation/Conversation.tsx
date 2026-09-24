@@ -2,14 +2,8 @@ import { useEffect, useMemo } from "react";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import ChatInput from "./ChatInput";
 import Chatting from "./Chatting";
-import DeleteChatDialog from "./dialouges/DeleteChatDialog";
-import EditChatDialog from "./dialouges/EditChatDialog";
-import Previewer from "./modals/Previewer";
-import TagsModal from "./modals/TagsModal";
 import Navbar from "./Navbar";
 import TextFilterInputBox from "./TextFilterInputBox";
-import PrivateMessagePayloadModal from "./modals/PrivateMessagePayloadModal";
-import DecryptPrivateMsgDialog from "./dialouges/DecryptPrivateMsgDialog";
 import { api } from "../../../api/axios";
 import { API_ENDPOINTS, withTargetUser } from "../../../utils/constant";
 import useContactStore from "../../../store/contacts/contacts.store";
@@ -17,10 +11,9 @@ import { useAuthStore } from "../../../store/auth/auth.store";
 import { useParams } from "react-router";
 import { ENDPOINTS } from "../../../api/endpoints";
 import { useTagStore } from "../../../store/tags/tags.store";
-import ExportChatModal from "./modals/ExportChatModal";
-import DisappearMsgsModal from "./modals/DisappearMsgsModal";
 import { useDMListStore } from "../../../store/dm/dm.list.store";
 import { useGroupListStore } from "../../../store/groups/group.list.store";
+import ChatModalsProvider from "./modals/ChatModalsProvider";
 
 function Conversation() {
   const { trigger } = useTriggerStore((state) => state);
@@ -139,14 +132,7 @@ function Conversation() {
           </div>
         </div>
       </div>
-      <DeleteChatDialog />
-      <EditChatDialog />
-      <Previewer />
-      <TagsModal />
-      <PrivateMessagePayloadModal />
-      <DecryptPrivateMsgDialog />
-      <ExportChatModal />
-      <DisappearMsgsModal />
+      <ChatModalsProvider />
     </div>
   );
 }

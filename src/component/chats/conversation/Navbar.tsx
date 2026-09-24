@@ -1,6 +1,7 @@
 import { ActionIcon, Avatar, Menu, ScrollArea } from "@mantine/core";
 import {
   IconChevronLeft,
+  IconClockHour10,
   IconDotsVertical,
   IconMessageDots,
   IconProgressDown,
@@ -13,9 +14,12 @@ import { useDMListStore } from "../../../store/dm/dm.list.store";
 import { useNavigate, useParams } from "react-router";
 import { useGroupListStore } from "../../../store/groups/group.list.store";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
-import { TRIGGERS } from "../../../utils/constant";
+import { OPENERS, TRIGGERS } from "../../../utils/constant";
 import { useTagStore } from "../../../store/tags/tags.store";
 import { useTranslation } from "../../../store/language/language.store";
+import { useOpenerStore } from "../../../store/openers/opener.store";
+import { useMemo } from "react";
+import { useAuthStore } from "../../../store/auth/auth.store";
 
 interface CURRENT_CHAT {
   display_name?: string;
@@ -30,11 +34,36 @@ function Navbar() {
   const { setTrigger, trigger, resetTrigger } = useTriggerStore(
     (state) => state,
   );
+  const { insertOpener } = useOpenerStore((state) => state);
   const { tagsWithCategories } = useTagStore((state) => state);
   const { translation } = useTranslation();
+  const { userDetails, target_user } = useAuthStore((state) => state);
 
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
+  const own_user_id = target_user ? target_user : userDetails?.username;
+  const isGroup = chatId?.includes("group");
+
+  const isAdmin = useMemo(
+    () =>
+      own_user_id
+        ? groups
+            .find((grp) => grp._id === decodeURIComponent(chatId || ""))
+            ?.admins.includes(own_user_id)
+        : false,
+    [chatId],
+  );
+
+  const conditionalRenderer = {
+    allowDisappear() {
+      let allow = true;
+      if (isGroup && !isAdmin) {
+        allow = false;
+      }
+
+      return allow;
+    },
+  };
 
   const currentChat = (): CURRENT_CHAT => {
     if (!chatId) return {};
@@ -100,6 +129,12 @@ function Navbar() {
 
   const onNavigate = () => {
     navigate("/chats");
+  };
+
+  const onSchedule = () => {
+    insertOpener({
+      opener: OPENERS.schedulerList,
+    });
   };
 
   return (
@@ -211,11 +246,19 @@ function Navbar() {
             </Menu.Target>
 
             <Menu.Dropdown>
+              {conditionalRenderer.allowDisappear() && (
+                <Menu.Item
+                  onClick={onDisappear}
+                  leftSection={<IconMessageDots size={14} />}
+                >
+                  Disappear Messages
+                </Menu.Item>
+              )}
               <Menu.Item
-                onClick={onDisappear}
-                leftSection={<IconMessageDots size={14} />}
+                onClick={onSchedule}
+                leftSection={<IconClockHour10 size={14} />}
               >
-                {translation("chat_history.NAV-exportsd", "Disappear Messages")}
+                Scheduled Messages
               </Menu.Item>
               <Menu.Item
                 onClick={onExportChat}
