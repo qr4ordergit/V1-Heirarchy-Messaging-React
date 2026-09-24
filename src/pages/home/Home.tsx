@@ -227,7 +227,6 @@ export default function Home() {
                 className={classes.introVideoBtn}
                 aria-label={"Watch intro video"}
               >
-                <span className={classes.introVideoPulse} />
                 <IconPlayerPlayFilled size={16} />
               </UnstyledButton>
               <UnstyledButton
