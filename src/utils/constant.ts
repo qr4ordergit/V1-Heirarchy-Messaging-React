@@ -35,6 +35,7 @@ export const API_ENDPOINTS = {
   USER_HOME: `${API_BASE_URL}/user-home`,
   USER_HOME_PASSKEY: `${API_BASE_URL}/user-home/passkey`,
   AUTH_GET_NEW_TOKEN: `${API_BASE_URL}/auth/get_new_token`,
+  KEYRING_CATEGORIES: `${API_BASE_URL}/keyring-categories`,
 } as const;
 
 const avatarColors = [
@@ -110,8 +111,8 @@ export const TRIGGERS = {
 
 export const OPENERS = {
   schedulerList: "schedulerList",
-  editScheduledMsg: "editScheduledMsg"
-}
+  editScheduledMsg: "editScheduledMsg",
+};
 
 export const CIPHER_SECRET =
   "a3f9c81e2d4b7f60918c5e3a2b7d4f9c1e6a8b3d5f2c9e4a7b1d8f3c6e9a2b5d";

@@ -5,8 +5,11 @@ import {
   Avatar,
   Button,
   Card,
+  Divider,
   Group,
   Loader,
+  Modal,
+  PasswordInput,
   Stack,
   Text,
   TextInput,
@@ -18,7 +21,10 @@ import {
   IconCheck,
   IconChevronDown,
   IconChevronRight,
+  IconCopy,
+  IconEdit,
   IconId,
+  IconKey,
   IconLogout,
   IconPencil,
   IconPlus,
@@ -32,16 +38,26 @@ import { useAuthStore } from "../../store/auth/auth.store";
 import { useTagStore } from "../../store/tags/tags.store";
 import { logout } from "../../api/authApi";
 import {
+  createKeyringCategoryApi,
   createTagApi,
+  deleteKeyringCategoryApi,
   deleteTagApi,
+  getKeyringCategoriesApi,
   getTagsApi,
+  updateKeyringCategoryApi,
   updateProfileApi,
   uploadImageToS3Api,
 } from "../../api/profileApi";
+import type { KeyringCategoryItem } from "../../api/profileApi";
 import { ROUTES } from "../../router/routes";
 import { notifications } from "@mantine/notifications";
 import { handleApiError } from "../../utils/errorHandler";
 import { useTranslation } from "../../store/language/language.store";
+
+interface PasswordPair {
+  key: string;
+  value: string;
+}
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -65,18 +81,39 @@ const Profile = () => {
 
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  // Account Details Accordion
   const [accountDetailsOpen, setAccountDetailsOpen] = useState(false);
   const [isEditingAccount, setIsEditingAccount] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [description, setDescription] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
+  // Tags Accordion
   const [tagsOpen, setTagsOpen] = useState(false);
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [loadingTags, setLoadingTags] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [creatingTag, setCreatingTag] = useState(false);
   const [deletingTagId, setDeletingTagId] = useState<string | null>(null);
+
+  // Keyring Accordion
+  const [keyringOpen, setKeyringOpen] = useState(false);
+  const [keyrings, setKeyrings] = useState<KeyringCategoryItem[]>([]);
+  const [loadingKeyrings, setLoadingKeyrings] = useState(false);
+  const [expandedKeyringId, setExpandedKeyringId] = useState<string | null>(
+    null,
+  );
+
+  const [keyringModalOpened, setKeyringModalOpened] = useState(false);
+  const [editingKeyringId, setEditingKeyringId] = useState<string | null>(null);
+  const [categoryName, setCategoryName] = useState("");
+  const [passwordPairs, setPasswordPairs] = useState<PasswordPair[]>([
+    { key: "", value: "" },
+  ]);
+  const [submittingKeyring, setSubmittingKeyring] = useState(false);
+  const [deletingKeyringId, setDeletingKeyringId] = useState<string | null>(
+    null,
+  );
 
   const isSubRoute = ["/privacy", "/help", "/about"].includes(
     location.pathname,
@@ -87,7 +124,7 @@ const Profile = () => {
   const savedDescription =
     targetUserDetails?.description ?? (userDetails as any)?.description ?? "";
 
-  const isAnySectionOpen = accountDetailsOpen || tagsOpen;
+  const isAnySectionOpen = accountDetailsOpen || tagsOpen || keyringOpen;
 
   useEffect(() => {
     setDisplayName(savedDisplayName);
@@ -111,6 +148,18 @@ const Profile = () => {
       handleApiError(error);
     } finally {
       setLoadingTags(false);
+    }
+  };
+
+  const fetchKeyringsList = async () => {
+    setLoadingKeyrings(true);
+    try {
+      const data = await getKeyringCategoriesApi();
+      setKeyrings(Array.isArray(data) ? data : []);
+    } catch (error: any) {
+      handleApiError(error);
+    } finally {
+      setLoadingKeyrings(false);
     }
   };
 
@@ -226,6 +275,185 @@ const Profile = () => {
     }
   };
 
+  const handleToggleKeyring = () => {
+    const nextState = !keyringOpen;
+    setKeyringOpen(nextState);
+    if (nextState) {
+      fetchKeyringsList();
+    }
+  };
+
+  const handleOpenAddKeyringModal = () => {
+    setEditingKeyringId(null);
+    setCategoryName("");
+    setPasswordPairs([{ key: "", value: "" }]);
+    setKeyringModalOpened(true);
+  };
+
+  const handleOpenEditKeyringModal = (item: KeyringCategoryItem) => {
+    const id = item.keyring_category_id || item._id || "";
+    setEditingKeyringId(id);
+    setCategoryName(item.keyring_category_name || "");
+
+    const pairs: PasswordPair[] = [];
+    if (
+      item.keyring_category_passwords &&
+      typeof item.keyring_category_passwords === "object"
+    ) {
+      for (const [k, v] of Object.entries(item.keyring_category_passwords)) {
+        pairs.push({ key: k, value: String(v) });
+      }
+    }
+    setPasswordPairs(pairs.length > 0 ? pairs : [{ key: "", value: "" }]);
+    setKeyringModalOpened(true);
+  };
+
+  const handleAddPasswordPairRow = () => {
+    setPasswordPairs([...passwordPairs, { key: "", value: "" }]);
+  };
+
+  const handleRemovePasswordPairRow = (index: number) => {
+    if (passwordPairs.length === 1) {
+      setPasswordPairs([{ key: "", value: "" }]);
+      return;
+    }
+    setPasswordPairs(passwordPairs.filter((_, idx) => idx !== index));
+  };
+
+  const handlePasswordPairChange = (
+    index: number,
+    field: "key" | "value",
+    val: string,
+  ) => {
+    const updated = [...passwordPairs];
+    updated[index][field] = val;
+    setPasswordPairs(updated);
+  };
+
+  const handleSaveKeyringModal = async () => {
+    const trimmedCatName = categoryName.trim();
+    if (!trimmedCatName) {
+      notifications.show({
+        title: "",
+        message: translation(
+          "profile.alertEnterCategoryName",
+          "Please enter a keyring category name.",
+        ),
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+      return;
+    }
+
+    const passwordsMap: Record<string, string> = {};
+    for (const pair of passwordPairs) {
+      const k = pair.key.trim();
+      const v = pair.value.trim();
+      if (k && v) {
+        passwordsMap[k] = v;
+      }
+    }
+
+    if (Object.keys(passwordsMap).length === 0) {
+      notifications.show({
+        title: "",
+        message: translation(
+          "profile.alertProvidePasswordPair",
+          "Please provide at least one valid password key and value.",
+        ),
+        color: "red",
+        icon: <IconX size={18} />,
+      });
+      return;
+    }
+
+    setSubmittingKeyring(true);
+    try {
+      if (editingKeyringId) {
+        const success = await updateKeyringCategoryApi({
+          keyring_category_id: editingKeyringId,
+          keyring_category_name: trimmedCatName,
+          keyring_category_passwords: passwordsMap,
+        });
+
+        if (success) {
+          notifications.show({
+            title: "",
+            message: translation(
+              "profile.notificationKeyringUpdated",
+              "Keyring category updated successfully.",
+            ),
+            color: "green",
+            icon: <IconCheck size={18} />,
+          });
+          setKeyringModalOpened(false);
+          await fetchKeyringsList();
+        }
+      } else {
+        const res = await createKeyringCategoryApi({
+          keyring_category_name: trimmedCatName,
+          keyring_category_passwords: passwordsMap,
+        });
+
+        if (res) {
+          notifications.show({
+            title: "",
+            message: translation(
+              "profile.notificationKeyringCreated",
+              "Keyring category created successfully.",
+            ),
+            color: "green",
+            icon: <IconCheck size={18} />,
+          });
+          setKeyringModalOpened(false);
+          await fetchKeyringsList();
+        }
+      }
+    } catch (err: any) {
+      handleApiError(err);
+    } finally {
+      setSubmittingKeyring(false);
+    }
+  };
+
+  const handleDeleteKeyring = async (id: string) => {
+    setDeletingKeyringId(id);
+    try {
+      const success = await deleteKeyringCategoryApi(id);
+      if (success) {
+        notifications.show({
+          title: "",
+          message: translation(
+            "profile.notificationKeyringDeleted",
+            "Keyring category deleted successfully.",
+          ),
+          color: "green",
+          icon: <IconCheck size={18} />,
+        });
+        setKeyrings((prev) =>
+          prev.filter((item) => (item.keyring_category_id || item._id) !== id),
+        );
+      }
+    } catch (err: any) {
+      handleApiError(err);
+    } finally {
+      setDeletingKeyringId(null);
+    }
+  };
+
+  const handleCopyPasswordValue = (val: string) => {
+    navigator.clipboard.writeText(val);
+    notifications.show({
+      title: "",
+      message: translation(
+        "profile.notificationPasswordCopied",
+        "Password copied to clipboard!",
+      ),
+      color: "blue",
+      icon: <IconCopy size={16} />,
+    });
+  };
+
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -275,6 +503,7 @@ const Profile = () => {
 
   useEffect(() => {
     fetchTagsList();
+    fetchKeyringsList();
   }, []);
 
   const handleToggleTags = () => {
@@ -713,6 +942,228 @@ const Profile = () => {
                 withBorder
                 radius="lg"
                 p={0}
+                className="w-full border-gray-200/90 shadow-xs bg-white transition-all"
+              >
+                <UnstyledButton
+                  onClick={handleToggleKeyring}
+                  className="w-full px-5 py-4 cursor-pointer"
+                >
+                  <Group justify="space-between" pr={"xs"}>
+                    <Group gap="md">
+                      <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600">
+                        <IconKey size={20} />
+                      </div>
+                      <div>
+                        <Text fw={600} size="sm" className="text-gray-900">
+                          {translation(
+                            "profile.txtKeyringList",
+                            "Keyring List",
+                          )}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {keyrings.length}{" "}
+                          {keyrings.length === 1
+                            ? translation("profile.txtCategory", "category")
+                            : translation(
+                                "profile.txtCategories",
+                                "categories",
+                              )}{" "}
+                          {translation("profile.txtConfigured", "configured")}
+                        </Text>
+                      </div>
+                    </Group>
+                    {keyringOpen ? (
+                      <IconChevronDown size={18} className="text-gray-400" />
+                    ) : (
+                      <IconChevronRight size={18} className="text-gray-400" />
+                    )}
+                  </Group>
+                </UnstyledButton>
+
+                {keyringOpen && (
+                  <div className="px-5 pb-5 pt-3 border-t border-gray-100 space-y-3">
+                    <Button
+                      variant="subtle"
+                      color="indigo"
+                      size="xs"
+                      leftSection={<IconPlus size={14} />}
+                      onClick={handleOpenAddKeyringModal}
+                      fullWidth
+                      className="border border-dashed border-indigo-200 bg-indigo-50/40 hover:bg-indigo-50"
+                    >
+                      {translation(
+                        "profile.btnAddNewKeyring",
+                        "Add Keyring Category",
+                      )}
+                    </Button>
+
+                    {loadingKeyrings ? (
+                      <div className="flex justify-center items-center py-4">
+                        <Loader size="sm" color="indigo" />
+                      </div>
+                    ) : keyrings.length > 0 ? (
+                      <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                        {keyrings.map((cat, idx) => {
+                          const catId =
+                            cat.keyring_category_id || cat._id || String(idx);
+                          const isExpanded = expandedKeyringId === catId;
+                          const passMap = cat.keyring_category_passwords || {};
+                          const passEntries = Object.entries(passMap);
+
+                          return (
+                            <div
+                              key={catId}
+                              className="rounded-xl border border-gray-200 bg-gray-50/60 overflow-hidden"
+                            >
+                              <div className="flex items-center justify-between p-3 bg-white">
+                                <Group
+                                  gap="xs"
+                                  className="cursor-pointer flex-1"
+                                  onClick={() =>
+                                    setExpandedKeyringId(
+                                      isExpanded ? null : catId,
+                                    )
+                                  }
+                                >
+                                  <IconKey
+                                    size={16}
+                                    className="text-indigo-600"
+                                  />
+                                  <div>
+                                    <Text fw={600} size="sm">
+                                      {cat.keyring_category_name}
+                                    </Text>
+                                    <Text size="xs" c="dimmed">
+                                      {passEntries.length}{" "}
+                                      {passEntries.length === 1
+                                        ? "password key"
+                                        : "password keys"}
+                                    </Text>
+                                  </div>
+                                </Group>
+
+                                <Group gap={4}>
+                                  <ActionIcon
+                                    size="sm"
+                                    variant="subtle"
+                                    color="indigo"
+                                    onClick={() =>
+                                      handleOpenEditKeyringModal(cat)
+                                    }
+                                    title={translation(
+                                      "profile.tooltipEditKeyring",
+                                      "Edit Category",
+                                    )}
+                                  >
+                                    <IconEdit size={15} />
+                                  </ActionIcon>
+                                  <ActionIcon
+                                    size="sm"
+                                    variant="subtle"
+                                    color="red"
+                                    loading={deletingKeyringId === catId}
+                                    onClick={() => handleDeleteKeyring(catId)}
+                                    title={translation(
+                                      "profile.tooltipDeleteKeyring",
+                                      "Delete Category",
+                                    )}
+                                  >
+                                    <IconTrash size={15} />
+                                  </ActionIcon>
+                                  <ActionIcon
+                                    size="sm"
+                                    variant="subtle"
+                                    color="gray"
+                                    onClick={() =>
+                                      setExpandedKeyringId(
+                                        isExpanded ? null : catId,
+                                      )
+                                    }
+                                  >
+                                    {isExpanded ? (
+                                      <IconChevronDown size={15} />
+                                    ) : (
+                                      <IconChevronRight size={15} />
+                                    )}
+                                  </ActionIcon>
+                                </Group>
+                              </div>
+
+                              {/* Standard conditional render without Collapse */}
+                              {isExpanded && (
+                                <div className="p-3 pt-2 bg-gray-50/90 border-t border-gray-100 space-y-2">
+                                  {passEntries.length > 0 ? (
+                                    passEntries.map(([k, v], pIdx) => (
+                                      <div
+                                        key={`${k}-${pIdx}`}
+                                        className="flex items-center justify-between p-2 rounded-lg bg-white border border-gray-200 text-xs"
+                                      >
+                                        <div>
+                                          <Text fw={600} size="xs" c="gray.8">
+                                            {k}
+                                          </Text>
+                                          <Text
+                                            size="xs"
+                                            c="dimmed"
+                                            className="font-mono truncate max-w-50"
+                                          >
+                                            ••••••••
+                                          </Text>
+                                        </div>
+
+                                        <Tooltip
+                                          label={translation(
+                                            "profile.tooltipCopyPassword",
+                                            "Copy Password",
+                                          )}
+                                          withArrow
+                                        >
+                                          <ActionIcon
+                                            size="xs"
+                                            variant="light"
+                                            color="gray"
+                                            onClick={() =>
+                                              handleCopyPasswordValue(String(v))
+                                            }
+                                          >
+                                            <IconCopy size={13} />
+                                          </ActionIcon>
+                                        </Tooltip>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <Text size="xs" c="dimmed" ta="center">
+                                      {translation(
+                                        "profile.txtNoPasswordsInCat",
+                                        "No passwords configured in this category.",
+                                      )}
+                                    </Text>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="py-2 text-center">
+                        <Text size="xs" c="dimmed">
+                          {translation(
+                            "profile.txtNoKeyringsCreated",
+                            "No keyring categories created yet.",
+                          )}
+                        </Text>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
+
+              {/* LOGOUT BUTTON */}
+              <Card
+                withBorder
+                radius="lg"
+                p={0}
                 className="w-full border-gray-200/90 shadow-xs bg-white hover:bg-red-50/40 hover:border-red-200 transition-all"
               >
                 <UnstyledButton
@@ -783,6 +1234,136 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      <Modal
+        opened={keyringModalOpened}
+        onClose={() => setKeyringModalOpened(false)}
+        title={
+          <Text fw={700} size="md">
+            {editingKeyringId
+              ? translation(
+                  "profile.modalTitleEditKeyring",
+                  "Edit Keyring Category",
+                )
+              : translation(
+                  "profile.modalTitleAddKeyring",
+                  "Add Keyring Category",
+                )}
+          </Text>
+        }
+        radius="lg"
+        size="md"
+        centered
+      >
+        <Stack gap="md">
+          <TextInput
+            label={translation("profile.labelCategoryName", "Category Name")}
+            placeholder={translation(
+              "profile.placeholderCategoryName",
+              "e.g. ByHUB Passwords, Personal Keys",
+            )}
+            size="sm"
+            required
+            value={categoryName}
+            onChange={(e) => setCategoryName(e.currentTarget.value)}
+          />
+
+          <Divider
+            label={translation(
+              "profile.dividerCategoryPasswords",
+              "Category Passwords (Key & Value)",
+            )}
+            labelPosition="center"
+          />
+
+          <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+            {passwordPairs.map((pair, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-2 p-2 bg-gray-50 rounded-xl border border-gray-200"
+              >
+                <TextInput
+                  placeholder={translation(
+                    "profile.placeholderPasswordKey",
+                    "Key (e.g. easy password)",
+                  )}
+                  size="xs"
+                  className="flex-1"
+                  value={pair.key}
+                  onChange={(e) =>
+                    handlePasswordPairChange(
+                      index,
+                      "key",
+                      e.currentTarget.value,
+                    )
+                  }
+                />
+                <PasswordInput
+                  placeholder={translation(
+                    "profile.placeholderPasswordValue",
+                    "Value / Hash",
+                  )}
+                  size="xs"
+                  className="flex-1"
+                  value={pair.value}
+                  onChange={(e) =>
+                    handlePasswordPairChange(
+                      index,
+                      "value",
+                      e.currentTarget.value,
+                    )
+                  }
+                />
+                <ActionIcon
+                  size="sm"
+                  color="red"
+                  variant="subtle"
+                  disabled={
+                    passwordPairs.length === 1 && !pair.key && !pair.value
+                  }
+                  onClick={() => handleRemovePasswordPairRow(index)}
+                  title="Remove Key-Value"
+                >
+                  <IconTrash size={14} />
+                </ActionIcon>
+              </div>
+            ))}
+          </div>
+
+          <Button
+            size="xs"
+            variant="light"
+            color="indigo"
+            leftSection={<IconPlus size={14} />}
+            onClick={handleAddPasswordPairRow}
+          >
+            {translation(
+              "profile.btnAddMorePasswords",
+              "Add More Password Key-Value",
+            )}
+          </Button>
+
+          <Group justify="flex-end" gap="xs" mt="sm">
+            <Button
+              variant="default"
+              size="xs"
+              onClick={() => setKeyringModalOpened(false)}
+            >
+              {translation("profile.btnCancel", "Cancel")}
+            </Button>
+            <Button
+              size="xs"
+              color="indigo"
+              loading={submittingKeyring}
+              onClick={handleSaveKeyringModal}
+            >
+              {editingKeyringId
+                ? translation("profile.btnUpdateCategory", "Update Category")
+                : translation("profile.btnSaveCategory", "Save Category")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </div>
   );
 };
