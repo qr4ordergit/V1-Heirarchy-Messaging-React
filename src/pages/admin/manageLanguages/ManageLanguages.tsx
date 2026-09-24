@@ -115,6 +115,8 @@ const ManageLanguages = () => {
           variant={active === "languages" ? "filled" : "outline"}
           onClick={() => {
             onClicTab("languages");
+            setSelectedLang({value: "en",
+    label: "English",})
           }}
         >
           Languages
