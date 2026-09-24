@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import type { InternalAxiosRequestConfig } from "axios";
+import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "../store/auth/auth.store";
 import { ClearStore } from "../store/clear.store";
 import { ROUTES } from "../router/routes";
@@ -7,6 +7,14 @@ import { API_ENDPOINTS } from "../utils/constant";
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
+  timeout: 50000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export const adminApi = axios.create({
+  baseURL: import.meta.env.VITE_ADMIN_API_URL,
   timeout: 50000,
   headers: {
     "Content-Type": "application/json",
@@ -81,60 +89,69 @@ function forceLogout() {
   }
 }
 
-api.interceptors.request.use(
-  (config) => {
-    const token = useAuthStore.getState().accessToken;
+function setupInterceptors(instance: AxiosInstance) {
+  instance.interceptors.request.use(
+    (config) => {
+      const token = useAuthStore.getState().accessToken;
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
-
-api.interceptors.response.use(
-  (response) => response,
-
-  async (error: AxiosError) => {
-    const originalRequest = error.config as RetryableRequestConfig | undefined;
-    const isRefreshCall = originalRequest?.url?.includes("/auth/get_new_token");
-
-    if (
-      error.response?.status === 401 &&
-      originalRequest &&
-      !originalRequest._retry &&
-      !isRefreshCall
-    ) {
-      if (isRefreshing) {
-        return new Promise<string>((resolve, reject) => {
-          pendingRequests.push({ resolve, reject });
-        }).then((token) => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        });
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
 
-      originalRequest._retry = true;
-      isRefreshing = true;
+      return config;
+    },
+    (error) => Promise.reject(error),
+  );
 
-      try {
-        const newAccessToken = await refreshAccessToken();
+  instance.interceptors.response.use(
+    (response) => response,
 
-        resolvePendingRequests(newAccessToken);
+    async (error: AxiosError) => {
+      const originalRequest = error.config as
+        | RetryableRequestConfig
+        | undefined;
+      const isRefreshCall = originalRequest?.url?.includes(
+        "/auth/get_new_token",
+      );
 
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        rejectPendingRequests(refreshError);
-        forceLogout();
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
+      if (
+        error.response?.status === 401 &&
+        originalRequest &&
+        !originalRequest._retry &&
+        !isRefreshCall
+      ) {
+        if (isRefreshing) {
+          return new Promise<string>((resolve, reject) => {
+            pendingRequests.push({ resolve, reject });
+          }).then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return instance(originalRequest);
+          });
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        try {
+          const newAccessToken = await refreshAccessToken();
+
+          resolvePendingRequests(newAccessToken);
+
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return instance(originalRequest);
+        } catch (refreshError) {
+          rejectPendingRequests(refreshError);
+          forceLogout();
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
       }
-    }
 
-    return Promise.reject(error);
-  },
-);
+      return Promise.reject(error);
+    },
+  );
+}
+
+setupInterceptors(api);
+setupInterceptors(adminApi);

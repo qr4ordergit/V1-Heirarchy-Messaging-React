@@ -73,8 +73,7 @@ export default function Admin() {
         size="xs"
         mb={"md"}
         style={{ maxWidth: "300px" }}
-        label="Select setting"
-        placeholder="Settings"
+        placeholder="Select setting"
         data={data}
         value={value ? value.value : null}
         onChange={(_value, option) => setValue(option)}

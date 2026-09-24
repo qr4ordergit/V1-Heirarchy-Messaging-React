@@ -1,32 +1,32 @@
 export const ENDPOINTS = {
   DM: {
     LIST: "/get-chat-history",
-    DELETE: "/delete-chat-history"
+    DELETE: "/delete-chat-history",
   },
   GROUPS: {
     LIST: "/group/chat-history",
     LEAVE: "/group/manage-members",
-    GETMEMBERS: "/group"
+    GETMEMBERS: "/group",
   },
   CHAT: {
     SEND: "/message",
     GET: "/message?other_user=",
     DELETE: "/message",
-    PUT: "/message"
+    PUT: "/message",
   },
   CHAT1: {
     SEND: "/message-v1",
     GET: "/message-v1?other_user=",
     DELETE: "/message",
-    PUT: "/message"
+    PUT: "/message",
   },
   ACCESS_PERMISSION: {
     GET: "/user-access/sub-users-permissions",
-    PATCH: "/user-access"
+    PATCH: "/user-access",
   },
   PERMISSION: {
     GET: "/permissions",
-    PATCH: "/permissions"
+    PATCH: "/permissions",
   },
   GROUP_CHAT: {
     GET: "/groups-message?group_id=",
@@ -41,7 +41,7 @@ export const ENDPOINTS = {
     PUT: "/groups-message",
   },
   MEDIA: {
-    COMPLETE_MULTIPART: "/multi-file-merge"
+    COMPLETE_MULTIPART: "/multi-file-merge",
   },
   TAGS_FILTER: {
     GET: "/tags/manage",
@@ -52,16 +52,19 @@ export const ENDPOINTS = {
     EXISTING: "/tags/by_message_id",
   },
   TAG: {
-    GET: "/tags"
+    GET: "/tags",
   },
   PRIVATEMSG: {
-    DECRYPT: "/groups-message/decrypt"
+    DECRYPT: "/groups-message/decrypt",
   },
   EXPORTCHAT: {
     GENERATE: "/message-reports",
-    STATUS: "/message-reports"
+    STATUS: "/message-reports",
   },
   MESSAGES: {
-    DISAPPEAR: "/disappear"
-  }
+    DISAPPEAR: "/disappear",
+  },
+  MANAGE_LANGUAGES: {
+    UPDATE: "/upload-language",
+  },
 } as const;
