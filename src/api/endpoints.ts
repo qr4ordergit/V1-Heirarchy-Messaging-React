@@ -59,9 +59,13 @@ export const ENDPOINTS = {
     DISAPPEAR: "/disappear",
     SCHEDULED_GET: "/schedule-message",
     SCHEDULED_PUT: "/schedule-message",
-    SCHEDULED_DELETE: "/schedule-message"
+    SCHEDULED_DELETE: "/schedule-message",
   },
   MANAGE_LANGUAGES: {
     UPDATE: "/upload-language",
+  },
+  VIDEO_HANDLER: {
+    BASE: "/video-handler",
+    ARRANGE: "/video-handler/arrange",
   },
 } as const;
