@@ -1,4 +1,4 @@
-import { Modal, Table } from "@mantine/core";
+import { Modal, Stack } from "@mantine/core";
 import { useOpenerStore } from "../../../../store/openers/opener.store";
 import { OPENERS } from "../../../../utils/constant";
 import { api } from "../../../../api/axios";
@@ -8,7 +8,6 @@ import { useEffect, useTransition } from "react";
 import { useParams } from "react-router";
 import { useScheduleMsgsStore } from "../../../../store/schedules/schedules.store";
 import ScheduledMsgCard from "../schedules/ScheduledMsgCard";
-import useScheduleMediaDecryptor from "../../../../hooks/useScheduleMediaDecryptor";
 import { Notification } from "../../../../utils/notification";
 import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
 import { useTranslation } from "../../../../store/language/language.store";
@@ -23,7 +22,6 @@ function SchedularsPreviewModal() {
   const { translation } = useTranslation();
 
   const trigger = openers[OPENERS.schedulerList]?.opener;
-  const decryptor = useScheduleMediaDecryptor();
   const [fetchLoader, FetchFn] = useTransition();
 
   const onClose = () => {
@@ -42,8 +40,7 @@ function SchedularsPreviewModal() {
       const res = await api.get(ENDPOINTS.MESSAGES.SCHEDULED_GET, { params });
 
       if (!res.data?.success) return;
-      const updatedMsgs = await decryptor(res.data?.data || []);
-      storeScheduleMsgs(updatedMsgs);
+      storeScheduleMsgs(res.data?.data);
     } catch (error) {
       Notification.error(getApiErrorMessage(error));
     }
@@ -65,56 +62,27 @@ function SchedularsPreviewModal() {
       title={"Scheduled messages"}
       size={"xl"}
     >
-      <Table withTableBorder withColumnBorders>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>
-              {translation("chat_history.modal-schedule-th-msg", "Message")}
-            </Table.Th>
-            <Table.Th>
-              {translation("chat_history.modal-schedule-th-media", "Media")}
-            </Table.Th>
-            <Table.Th>
-              {translation("chat_history.modal-schedule-th-action", "Action")}
-            </Table.Th>
-            <Table.Th>
-              {translation(
-                "chat_history.modal-schedule-th-frequency",
-                "Frequency",
-              )}
-            </Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {fetchLoader ? (
-            <Table.Tr>
-              <Table.Td colSpan={4} className=" text-center">
-                {translation(
-                  "chat_history.modal-schedule-th-loader",
-                  "Fetching scheduled messages. Please wait...",
-                )}
-              </Table.Td>
-            </Table.Tr>
-          ) : (
-            <>
-              {messages.length > 0 ? (
-                messages.map((msg) => (
-                  <ScheduledMsgCard key={msg._id} msg={msg} />
-                ))
-              ) : (
-                <Table.Tr>
-                  <Table.Td colSpan={4} className="text-red-500 text-center">
-                    {translation(
-                      "chat_history.modal-schedule-th-empty",
-                      "No scheduled messages found",
-                    )}
-                  </Table.Td>
-                </Table.Tr>
-              )}
-            </>
+      {fetchLoader ? (
+        <div>
+          {translation(
+            "chat_history.modal-schedule-loader",
+            "Fetching scheduled messages. Please wait...",
           )}
-        </Table.Tbody>
-      </Table>
+        </div>
+      ) : (
+        <Stack align="stretch" justify="center">
+          {messages.length > 0 ? (
+            messages.map((msg) => <ScheduledMsgCard key={msg._id} msg={msg} />)
+          ) : (
+            <div>
+              {translation(
+                "chat_history.modal-schedule-empty",
+                "No scheduled messages found",
+              )}
+            </div>
+          )}
+        </Stack>
+      )}
     </Modal>
   );
 }
