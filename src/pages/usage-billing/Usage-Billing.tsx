@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Accordion,
@@ -9,6 +9,7 @@ import {
   Container,
   Divider,
   Group,
+  Loader,
   Paper,
   SimpleGrid,
   Stack,
@@ -28,20 +29,38 @@ import {
   IconMail,
   IconSparkles,
   IconTable,
-  IconTrendingUp,
   IconWallet,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useAuthStore } from "../../store/auth/auth.store";
-import { updateMembershipStatusApi } from "../../api/usageBillingApi";
+import {
+  getEstimateApi,
+  getUsageApi,
+  updateMembershipStatusApi,
+  type EstimateData,
+  type UsageData,
+} from "../../api/usageBillingApi";
 
-export interface FeatureRow {
+export interface FeatureRowDef {
   key?: string;
   feature: string;
   featureDescription?: string;
-  usage: string | number;
+  defaultUsage?: string;
+  format?: (val: any, rawData?: UsageData) => string | number;
   isPaidOnly?: boolean;
 }
+
+export interface FeatureRowRendered extends FeatureRowDef {
+  usage: string | number;
+}
+
+const formatBytes = (bytes: number = 0): string => {
+  if (!bytes || bytes <= 0) return "0 MB";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+};
 
 export default function UsageBilling() {
   const navigate = useNavigate();
@@ -51,89 +70,173 @@ export default function UsageBilling() {
 
   const [payingBill, setPayingBill] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
 
-  // Mock API Response Container: Replace this object when your API is connected
-  const apiUsageData = {
-    chat_accounts_active: 1,
-    storage_used: "20 MB",
-    cloud_cost: "Currently free",
-    premium_usernames_count: 1,
-  };
+  const [usageData, setUsageData] = useState<UsageData | null>(null);
+  const [estimateData, setEstimateData] = useState<EstimateData | null>(null);
+  const [canPayAndDownload, setCanPayAndDownload] = useState(false);
 
-  const freeFeatures: FeatureRow[] = [
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoadingData(true);
+      const [usageRes, estimateRes] = await Promise.all([
+        getUsageApi(),
+        getEstimateApi(),
+      ]);
+
+      if (mounted) {
+        if (usageRes) setUsageData(usageRes);
+        if (estimateRes?.estimate) setEstimateData(estimateRes.estimate);
+        setCanPayAndDownload(Boolean(estimateRes?.invoiceGenerated));
+        setLoadingData(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const freeFeatureDefs: FeatureRowDef[] = [
     {
       key: "chat_accounts",
       feature: "Chat Accounts",
       featureDescription:
         "First 5 accounts are free (Beyond 5 free accounts, $1 per account per month)",
-      usage: `${apiUsageData.chat_accounts_active}`,
+      format: (val) => (val !== undefined ? String(val) : "0"),
     },
     {
-      key: "storage",
+      key: "storage_bytes",
       feature: "Storage",
       featureDescription:
         "Up to 5GB storage free (Beyond 5GB, $0.025 per GB per month)",
-      usage: apiUsageData.storage_used,
+      format: (val) => formatBytes(val?.total_bytes ?? 0),
     },
     {
       key: "cloud_cost",
       feature: "Cloud computing cost",
       featureDescription: "Will be based on your actual daily usage",
-      usage: apiUsageData.cloud_cost,
+      defaultUsage: "Currently free",
     },
-    { feature: "Bulk account creation", usage: "Unlimited" },
-    { feature: "Hierarchical Account Access", usage: "Unlimited" },
-    { feature: "One on One Chat - (Encrypted)", usage: "Unlimited" },
-    { feature: "Group Chats - (Encrypted)", usage: "Unlimited" },
-    { feature: "Double Encryption with own password", usage: "Unlimited" },
-    { feature: "Scheduled Messages", usage: "Unlimited" },
-    { feature: "Disappearing Messages", usage: "Unlimited" },
     {
+      key: "bulk_account_creation",
+      feature: "Bulk account creation",
+      defaultUsage: "Unlimited",
+    },
+    {
+      key: "hierarchical_access",
+      feature: "Hierarchical Account Access",
+      defaultUsage: "Unlimited",
+    },
+    {
+      key: "one_on_one_chat",
+      feature: "One on One Chat - (Encrypted)",
+      defaultUsage: "Unlimited",
+    },
+    {
+      key: "group_chats",
+      feature: "Group Chats - (Encrypted)",
+      defaultUsage: "Unlimited",
+    },
+    {
+      key: "double_encryption",
+      feature: "Double Encryption with own password",
+      defaultUsage: "Unlimited",
+    },
+    {
+      key: "scheduled_messages",
+      feature: "Scheduled Messages",
+      defaultUsage: "Unlimited",
+    },
+    {
+      key: "disappearing_messages",
+      feature: "Disappearing Messages",
+      defaultUsage: "Unlimited",
+    },
+    {
+      key: "account_tags",
       feature: "Account & Group Tags",
       featureDescription: "Convenient message filtering across your chats",
-      usage: "Unlimited",
+      format: (val) => (val !== undefined ? `${val} created` : "Unlimited"),
+      defaultUsage: "Unlimited",
     },
     {
+      key: "export_chats",
       feature: "Export/Download Chats with Media",
-      usage: "Unlimited",
+      defaultUsage: "Unlimited",
     },
   ];
 
-  const paidFeatures: FeatureRow[] = [
+  const paidFeatureDefs: FeatureRowDef[] = [
     {
       key: "premium_usernames",
       feature: "Premium Usernames",
-      usage: `${apiUsageData.premium_usernames_count}`,
+      featureDescription:
+        "Claim custom exclusive unique handles for your accounts",
+      format: (val) => (val !== undefined ? String(val) : "0"),
       isPaidOnly: true,
     },
   ];
 
-  const allCombinedFeatures: FeatureRow[] = [...freeFeatures, ...paidFeatures];
+  const resolveFeatures = (defs: FeatureRowDef[]): FeatureRowRendered[] => {
+    return defs.map((def) => {
+      let resolvedUsage = def.defaultUsage ?? "0";
 
-  // Billing calculation states
+      if (def.key && usageData && usageData[def.key] !== undefined) {
+        const rawVal = usageData[def.key];
+        resolvedUsage = def.format
+          ? String(def.format(rawVal, usageData))
+          : String(rawVal);
+      }
+
+      return {
+        ...def,
+        usage: resolvedUsage,
+      };
+    });
+  };
+
+  const freeFeatures = useMemo(
+    () => resolveFeatures(freeFeatureDefs),
+    [usageData],
+  );
+  const paidFeatures = useMemo(
+    () => resolveFeatures(paidFeatureDefs),
+    [usageData],
+  );
+  const allCombinedFeatures = useMemo(
+    () => [...freeFeatures, ...paidFeatures],
+    [freeFeatures, paidFeatures],
+  );
+
+  const chatAccountEst = estimateData?.chat_accounts;
+  const storageEst = estimateData?.storage;
+
+  const chatUsage = chatAccountEst?.usage ?? 0;
+  const chatFreeUnits = chatAccountEst?.free_units ?? 5;
+  const chatUnitPrice = chatAccountEst?.unit_price ?? 1.0;
+  const chatEstimatedCost = chatAccountEst?.estimated_cost ?? 0.0;
+
+  const storageUsageBytes = storageEst?.usage_bytes ?? 0;
+  const storageFreeBytes = storageEst?.free_bytes ?? 5368709120;
+  const storageUnitPrice = storageEst?.unit_price ?? 0.025;
+  const storageEstimatedCost = storageEst?.estimated_cost ?? 0.0;
+
+  const totalEstimatedCost = estimateData?.total_estimated_cost ?? 0.0;
+
   const billingItems = [
     {
-      item: "Chat Accounts (> 5 free)",
-      detail: "0 extra accounts",
-      currentAmount: 0.0,
-      estimatedAmount: 0.0,
+      item: `Chat Accounts (> ${chatFreeUnits} free)`,
+      detail: `${chatUsage} used (${chatAccountEst?.billable_units ?? 0} billable) • $${chatUnitPrice.toFixed(2)}/acct`,
+      cost: chatEstimatedCost,
     },
     {
-      item: "Storage Overage (> 5GB free)",
-      detail: "20 MB used of 5 GB",
-      currentAmount: 0.0,
-      estimatedAmount: 0.0,
+      item: `Storage Overage (> ${formatBytes(storageFreeBytes)} free)`,
+      detail: `${formatBytes(storageUsageBytes)} used • $${storageUnitPrice.toFixed(3)}/GB`,
+      cost: storageEstimatedCost,
     },
   ];
-
-  const currentTotal = billingItems.reduce(
-    (acc, curr) => acc + curr.currentAmount,
-    0,
-  );
-  const estimatedMonthEndTotal = billingItems.reduce(
-    (acc, curr) => acc + curr.estimatedAmount,
-    0,
-  );
 
   const handleUpgradeToPaid = async () => {
     setUpgrading(true);
@@ -161,7 +264,7 @@ export default function UsageBilling() {
     }, 1200);
   };
 
-  const renderTable = (rows: FeatureRow[], showLockBanner = false) => (
+  const renderTable = (rows: FeatureRowRendered[], showLockBanner = false) => (
     <Paper withBorder radius="md" p={0} style={{ overflow: "hidden" }}>
       <Table
         striped
@@ -181,12 +284,10 @@ export default function UsageBilling() {
         </Table.Thead>
         <Table.Tbody>
           {rows.map((row, index) => {
-            // Evaluates locked if it is a paid-only feature and user is not paid
             const isLocked = Boolean(row.isPaidOnly && !isPaid);
 
             return (
               <Table.Tr key={index}>
-                {/* Feature Name & Subtitle */}
                 <Table.Td>
                   <Group gap="sm" align="flex-start" wrap="nowrap">
                     <ThemeIcon
@@ -216,7 +317,6 @@ export default function UsageBilling() {
                   </Group>
                 </Table.Td>
 
-                {/* Usage / Contact Action */}
                 <Table.Td
                   style={{ textAlign: "right", verticalAlign: "middle" }}
                 >
@@ -227,9 +327,9 @@ export default function UsageBilling() {
                         row.feature,
                       )}&body=Hello%20Team%2C%0A%0AI%20am%20interested%20in%20unlocking%20${encodeURIComponent(
                         row.feature,
-                      )}%20for%20my%20Hub.%20Please%20guide%20me%20with%20the%20details.`}
+                      )}%20for%20my%20Hub.`}
                       variant="light"
-                      color="grey"
+                      color="gray"
                       size="compact-xs"
                       radius="xl"
                       leftSection={<IconMail size={13} />}
@@ -257,7 +357,6 @@ export default function UsageBilling() {
         </Table.Tbody>
       </Table>
 
-      {/* Upgrade Banner */}
       {showLockBanner && !isPaid && (
         <Paper p="md" bg="blue.0" style={{ borderTop: "1px solid #d0ebff" }}>
           <Group justify="flex-end">
@@ -287,7 +386,6 @@ export default function UsageBilling() {
       }}
     >
       <Container size="lg">
-        {/* Top Header */}
         <Group justify="space-between" align="center" mb="lg">
           <Tooltip label="Go back" position="right" withArrow>
             <ActionIcon
@@ -329,7 +427,6 @@ export default function UsageBilling() {
           </Group>
         </Group>
 
-        {/* Title */}
         <Stack gap={4} mb="xl">
           <Title order={2} style={{ letterSpacing: "-0.5px" }}>
             Available Feature List & Usage Table
@@ -341,195 +438,193 @@ export default function UsageBilling() {
           </Text>
         </Stack>
 
-        {/* Accordion Layout */}
-        <Accordion
-          variant="separated"
-          radius="md"
-          defaultValue="features"
-          styles={{
-            item: { backgroundColor: "#ffffff", border: "1px solid #e9ecef" },
-            control: { padding: "16px 20px" },
-            content: { padding: "8px 20px 20px 20px" },
-          }}
-        >
-          {/* Section 1: Features & Quotas */}
-          <Accordion.Item value="features">
-            <Accordion.Control
-              icon={
-                <ThemeIcon variant="light" color="indigo" radius="md" size={32}>
-                  <IconTable size={18} />
-                </ThemeIcon>
-              }
-            >
-              <div>
-                <Text fw={600} size="md">
-                  Features & Usage
-                </Text>
-                <Text size="xs" c="dimmed">
-                  Detailed quota tracking, limits, and active features
-                </Text>
-              </div>
-            </Accordion.Control>
-
-            <Accordion.Panel>
-              {isPaid ? (
-                <Stack gap="md">
-                  <Text fw={600} size="sm" c="dimmed" tt="uppercase">
-                    Active Subscription Allowances
+        {loadingData ? (
+          <Paper withBorder radius="md" p="xl" bg="white">
+            <Group justify="center" gap="sm">
+              <Loader size="sm" color="indigo" />
+              <Text size="sm" c="dimmed">
+                Loading usage & billing estimates...
+              </Text>
+            </Group>
+          </Paper>
+        ) : (
+          <Accordion
+            variant="separated"
+            radius="md"
+            defaultValue="features"
+            styles={{
+              item: { backgroundColor: "#ffffff", border: "1px solid #e9ecef" },
+              control: { padding: "16px 20px" },
+              content: { padding: "8px 20px 20px 20px" },
+            }}
+          >
+            {/* Section 1: Features & Usage */}
+            <Accordion.Item value="features">
+              <Accordion.Control
+                icon={
+                  <ThemeIcon
+                    variant="light"
+                    color="indigo"
+                    radius="md"
+                    size={32}
+                  >
+                    <IconTable size={18} />
+                  </ThemeIcon>
+                }
+              >
+                <div>
+                  <Text fw={600} size="md">
+                    Features & Usage
                   </Text>
-                  {renderTable(allCombinedFeatures)}
-                </Stack>
-              ) : (
-                <Stack gap="xl">
-                  <Stack gap="xs">{renderTable(freeFeatures)}</Stack>
-                  <Stack gap="xs">
-                    <Text fw={700} size="sm" c="red.7" tt="uppercase">
-                      Paid Features — Unlock by switching to Paid Membership
-                    </Text>
-                    {renderTable(paidFeatures, true)}
-                  </Stack>
-                </Stack>
-              )}
-            </Accordion.Panel>
-          </Accordion.Item>
-
-          {/* Section 2: Billing & Projections */}
-          <Accordion.Item value="billing">
-            <Accordion.Control
-              icon={
-                <ThemeIcon variant="light" color="teal" radius="md" size={32}>
-                  <IconCreditCard size={18} />
-                </ThemeIcon>
-              }
-            >
-              <div>
-                <Text fw={600} size="md">
-                  Billing & Invoices
-                </Text>
-                <Text size="xs" c="dimmed">
-                  Monthly charges, variable utility usage, and payment checkout
-                </Text>
-              </div>
-            </Accordion.Control>
-
-            <Accordion.Panel>
-              <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
-                {/* Table Breakdown */}
-                <div style={{ gridColumn: "span 2" }}>
-                  <Paper withBorder radius="md" p="md" bg="white">
-                    <Title order={5} mb="sm">
-                      Daily Utility Breakdown
-                    </Title>
-                    <Table verticalSpacing="sm">
-                      <Table.Thead bg="gray.0">
-                        <Table.Tr>
-                          <Table.Th>Billed Item</Table.Th>
-                          <Table.Th>Activity / Rate</Table.Th>
-                          <Table.Th style={{ textAlign: "right" }}>
-                            Current Cost ($)
-                          </Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>
-                        {billingItems.map((item, idx) => (
-                          <Table.Tr key={idx}>
-                            <Table.Td fw={500}>{item.item}</Table.Td>
-                            <Table.Td>
-                              <Text size="sm" c="dimmed">
-                                {item.detail}
-                              </Text>
-                            </Table.Td>
-                            <Table.Td style={{ textAlign: "right" }} fw={600}>
-                              ${item.currentAmount.toFixed(2)}
-                            </Table.Td>
-                          </Table.Tr>
-                        ))}
-                      </Table.Tbody>
-                    </Table>
-                  </Paper>
+                  <Text size="xs" c="dimmed">
+                    Detailed quota tracking, limits, and active features
+                  </Text>
                 </div>
+              </Accordion.Control>
 
-                {/* Invoice Status & Month-End Estimates */}
-                <Card withBorder radius="md" p="lg" bg="white">
+              <Accordion.Panel>
+                {isPaid ? (
                   <Stack gap="md">
-                    <Group justify="space-between">
-                      <Text fw={600} size="sm" c="dimmed">
-                        Invoice Status
-                      </Text>
-                      <Badge
-                        color={currentTotal > 0 ? "orange" : "green"}
-                        variant="light"
-                      >
-                        {currentTotal > 0 ? "Due" : "No Charges Due"}
-                      </Badge>
-                    </Group>
-
-                    <Divider />
-
-                    {/* Current Price */}
-                    <Stack gap={2}>
-                      <Text size="xs" c="dimmed" fw={600} tt="uppercase">
-                        Current Accrued Cost
-                      </Text>
-                      <Title order={2}>${currentTotal.toFixed(2)}</Title>
-                    </Stack>
-
-                    {/* Month-End Estimated Price */}
-                    <Paper p="xs" bg="gray.0" radius="md" withBorder>
-                      <Group justify="space-between" align="center">
-                        <Group gap={6}>
-                          <ThemeIcon
-                            size={20}
-                            color="indigo"
-                            variant="light"
-                            radius="xl"
-                          >
-                            <IconTrendingUp size={12} />
-                          </ThemeIcon>
-                          <Text size="xs" fw={500} c="dimmed">
-                            Est. Month-End:
-                          </Text>
-                        </Group>
-                        <Text size="sm" fw={700} c="indigo.8">
-                          ${estimatedMonthEndTotal.toFixed(2)}
-                        </Text>
-                      </Group>
-                    </Paper>
-
-                    <Button
-                      fullWidth
-                      color="indigo"
-                      size="md"
-                      radius="md"
-                      leftSection={<IconWallet size={16} />}
-                      loading={payingBill}
-                      onClick={handlePayBill}
-                    >
-                      Pay Current Bill
-                    </Button>
-
-                    <Button
-                      fullWidth
-                      variant="subtle"
-                      color="gray"
-                      size="xs"
-                      leftSection={<IconDownload size={14} />}
-                      onClick={() =>
-                        notifications.show({
-                          title: "",
-                          message: "Invoice download started.",
-                          color: "blue",
-                        })
-                      }
-                    >
-                      Download PDF Summary
-                    </Button>
+                    <Text fw={600} size="sm" c="dimmed" tt="uppercase">
+                      Active Subscription Allowances
+                    </Text>
+                    {renderTable(allCombinedFeatures)}
                   </Stack>
-                </Card>
-              </SimpleGrid>
-            </Accordion.Panel>
-          </Accordion.Item>
-        </Accordion>
+                ) : (
+                  <Stack gap="xl">
+                    <Stack gap="xs">{renderTable(freeFeatures)}</Stack>
+                    <Stack gap="xs">
+                      <Text fw={700} size="sm" c="red.7" tt="uppercase">
+                        Paid Features — Unlock by switching to Paid Membership
+                      </Text>
+                      {renderTable(paidFeatures, true)}
+                    </Stack>
+                  </Stack>
+                )}
+              </Accordion.Panel>
+            </Accordion.Item>
+
+            <Accordion.Item value="billing">
+              <Accordion.Control
+                icon={
+                  <ThemeIcon variant="light" color="teal" radius="md" size={32}>
+                    <IconCreditCard size={18} />
+                  </ThemeIcon>
+                }
+              >
+                <div>
+                  <Text fw={600} size="md">
+                    Billing & Invoices
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    Monthly charges, variable utility usage, and payment
+                    checkout
+                  </Text>
+                </div>
+              </Accordion.Control>
+
+              <Accordion.Panel>
+                <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
+                  <div style={{ gridColumn: "span 2" }}>
+                    <Paper withBorder radius="md" p="md" bg="white">
+                      <Title order={5} mb="sm">
+                        Daily Utility Breakdown
+                      </Title>
+                      <Table verticalSpacing="sm">
+                        <Table.Thead bg="gray.0">
+                          <Table.Tr>
+                            <Table.Th>Billed Item</Table.Th>
+                            <Table.Th>Activity / Rate</Table.Th>
+                            <Table.Th style={{ textAlign: "right" }}>
+                              Current Cost ($)
+                            </Table.Th>
+                          </Table.Tr>
+                        </Table.Thead>
+                        <Table.Tbody>
+                          {billingItems.map((item, idx) => (
+                            <Table.Tr key={idx}>
+                              <Table.Td fw={500}>{item.item}</Table.Td>
+                              <Table.Td>
+                                <Text size="sm" c="dimmed">
+                                  {item.detail}
+                                </Text>
+                              </Table.Td>
+                              <Table.Td style={{ textAlign: "right" }} fw={600}>
+                                ${item.cost.toFixed(2)}
+                              </Table.Td>
+                            </Table.Tr>
+                          ))}
+                        </Table.Tbody>
+                      </Table>
+                    </Paper>
+                  </div>
+
+                  {/* Invoice Summary Card */}
+                  <Card withBorder radius="md" p="lg" bg="white">
+                    <Stack gap="md">
+                      <Group justify="space-between">
+                        <Text fw={600} size="sm" c="dimmed">
+                          Invoice Status
+                        </Text>
+                        <Badge
+                          color={totalEstimatedCost > 0 ? "orange" : "green"}
+                          variant="light"
+                        >
+                          {totalEstimatedCost > 0 ? "Due" : "No Charges Due"}
+                        </Badge>
+                      </Group>
+
+                      <Divider />
+
+                      <Stack gap={2}>
+                        <Text size="xs" c="dimmed" fw={600} tt="uppercase">
+                          Current Accrued Cost
+                        </Text>
+                        <Title order={2}>
+                          ${totalEstimatedCost.toFixed(2)}
+                        </Title>
+                      </Stack>
+
+                      {/* Action buttons conditionally rendered based on status */}
+                      {canPayAndDownload ? (
+                        <>
+                          <Button
+                            fullWidth
+                            color="indigo"
+                            size="md"
+                            radius="md"
+                            leftSection={<IconWallet size={16} />}
+                            loading={payingBill}
+                            onClick={handlePayBill}
+                          >
+                            Pay Current Bill
+                          </Button>
+
+                          <Button
+                            fullWidth
+                            variant="subtle"
+                            color="gray"
+                            size="xs"
+                            leftSection={<IconDownload size={14} />}
+                            onClick={() =>
+                              notifications.show({
+                                title: "",
+                                message: "Invoice download started.",
+                                color: "blue",
+                              })
+                            }
+                          >
+                            Download PDF Summary
+                          </Button>
+                        </>
+                      ) : null}
+                    </Stack>
+                  </Card>
+                </SimpleGrid>
+              </Accordion.Panel>
+            </Accordion.Item>
+          </Accordion>
+        )}
       </Container>
     </div>
   );

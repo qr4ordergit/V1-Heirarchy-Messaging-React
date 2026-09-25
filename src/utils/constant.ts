@@ -36,6 +36,8 @@ export const API_ENDPOINTS = {
   USER_HOME_PASSKEY: `${API_BASE_URL}/user-home/passkey`,
   AUTH_GET_NEW_TOKEN: `${API_BASE_URL}/auth/get_new_token`,
   KEYRING_CATEGORIES: `${API_BASE_URL}/keyring-categories`,
+  USAGE: `${API_BASE_URL}/usage`,
+  ESTIMATE: `${API_BASE_URL}/estimate`,
 } as const;
 
 const avatarColors = [

@@ -46,8 +46,14 @@ import introVideoSrc from "../../assets/intro.mp4";
 import introVideoPoster from "../../assets/intro.jpg";
 
 export default function Home() {
-  const { translation, currentLang, languages, setLanguage, isLoaded } =
-    useTranslation();
+  const {
+    translation,
+    currentLang,
+    languages,
+    setLanguage,
+    isLoaded,
+    isLoadingLanguage,
+  } = useTranslation();
 
   const [videoOpen, setVideoOpen] = useState(false);
   const videoOverlayRef = useRef<HTMLDivElement>(null);
@@ -122,7 +128,10 @@ export default function Home() {
                   color="gray"
                   size="lg"
                   radius="xl"
-                  loading={!isLoaded && availableLanguages.length === 0}
+                  loading={
+                    (!isLoaded && availableLanguages.length === 0) ||
+                    isLoadingLanguage
+                  }
                   aria-label={translation(
                     "home-page.txtSelectLanguage",
                     "Select Language",
