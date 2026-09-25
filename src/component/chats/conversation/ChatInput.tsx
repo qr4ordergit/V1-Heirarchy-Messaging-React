@@ -7,6 +7,7 @@ import {
   Paper,
   Text,
   TextInput,
+  Tooltip,
 } from "@mantine/core";
 import {
   IconClockHour10,
@@ -543,23 +544,49 @@ export default function ChatInput() {
           />
         </div>
 
-        <ActionIcon
-          variant={trigger.includes("secret_007") ? "filled" : "subtle"}
-          radius="xl"
-          size={36}
-          onClick={togglePrivate}
+        <Tooltip
+          label={translation(
+            "chat_history.tooltip-e2e",
+            "End-to-end encryption (E2E)",
+          )}
+          position="top"
+          withArrow
         >
-          <IconLock size={20} stroke={2} />
-        </ActionIcon>
+          <ActionIcon
+            variant={trigger.includes("secret_007") ? "filled" : "subtle"}
+            radius="xl"
+            size={36}
+            onClick={togglePrivate}
+            aria-label={translation(
+              "chat_history.tooltip-e2e",
+              "End-to-end encryption (E2E)",
+            )}
+          >
+            <IconLock size={20} stroke={2} />
+          </ActionIcon>
+        </Tooltip>
 
-        <ActionIcon
-          variant={trigger.includes("schedulePayload") ? "filled" : "subtle"}
-          radius="xl"
-          size={36}
-          onClick={toggleSchedule}
+        <Tooltip
+          label={translation(
+            "chat_history.tooltip-schedule",
+            "Schedule message",
+          )}
+          position="top"
+          withArrow
         >
-          <IconClockHour10 size={20} stroke={2} />
-        </ActionIcon>
+          <ActionIcon
+            variant={trigger.includes("schedulePayload") ? "filled" : "subtle"}
+            radius="xl"
+            size={36}
+            onClick={toggleSchedule}
+            aria-label={translation(
+              "chat_history.tooltip-schedule",
+              "Schedule message",
+            )}
+          >
+            <IconClockHour10 size={20} stroke={2} />
+          </ActionIcon>
+        </Tooltip>
 
         {/* Send */}
         <ActionIcon
