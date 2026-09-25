@@ -98,6 +98,13 @@ export default function ChatInput() {
         if (triggerPayload?.users && triggerPayload?.users?.length > 0) {
           payload["users_list"] = [...triggerPayload?.users, own_user_id];
         }
+        if (triggerPayload?.keyring_category_name) {
+          payload["keyring_category_name"] =
+            triggerPayload.keyring_category_name;
+        }
+        if (triggerPayload?.keyring_password_key) {
+          payload["keyring_password_key"] = triggerPayload.keyring_password_key;
+        }
       }
 
       if (trigger.includes("schedulePayload")) {
@@ -305,6 +312,13 @@ export default function ChatInput() {
         payload["user_key"] = triggerPayload?.password;
         if (triggerPayload?.users && triggerPayload?.users?.length > 0) {
           payload["users_list"] = [...triggerPayload?.users, own_user_id];
+        }
+        if (triggerPayload?.keyring_category_name) {
+          payload["keyring_category_name"] =
+            triggerPayload.keyring_category_name;
+        }
+        if (triggerPayload?.keyring_password_key) {
+          payload["keyring_password_key"] = triggerPayload.keyring_password_key;
         }
       }
 

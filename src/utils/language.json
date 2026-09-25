@@ -631,7 +631,14 @@
         "modal-schedule-timmer-tab3": "Weekly",
         "modal-schedule-timmer-tab4": "Monthly",
         "modal-schedule-timmer-btn": "Set",
-        "noti-schedule-send": "Message scheduled successfully"
+        "noti-schedule-send": "Message scheduled successfully",
+        "selectKeyringCategory": "Keyring Category (Optional)",
+        "phSelectKeyringCat": "Choose saved category",
+        "selectPasswordKey": "Select Password",
+        "phSelectPasswordKey": "Choose password key",
+        "phSelectedFromKeyring": "Password populated from Keyring",
+        "txtKeyringActiveNote": "Manual typing disabled while Keyring Category is selected. Clear category above to type manually.",
+        "alert-password-required": "Password is mandatory"
       }
     },
     "uk": {
@@ -1265,7 +1272,14 @@
         "modal-schedule-timmer-tab3": "Weekly",
         "modal-schedule-timmer-tab4": "Monthly",
         "modal-schedule-timmer-btn": "Set",
-        "noti-schedule-send": "Message scheduled successfully"
+        "noti-schedule-send": "Message scheduled successfully",
+        "selectKeyringCategory": "Категорія зв'язки ключів (необов'язково)",
+        "phSelectKeyringCat": "Виберіть збережену категорію",
+        "selectPasswordKey": "Виберіть пароль",
+        "phSelectPasswordKey": "Виберіть ключ пароля",
+        "phSelectedFromKeyring": "Пароль підтягнуто зі зв'язки ключів",
+        "txtKeyringActiveNote": "Ручне введення вимкнено, доки вибрано категорію зв'язки ключів. Очистіть категорію вище, щоб ввести вручну.",
+        "alert-password-required": "Пароль є обов'язковим"
       }
     }
   },
