@@ -23,11 +23,9 @@ import { getKeyringCategoriesApi } from "../../../../api/profileApi";
 import type { KeyringCategoryItem } from "../../../../api/profileApi";
 
 interface MembersResponse {
-  data: [
-    {
-      members?: string[];
-    },
-  ];
+  data: {
+    members?: string[];
+  };
 }
 
 function PrivateMessagePayloadModal() {
@@ -54,6 +52,7 @@ function PrivateMessagePayloadModal() {
   const [loadingKeyrings, setLoadingKeyrings] = useState(false);
 
   const [fetchLoader, FetchFn] = useTransition();
+  const own_user_id = target_user ? target_user : userDetails?.username;
 
   const resetForm = () => {
     setPassword("");
@@ -84,7 +83,8 @@ function PrivateMessagePayloadModal() {
 
     if (!chatId.includes("group")) {
       const id = decodeURIComponent(chatId);
-      const member = id.split("#").filter((u) => u !== userDetails?.username);
+      const member = id.split("#").filter((u) => u !== own_user_id);
+
       setMembers(member);
       return;
     }
@@ -99,10 +99,7 @@ function PrivateMessagePayloadModal() {
       );
 
       if (response.status === 200) {
-        let mems = response.data?.data?.[0]?.members ?? [];
-        const own_user_id =
-          targetUserDetails?.user_id || target_user || userDetails?.username;
-
+        let mems = response.data?.data?.members ?? [];
         mems = mems.filter((user) => user !== own_user_id);
         setMembers(mems);
       }
@@ -160,15 +157,21 @@ function PrivateMessagePayloadModal() {
         return;
       }
 
+      const payload = {
+        password: password,
+        users: selectedMembers,
+        keyring_category_name:
+          activeCategory?.keyring_category_name ?? undefined,
+        keyring_password_key: selectedPasswordKey ?? undefined,
+      };
+
+      if (!chatId?.includes("group")) {
+        payload.users = members;
+      }
+
       setTrigger({
         toTrigger: TRIGGERS.privateMessageSender,
-        payload: {
-          password: password,
-          users: selectedMembers,
-          keyring_category_name:
-            activeCategory?.keyring_category_name ?? undefined,
-          keyring_password_key: selectedPasswordKey ?? undefined,
-        },
+        payload,
       });
 
       resetForm();
@@ -268,19 +271,20 @@ function PrivateMessagePayloadModal() {
               )}
             </Text>
           )}
-
-          <MultiSelect
-            label={translation(
-              "chat_history.modal-e2e-label2",
-              "Select group members",
-            )}
-            placeholder={translation("chat_history.modal-e2e-ph2", "Select")}
-            data={members}
-            clearable
-            loading={fetchLoader}
-            value={selectedMembers}
-            onChange={setSelectedMembers}
-          />
+          {chatId?.includes("group") && (
+            <MultiSelect
+              label={translation(
+                "chat_history.modal-e2e-label2",
+                "Select group members",
+              )}
+              placeholder={translation("chat_history.modal-e2e-ph2", "Select")}
+              data={members}
+              clearable
+              loading={fetchLoader}
+              value={selectedMembers}
+              onChange={setSelectedMembers}
+            />
+          )}
 
           <Group justify="flex-end" mt="md">
             <Button onClick={onSubmit}>
