@@ -42,8 +42,11 @@ import classes from "./Home.module.css";
 import { ROUTES } from "../../router/routes";
 import { COGNITO_LOGIN_URL } from "../../config/cognito";
 import { useTranslation } from "../../store/language/language.store";
+import { ManageVideosService } from "../../api/services/manage.videos.service";
 import introVideoSrc from "../../assets/intro.mp4";
 import introVideoPoster from "../../assets/intro.jpg";
+
+const HOME_INTRO_PAGE_NAME = "homepage-intro";
 
 export default function Home() {
   const {
@@ -58,6 +61,34 @@ export default function Home() {
   const [videoOpen, setVideoOpen] = useState(false);
   const videoOverlayRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const [introVideoUrl, setIntroVideoUrl] = useState<string>(introVideoSrc);
+  const [introVideoLoading, setIntroVideoLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const videos = await ManageVideosService.list(HOME_INTRO_PAGE_NAME);
+        const featured = videos
+          .filter((v) => v.s3_link)
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[0];
+
+        if (!cancelled && featured?.s3_link) {
+          setIntroVideoUrl(featured.s3_link);
+        }
+      } catch (err) {
+        console.error("Could not load homepage intro video:", err);
+      } finally {
+        if (!cancelled) setIntroVideoLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const openIntroVideo = () => setVideoOpen(true);
   const closeIntroVideo = () => setVideoOpen(false);
@@ -235,6 +266,7 @@ export default function Home() {
                 onClick={openIntroVideo}
                 className={classes.introVideoBtn}
                 aria-label={"Watch intro video"}
+                disabled={introVideoLoading}
               >
                 <IconPlayerPlayFilled size={16} />
               </UnstyledButton>
@@ -269,7 +301,7 @@ export default function Home() {
           <video
             ref={videoRef}
             className={classes.videoPlayer}
-            src={introVideoSrc}
+            src={introVideoUrl}
             poster={introVideoPoster}
             controls
             autoPlay
