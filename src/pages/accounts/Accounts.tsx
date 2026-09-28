@@ -1242,7 +1242,7 @@ export default function Accounts() {
       <Container size="md" py="xl">
         <Group justify="space-between" align="center" mb="xl">
           <Group gap="sm" align="center">
-            <Text className={classes.brand}>Messenger.com</Text>
+            <Text className={classes.brand}>Ukrchat.com</Text>
           </Group>
 
           <Group gap="xs" align="center">
