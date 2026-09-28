@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  Flex,
   Group,
   Input,
   Paper,
@@ -60,17 +59,10 @@ export default function ConversationPanel() {
           minHeight: 0,
         }}
       >
-        <Flex align={"center"} gap={"xs"} justify={"space-between"}>
-          <Group gap={4} wrap="nowrap">
             <Text size="sm" c={"blue"}>
               {activeUsername}
               {" "}
             </Text>
-             <Text size="sm" c={"dimmed"}>
-              {translation("chat_page.user_chat_label", "Chat's")}
-            </Text>
-          </Group>
-        </Flex>
         <Input
           size="xs"
           placeholder={translation("chat_page.search_dm_groups", "Search")}
