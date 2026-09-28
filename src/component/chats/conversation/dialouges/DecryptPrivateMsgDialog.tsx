@@ -21,7 +21,7 @@ function DecryptPrivateMsgDialog() {
   );
   const { updateDecryptedMsg } = useChatStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
-  const { targetUserDetails } = useAuthStore((state) => state);
+  const { target_user } = useAuthStore((state) => state);
   const { translation } = useTranslation();
 
   const [password, setPassword] = useState<string>("");
@@ -43,21 +43,27 @@ function DecryptPrivateMsgDialog() {
 
     try {
       const payload: DECRYPT_PAYLOAD = {
-        group_id: chatId,
         message_id: triggerPayload?._id,
       };
+
+      if (chatId?.includes("group")) {
+        payload["group_id"] = chatId;
+      } else {
+        payload["chat_id"] = chatId;
+      }
 
       if (mode === "manual") {
         payload["password"] = password;
       }
 
-      const endpoint_url = targetUserDetails?.user_id
-        ? `?target_user=${targetUserDetails?.user_id}`
-        : "";
-      const res = await api.post(
-        `${ENDPOINTS.PRIVATEMSG.DECRYPT}${endpoint_url}`,
-        payload,
-      );
+      const params = {
+        target_user: target_user ? target_user : undefined,
+      };
+
+      const endpoint_url = chatId?.includes("group")
+        ? ENDPOINTS.PRIVATEMSG.GROUP_DECRYPT
+        : ENDPOINTS.PRIVATEMSG.DM_DECRYPT;
+      const res = await api.post(endpoint_url, payload, { params });
 
       if (!res.data?.success) {
         setIsPasswordIncorrect(true);

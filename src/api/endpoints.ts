@@ -49,7 +49,8 @@ export const ENDPOINTS = {
     GET: "/tags",
   },
   PRIVATEMSG: {
-    DECRYPT: "/groups-message/decrypt",
+    GROUP_DECRYPT: "/groups-message/decrypt",
+    DM_DECRYPT: "/message/decrypt",
   },
   EXPORTCHAT: {
     GENERATE: "/message-reports",
