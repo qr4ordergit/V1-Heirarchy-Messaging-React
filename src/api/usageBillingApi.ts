@@ -118,11 +118,11 @@ export const updateMembershipStatusApi = async (
         title: "",
         message: isPaid
           ? getTranslation(
-              "plans.upgradedSuccessfully",
+              "billing.upgradedSuccessfully",
               "Upgraded to Paid Membership successfully!",
             )
           : getTranslation(
-              "plans.membershipUpdated",
+              "billing.membershipUpdated",
               "Membership status updated.",
             ),
         color: "green",
@@ -135,7 +135,7 @@ export const updateMembershipStatusApi = async (
       message:
         data?.message ||
         getTranslation(
-          "plans.membershipUpdateFailed",
+          "billing.membershipUpdateFailed",
           "Failed to update membership status.",
         ),
       color: "red",
@@ -147,7 +147,7 @@ export const updateMembershipStatusApi = async (
       message:
         error.response?.data?.message ||
         getTranslation(
-          "plans.membershipUpdateFailed",
+          "billing.membershipUpdateFailed",
           "Failed to update membership status.",
         ),
       color: "red",

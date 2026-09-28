@@ -25,7 +25,7 @@ import {
   IconEdit,
   IconId,
   IconKey,
-  IconLogout,
+  // IconLogout,
   IconPencil,
   IconPlus,
   IconTag,
@@ -36,7 +36,7 @@ import {
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { useTagStore } from "../../store/tags/tags.store";
-import { logout } from "../../api/authApi";
+// import { logout } from "../../api/authApi";
 import {
   createKeyringCategoryApi,
   createTagApi,
@@ -49,7 +49,7 @@ import {
   uploadImageToS3Api,
 } from "../../api/profileApi";
 import type { KeyringCategoryItem } from "../../api/profileApi";
-import { ROUTES } from "../../router/routes";
+// import { ROUTES } from "../../router/routes";
 import { notifications } from "@mantine/notifications";
 import { handleApiError } from "../../utils/errorHandler";
 import { useTranslation } from "../../store/language/language.store";
@@ -65,7 +65,7 @@ const Profile = () => {
   const { translation } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const clearTokens = useAuthStore((state) => state.clearTokens);
+  // const clearTokens = useAuthStore((state) => state.clearTokens);
   const userDetails = useAuthStore((state) => state.userDetails);
   const setTargetUserDetails = useAuthStore(
     (state) => state.setTargetUserDetails,
@@ -514,16 +514,16 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error: any) {
-      handleApiError(error);
-    } finally {
-      clearTokens();
-      navigate(ROUTES.HOME, { replace: true });
-    }
-  };
+  // const handleLogout = async () => {
+  //   try {
+  //     await logout();
+  //   } catch (error: any) {
+  //     handleApiError(error);
+  //   } finally {
+  //     clearTokens();
+  //     navigate(ROUTES.HOME, { replace: true });
+  //   }
+  // };
 
   const username =
     targetUserDetails?.phone_number ||
@@ -1160,7 +1160,7 @@ const Profile = () => {
               </Card>
 
               {/* LOGOUT BUTTON */}
-              <Card
+              {/* <Card
                 withBorder
                 radius="lg"
                 p={0}
@@ -1181,7 +1181,7 @@ const Profile = () => {
                     </Group>
                   </Group>
                 </UnstyledButton>
-              </Card>
+              </Card> */}
             </div>
           </Stack>
 

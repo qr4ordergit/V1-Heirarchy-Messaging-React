@@ -40,18 +40,30 @@ import {
   type EstimateData,
   type UsageData,
 } from "../../api/usageBillingApi";
+import { useTranslation } from "../../store/language/language.store";
 
 export interface FeatureRowDef {
   key?: string;
-  feature: string;
-  featureDescription?: string;
-  defaultUsage?: string;
-  format?: (val: any, rawData?: UsageData) => string | number;
+  featureKey: string;
+  featureDefault: string;
+  featureDescKey?: string;
+  featureDescDefault?: string;
+  defaultUsageKey?: string;
+  defaultUsageFallback?: string;
+  format?: (
+    val: any,
+    rawData: UsageData | null,
+    t: (path: string, fallback?: string) => string,
+  ) => string | number;
   isPaidOnly?: boolean;
 }
 
-export interface FeatureRowRendered extends FeatureRowDef {
+export interface FeatureRowRendered {
+  key?: string;
+  feature: string;
+  featureDescription?: string;
   usage: string | number;
+  isPaidOnly?: boolean;
 }
 
 const formatBytes = (bytes: number = 0): string => {
@@ -64,6 +76,7 @@ const formatBytes = (bytes: number = 0): string => {
 
 export default function UsageBilling() {
   const navigate = useNavigate();
+  const { translation } = useTranslation();
   const userDetails = useAuthStore((state) => state.userDetails);
   const setUserDetails = useAuthStore((state) => (state as any).setUserDetails);
   const isPaid = Boolean((userDetails as any)?.is_paid);
@@ -101,78 +114,109 @@ export default function UsageBilling() {
   const freeFeatureDefs: FeatureRowDef[] = [
     {
       key: "chat_accounts",
-      feature: "Chat Accounts",
-      featureDescription:
+      featureKey: "billing.featChatAccountsTitle",
+      featureDefault: "Chat Accounts",
+      featureDescKey: "billing.featChatAccountsDesc",
+      featureDescDefault:
         "First 5 accounts are free (Beyond 5 free accounts, $1 per account per month)",
       format: (val) => (val !== undefined ? String(val) : "0"),
     },
     {
       key: "storage_bytes",
-      feature: "Storage",
-      featureDescription:
+      featureKey: "billing.featStorageTitle",
+      featureDefault: "Storage",
+      featureDescKey: "billing.featStorageDesc",
+      featureDescDefault:
         "Up to 5GB storage free (Beyond 5GB, $0.025 per GB per month)",
       format: (val) => formatBytes(val?.total_bytes ?? 0),
     },
     {
       key: "cloud_cost",
-      feature: "Cloud computing cost",
-      featureDescription: "Will be based on your actual daily usage",
-      defaultUsage: "Currently free",
+      featureKey: "billing.featCloudCostTitle",
+      featureDefault: "Cloud computing cost",
+      featureDescKey: "billing.featCloudCostDesc",
+      featureDescDefault: "Will be based on your actual daily usage",
+      defaultUsageKey: "billing.txtCurrentlyFree",
+      defaultUsageFallback: "Currently free",
     },
     {
       key: "bulk_account_creation",
-      feature: "Bulk account creation",
-      defaultUsage: "Unlimited",
+      featureKey: "billing.featBulkAccountsTitle",
+      featureDefault: "Bulk account creation",
+      defaultUsageKey: "billing.txtUnlimited",
+      defaultUsageFallback: "Unlimited",
     },
     {
       key: "hierarchical_access",
-      feature: "Hierarchical Account Access",
-      defaultUsage: "Unlimited",
+      featureKey: "billing.featHierarchicalAccessTitle",
+      featureDefault: "Hierarchical Account Access",
+      defaultUsageKey: "billing.txtUnlimited",
+      defaultUsageFallback: "Unlimited",
     },
     {
       key: "one_on_one_chat",
-      feature: "One on One Chat - (Encrypted)",
-      defaultUsage: "Unlimited",
+      featureKey: "billing.featOneOnOneTitle",
+      featureDefault: "One on One Chat - (Encrypted)",
+      defaultUsageKey: "billing.txtUnlimited",
+      defaultUsageFallback: "Unlimited",
     },
     {
       key: "group_chats",
-      feature: "Group Chats - (Encrypted)",
-      defaultUsage: "Unlimited",
+      featureKey: "billing.featGroupChatsTitle",
+      featureDefault: "Group Chats - (Encrypted)",
+      defaultUsageKey: "billing.txtUnlimited",
+      defaultUsageFallback: "Unlimited",
     },
     {
       key: "double_encryption",
-      feature: "Double Encryption with own password",
-      defaultUsage: "Unlimited",
+      featureKey: "billing.featDoubleEncryptionTitle",
+      featureDefault: "Double Encryption with own password",
+      defaultUsageKey: "billing.txtUnlimited",
+      defaultUsageFallback: "Unlimited",
     },
     {
       key: "scheduled_messages",
-      feature: "Scheduled Messages",
-      defaultUsage: "Unlimited",
+      featureKey: "billing.featScheduledMsgsTitle",
+      featureDefault: "Scheduled Messages",
+      defaultUsageKey: "billing.txtUnlimited",
+      defaultUsageFallback: "Unlimited",
     },
     {
       key: "disappearing_messages",
-      feature: "Disappearing Messages",
-      defaultUsage: "Unlimited",
+      featureKey: "billing.featDisappearingMsgsTitle",
+      featureDefault: "Disappearing Messages",
+      defaultUsageKey: "billing.txtUnlimited",
+      defaultUsageFallback: "Unlimited",
     },
     {
       key: "account_tags",
-      feature: "Account & Group Tags",
-      featureDescription: "Convenient message filtering across your chats",
-      format: (val) => (val !== undefined ? `${val} created` : "Unlimited"),
-      defaultUsage: "Unlimited",
+      featureKey: "billing.featAccountTagsTitle",
+      featureDefault: "Account & Group Tags",
+      featureDescKey: "billing.featAccountTagsDesc",
+      featureDescDefault: "Convenient message filtering across your chats",
+      format: (val, _, t) =>
+        val !== undefined
+          ? `${val} ${t("billing.txtCreatedSuffix", "created")}`
+          : t("billing.txtUnlimited", "Unlimited"),
+      defaultUsageKey: "billing.txtUnlimited",
+      defaultUsageFallback: "Unlimited",
     },
     {
       key: "export_chats",
-      feature: "Export/Download Chats with Media",
-      defaultUsage: "Unlimited",
+      featureKey: "billing.featExportChatsTitle",
+      featureDefault: "Export/Download Chats with Media",
+      defaultUsageKey: "billing.txtUnlimited",
+      defaultUsageFallback: "Unlimited",
     },
   ];
 
   const paidFeatureDefs: FeatureRowDef[] = [
     {
       key: "premium_usernames",
-      feature: "Premium Usernames",
-      featureDescription:
+      featureKey: "billing.featPremiumUsernamesTitle",
+      featureDefault: "Premium Usernames",
+      featureDescKey: "billing.featPremiumUsernamesDesc",
+      featureDescDefault:
         "Claim custom exclusive unique handles for your accounts",
       format: (val) => (val !== undefined ? String(val) : "0"),
       isPaidOnly: true,
@@ -181,29 +225,39 @@ export default function UsageBilling() {
 
   const resolveFeatures = (defs: FeatureRowDef[]): FeatureRowRendered[] => {
     return defs.map((def) => {
-      let resolvedUsage = def.defaultUsage ?? "0";
+      let resolvedUsage: string | number = def.defaultUsageKey
+        ? translation(
+            def.defaultUsageKey,
+            def.defaultUsageFallback ?? "Unlimited",
+          )
+        : "0";
 
       if (def.key && usageData && usageData[def.key] !== undefined) {
         const rawVal = usageData[def.key];
         resolvedUsage = def.format
-          ? String(def.format(rawVal, usageData))
+          ? def.format(rawVal, usageData, translation)
           : String(rawVal);
       }
 
       return {
-        ...def,
+        key: def.key,
+        feature: translation(def.featureKey, def.featureDefault),
+        featureDescription: def.featureDescKey
+          ? translation(def.featureDescKey, def.featureDescDefault ?? "")
+          : undefined,
         usage: resolvedUsage,
+        isPaidOnly: def.isPaidOnly,
       };
     });
   };
 
   const freeFeatures = useMemo(
     () => resolveFeatures(freeFeatureDefs),
-    [usageData],
+    [usageData, translation],
   );
   const paidFeatures = useMemo(
     () => resolveFeatures(paidFeatureDefs),
-    [usageData],
+    [usageData, translation],
   );
   const allCombinedFeatures = useMemo(
     () => [...freeFeatures, ...paidFeatures],
@@ -217,6 +271,7 @@ export default function UsageBilling() {
   const chatFreeUnits = chatAccountEst?.free_units ?? 5;
   const chatUnitPrice = chatAccountEst?.unit_price ?? 1.0;
   const chatEstimatedCost = chatAccountEst?.estimated_cost ?? 0.0;
+  const chatBillableUnits = chatAccountEst?.billable_units ?? 0;
 
   const storageUsageBytes = storageEst?.usage_bytes ?? 0;
   const storageFreeBytes = storageEst?.free_bytes ?? 5368709120;
@@ -225,15 +280,40 @@ export default function UsageBilling() {
 
   const totalEstimatedCost = estimateData?.total_estimated_cost ?? 0.0;
 
+  const chatItemTitle = translation(
+    "billing.itemChatAccounts",
+    `Chat Accounts (> ${chatFreeUnits} free)`,
+  ).replace("{count}", String(chatFreeUnits));
+
+  const chatItemDetail = translation(
+    "billing.detailChatAccounts",
+    `${chatUsage} used (${chatBillableUnits} billable) • $${chatUnitPrice.toFixed(2)}/acct`,
+  )
+    .replace("{usage}", String(chatUsage))
+    .replace("{billable}", String(chatBillableUnits))
+    .replace("{rate}", chatUnitPrice.toFixed(2));
+
+  const storageItemTitle = translation(
+    "billing.itemStorageOverage",
+    `Storage Overage (> ${formatBytes(storageFreeBytes)} free)`,
+  ).replace("{size}", formatBytes(storageFreeBytes));
+
+  const storageItemDetail = translation(
+    "billing.detailStorageOverage",
+    `${formatBytes(storageUsageBytes)} used • $${storageUnitPrice.toFixed(3)}/GB`,
+  )
+    .replace("{usage}", formatBytes(storageUsageBytes))
+    .replace("{rate}", storageUnitPrice.toFixed(3));
+
   const billingItems = [
     {
-      item: `Chat Accounts (> ${chatFreeUnits} free)`,
-      detail: `${chatUsage} used (${chatAccountEst?.billable_units ?? 0} billable) • $${chatUnitPrice.toFixed(2)}/acct`,
+      item: chatItemTitle,
+      detail: chatItemDetail,
       cost: chatEstimatedCost,
     },
     {
-      item: `Storage Overage (> ${formatBytes(storageFreeBytes)} free)`,
-      detail: `${formatBytes(storageUsageBytes)} used • $${storageUnitPrice.toFixed(3)}/GB`,
+      item: storageItemTitle,
+      detail: storageItemDetail,
       cost: storageEstimatedCost,
     },
   ];
@@ -258,7 +338,10 @@ export default function UsageBilling() {
       setPayingBill(false);
       notifications.show({
         title: "",
-        message: "Payment processed successfully.",
+        message: translation(
+          "billing.notiPaymentSuccess",
+          "Payment processed successfully.",
+        ),
         color: "green",
       });
     }, 1200);
@@ -275,9 +358,14 @@ export default function UsageBilling() {
         <Table.Thead bg="gray.0">
           {!showLockBanner && (
             <Table.Tr>
-              <Table.Th style={{ width: "65%" }}>Feature Description</Table.Th>
+              <Table.Th style={{ width: "65%" }}>
+                {translation(
+                  "billing.thFeatureDescription",
+                  "Feature Description",
+                )}
+              </Table.Th>
               <Table.Th style={{ width: "35%", textAlign: "right" }}>
-                Current Usage
+                {translation("billing.thCurrentUsage", "Current Usage")}
               </Table.Th>
             </Table.Tr>
           )}
@@ -335,14 +423,16 @@ export default function UsageBilling() {
                       leftSection={<IconMail size={13} />}
                       style={{ fontWeight: 500 }}
                     >
-                      Contact us
+                      {translation("billing.btnContactUs", "Contact us")}
                     </Button>
                   ) : (
                     <Text
                       size="sm"
                       fw={600}
                       c={
-                        String(row.usage).includes("Unlimited")
+                        String(row.usage).includes(
+                          translation("billing.txtUnlimited", "Unlimited"),
+                        )
                           ? "dimmed"
                           : "dark"
                       }
@@ -369,7 +459,7 @@ export default function UsageBilling() {
               loading={upgrading}
               onClick={handleUpgradeToPaid}
             >
-              Upgrade to Paid
+              {translation("billing.btnUpgradeToPaid", "Upgrade to Paid")}
             </Button>
           </Group>
         </Paper>
@@ -386,14 +476,19 @@ export default function UsageBilling() {
       }}
     >
       <Container size="lg">
+        {/* Header navigation & membership badge */}
         <Group justify="space-between" align="center" mb="lg">
-          <Tooltip label="Go back" position="right" withArrow>
+          <Tooltip
+            label={translation("billing.tooltipGoBack", "Go back")}
+            position="right"
+            withArrow
+          >
             <ActionIcon
               variant="default"
               size="lg"
               radius="md"
               onClick={() => navigate(-1)}
-              aria-label="Back"
+              aria-label={translation("billing.tooltipGoBack", "Go back")}
             >
               <IconArrowLeft size={18} />
             </ActionIcon>
@@ -401,7 +496,7 @@ export default function UsageBilling() {
 
           <Group gap="xs">
             <Text size="xs" c="dimmed" fw={600} tt="uppercase">
-              Membership:
+              {translation("billing.txtMembership", "Membership:")}
             </Text>
             {isPaid ? (
               <Badge
@@ -411,7 +506,7 @@ export default function UsageBilling() {
                 radius="sm"
                 leftSection={<IconCrown size={14} />}
               >
-                Paid Membership
+                {translation("billing.badgePaidMembership", "Paid Membership")}
               </Badge>
             ) : (
               <Badge
@@ -421,20 +516,30 @@ export default function UsageBilling() {
                 radius="sm"
                 leftSection={<IconSparkles size={14} />}
               >
-                Free Membership
+                {translation("billing.badgeFreeMembership", "Free Membership")}
               </Badge>
             )}
           </Group>
         </Group>
 
+        {/* Page Title */}
         <Stack gap={4} mb="xl">
           <Title order={2} style={{ letterSpacing: "-0.5px" }}>
-            Available Feature List & Usage Table
+            {translation(
+              "billing.titlePage",
+              "Available Feature List & Usage Table",
+            )}
           </Title>
           <Text size="sm" c="dimmed">
             {isPaid
-              ? "All features unlocked. Track your live quotas, limits, and monthly utility expenses."
-              : "Review your active free allowances or upgrade to unlock advanced hierarchy tools."}
+              ? translation(
+                  "billing.subtitlePaid",
+                  "All features unlocked. Track your live quotas, limits, and monthly utility expenses.",
+                )
+              : translation(
+                  "billing.subtitleFree",
+                  "Review your active free allowances or upgrade to unlock advanced hierarchy tools.",
+                )}
           </Text>
         </Stack>
 
@@ -443,7 +548,10 @@ export default function UsageBilling() {
             <Group justify="center" gap="sm">
               <Loader size="sm" color="indigo" />
               <Text size="sm" c="dimmed">
-                Loading usage & billing estimates...
+                {translation(
+                  "billing.loadingBillingData",
+                  "Loading usage & billing estimates...",
+                )}
               </Text>
             </Group>
           </Paper>
@@ -474,10 +582,16 @@ export default function UsageBilling() {
               >
                 <div>
                   <Text fw={600} size="md">
-                    Features & Usage
+                    {translation(
+                      "billing.accordionFeaturesTitle",
+                      "Features & Usage",
+                    )}
                   </Text>
                   <Text size="xs" c="dimmed">
-                    Detailed quota tracking, limits, and active features
+                    {translation(
+                      "billing.accordionFeaturesDesc",
+                      "Detailed quota tracking, limits, and active features",
+                    )}
                   </Text>
                 </div>
               </Accordion.Control>
@@ -486,7 +600,10 @@ export default function UsageBilling() {
                 {isPaid ? (
                   <Stack gap="md">
                     <Text fw={600} size="sm" c="dimmed" tt="uppercase">
-                      Active Subscription Allowances
+                      {translation(
+                        "billing.txtActiveSubAllowances",
+                        "Active Subscription Allowances",
+                      )}
                     </Text>
                     {renderTable(allCombinedFeatures)}
                   </Stack>
@@ -495,7 +612,10 @@ export default function UsageBilling() {
                     <Stack gap="xs">{renderTable(freeFeatures)}</Stack>
                     <Stack gap="xs">
                       <Text fw={700} size="sm" c="red.7" tt="uppercase">
-                        Paid Features — Unlock by switching to Paid Membership
+                        {translation(
+                          "billing.txtPaidFeaturesNotice",
+                          "Paid Features — Unlock by switching to Paid Membership",
+                        )}
                       </Text>
                       {renderTable(paidFeatures, true)}
                     </Stack>
@@ -504,6 +624,7 @@ export default function UsageBilling() {
               </Accordion.Panel>
             </Accordion.Item>
 
+            {/* Section 2: Billing & Invoices */}
             <Accordion.Item value="billing">
               <Accordion.Control
                 icon={
@@ -514,29 +635,51 @@ export default function UsageBilling() {
               >
                 <div>
                   <Text fw={600} size="md">
-                    Billing & Invoices
+                    {translation(
+                      "billing.accordionBillingTitle",
+                      "Billing & Invoices",
+                    )}
                   </Text>
                   <Text size="xs" c="dimmed">
-                    Monthly charges, variable utility usage, and payment
-                    checkout
+                    {translation(
+                      "billing.accordionBillingDesc",
+                      "Monthly charges, variable utility usage, and payment checkout",
+                    )}
                   </Text>
                 </div>
               </Accordion.Control>
 
               <Accordion.Panel>
                 <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
+                  {/* Daily Utility Breakdown */}
                   <div style={{ gridColumn: "span 2" }}>
                     <Paper withBorder radius="md" p="md" bg="white">
                       <Title order={5} mb="sm">
-                        Daily Utility Breakdown
+                        {translation(
+                          "billing.titleDailyBreakdown",
+                          "Daily Utility Breakdown",
+                        )}
                       </Title>
                       <Table verticalSpacing="sm">
                         <Table.Thead bg="gray.0">
                           <Table.Tr>
-                            <Table.Th>Billed Item</Table.Th>
-                            <Table.Th>Activity / Rate</Table.Th>
+                            <Table.Th>
+                              {translation(
+                                "billing.thBilledItem",
+                                "Billed Item",
+                              )}
+                            </Table.Th>
+                            <Table.Th>
+                              {translation(
+                                "billing.thActivityRate",
+                                "Activity / Rate",
+                              )}
+                            </Table.Th>
                             <Table.Th style={{ textAlign: "right" }}>
-                              Current Cost ($)
+                              {translation(
+                                "billing.thCurrentCost",
+                                "Current Cost ($)",
+                              )}
                             </Table.Th>
                           </Table.Tr>
                         </Table.Thead>
@@ -564,21 +707,33 @@ export default function UsageBilling() {
                     <Stack gap="md">
                       <Group justify="space-between">
                         <Text fw={600} size="sm" c="dimmed">
-                          Invoice Status
+                          {translation(
+                            "billing.txtInvoiceStatus",
+                            "Invoice Status",
+                          )}
                         </Text>
                         <Badge
                           color={totalEstimatedCost > 0 ? "orange" : "green"}
                           variant="light"
                         >
-                          {totalEstimatedCost > 0 ? "Due" : "No Charges Due"}
+                          {totalEstimatedCost > 0
+                            ? translation("billing.badgeDue", "Due")
+                            : translation(
+                                "billing.badgeNoChargesDue",
+                                "No Charges Due",
+                              )}
                         </Badge>
                       </Group>
 
                       <Divider />
 
+                      {/* Current Accrued Cost */}
                       <Stack gap={2}>
                         <Text size="xs" c="dimmed" fw={600} tt="uppercase">
-                          Current Accrued Cost
+                          {translation(
+                            "billing.txtCurrentAccruedCost",
+                            "Current Accrued Cost",
+                          )}
                         </Text>
                         <Title order={2}>
                           ${totalEstimatedCost.toFixed(2)}
@@ -597,7 +752,10 @@ export default function UsageBilling() {
                             loading={payingBill}
                             onClick={handlePayBill}
                           >
-                            Pay Current Bill
+                            {translation(
+                              "billing.btnPayCurrentBill",
+                              "Pay Current Bill",
+                            )}
                           </Button>
 
                           <Button
@@ -609,12 +767,18 @@ export default function UsageBilling() {
                             onClick={() =>
                               notifications.show({
                                 title: "",
-                                message: "Invoice download started.",
+                                message: translation(
+                                  "billing.notiInvoiceDownloadStarted",
+                                  "Invoice download started.",
+                                ),
                                 color: "blue",
                               })
                             }
                           >
-                            Download PDF Summary
+                            {translation(
+                              "billing.btnDownloadPdfSummary",
+                              "Download PDF Summary",
+                            )}
                           </Button>
                         </>
                       ) : null}

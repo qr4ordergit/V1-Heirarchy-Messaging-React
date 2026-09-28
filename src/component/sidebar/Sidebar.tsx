@@ -1,32 +1,32 @@
-import { ActionIcon, Stack } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import SidebarItem from "./SidebarItem";
 import { navigationItems } from "../../utils/navigation";
-import { useAuthStore } from "../../store/auth/auth.store";
-import { ROUTES } from "../../router/routes";
-import { useNavigate } from "react-router";
-import { useState } from "react";
-import { logout } from "../../api/authApi";
-import { IconLogout } from "@tabler/icons-react";
-import { ClearStore } from "../../store/clear.store";
+// import { useAuthStore } from "../../store/auth/auth.store";
+// import { ROUTES } from "../../router/routes";
+// import { useNavigate } from "react-router";
+// import { useState } from "react";
+// import { logout } from "../../api/authApi";
+// import { IconLogout } from "@tabler/icons-react";
+// import { ClearStore } from "../../store/clear.store";
 import { useTranslation } from "../../store/language/language.store";
 export default function Sidebar() {
-  const navigate = useNavigate();
-const {translation} = useTranslation()
-  const clearTokens = useAuthStore((state) => state.clearTokens);
-  const [loggingOut, setLoggingOut] = useState(false);
-  const handleLogout = async () => {
-    setLoggingOut(true);
-    try {
-      await logout();
-    } catch (err) {
-      console.error("Logout request failed:", err);
-    } finally {
-      clearTokens();
-      ClearStore();
-      setLoggingOut(false);
-      navigate(ROUTES.HOME, { replace: true });
-    }
-  };
+  // const navigate = useNavigate();
+  const { translation } = useTranslation();
+  // const clearTokens = useAuthStore((state) => state.clearTokens);
+  // const [loggingOut, setLoggingOut] = useState(false);
+  // const handleLogout = async () => {
+  //   setLoggingOut(true);
+  //   try {
+  //     await logout();
+  //   } catch (err) {
+  //     console.error("Logout request failed:", err);
+  //   } finally {
+  //     clearTokens();
+  //     ClearStore();
+  //     setLoggingOut(false);
+  //     navigate(ROUTES.HOME, { replace: true });
+  //   }
+  // };
   return (
     <Stack
       h="100%"
@@ -39,13 +39,13 @@ const {translation} = useTranslation()
         {navigationItems.map((item) => (
           <SidebarItem
             key={item.to}
-            label={translation(`chat_page.${item.lang_id}`,item.label)}
+            label={translation(`chat_page.${item.lang_id}`, item.label)}
             to={item.to}
             Icon={item.icon}
           />
         ))}
       </Stack>
-      <ActionIcon
+      {/* <ActionIcon
         variant="transparent"
         size="md"
         loading={loggingOut}
@@ -53,7 +53,7 @@ const {translation} = useTranslation()
         color="red"
       >
         <IconLogout size={18} />
-      </ActionIcon>
+      </ActionIcon> */}
     </Stack>
   );
 }
