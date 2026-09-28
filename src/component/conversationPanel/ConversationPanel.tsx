@@ -9,7 +9,6 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import Heading from "../heading/Heading";
 import { IconSearch } from "@tabler/icons-react";
 import { useConversationTypeStore } from "../../store/conversation/conversation.type.store";
 import DmList from "../dmList/DmList";
@@ -62,12 +61,13 @@ export default function ConversationPanel() {
         }}
       >
         <Flex align={"center"} gap={"xs"} justify={"space-between"}>
-          <Heading c="var(--mantine-color-blue-4)">
-            {translation("chat_page.app_heading", "Chat Hub")}
-          </Heading>
           <Group gap={4} wrap="nowrap">
-            <Text size="xs" c={"dimmed"}>
+            <Text size="sm" c={"blue"}>
               {activeUsername}
+              {" "}
+            </Text>
+             <Text size="sm" c={"dimmed"}>
+              {translation("chat_page.user_chat_label", "Chat's")}
             </Text>
           </Group>
         </Flex>

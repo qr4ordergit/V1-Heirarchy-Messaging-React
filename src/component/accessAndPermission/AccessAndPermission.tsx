@@ -43,6 +43,7 @@ interface userDetails {
   id: string;
   label: string | null;
   display_name: string | null;
+  description: string | null;
 }
 
 interface AccessAndPermissionGridProps {
@@ -262,9 +263,9 @@ export default function AccessAndPermission({
                   }}
                 >
                   <Flex
-                    align={"center"}
-                    gap={"md"}
-                    justify={"space-between"}
+                    align="center"
+                    gap="md"
+                    justify="space-between"
                     style={{
                       padding: "5px 10px",
                       cursor: canUserAccess ? "pointer" : "not-allowed",
@@ -279,36 +280,59 @@ export default function AccessAndPermission({
                       )
                     }
                   >
-                    <Flex align={"center"} gap={"xs"}>
+                    {/* Left side */}
+                    <Flex align="center" gap="xs" className="min-w-0 flex-1">
                       <Checkbox
                         size="xs"
                         checked={canUserAccess}
                         onChange={(event) => {
                           event.stopPropagation();
+
                           handleAccessChange(
                             user.id,
                             event.currentTarget.checked,
                           );
+
                           setOpenedUserAcc(null);
                         }}
                       />
-                      <Stack gap={0}>
-                        {user.display_name !== "" ? (
-                          <>
-                            <Text size="xs" fw={"bolder"}>
-                              {user.display_name}
+
+                      {user.display_name !== "" ? (
+                        <Stack gap={0} className="min-w-0 flex-1">
+                          <Text size="xs" fw="bolder">
+                            {user.display_name}
+                          </Text>
+                          {user.description !== "" ? (
+                            <Text size="xs" c="gray" truncate>
+                              {user.label} | {user.description}
                             </Text>
-                            <Text size="xs" c={"gray"}>
+                          ) : (
+                            <Text size="xs" c="gray">
                               {user.label}
                             </Text>
-                          </>
-                        ) : (
-                          <Text size="xs" fw={"bolder"}>
-                            {user.label}
+                          )}
+                        </Stack>
+                      ) : (
+                          user.description !== "" ? 
+                        <Text
+                          size="xs"
+                          fw="bolder"
+                          truncate
+                          className="min-w-0 flex-1"
+                        >
+                          {user.label} | <span style={{color : "gray" , fontWeight : "normal"}}>{user.description}</span>
+                        </Text>
+                        :
+                        <Text
+                          size="xs"
+                          fw="bolder"
+                        >
+                          {user.label}
                           </Text>
-                        )}
-                      </Stack>
+                      )}
                     </Flex>
+
+                    {/* Arrow */}
                     {!opend ? (
                       <IconChevronDown size={15} />
                     ) : (
@@ -368,10 +392,10 @@ export default function AccessAndPermission({
                           <Stack key={groupKey} gap="xs">
                             <Text size="xs" fw={"bolder"} c={"gray"}>
                               {translation(
-              `permission_group_labels.${groupKey}`,
-              COMMON_PERMISSION_GROUP_LABELS[groupKey] ??
-                                groupKey,
-            )}
+                                `permission_group_labels.${groupKey}`,
+                                COMMON_PERMISSION_GROUP_LABELS[groupKey] ??
+                                  groupKey,
+                              )}
                             </Text>
 
                             <Flex gap="md" style={{ flexWrap: "wrap" }}>
@@ -398,11 +422,10 @@ export default function AccessAndPermission({
                                     size="xs"
                                     checked={checked}
                                     disabled={disabled}
-                                    label=
-                                    {translation(
-              `permission_labels.${path}`,
-              PERMISSION_LABELS[path] ?? permissionKey,
-            )}
+                                    label={translation(
+                                      `permission_labels.${path}`,
+                                      PERMISSION_LABELS[path] ?? permissionKey,
+                                    )}
                                     onChange={(event) =>
                                       handlePermissionChange(
                                         user.id,
@@ -434,9 +457,9 @@ export default function AccessAndPermission({
           loading={loading}
         >
           {translation(
-              "manage_access_permissions_modal.btn_save_changes",
-              "Save changes",
-            )}
+            "manage_access_permissions_modal.btn_save_changes",
+            "Save changes",
+          )}
         </Button>
       </Flex>
     </Flex>

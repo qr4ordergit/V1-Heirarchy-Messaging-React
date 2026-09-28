@@ -301,6 +301,7 @@ export default function Accounts() {
     )
     .map((acc) => ({
       id: acc.user_id,
+      description: acc.description ?? null,
       label: acc.phone_number !== "" ? acc.phone_number : acc.user_id,
       display_name: acc.display_name !== "" ? acc.display_name : "",
     }));
