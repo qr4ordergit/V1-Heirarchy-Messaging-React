@@ -7,7 +7,6 @@ import {
   Select,
   Stack,
   Text,
-  TextInput,
 } from "@mantine/core";
 import { useTriggerStore } from "../../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../../utils/constant";
@@ -37,7 +36,6 @@ function PrivateMessagePayloadModal() {
   const { translation } = useTranslation();
 
   const [members, setMembers] = useState<string[]>([]);
-  const [password, setPassword] = useState<string>("");
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
 
   const [keyringCategories, setKeyringCategories] = useState<
@@ -55,7 +53,6 @@ function PrivateMessagePayloadModal() {
   const own_user_id = target_user ? target_user : userDetails?.username;
 
   const resetForm = () => {
-    setPassword("");
     setSelectedMembers([]);
     setSelectedCategoryId(null);
     setSelectedPasswordKey(null);
@@ -128,42 +125,27 @@ function PrivateMessagePayloadModal() {
   const handleCategoryChange = (val: string | null) => {
     setSelectedCategoryId(val);
     setSelectedPasswordKey(null);
-
-    // If category is cleared, clear password so user can manually type
-    if (!val) {
-      setPassword("");
-    }
   };
 
   const handlePasswordKeyChange = (key: string | null) => {
     setSelectedPasswordKey(key);
-    if (key && activeCategory?.keyring_category_passwords) {
-      const resolvedPassword = activeCategory.keyring_category_passwords[key];
-      setPassword(String(resolvedPassword ?? ""));
-    } else {
-      setPassword("");
-    }
   };
 
   const onSubmit = async () => {
     try {
-      if (password.trim().length === 0) {
-        Notification.error(
-          translation(
-            "chat_history.alert-password-required",
-            "Password is mandatory",
-          ),
-        );
-        return;
-      }
-
-      const payload = {
-        password: password,
+      const payload: {
+        [key: string]: unknown;
+      } = {
         users: selectedMembers,
         keyring_category_name:
           activeCategory?.keyring_category_name ?? undefined,
         keyring_password_key: selectedPasswordKey ?? undefined,
       };
+
+      if (selectedPasswordKey) {
+        payload["user_key"] =
+          activeCategory?.keyring_category_passwords[selectedPasswordKey];
+      }
 
       if (!chatId?.includes("group")) {
         payload.users = members;
@@ -241,27 +223,6 @@ function PrivateMessagePayloadModal() {
               clearable
             />
           )}
-
-          <TextInput
-            label={translation(
-              "chat_history.modal-e2e-label1",
-              "Private password",
-            )}
-            placeholder={
-              isManualPasswordDisabled
-                ? translation(
-                    "chat_history.phSelectedFromKeyring",
-                    "Password populated from Keyring",
-                  )
-                : translation(
-                    "chat_history.modal-e2e-ph1",
-                    "Enter password manually",
-                  )
-            }
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isManualPasswordDisabled}
-          />
 
           {isManualPasswordDisabled && (
             <Text size="xs" c="dimmed">

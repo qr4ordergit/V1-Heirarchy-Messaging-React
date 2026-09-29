@@ -14,11 +14,8 @@ export const ENDPOINTS = {
     DELETE: "/message",
     PUT: "/message",
   },
-  CHAT1: {
-    SEND: "/message-v1",
-    GET: "/message-v1?other_user=",
-    DELETE: "/message",
-    PUT: "/message",
+  CHAT_HANDLER: {
+    PUT: "/dm-handler"
   },
   ACCESS_PERMISSION: {
     GET: "/user-access/sub-users-permissions",

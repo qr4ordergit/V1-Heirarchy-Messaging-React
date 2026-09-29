@@ -1,16 +1,12 @@
 import { Image, Modal } from "@mantine/core";
 import { useTriggerStore } from "../../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../../utils/constant";
-import { Carousel } from "@mantine/carousel";
-import { useExtentionMediaProvider } from "../../../../hooks/useExtentionMediaProvider";
 import { useTranslation } from "../../../../store/language/language.store";
 
 function Previewer() {
   const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
     (state) => state,
   );
-
-  const getMediaType = useExtentionMediaProvider();
   const { translation } = useTranslation();
 
   const onClose = () => {
@@ -25,29 +21,25 @@ function Previewer() {
       size="100%"
       centered
     >
-      <Carousel withIndicators height="70vh" slideSize="100%" slideGap="0">
-        {triggerPayload?.body?.media_url?.map((url) => (
-          <Carousel.Slide key={url?.name}>
-            <div className="w-full h-full flex items-center justify-center">
-              {getMediaType(url?.name) === "image" ? (
-                <Image
-                  src={URL.createObjectURL(url)}
-                  alt="Media preview"
-                  className="max-w-full max-h-full"
-                  fit="contain"
-                />
-              ) : (
-                <video
-                  src={URL.createObjectURL(url)}
-                  className="max-w-full max-h-full rounded-lg object-contain"
-                  controls
-                  preload="metadata"
-                />
-              )}
-            </div>
-          </Carousel.Slide>
-        ))}
-      </Carousel>
+      <div className="w-full h-100 flex items-center justify-center">
+        {typeof triggerPayload?.src === "string" ? (
+          triggerPayload?.type === "image" ? (
+            <Image
+              src={triggerPayload?.src}
+              alt="Media preview"
+              className="w-100 h-100"
+              fit="contain"
+            />
+          ) : (
+            <video
+              src={triggerPayload?.src}
+              className="max-w-full max-h-full rounded-lg object-contain"
+              controls
+              preload="metadata"
+            />
+          )
+        ) : null}
+      </div>
     </Modal>
   );
 }

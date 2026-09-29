@@ -1,5 +1,4 @@
 import { Image } from "@mantine/core";
-import { useExtentionMediaProvider } from "../../../hooks/useExtentionMediaProvider";
 import {
   IconCode,
   IconFileTypeDoc,
@@ -8,42 +7,47 @@ import {
   IconJson,
   IconZip,
 } from "@tabler/icons-react";
-import type { MESSAGE } from "../../../store/chats/chats.store";
+import type { MESSAGE_MEDIA } from "../../../store/chats/chats.store";
+import { useMemo } from "react";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../utils/constant";
-import { useMemo } from "react";
 
 interface MEDIACHAT {
-  url: File;
-  msg: MESSAGE;
+  media_data: MESSAGE_MEDIA;
 }
 
-export function MediaChat({ url, msg }: MEDIACHAT) {
-  const getMediaType = useExtentionMediaProvider();
-  const { setTrigger } = useTriggerStore();
+export function MediaChat({ media_data }: MEDIACHAT) {
+  const { setTrigger } = useTriggerStore((state) => state);
 
-  const mediaType = getMediaType(url?.name);
+  const fileUrl = useMemo(() => {
+    if (typeof media_data.media_url === "string") {
+      return media_data.media_url;
+    } else {
+      return URL.createObjectURL(media_data.media_url);
+    }
+  }, []);
 
-  if (!mediaType) return null;
+  const mediaIcons = useMemo(() => {
+    return {
+      document: IconFileTypeDoc,
+      pdf: IconFileTypePdf,
+      excel: IconFileTypeXls,
+      json: IconJson,
+      code: IconCode,
+      zip: IconZip,
+    };
+  }, []);
 
-  const fileUrl = useMemo(() => URL.createObjectURL(url), []);
-
-  const mediaIcons = {
-    document: IconFileTypeDoc,
-    pdf: IconFileTypePdf,
-    excel: IconFileTypeXls,
-    json: IconJson,
-    code: IconCode,
-    zip: IconZip,
-  };
-
-  const DocumentIcon = mediaIcons[mediaType as keyof typeof mediaIcons];
+  const DocumentIcon =
+    mediaIcons[media_data.media_details.type as keyof typeof mediaIcons];
 
   const onPreview = () => {
-    if (msg?.repeat) return;
     setTrigger({
       toTrigger: TRIGGERS.previewMedia,
-      payload: msg,
+      payload: {
+        src: fileUrl,
+        type: media_data.media_details.type,
+      },
     });
   };
 
@@ -51,21 +55,21 @@ export function MediaChat({ url, msg }: MEDIACHAT) {
     <div className="mb-1">
       <div>
         {/* Image */}
-        {mediaType === "image" && (
+        {media_data.media_details.type === "image" && (
           <Image
             key={fileUrl}
             radius="md"
-            h={"100px"}
-            w={"100px"}
+            h={"120px"}
+            w={"120px"}
             src={fileUrl}
             onClick={onPreview}
           />
         )}
 
-        {mediaType === "video" && (
+        {media_data.media_details.type === "video" && (
           <video
             src={fileUrl}
-            className="w-25 h-25 object-cover rounded-lg"
+            className="w-30 h-30 object-cover rounded-lg"
             preload="metadata"
             onClick={onPreview}
           />
@@ -81,7 +85,7 @@ export function MediaChat({ url, msg }: MEDIACHAT) {
           className="block"
         >
           {" "}
-          <div className="bg-blue-950 h-25 w-25 rounded-md relative">
+          <div className="bg-blue-950 h-30 w-30 rounded-md relative">
             {" "}
             <DocumentIcon
               stroke={2}

@@ -54,9 +54,7 @@ export default function Chatting() {
         return;
       }
 
-      const updatedMsgs = await mediaDecryptor(response.data?.data?.messages);
-
-      addChats(updatedMsgs);
+      addChats(response.data?.data?.messages);
     } catch (error) {
       Notification.error(getApiErrorMessage(error));
       navigate("/chats");
@@ -85,9 +83,7 @@ export default function Chatting() {
         return;
       }
 
-      const updatedMsgs = await mediaDecryptor(response.data?.data?.messages);
-
-      addChats(updatedMsgs);
+      addChats(response.data?.data?.messages);
     } catch (error) {
       Notification.error(getApiErrorMessage(error));
       navigate("/chats");

@@ -18,14 +18,18 @@ import { OPENERS, TRIGGERS } from "../../../utils/constant";
 import { useTagStore } from "../../../store/tags/tags.store";
 import { useTranslation } from "../../../store/language/language.store";
 import { useOpenerStore } from "../../../store/openers/opener.store";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useAuthStore } from "../../../store/auth/auth.store";
+import { Notification } from "../../../utils/notification";
+import { getApiErrorMessage } from "../../../api/getApiErrorMessage";
+import { api } from "../../../api/axios";
+import { ENDPOINTS } from "../../../api/endpoints";
+import { useChatStore } from "../../../store/chats/chats.store";
 
-interface CURRENT_CHAT {
-  display_name?: string;
-  profile_url?: string | null;
-
-  [key: string]: unknown;
+interface ENCRYPTION_PAYLOAD {
+  chat_id: string;
+  media_encryption: boolean;
+  type?: string;
 }
 
 function Navbar() {
@@ -38,6 +42,9 @@ function Navbar() {
   const { tagsWithCategories } = useTagStore((state) => state);
   const { translation } = useTranslation();
   const { userDetails, target_user } = useAuthStore((state) => state);
+  const { modifyCurrentChat, current_chat, insertCurrentChat } = useChatStore(
+    (state) => state,
+  );
 
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
@@ -51,7 +58,7 @@ function Navbar() {
             .find((grp) => grp._id === decodeURIComponent(chatId || ""))
             ?.admins.includes(own_user_id)
         : false,
-    [chatId],
+    [chatId, groups],
   );
 
   const conditionalRenderer = {
@@ -63,29 +70,42 @@ function Navbar() {
 
       return allow;
     },
+    allowMediaEncryption() {
+      let allow = true;
+      if (isGroup && !isAdmin) {
+        allow = false;
+      }
+
+      return allow;
+    },
   };
 
-  const currentChat = (): CURRENT_CHAT => {
-    if (!chatId) return {};
+  const dataAssigner = () => {
+    if (!chatId) return;
 
     if (chatId.includes("group")) {
       const chat = groups.find(
         (userDoc) => userDoc._id === decodeURIComponent(chatId),
       );
 
-      return {
+      if (!chat) return;
+
+      insertCurrentChat({
+        ...chat,
         display_name: chat?.group_name,
         profile_url: chat?.profile_url,
-      };
-    }
+      });
+    } else {
+      const chat = dms.find(
+        (userDoc) => userDoc._id === decodeURIComponent(chatId),
+      );
 
-    const chat = dms.find(
-      (userDoc) => userDoc._id === decodeURIComponent(chatId),
-    );
-    return {
-      display_name: chat?.display_name,
-      profile_url: chat?.profile_url,
-    };
+      insertCurrentChat({
+        ...chat,
+        display_name: chat?.display_name,
+        profile_url: chat?.profile_url,
+      });
+    }
   };
 
   const onRefresh = () => {
@@ -137,6 +157,46 @@ function Navbar() {
     });
   };
 
+  const handleEncryptionCheck = async (e: boolean) => {
+    if (!chatId) return;
+
+    modifyCurrentChat({
+      key: "media_encryption",
+      value: e,
+    });
+
+    const payload: ENCRYPTION_PAYLOAD = {
+      chat_id: chatId,
+      media_encryption: e,
+    };
+
+    if (chatId?.includes("group")) {
+      payload["type"] = "GROUP";
+    } else {
+      payload["type"] = "DM";
+    }
+
+    try {
+      const params = {
+        target_user: target_user ? target_user : undefined,
+      };
+
+      await api.put(ENDPOINTS.CHAT_HANDLER.PUT, payload, {
+        params,
+      });
+    } catch (error) {
+      modifyCurrentChat({
+        key: "media_encryption",
+        value: !e,
+      });
+      Notification.error(getApiErrorMessage(error));
+    }
+  };
+
+  useEffect(() => {
+    dataAssigner();
+  }, [chatId, dms, groups]);
+
   return (
     <div className="bg-white rounded-full p-2 shadow">
       <div className="flex gap-3 items-center">
@@ -150,15 +210,15 @@ function Navbar() {
             <IconChevronLeft />
           </ActionIcon>
         </div>
-        {currentChat().profile_url ? (
-          <Avatar src={currentChat().profile_url} />
+        {current_chat?.profile_url ? (
+          <Avatar src={current_chat?.profile_url} />
         ) : (
           <Avatar color="cyan" radius="xl">
-            {currentChat().display_name?.[0]?.toUpperCase()}
+            {current_chat?.display_name?.[0]?.toUpperCase()}
           </Avatar>
         )}
 
-        <div className="font-medium">{currentChat().display_name}</div>
+        <div className="font-medium">{current_chat?.display_name}</div>
         <div className="ms-auto">
           <Menu width={200} position="bottom-end">
             <Menu.Target>
@@ -238,7 +298,7 @@ function Navbar() {
           </ActionIcon>
         </div>
         <div>
-          <Menu position="bottom-end">
+          <Menu position="bottom-end" alignItemsLabels="none">
             <Menu.Target>
               <ActionIcon variant="light" radius="xl" size={36}>
                 <IconDotsVertical />
@@ -246,6 +306,15 @@ function Navbar() {
             </Menu.Target>
 
             <Menu.Dropdown>
+              {conditionalRenderer.allowMediaEncryption() && (
+                <Menu.CheckboxItem
+                  checked={current_chat?.media_encryption}
+                  onChange={handleEncryptionCheck}
+                  color={current_chat?.media_encryption ? "green" : ""}
+                >
+                  Enable Media encryption
+                </Menu.CheckboxItem>
+              )}
               {conditionalRenderer.allowDisappear() && (
                 <Menu.Item
                   onClick={onDisappear}

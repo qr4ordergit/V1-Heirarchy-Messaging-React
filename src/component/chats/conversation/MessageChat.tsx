@@ -5,12 +5,17 @@ import {
   IconStarFilled,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import type { MESSAGE } from "../../../store/chats/chats.store";
 import { useAuthStore } from "../../../store/auth/auth.store";
 import { MediaChat } from "./MediaChat";
 import { ChatOptions } from "./ChatOptions";
 import ReplyChat from "./ReplyChat";
 import useContactNameProvider from "../../../hooks/useContactNameProvider";
+import MediaDownload from "./MediaDownload";
+import { Fragment } from "react/jsx-runtime";
+
+dayjs.extend(utc);
 
 interface MessageChatProps {
   msg: MESSAGE;
@@ -50,15 +55,23 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
           <ReplyChat replied_to={msg.replied_to} onReplyClick={onReplyClick} />
         )}
 
-        {msg.body?.media_url ? (
+        {msg?.body?.media ? (
           <Flex gap={6} justify={"center"} wrap={"wrap"}>
-            {msg.body?.media_url?.map((url, i) => (
-              <MediaChat key={i} url={url} msg={msg} />
+            {msg.body?.media?.map((media_data, i) => (
+              <Fragment key={i}>
+                {media_data.media_details.isDecrypted ? (
+                  <MediaChat media_data={media_data} />
+                ) : (
+                  <MediaDownload
+                    msg_id={msg._id || ""}
+                    media_data={media_data}
+                    mediaIndex={i}
+                  />
+                )}
+              </Fragment>
             ))}
           </Flex>
-        ) : (
-          ""
-        )}
+        ) : null}
 
         <Text
           c={isMe ? "white" : "dark"}
@@ -71,7 +84,7 @@ export function MessageChat({ msg, onReplyClick }: MessageChatProps) {
           {msg?.is_tagged ? <IconStarFilled size={12} color="#e2e2e2" /> : ""}
 
           <Text size="xs" c={isMe ? "gray.2" : "dimmed"}>
-            {dayjs(msg.created_on).format("hh:mm A")}
+            {dayjs.utc(msg.created_on).local().format("hh:mm A")}
           </Text>
 
           <IconChecks size={14} color="#9be7ff" />

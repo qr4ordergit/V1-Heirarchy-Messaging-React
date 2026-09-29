@@ -30,6 +30,7 @@ import { useAuthStore } from "../../../store/auth/auth.store";
 import { E2EHelper } from "../../../utils/e2eHelper";
 import { useTranslation } from "../../../store/language/language.store";
 import { getApiErrorMessage } from "../../../api/getApiErrorMessage";
+import mediaTypeProvider from "../../../utils/mediaTypeProvider";
 
 interface SUBMIT_PAYLOAD {
   [key: string]: unknown;
@@ -56,14 +57,22 @@ interface UploadedPart {
   etag: string;
 }
 
+interface FILE_INFO {
+  file_name: string;
+  total_size: number;
+  duration?: number;
+  type: string;
+  isEncrypted: boolean;
+}
+
 export default function ChatInput() {
   const { chatId } = useParams<{ chatId: string }>();
   const nextPerson = useNextPerson();
-  const appendChats = useChatStore((state) => state.appendChats);
   const { trigger, triggerPayload, resetTrigger, setTrigger } =
     useTriggerStore();
   const { userDetails, target_user } = useAuthStore((state) => state);
   const { translation } = useTranslation();
+  const { current_chat, appendChats } = useChatStore((state) => state);
 
   const own_user_id = target_user ? target_user : userDetails?.username;
   const isReply = trigger === TRIGGERS.reply;
@@ -73,6 +82,29 @@ export default function ChatInput() {
   const [files, setFiles] = useState<File[]>([]);
 
   const [submitLoader, SubmitFn] = useTransition();
+
+  const getVideoDuration = (file: File): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      if (!file.type.includes("video")) {
+        resolve(0);
+      }
+      const video = document.createElement("video");
+
+      video.preload = "metadata";
+
+      video.onloadedmetadata = () => {
+        resolve(video.duration); // duration in seconds
+        URL.revokeObjectURL(video.src);
+      };
+
+      video.onerror = () => {
+        reject(new Error("Unable to read video duration"));
+        URL.revokeObjectURL(video.src);
+      };
+
+      video.src = URL.createObjectURL(file);
+    });
+  };
 
   const handleFiles = (selectedFiles: File[]) => {
     setFiles((prev) => [...prev, ...selectedFiles]);
@@ -95,7 +127,7 @@ export default function ChatInput() {
       };
 
       if (trigger === TRIGGERS.privateMessageSender) {
-        payload["user_key"] = triggerPayload?.password;
+        payload["user_key"] = triggerPayload?.user_key;
         if (triggerPayload?.users && triggerPayload?.users?.length > 0) {
           payload["users_list"] = [...triggerPayload?.users, own_user_id];
         }
@@ -160,9 +192,8 @@ export default function ChatInput() {
     file: File,
     uploadInfo: UploadUrl,
     key: string,
+    media_encryption: boolean = false,
   ): Promise<UploadedPart[]> => {
-    const ENCRYPTION_CHUNK_SIZE = E2EHelper.getChunkSize();
-
     const S3_PART_SIZE = uploadInfo.part_size;
 
     if (S3_PART_SIZE < 5 * 1024 * 1024) {
@@ -171,12 +202,78 @@ export default function ChatInput() {
 
     const uploadedParts: UploadedPart[] = [];
 
+    // ---------------------------------------------------------
+    // NON-ENCRYPTED UPLOAD
+    // ---------------------------------------------------------
+    if (!media_encryption) {
+      let currentS3Part = 1;
+      let offset = 0;
+
+      while (offset < file.size) {
+        const end = Math.min(offset + S3_PART_SIZE, file.size);
+
+        const fileChunk = file.slice(offset, end);
+
+        const presignedPart = uploadInfo.parts.find(
+          (part) => part.part_number === currentS3Part,
+        );
+
+        if (!presignedPart) {
+          throw new Error(`Presigned URL missing for S3 part ${currentS3Part}`);
+        }
+
+        console.log(
+          `Uploading unencrypted S3 part ${currentS3Part}/${uploadInfo.parts.length}`,
+          {
+            size: fileChunk.size,
+          },
+        );
+
+        const response = await fetch(presignedPart.upload_url, {
+          method: "PUT",
+          body: fileChunk,
+          headers: {
+            "Content-Type":
+              uploadInfo.content_type ||
+              file.type ||
+              "application/octet-stream",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to upload S3 part ${currentS3Part}: ${response.status}`,
+          );
+        }
+
+        const etag = response.headers.get("ETag");
+
+        if (!etag) {
+          throw new Error(`ETag missing for S3 part ${currentS3Part}`);
+        }
+
+        uploadedParts.push({
+          part_number: currentS3Part,
+          etag: etag.replace(/^"|"$/g, ""),
+        });
+
+        offset = end;
+        currentS3Part++;
+      }
+
+      return uploadedParts;
+    }
+
+    // ---------------------------------------------------------
+    // ENCRYPTED UPLOAD
+    // ---------------------------------------------------------
+
+    const ENCRYPTION_CHUNK_SIZE = E2EHelper.getChunkSize();
+
     const totalEncryptionChunks = Math.ceil(file.size / ENCRYPTION_CHUNK_SIZE);
 
     let currentS3Part = 1;
-
     let currentS3PartSize = 0;
-
     let currentS3PartChunks: ArrayBuffer[] = [];
 
     for (
@@ -226,7 +323,7 @@ export default function ChatInput() {
       }
 
       console.log(
-        `Uploading S3 part ${currentS3Part}/${uploadInfo.parts.length}`,
+        `Uploading encrypted S3 part ${currentS3Part}/${uploadInfo.parts.length}`,
         {
           encryptionChunks: currentS3PartChunks.length,
           size: currentS3PartSize,
@@ -255,14 +352,11 @@ export default function ChatInput() {
 
       uploadedParts.push({
         part_number: currentS3Part,
-
         etag: etag.replace(/^"|"$/g, ""),
       });
 
       currentS3Part++;
-
       currentS3PartSize = 0;
-
       currentS3PartChunks = [];
     }
 
@@ -295,18 +389,25 @@ export default function ChatInput() {
     if (!chatId) return;
 
     try {
+      const files_info: FILE_INFO[] = [];
+      for (let fileIndex = 0; fileIndex < files.length; fileIndex++) {
+        const duration = await getVideoDuration(files[fileIndex]);
+        files_info.push({
+          file_name: files[fileIndex].name,
+          total_size: files[fileIndex].size,
+          duration,
+          type: mediaTypeProvider(files[fileIndex]),
+          isEncrypted: current_chat?.media_encryption ? true : false,
+        });
+      }
+
       const payload: SUBMIT_PAYLOAD = {
         user: isGroup ? undefined : nextPerson(chatId),
         group_id: isGroup ? chatId : undefined,
         type: isReply ? "replay" : "message",
         parent_message_id: triggerPayload?._id ?? undefined,
         text: message,
-        files: files.map((file) => {
-          return {
-            file_name: file.name,
-            total_size: file.size,
-          };
-        }),
+        files: files_info,
       };
 
       if (trigger === TRIGGERS.privateMessageSender) {
@@ -388,6 +489,7 @@ export default function ChatInput() {
           file,
           uploadInfo,
           messageKey,
+          current_chat?.media_encryption,
         );
 
         console.log("Uploaded parts:", uploadedParts);
@@ -399,7 +501,15 @@ export default function ChatInput() {
 
       if (finalMsg) {
         finalMsg["double_encryption"] = false;
-        finalMsg["body"]["media_url"] = files;
+        finalMsg["body"]["media"] = files.map((file, i) => {
+          return {
+            media_url: file,
+            media_details: {
+              ...files_info[i],
+              isDecrypted: true,
+            },
+          };
+        });
         if (finalMsg?.type !== "schedule") {
           appendChats([finalMsg]);
         } else {

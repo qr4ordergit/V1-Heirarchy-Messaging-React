@@ -19,6 +19,10 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useTranslation } from "../../../../store/language/language.store";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 interface MSG {
   msg: SCHEDULED_MESSAGE;
@@ -104,7 +108,7 @@ function ScheduledMsgCard({ msg }: MSG) {
           size="sm"
           className="text-gray-600"
         >{`Repeat : ${msg.repeat} |`}</Text>
-        <Text size="sm">{`${msg.schedule_date ?? ""} ${msg.schedule_time}`}</Text>
+        <Text size="sm">{`${msg.schedule_date ?? ""} ${msg?.schedule_time_12hr}`}</Text>
       </Flex>
     </Paper>
   );

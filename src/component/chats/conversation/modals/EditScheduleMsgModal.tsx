@@ -273,8 +273,8 @@ function EditScheduleMsgModal() {
               : ""}
           </div>
           <div>
-            {typeof scheduledMessage?.schedule_time === "string"
-              ? scheduledMessage?.schedule_time
+            {typeof scheduledMessage?.schedule_time_12hr === "string"
+              ? scheduledMessage?.schedule_time_12hr
               : ""}
           </div>
           {Array.isArray(scheduledMessage?.days)

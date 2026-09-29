@@ -1,5 +1,16 @@
 import { create } from "zustand";
 
+export interface MESSAGE_MEDIA {
+    media_url: string | File,
+    media_details: {
+        file_name: string,
+        total_size: number,
+        duration?: number,
+        type: string,
+        isDecrypted?: boolean,
+        isEncrypted: true
+    }
+}
 export interface MESSAGE {
     _id?: string;
     created_by?: string;
@@ -8,6 +19,7 @@ export interface MESSAGE {
     body?: {
         text?: string;
         media_url?: File[];
+        media?: MESSAGE_MEDIA[]
     };
     tag?: string,
     users?: string[],
@@ -22,9 +34,28 @@ interface TAG_STATUS_PAYLOAD {
     status: boolean
 }
 
+interface CURRENT_CHAT {
+    media_encryption?: boolean,
+    profile_url?: string | null,
+    disappearing_messages?: {
+        duration: number,
+        enabled: boolean,
+    } | null
+    display_name?: string,
+    admins?: string[],
+
+    [key: string]: unknown
+}
+
+interface MODIFY_CURRENT_CHAT {
+    key: string,
+    value: unknown
+}
+
 interface ChatsStore {
     chats: MESSAGE[];
     ogChats: MESSAGE[];
+    current_chat: CURRENT_CHAT;
     addChats: (messages: MESSAGE[]) => void;
     appendChats: (messages: MESSAGE[]) => void;
     popChat: (message_id: string) => void;
@@ -32,12 +63,17 @@ interface ChatsStore {
     updateTagStatus: (payload: TAG_STATUS_PAYLOAD) => void,
     filterChatsByText: (text: string) => void,
     emptyOGList: () => void,
-    updateDecryptedMsg: (msg: MESSAGE) => void
+    updateDecryptedMsg: (msg: MESSAGE) => void,
+    decryptMediaUrlOfChat: (message_id: string, newUrl: File, mediaIndex: number) => void,
+    enableDecryptedMediaOfChat: (message_id: string, mediaIndex: number) => void
+    insertCurrentChat: (payload: CURRENT_CHAT) => void,
+    modifyCurrentChat: (payload: MODIFY_CURRENT_CHAT) => void
 }
 
 export const useChatStore = create<ChatsStore>((set) => ({
     chats: [],
     ogChats: [],
+    current_chat: {},
 
     addChats: (messages) => {
         const alteredChats = [...messages].reverse();
@@ -111,6 +147,46 @@ export const useChatStore = create<ChatsStore>((set) => ({
 
                 return chat
             })
+        }))
+    },
+    decryptMediaUrlOfChat: (message_id, newUrl, mediaIndex) => {
+        set((state) => ({
+            chats: state.chats.map((chat) => {
+                if (!chat.body?.media) return chat
+
+                if (chat._id === message_id) {
+                    chat.body.media[mediaIndex].media_url = newUrl
+                    chat.body.media[mediaIndex].media_details.isDecrypted = true
+                }
+
+                return chat
+            })
+        }))
+    },
+    enableDecryptedMediaOfChat: (message_id, mediaIndex) => {
+        set((state) => ({
+            chats: state.chats.map((chat) => {
+                if (!chat.body?.media) return chat
+
+                if (chat._id === message_id) {
+                    chat.body.media[mediaIndex].media_details.isDecrypted = true
+                }
+
+                return chat
+            })
+        }))
+    },
+    insertCurrentChat: (payload) => {
+        set({
+            current_chat: payload
+        })
+    },
+    modifyCurrentChat: (payload) => {
+        set((state) => ({
+            current_chat: {
+                ...state.current_chat,
+                [payload.key]: payload.value
+            }
         }))
     }
 
