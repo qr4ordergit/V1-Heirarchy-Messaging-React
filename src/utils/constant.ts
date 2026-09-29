@@ -143,6 +143,9 @@ const COMMON_PERMISSION = {
     update: false,
     delete: false,
   },
+  "media-encryption": {
+      "active": true
+    },
   contacts: {
     read: false,
     create: false,
@@ -155,7 +158,7 @@ const COMMON_PERMISSION = {
     update: false,
     delete: false,
   },
-  "keyring-categories" : {
+  "keyring-categories": {
     read: false,
     create: false,
     update: false,
@@ -223,6 +226,9 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "group-messages|update": "Update",
   "group-messages|delete": "Delete",
 
+  // Media Encryption
+  "media-encryption|active": "Allow",
+
   // Manage Contacts
   "contacts|create": "Add",
   "contacts|read": "View",
@@ -278,10 +284,10 @@ export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
   "direct-messages": "Direct Messages (DM)",
   groups: "Manage Groups",
   "group-messages": "Group Messages",
-  keyring: "Manage Keyring",
+  "media-encryption": "Media Encryption",
   contacts: "Manage Contacts",
   tags: "Manage Tags",
-  "keyring-categories" : "Keyring Categories",
+  "keyring-categories": "Keyring Categories",
   "scheduled-messages": "Scheduled Messages",
   "disappearing-messages": "Disappearing Messages",
   "chat-export": "Export Chats",
