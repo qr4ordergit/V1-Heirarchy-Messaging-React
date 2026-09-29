@@ -640,7 +640,8 @@
         "txtKeyringActiveNote": "Manual typing disabled while Keyring Category is selected. Clear category above to type manually.",
         "alert-password-required": "Password is mandatory",
         "tooltip-e2e": "Double Encryption",
-        "tooltip-schedule": "Schedule message"
+        "tooltip-schedule": "Schedule message",
+        "NAV-menu-media-encryption-toggle": "Enable Media encryption"
       },
       "billing": {
         "tooltipGoBack": "Go back",
@@ -1347,7 +1348,8 @@
         "txtKeyringActiveNote": "Ручне введення вимкнено, доки вибрано категорію зв'язки ключів. Очистіть категорію вище, щоб ввести вручну.",
         "alert-password-required": "Пароль є обов'язковим",
         "tooltip-e2e": "Подвійне шифрування",
-        "tooltip-schedule": "Запланувати повідомлення"
+        "tooltip-schedule": "Запланувати повідомлення",
+        "NAV-menu-media-encryption-toggle": "Enable Media encryption"
       },
       "billing": {
         "tooltipGoBack": "Назад",

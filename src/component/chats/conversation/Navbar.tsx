@@ -312,7 +312,10 @@ function Navbar() {
                   onChange={handleEncryptionCheck}
                   color={current_chat?.media_encryption ? "green" : ""}
                 >
-                  Enable Media encryption
+                  {translation(
+                    "chat_history.NAV-menu-media-encryption-toggle",
+                    "Enable Media encryption",
+                  )}
                 </Menu.CheckboxItem>
               )}
               {conditionalRenderer.allowDisappear() && (
