@@ -11,6 +11,7 @@ import {
 } from "@tabler/icons-react";
 import { useExtentionMediaProvider } from "../../../hooks/useExtentionMediaProvider";
 import { useChatStore } from "../../../store/chats/chats.store";
+import useContactNameProvider from "../../../hooks/useContactNameProvider";
 
 interface REPLYCHAT {
   replied_to: string;
@@ -20,6 +21,7 @@ interface REPLYCHAT {
 function ReplyChat({ replied_to, onReplyClick }: REPLYCHAT) {
   const getMediaType = useExtentionMediaProvider();
   const { chats } = useChatStore();
+  const contactNameProvider = useContactNameProvider();
 
   const repliedChat = chats.find((chat) => chat._id === replied_to);
 
@@ -53,7 +55,9 @@ function ReplyChat({ replied_to, onReplyClick }: REPLYCHAT) {
       onClick={() => onReplyClick(replied_to)}
     >
       <div className="flex items-center">
-        <div className="font-medium text-sm">{repliedChat.created_by}</div>
+        <div className="font-medium text-sm">
+          {contactNameProvider(repliedChat.created_by ?? "")}
+        </div>
         <div className="ms-auto"></div>
       </div>
       <div className="w-90 flex items-center gap-2">
