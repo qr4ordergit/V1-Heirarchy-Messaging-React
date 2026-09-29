@@ -65,8 +65,12 @@ function DecryptPrivateMsgDialog() {
         : ENDPOINTS.PRIVATEMSG.DM_DECRYPT;
       const res = await api.post(endpoint_url, payload, { params });
 
-      if (!res.data?.success) {
+      if (!res.data?.success && mode === "manual") {
         setIsPasswordIncorrect(true);
+        return;
+      }
+
+      if (!res.data?.success) {
         return;
       }
 

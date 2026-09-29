@@ -1,4 +1,3 @@
-import { CloseIcon } from "@mantine/core";
 import {
   IconBrandYoutube,
   IconCode,
@@ -8,6 +7,7 @@ import {
   IconFileTypeXls,
   IconJson,
   IconPhoto,
+  IconX,
 } from "@tabler/icons-react";
 import { useExtentionMediaProvider } from "../../../hooks/useExtentionMediaProvider";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
@@ -52,7 +52,7 @@ function ReplyInputBoxCard() {
           {contactNameProvider(triggerPayload?.created_by ?? "")}
         </div>
         <div className="ms-auto">
-          <CloseIcon size="20" color="blue" onClick={onClose} />
+          <IconX size={20} color="blue" onClick={onClose} />
         </div>
       </div>
       <div className="w-90 flex items-center gap-2">
