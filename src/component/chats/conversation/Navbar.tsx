@@ -1,14 +1,16 @@
-import { ActionIcon, Avatar, Menu, ScrollArea } from "@mantine/core";
+import { ActionIcon, Avatar, Flex, Menu, ScrollArea } from "@mantine/core";
 import {
   IconChevronLeft,
   IconClockHour10,
   IconDotsVertical,
   IconMessageDots,
+  IconPhotoShield,
   IconProgressDown,
   IconRefresh,
   IconSearch,
   IconStar,
   IconTextRecognition,
+  IconX,
 } from "@tabler/icons-react";
 import { useDMListStore } from "../../../store/dm/dm.list.store";
 import { useNavigate, useParams } from "react-router";
@@ -311,10 +313,25 @@ function Navbar() {
                   checked={current_chat?.media_encryption}
                   onChange={handleEncryptionCheck}
                   color={current_chat?.media_encryption ? "green" : ""}
+                  checkIcon={<IconX size={14} />}
                 >
-                  {translation(
-                    "chat_history.NAV-menu-media-encryption-toggle",
-                    "Enable Media encryption",
+                  {current_chat?.media_encryption ? (
+                    <div>
+                      {translation(
+                        "chat_history.NAV-menu-media-encryption-toggle2",
+                        "Media encryption active",
+                      )}
+                    </div>
+                  ) : (
+                    <Flex align={"center"} gap={10}>
+                      <IconPhotoShield size={14} />
+                      <div>
+                        {translation(
+                          "chat_history.NAV-menu-media-encryption-toggle1",
+                          "Enable media encryption",
+                        )}
+                      </div>
+                    </Flex>
                   )}
                 </Menu.CheckboxItem>
               )}

@@ -12,10 +12,12 @@ import {
 import { useExtentionMediaProvider } from "../../../hooks/useExtentionMediaProvider";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../utils/constant";
+import useContactNameProvider from "../../../hooks/useContactNameProvider";
 
 function ReplyInputBoxCard() {
   const getMediaType = useExtentionMediaProvider();
   const { trigger, triggerPayload, resetTrigger } = useTriggerStore();
+  const contactNameProvider = useContactNameProvider();
 
   const onClose = () => resetTrigger();
 
@@ -46,7 +48,9 @@ function ReplyInputBoxCard() {
   return (
     <div className="bg-blue-200 rounded-xl m-2 p-2 border-l-3 border-blue-700">
       <div className="flex items-center">
-        <div className="font-medium text-sm">{triggerPayload?.created_by}</div>
+        <div className="font-medium text-sm">
+          {contactNameProvider(triggerPayload?.created_by ?? "")}
+        </div>
         <div className="ms-auto">
           <CloseIcon size="20" color="blue" onClick={onClose} />
         </div>
