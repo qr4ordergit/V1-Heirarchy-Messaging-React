@@ -155,6 +155,12 @@ const COMMON_PERMISSION = {
     update: false,
     delete: false,
   },
+  "keyring-categories" : {
+    read: false,
+    create: false,
+    update: false,
+    delete: false,
+  },
   "scheduled-messages": {
     read: false,
     create: false,
@@ -229,6 +235,12 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "tags|update": "Update",
   "tags|delete": "Delete",
 
+  // Keyring Categories
+  "keyring-categories|read": "View",
+  "keyring-categories|create": "Create",
+  "keyring-categories|update": "Update",
+  "keyring-categories|delete": "Delete",
+
   // Scheduled Messages
   "scheduled-messages|read": "View",
   "scheduled-messages|create": "Allow",
@@ -269,6 +281,7 @@ export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
   keyring: "Manage Keyring",
   contacts: "Manage Contacts",
   tags: "Manage Tags",
+  "keyring-categories" : "Keyring Categories",
   "scheduled-messages": "Scheduled Messages",
   "disappearing-messages": "Disappearing Messages",
   "chat-export": "Export Chats",
