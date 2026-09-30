@@ -109,7 +109,7 @@ import { Notification } from "../../utils/notification";
 import { fetchUserDetails } from "../../api/userApi";
 import axios from "axios";
 import { useTranslation } from "../../store/language/language.store";
-
+import logo from "../../assets/logo.png";
 const PASSKEY_PATTERN = /^[a-zA-Z0-9]{4,12}$/;
 const ACCOUNTS_PAGE_SIZE = 10;
 
@@ -1242,6 +1242,7 @@ export default function Accounts() {
       <Container size="md" py="xl">
         <Group justify="space-between" align="center" mb="xl">
           <Group gap="sm" align="center">
+            <img src={logo} alt="Ukrchat logo" className={classes.brandLogo} />
             <Text className={classes.brand}>Ukrchat.com</Text>
           </Group>
 

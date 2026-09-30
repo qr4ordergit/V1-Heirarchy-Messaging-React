@@ -45,7 +45,7 @@ import { useTranslation } from "../../store/language/language.store";
 import { ManageVideosService } from "../../api/services/manage.videos.service";
 import introVideoSrc from "../../assets/intro.mp4";
 import introVideoPoster from "../../assets/intro.jpg";
-
+import logo from "../../assets/logo.png";
 const HOME_INTRO_PAGE_NAME = "homepage-intro";
 
 export default function Home() {
@@ -210,7 +210,19 @@ export default function Home() {
             </Menu.Dropdown>
           </Menu>
         </div>
-
+        <div
+          style={{
+            position: "absolute",
+            top: 18,
+            left: 22,
+            zIndex: 10,
+          }}
+        >
+          <Group gap="sm" align="center" wrap="nowrap">
+            <img src={logo} alt="Ukrchat logo" className={classes.brandLogo} />
+            <Text className={classes.brand}>Ukrchat.com</Text>
+          </Group>
+        </div>
         <Container
           size="md"
           className={classes.heroContent}

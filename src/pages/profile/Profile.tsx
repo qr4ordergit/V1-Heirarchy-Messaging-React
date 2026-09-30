@@ -139,25 +139,29 @@ const Profile = () => {
     getValidAvatarSrc(targetUserDetails?.profile_picture) ||
     getValidAvatarSrc(userDetails?.profile_picture);
 
-  const fetchTagsList = async () => {
+  const fetchTagsList = async (): Promise<boolean> => {
     setLoadingTags(true);
     try {
       const tags = await getTagsApi();
       storeTags(Array.isArray(tags) ? tags : []);
+      return true;
     } catch (error: any) {
-      handleApiError(error);
+      console.error("fetchTagsList failed:", error);
+      return false;
     } finally {
       setLoadingTags(false);
     }
   };
 
-  const fetchKeyringsList = async () => {
+  const fetchKeyringsList = async (): Promise<boolean> => {
     setLoadingKeyrings(true);
     try {
       const data = await getKeyringCategoriesApi();
       setKeyrings(Array.isArray(data) ? data : []);
+      return true;
     } catch (error: any) {
-      handleApiError(error);
+      console.error("fetchKeyringsList failed:", error);
+      return false;
     } finally {
       setLoadingKeyrings(false);
     }
@@ -275,11 +279,15 @@ const Profile = () => {
     }
   };
 
-  const handleToggleKeyring = () => {
-    const nextState = !keyringOpen;
-    setKeyringOpen(nextState);
-    if (nextState) {
-      fetchKeyringsList();
+  const handleToggleKeyring = async () => {
+    if (keyringOpen) {
+      setKeyringOpen(false);
+      return;
+    }
+
+    const isSuccess = await fetchKeyringsList();
+    if (isSuccess === true) {
+      setKeyringOpen(true);
     }
   };
 
@@ -501,19 +509,22 @@ const Profile = () => {
     }
   };
 
-  useEffect(() => {
-    fetchTagsList();
-    fetchKeyringsList();
-  }, []);
+  // useEffect(() => {
+  //   fetchTagsList();
+  //   fetchKeyringsList();
+  // }, []);
 
-  const handleToggleTags = () => {
-    const nextState = !tagsOpen;
-    setTagsOpen(nextState);
-    if (nextState) {
-      fetchTagsList();
+  const handleToggleTags = async () => {
+    if (tagsOpen) {
+      setTagsOpen(false);
+      return;
+    }
+
+    const isSuccess = await fetchTagsList();
+    if (isSuccess === true) {
+      setTagsOpen(true);
     }
   };
-
   // const handleLogout = async () => {
   //   try {
   //     await logout();

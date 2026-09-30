@@ -519,8 +519,10 @@ const Contact = () => {
                 >
                   {loading ? (
                     <Text ta="center" py={60} c="dimmed">
-                      translation("contact.txtLoadingContacts", "Loading
-                      contacts...")
+                      {translation(
+                        "contact.txtLoadingContacts",
+                        "Loading contacts...",
+                      )}
                     </Text>
                   ) : filteredContacts.length > 0 ? (
                     filteredContacts.map((contact) => (
