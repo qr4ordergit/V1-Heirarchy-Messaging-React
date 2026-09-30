@@ -209,10 +209,6 @@ function PrivateMessagePayloadModal() {
 
           {selectedCategoryId && (
             <Select
-              label={translation(
-                "chat_history.selectPasswordKey",
-                "Select Password",
-              )}
               placeholder={translation(
                 "chat_history.phSelectPasswordKey",
                 "Choose password key",
