@@ -50,6 +50,7 @@ function MediaDownload({ msg_id, media_data, mediaIndex }: PAYLOAD) {
   const onDecrypt = async () => {
     if (!media_data.media_details.isEncrypted) {
       enableDecryptedMediaOfChat(msg_id, mediaIndex);
+      return;
     }
     const newUrl = await decryptor(msg_id, media_data.media_url);
 

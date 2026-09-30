@@ -121,7 +121,7 @@ export default function ChatInput() {
       const payload: SUBMIT_PAYLOAD = {
         user: isGroup ? undefined : nextPerson(chatId),
         group_id: isGroup ? chatId : undefined,
-        type: isReply ? "replay" : "message",
+        type: isReply ? "reply" : "message",
         parent_message_id: triggerPayload?._id ?? undefined,
         text: message,
       };
@@ -404,7 +404,7 @@ export default function ChatInput() {
       const payload: SUBMIT_PAYLOAD = {
         user: isGroup ? undefined : nextPerson(chatId),
         group_id: isGroup ? chatId : undefined,
-        type: isReply ? "replay" : "message",
+        type: isReply ? "reply" : "message",
         parent_message_id: triggerPayload?._id ?? undefined,
         text: message,
         files: files_info,
