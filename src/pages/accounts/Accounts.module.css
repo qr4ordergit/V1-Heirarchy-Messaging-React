@@ -244,3 +244,8 @@
 .searchButton:hover {
   background: #1a1a1a;
 }
+.brandLogo {
+  height: 28px;
+  width: auto;
+  display: block;
+}
