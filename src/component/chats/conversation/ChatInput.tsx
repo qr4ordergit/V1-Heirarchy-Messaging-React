@@ -31,7 +31,12 @@ import { E2EHelper } from "../../../utils/e2eHelper";
 import { useTranslation } from "../../../store/language/language.store";
 import { getApiErrorMessage } from "../../../api/getApiErrorMessage";
 import mediaTypeProvider from "../../../utils/mediaTypeProvider";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
 interface SUBMIT_PAYLOAD {
   [key: string]: unknown;
 }
@@ -148,15 +153,21 @@ export default function ChatInput() {
         payload["type"] = "schedule";
       }
 
-      const target_user_param = target_user
-        ? `?target_user=${target_user}`
-        : "";
+      const params = {
+        target_user: target_user ? target_user : undefined,
+      };
+      const headers = {
+        "x-timezone": dayjs.tz.guess(),
+      };
 
       const endpoint = isGroup
-        ? `${ENDPOINTS.GROUP_CHAT.POST}${target_user_param}`
-        : `${ENDPOINTS.CHAT.SEND}${target_user_param}`;
+        ? ENDPOINTS.GROUP_CHAT.POST
+        : ENDPOINTS.CHAT.SEND;
 
-      const response = await api.post(endpoint, payload);
+      const response = await api.post(endpoint, payload, {
+        params,
+        headers,
+      });
 
       if (!response.data?.success) {
         Notification.error(

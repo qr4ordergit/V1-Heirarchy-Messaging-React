@@ -7,8 +7,10 @@ import {
   Select,
   Stack,
   Title,
+  Text,
   type ComboboxItem,
 } from "@mantine/core";
+import classes from "./Admin.module.css";
 import { IconLogout, IconShieldLock } from "@tabler/icons-react";
 
 import { logout } from "../../api/authApi";
@@ -18,6 +20,7 @@ import { ROUTES } from "../../router/routes";
 import ManageLanguages from "./manageLanguages/ManageLanguages";
 import ManageVideo from "./ManageVideos/ManageVideos";
 import ManageBillings from "./manageBillings/ManageBillings";
+import logo from "../../assets/logo.png";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -48,11 +51,17 @@ export default function Admin() {
 
   return (
     <Container size="lg" py="xl">
-      <Group justify="space-between" align="flex-start" mb="xs">
-        <Stack gap={4}>
-          <Group gap="xs">
-            <IconShieldLock size={18} />
-            <Title order={5}>Admin Dashboard</Title>
+      <Group justify="space-between" align="center" mb="md">
+        <Stack gap={6}>
+          <Group gap="sm" align="center" wrap="nowrap">
+            <div className={classes.brandLogoWrap}>
+              <img
+                src={logo}
+                alt="Ukrchat logo"
+                className={classes.brandLogo}
+              />
+            </div>
+            <Text className={classes.brand}>Ukrchat.com</Text>
           </Group>
         </Stack>
 
@@ -68,11 +77,14 @@ export default function Admin() {
           Logout
         </Button>
       </Group>
-
+      <Group gap="xs">
+        <IconShieldLock size={18} />
+        <Title order={5}>Admin Dashboard</Title>
+      </Group>
       <Select
         size="xs"
         mb={"md"}
-        style={{ maxWidth: "300px" }}
+        style={{ maxWidth: "300px", marginTop: "10px" }}
         placeholder="Select setting"
         data={data}
         value={value ? value.value : null}

@@ -1,7 +1,7 @@
-import { ScrollArea, Stack } from "@mantine/core";
+import { Flex, ScrollArea, Stack, Text } from "@mantine/core";
 import { api } from "../../../api/axios";
 import { ENDPOINTS } from "../../../api/endpoints";
-import { useEffect, useRef, useTransition } from "react";
+import { Fragment, useEffect, useRef, useTransition } from "react";
 import { ConversationShimmer } from "../../loaders/shimmers/ConversationShimmer";
 import { Notification } from "../../../utils/notification";
 import { useChatStore, type MESSAGE } from "../../../store/chats/chats.store";
@@ -15,6 +15,10 @@ import EncryptedChatCard from "./EncryptedChatCard";
 import useMediaDecryptor from "../../../hooks/useMediaDecryptor";
 import { useTranslation } from "../../../store/language/language.store";
 import { getApiErrorMessage } from "../../../api/getApiErrorMessage";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 export default function Chatting() {
   const messages = useChatStore((state) => state.chats);
@@ -32,6 +36,22 @@ export default function Chatting() {
 
   const mediaDecryptor = useMediaDecryptor();
   const { translation } = useTranslation();
+
+  const formatMessageDate = (date: string) => {
+    const messageDate = dayjs.utc(date).local();
+    const today = dayjs();
+    const yesterday = dayjs().subtract(1, "day");
+
+    if (messageDate.isSame(today, "day")) {
+      return "Today";
+    }
+
+    if (messageDate.isSame(yesterday, "day")) {
+      return "Yesterday";
+    }
+
+    return messageDate.format("DD MMMM YYYY");
+  };
 
   const fetchOneToOneChats = async () => {
     try {
@@ -162,11 +182,9 @@ export default function Chatting() {
   const conditionalRenderer = {
     msgCardProvider: (msg: MESSAGE) => {
       if (msg?.double_encryption) {
-        return <EncryptedChatCard key={msg._id} msg={msg} />;
+        return <EncryptedChatCard msg={msg} />;
       } else {
-        return (
-          <MessageChat key={msg._id} msg={msg} onReplyClick={scrollToMessage} />
-        );
+        return <MessageChat msg={msg} onReplyClick={scrollToMessage} />;
       }
     },
   };
@@ -199,8 +217,28 @@ export default function Chatting() {
       viewportRef={viewport}
     >
       <Stack py="md" gap="sm" className="h-100">
-        {messages.map((msg) => {
-          return conditionalRenderer.msgCardProvider(msg);
+        {messages.map((msg, msgIndex) => {
+          const newMsgDate = formatMessageDate(msg.created_on ?? "");
+          const oldMsgDate = formatMessageDate(
+            messages[msgIndex - 1]?.created_on ?? "",
+          );
+          return (
+            <Fragment key={msg._id}>
+              {newMsgDate !== oldMsgDate ? (
+                <Flex justify={"center"} className="sticky top-0">
+                  <Text
+                    className="bg-gray-400 rounded-full text-white opacity-80"
+                    size="xs"
+                    px={10}
+                    py={2}
+                  >
+                    {newMsgDate}
+                  </Text>
+                </Flex>
+              ) : null}
+              {conditionalRenderer.msgCardProvider(msg)}
+            </Fragment>
+          );
         })}
       </Stack>
     </ScrollArea>
