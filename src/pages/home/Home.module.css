@@ -215,9 +215,11 @@
   animation: videoOverlayIn 200ms ease;
 }
 .brandLogo {
+  width: 32px;
   height: 32px;
-  width: auto;
-  display: block;
+  border-radius: 22%;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .brand {
