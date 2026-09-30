@@ -43,20 +43,57 @@ const showNotification = (message: string) => {
 };
 
 export const getTagsApi = async (): Promise<string[]> => {
-  const response = await api.get(withTargetUser(API_ENDPOINTS.TAGS));
+  try {
+    const response = await api.get(withTargetUser(API_ENDPOINTS.TAGS));
 
-  if (response.status !== 200) {
+    if (response.status !== 200) {
+      showNotification(
+        response.data?.message ||
+          getTranslation(
+            "profile.notificationFailedFetchTagList",
+            "Failed to fetch tags list.",
+          ),
+      );
+      throw new Error("Failed to fetch tags");
+    }
+
+    return response.data.tag_ids || [];
+  } catch (error: any) {
     showNotification(
-      response.data?.message ||
+      error?.response?.data?.message ||
         getTranslation(
           "profile.notificationFailedFetchTagList",
           "Failed to fetch tags list.",
         ),
     );
-    return [];
+    throw error;
   }
+};
 
-  return response.data.tag_ids || [];
+export const getKeyringCategoriesApi = async (
+  keyringCategoryId?: string,
+): Promise<KeyringCategoryItem[]> => {
+  try {
+    let url = API_ENDPOINTS.KEYRING_CATEGORIES;
+    if (keyringCategoryId) {
+      url += `?keyring_category_id=${encodeURIComponent(keyringCategoryId)}`;
+    }
+    const response = await api.get(withTargetUser(url));
+    const data = response.data;
+    if (response.status === 200) {
+      return data.categories || data.data || (Array.isArray(data) ? data : []);
+    }
+    throw new Error("Failed to fetch keyring categories");
+  } catch (error: any) {
+    showNotification(
+      error?.response?.data?.message ||
+        getTranslation(
+          "profile.failedToFetchKeyring",
+          "Failed to fetch keyring categories.",
+        ),
+    );
+    throw error;
+  }
 };
 
 export const createTagApi = async (tagName: string): Promise<any | null> => {
@@ -147,32 +184,6 @@ export const uploadImageToS3Api = async (
   }
 
   return true;
-};
-
-export const getKeyringCategoriesApi = async (
-  keyringCategoryId?: string,
-): Promise<KeyringCategoryItem[]> => {
-  try {
-    let url = API_ENDPOINTS.KEYRING_CATEGORIES;
-    if (keyringCategoryId) {
-      url += `?keyring_category_id=${encodeURIComponent(keyringCategoryId)}`;
-    }
-    const response = await api.get(withTargetUser(url));
-    const data = response.data;
-    if (response.status === 200) {
-      return data.categories || data.data || (Array.isArray(data) ? data : []);
-    }
-    return [];
-  } catch (error: any) {
-    showNotification(
-      error?.response?.data?.message ||
-        getTranslation(
-          "profile.failedToFetchKeyring",
-          "Failed to fetch keyring categories.",
-        ),
-    );
-    return [];
-  }
 };
 
 export const createKeyringCategoryApi = async (
