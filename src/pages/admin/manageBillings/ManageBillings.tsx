@@ -5,6 +5,7 @@ import {
   Card,
   Divider,
   Group,
+  LoadingOverlay,
   Modal,
   NumberInput,
   Paper,
@@ -33,6 +34,7 @@ import { notifications } from "@mantine/notifications";
 import { useTranslation } from "../../../store/language/language.store";
 import { api } from "../../../api/axios";
 import { API_ENDPOINTS } from "../../../utils/constant";
+import { handleApiError } from "../../../utils/errorHandler";
 
 export interface PricingRule {
   pricing_id: string;
@@ -120,15 +122,13 @@ const normalizeUser = (
 export default function ManageBillings() {
   const { translation } = useTranslation();
 
-  // const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [defaultTier, setDefaultTier] = useState<DefaultTierGroup | null>(null);
   const [customTiers, setCustomTiers] = useState<CustomTierItem[]>([]);
 
-  // Search filters
   const [defaultSearch, setDefaultSearch] = useState("");
   const [customSearch, setCustomSearch] = useState("");
 
-  // Rate Configuration Modal State
   const [rateModalOpened, setRateModalOpened] = useState(false);
   const [modalMode, setModalMode] = useState<
     "edit_default" | "edit_custom" | "move_to_custom"
@@ -143,7 +143,7 @@ export default function ManageBillings() {
   const [submittingRate, setSubmittingRate] = useState(false);
 
   const fetchPricingData = async () => {
-    // setLoading(true);
+    setLoading(true);
     try {
       const endpoint = API_ENDPOINTS.ADMIN_PRICING || "/admin/pricing";
       const res = await api.get<AdminPricingResponse>(endpoint);
@@ -152,10 +152,10 @@ export default function ManageBillings() {
         setDefaultTier(res.data.details.default);
         setCustomTiers(res.data.details.custom || []);
       }
-    } catch (error) {
-      console.error("Failed to load admin pricing config:", error);
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
-      // setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -163,7 +163,6 @@ export default function ManageBillings() {
     fetchPricingData();
   }, []);
 
-  // Open modal to edit default plan rates
   const handleOpenEditDefault = () => {
     if (!defaultTier) return;
     setModalMode("edit_default");
@@ -179,7 +178,6 @@ export default function ManageBillings() {
     setRateModalOpened(true);
   };
 
-  // Open modal to edit a specific custom user's rates
   const handleOpenEditCustom = (customItem: CustomTierItem) => {
     setModalMode("edit_custom");
     setActivePricingId(customItem.pricing.pricing_id);
@@ -194,7 +192,6 @@ export default function ManageBillings() {
     setRateModalOpened(true);
   };
 
-  // Open modal when moving a user from Default -> Custom
   const handleOpenMoveToCustom = (userId: string) => {
     setModalMode("move_to_custom");
     setTargetUserId(userId);
@@ -210,7 +207,6 @@ export default function ManageBillings() {
     setRateModalOpened(true);
   };
 
-  // Save rates or confirm reassignment to custom
   const handleSaveRates = async () => {
     setSubmittingRate(true);
     const endpoint = API_ENDPOINTS.ADMIN_PRICING || "/admin/pricing";
@@ -263,14 +259,13 @@ export default function ManageBillings() {
 
       setRateModalOpened(false);
       await fetchPricingData();
-    } catch (err) {
-      console.error("Failed to update pricing tier:", err);
+    } catch (error: any) {
+      handleApiError(error);
     } finally {
       setSubmittingRate(false);
     }
   };
 
-  // Direct move from Custom -> Default
   const handleReturnToDefault = async (userId: string) => {
     try {
       await api.post(
@@ -292,12 +287,11 @@ export default function ManageBillings() {
       });
 
       await fetchPricingData();
-    } catch (error) {
-      console.error("Failed to move user to default:", error);
+    } catch (error: any) {
+      handleApiError(error);
     }
   };
 
-  // Filtered queries using normalizeUser
   const filteredDefaultUsers = useMemo(() => {
     const items = defaultTier?.users.items || [];
     if (!defaultSearch.trim()) return items;
@@ -373,6 +367,12 @@ export default function ManageBillings() {
 
   return (
     <div className="w-full">
+      <LoadingOverlay
+        visible={loading}
+        zIndex={10}
+        overlayProps={{ radius: "sm", blur: 1 }}
+        loaderProps={{ color: "indigo", type: "dots" }}
+      />
       {/* Header */}
       <Stack gap={4} mb="xl">
         <Title order={3} style={{ letterSpacing: "-0.5px" }}>
@@ -390,7 +390,6 @@ export default function ManageBillings() {
       </Stack>
 
       <Stack gap="xl">
-        {/* TOP SECTION: STANDARD DEFAULT PLAN CARD */}
         {defaultTier && (
           <Card withBorder radius="lg" p="lg" bg="white" className="shadow-xs">
             <Stack gap="md">
@@ -406,7 +405,9 @@ export default function ManageBillings() {
                     </Badge>
                   </Group>
                   <Text size="xs" c="dimmed">
-                    Version {defaultTier.pricing.version} • Currency:{" "}
+                    {translation("admin_billing.txtVersion", "Version")}{" "}
+                    {defaultTier.pricing.version} •{" "}
+                    {translation("admin_billing.txtCurrency", "Currency")}:{" "}
                     {defaultTier.pricing.currency}
                   </Text>
                 </div>
@@ -445,7 +446,8 @@ export default function ManageBillings() {
                   <Text size="xs" c="dimmed">
                     Free Quantity:{" "}
                     <b className="text-gray-900">
-                      {defaultTier.pricing.chat_accounts.free_quantity} accounts
+                      {defaultTier.pricing.chat_accounts.free_quantity}{" "}
+                      {translation("admin_billing.txtAccounts", "accounts")}
                     </b>
                   </Text>
                   <Text size="xs" c="dimmed">
@@ -467,7 +469,10 @@ export default function ManageBillings() {
                       <IconDatabase size={14} />
                     </ThemeIcon>
                     <Text size="xs" fw={700}>
-                      Storage Allowance
+                      {translation(
+                        "admin_billing.txtStorageAllowance",
+                        "Storage Allowance",
+                      )}
                     </Text>
                   </Group>
                   <Text size="xs" c="dimmed">
@@ -489,9 +494,7 @@ export default function ManageBillings() {
           </Card>
         )}
 
-        {/* BOTTOM SECTION: USER ALLOCATIONS (SIDE-BY-SIDE ON DESKTOP, STACKED ON MOBILE) */}
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
-          {/* LEFT: DEFAULT PLAN USERS */}
           <Card
             withBorder
             radius="lg"
@@ -511,16 +514,23 @@ export default function ManageBillings() {
                     <IconUser size={16} />
                   </ThemeIcon>
                   <Text fw={700} size="sm">
-                    Users on Default Pricing
+                    {translation(
+                      "admin_billing.txtUserDefaultPricing",
+                      "Users on Default Pricing",
+                    )}
                   </Text>
                 </Group>
                 <Badge color="indigo" variant="light">
-                  {defaultTier?.users.total ?? 0} Users
+                  {defaultTier?.users.total ?? 0}{" "}
+                  {translation("admin_billing.txtUsers", "Users")}
                 </Badge>
               </Group>
 
               <TextInput
-                placeholder="Search by ID, username, email..."
+                placeholder={translation(
+                  "admin_billing.phSearchUser",
+                  "Search by ID, username, email...",
+                )}
                 size="xs"
                 leftSection={<IconSearch size={14} />}
                 value={defaultSearch}
@@ -546,7 +556,10 @@ export default function ManageBillings() {
                           {renderUserInfo(u)}
 
                           <Tooltip
-                            label="Set custom pricing and move to custom"
+                            label={translation(
+                              "admin_billing.tooltipMoveToCustom",
+                              "Set custom pricing and move to custom",
+                            )}
                             withArrow
                           >
                             <Button
@@ -556,7 +569,10 @@ export default function ManageBillings() {
                               rightSection={<IconArrowRight size={12} />}
                               onClick={() => handleOpenMoveToCustom(u.user_id)}
                             >
-                              Move to Custom
+                              {translation(
+                                "admin_billing.btnMoveToCustom",
+                                "Move to Custom",
+                              )}
                             </Button>
                           </Tooltip>
                         </Paper>
@@ -564,7 +580,10 @@ export default function ManageBillings() {
                     })
                   ) : (
                     <Text size="xs" c="dimmed" ta="center" py="xl">
-                      No users found in default tier.
+                      {translation(
+                        "admin_billing.txtNoUsersDefaultTier",
+                        "No users found in default tier.",
+                      )}
                     </Text>
                   )}
                 </Stack>
@@ -587,16 +606,23 @@ export default function ManageBillings() {
                     <IconArrowLeftRight size={16} />
                   </ThemeIcon>
                   <Text fw={700} size="sm">
-                    Users on Custom Pricing
+                    {translation(
+                      "admin_billing.txtUserCustomPricing",
+                      "Users on Custom Pricing",
+                    )}
                   </Text>
                 </Group>
                 <Badge color="cyan" variant="light">
-                  {customTiers.length} Users
+                  {customTiers.length}{" "}
+                  {translation("admin_billing.txtUsers", "Users")}
                 </Badge>
               </Group>
 
               <TextInput
-                placeholder="Search by ID, username, email..."
+                placeholder={translation(
+                  "admin_billing.phSearchUser",
+                  "Search by ID, username, email...",
+                )}
                 size="xs"
                 leftSection={<IconSearch size={14} />}
                 value={customSearch}
@@ -622,7 +648,10 @@ export default function ManageBillings() {
 
                           <Group gap="xs">
                             <Tooltip
-                              label="Edit user's custom pricing rates"
+                              label={translation(
+                                "admin_billing.tooltipEditCustomPricing",
+                                "Edit user's custom pricing rates",
+                              )}
                               withArrow
                             >
                               <Button
@@ -632,12 +661,18 @@ export default function ManageBillings() {
                                 leftSection={<IconEdit size={12} />}
                                 onClick={() => handleOpenEditCustom(u)}
                               >
-                                Edit Rates
+                                {translation(
+                                  "admin_billing.btnEditRates",
+                                  "Edit Rates",
+                                )}
                               </Button>
                             </Tooltip>
 
                             <Tooltip
-                              label="Revert to standard default plan rates"
+                              label={translation(
+                                "admin_billing.tooltipRevertToDefault",
+                                "Revert to standard default plan rates",
+                              )}
                               withArrow
                             >
                               <Button
@@ -647,7 +682,10 @@ export default function ManageBillings() {
                                 leftSection={<IconArrowLeft size={12} />}
                                 onClick={() => handleReturnToDefault(u.user_id)}
                               >
-                                Return
+                                {translation(
+                                  "admin_billing.btnReturnToDefault",
+                                  "Return to Default",
+                                )}
                               </Button>
                             </Tooltip>
                           </Group>
@@ -657,20 +695,24 @@ export default function ManageBillings() {
                         <Group gap={6}>
                           <Badge size="xs" variant="outline" color="cyan">
                             Accounts: {u.pricing.chat_accounts.free_quantity}{" "}
-                            free ($
+                            {translation("admin_billing.txtFree", "free")} ($
                             {u.pricing.chat_accounts.price_per_unit}/unit)
                           </Badge>
                           <Badge size="xs" variant="outline" color="teal">
-                            Storage:{" "}
-                            {formatBytesToGb(u.pricing.storage.free_bytes)} GB
-                            free (${u.pricing.storage.price_per_gb}/GB)
+                            {translation("admin_billing.txtStorage", "Storage")}
+                            : {formatBytesToGb(u.pricing.storage.free_bytes)} GB
+                            {translation("admin_billing.txtFree", "free")} ($
+                            {u.pricing.storage.price_per_gb}/GB)
                           </Badge>
                         </Group>
                       </Paper>
                     ))
                   ) : (
                     <Text size="xs" c="dimmed" ta="center" py="xl">
-                      No custom pricing users found.
+                      {translation(
+                        "admin_billing.txtNoCustomPricingUsers",
+                        "No custom pricing users found.",
+                      )}
                     </Text>
                   )}
                 </Stack>
@@ -687,10 +729,19 @@ export default function ManageBillings() {
         title={
           <Text fw={700} size="md">
             {modalMode === "edit_default"
-              ? "Edit Standard Default Rates"
+              ? translation(
+                  "admin_billing.titleEditDefaultRates",
+                  "Edit Standard Default Rates",
+                )
               : modalMode === "move_to_custom"
-                ? `Set Custom Rates for ${targetUserId}`
-                : `Edit Custom Rates: ${targetUserId}`}
+                ? translation(
+                    "admin_billing.titleMoveToCustom",
+                    `Set Custom Rates for `,
+                  ) + (targetUserId || "")
+                : translation(
+                    "admin_billing.titleEditCustomRates",
+                    `Edit Custom Rates: `,
+                  ) + (targetUserId || "")}
           </Text>
         }
         radius="lg"
@@ -700,24 +751,42 @@ export default function ManageBillings() {
         <Stack gap="md">
           <Text size="xs" c="dimmed">
             {modalMode === "move_to_custom"
-              ? "Specify the custom rates and allowances to apply when moving this user to the custom pricing tier."
-              : "Adjust included free usage allowances and overage charges."}
+              ? translation(
+                  "admin_billing.textMoveToCustom",
+                  "Specify the custom rates and allowances to apply when moving this user to the custom pricing tier.",
+                )
+              : translation(
+                  "admin_billing.textEditCustomRates",
+                  "Adjust included free usage allowances and overage charges.",
+                )}
           </Text>
 
           <Divider label="Chat Accounts" labelPosition="left" />
 
           <SimpleGrid cols={2} spacing="xs">
             <NumberInput
-              label="Free Quantity"
-              description="Included free accounts"
+              label={translation(
+                "admin_billing.labelFreeQuantity",
+                "Free Quantity",
+              )}
+              description={translation(
+                "admin_billing.descriptionFreeAccounts",
+                "Included free accounts",
+              )}
               size="xs"
               min={0}
               value={editFreeAccounts}
               onChange={(val) => setEditFreeAccounts(Number(val) || 0)}
             />
             <NumberInput
-              label="Rate per extra unit ($)"
-              description="Price per additional account"
+              label={translation(
+                "admin_billing.labelAccountPrice",
+                "Rate per extra unit ($)",
+              )}
+              description={translation(
+                "admin_billing.descriptionAccountPrice",
+                "Price per additional account",
+              )}
               size="xs"
               min={0}
               decimalScale={2}
@@ -730,8 +799,14 @@ export default function ManageBillings() {
 
           <SimpleGrid cols={2} spacing="xs">
             <NumberInput
-              label="Free Storage (GB)"
-              description="Included GBs"
+              label={translation(
+                "admin_billing.labelFreeStorage",
+                "Free Storage (GB)",
+              )}
+              description={translation(
+                "admin_billing.descriptionFreeStorage",
+                "Included GBs",
+              )}
               size="xs"
               min={0}
               decimalScale={2}
@@ -739,8 +814,14 @@ export default function ManageBillings() {
               onChange={(val) => setEditFreeGb(Number(val) || 0)}
             />
             <NumberInput
-              label="Rate per extra GB ($)"
-              description="Price per additional GB"
+              label={translation(
+                "admin_billing.labelStoragePrice",
+                "Rate per extra GB ($)",
+              )}
+              description={translation(
+                "admin_billing.descriptionStoragePrice",
+                "Price per additional GB",
+              )}
               size="xs"
               min={0}
               decimalScale={3}
@@ -755,7 +836,7 @@ export default function ManageBillings() {
               size="xs"
               onClick={() => setRateModalOpened(false)}
             >
-              Cancel
+              {translation("admin_billing.buttonCancel", "Cancel")}
             </Button>
             <Button
               size="xs"
@@ -764,8 +845,11 @@ export default function ManageBillings() {
               onClick={handleSaveRates}
             >
               {modalMode === "move_to_custom"
-                ? "Move & Apply Custom Rates"
-                : "Save Rates"}
+                ? translation(
+                    "admin_billing.buttonMoveToCustom",
+                    "Move & Apply Custom Rates",
+                  )
+                : translation("admin_billing.buttonSaveRates", "Save Rates")}
             </Button>
           </Group>
         </Stack>

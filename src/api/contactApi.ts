@@ -132,6 +132,7 @@ export const getContactsApi = async (): Promise<Contact[] | null> => {
         phone: item.phone || "",
         email: item.email || "",
         color: item.color || "indigo",
+        profile_picture: item?.contact_user_data?.profile_picture || "",
       }));
     }
     notifications.show({

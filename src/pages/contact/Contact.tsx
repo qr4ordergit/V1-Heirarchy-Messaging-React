@@ -900,27 +900,29 @@ const Contact = () => {
                               </Tooltip>
                             )}
 
-                            <Tooltip
-                              label={translation(
-                                "contact.tooltipInviteLink",
-                                "Invite Link",
-                              )}
-                              withArrow
-                            >
-                              <ActionIcon
-                                variant="subtle"
-                                color="blue"
-                                size="md"
-                                radius="md"
-                                loading={activeActionId === group._id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleShareGroup(group);
-                                }}
+                            {isAdmin && (
+                              <Tooltip
+                                label={translation(
+                                  "contact.tooltipInviteLink",
+                                  "Invite Link",
+                                )}
+                                withArrow
                               >
-                                <IconLink size={18} />
-                              </ActionIcon>
-                            </Tooltip>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="blue"
+                                  size="md"
+                                  radius="md"
+                                  loading={activeActionId === group._id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleShareGroup(group);
+                                  }}
+                                >
+                                  <IconLink size={18} />
+                                </ActionIcon>
+                              </Tooltip>
+                            )}
 
                             <Tooltip
                               label={translation(

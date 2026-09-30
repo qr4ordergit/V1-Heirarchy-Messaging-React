@@ -1041,9 +1041,16 @@ const Profile = () => {
                                     className="text-indigo-600"
                                   />
                                   <div>
-                                    <Text fw={600} size="sm">
-                                      {cat.keyring_category_name}
-                                    </Text>
+                                    <div>
+                                      <Text
+                                        size="xs"
+                                        fw={700}
+                                        c="dimmed"
+                                        style={{ letterSpacing: "0.6px" }}
+                                      >
+                                        {cat.keyring_category_name}
+                                      </Text>
+                                    </div>
                                     <Text size="xs" c="dimmed">
                                       {passEntries.length}{" "}
                                       {passEntries.length === 1
