@@ -44,7 +44,7 @@ import { COGNITO_LOGIN_URL } from "../../config/cognito";
 import { useTranslation } from "../../store/language/language.store";
 import { ManageVideosService } from "../../api/services/manage.videos.service";
 import introVideoSrc from "../../assets/intro.mp4";
-import introVideoPoster from "../../assets/intro.jpg";
+
 import logo from "../../assets/logo.png";
 const HOME_INTRO_PAGE_NAME = "homepage-intro";
 
@@ -314,7 +314,6 @@ export default function Home() {
             ref={videoRef}
             className={classes.videoPlayer}
             src={introVideoUrl}
-            poster={introVideoPoster}
             controls
             autoPlay
             playsInline
