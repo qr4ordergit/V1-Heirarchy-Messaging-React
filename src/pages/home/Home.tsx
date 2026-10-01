@@ -131,6 +131,7 @@ export default function Home() {
 
   return (
     <div className={classes.page}>
+      {/* ───────────── HERO ───────────── */}
       <div className={classes.hero} style={{ position: "relative" }}>
         <Overlay
           gradient="linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, .75) 55%)"
@@ -332,6 +333,7 @@ export default function Home() {
         </div>
       )}
 
+      {/* ───────────── 1. PAID SERVICE: HIERARCHICAL ───────────── */}
       <div className={classes.altSection}>
         <Container size="lg">
           <Badge variant="light" size="lg" radius="sm" mb="md">
@@ -408,40 +410,46 @@ export default function Home() {
         </Container>
       </div>
 
+      {/* ───────────── 2. UNLIMITED ACCOUNTS + AI AGENTS ───────────── */}
       <Container size="lg" className={classes.section}>
-        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl">
+        <Stack gap="xl">
           <Card
             withBorder
             radius="md"
             padding="lg"
             className={classes.featureCard}
           >
-            <ThemeIcon
-              size={44}
-              radius="md"
-              variant="light"
-              className={classes.featureIcon}
-            >
-              <IconUsersGroup size={22} />
-            </ThemeIcon>
-            <Text fw={700} size="lg" mt="md" mb={6}>
-              {translation(
-                "home-page.unlimitedTitle",
-                "Create unlimited accounts based on usernames or phone numbers",
-              )}
-            </Text>
-            <Text size="sm" c="dimmed" mb="sm">
-              {translation(
-                "home-page.unlimitedDesc1",
-                "You can create an unlimited number of username-based accounts in your hub. You can also create an unlimited number of phone-number-based accounts, as long as you own the phone number and can receive the confirmation one-time password (OTP).",
-              )}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {translation(
-                "home-page.unlimitedDesc2",
-                "Currently, only certain countries (Ukraine, Moldova and Romania) are available for phone-number-based accounts, and any reported abuse will result in account suspension as per applicable laws.",
-              )}
-            </Text>
+            <Group align="flex-start" wrap="nowrap" gap="lg">
+              <ThemeIcon
+                size={44}
+                radius="md"
+                variant="light"
+                className={classes.featureIcon}
+                style={{ flexShrink: 0 }}
+              >
+                <IconUsersGroup size={22} />
+              </ThemeIcon>
+              <div>
+                <Text fw={700} size="lg" mb={6}>
+                  {translation(
+                    "home-page.unlimitedTitle",
+                    "Create unlimited accounts based on usernames or phone numbers",
+                  )}
+                </Text>
+                <Text size="sm" c="dimmed" mb="sm">
+                  {translation(
+                    "home-page.unlimitedDesc1",
+                    "You can create an unlimited number of username-based accounts in your hub. You can also create an unlimited number of phone-number-based accounts, as long as you own the phone number and can receive the confirmation one-time password (OTP).",
+                  )}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  {translation(
+                    "home-page.unlimitedDesc2",
+                    "Currently, only certain countries (Ukraine, Moldova and Romania) are available for phone-number-based accounts, and any reported abuse will result in account suspension as per applicable laws.",
+                  )}
+                </Text>
+              </div>
+            </Group>
           </Card>
 
           <Card
@@ -450,36 +458,42 @@ export default function Home() {
             padding="lg"
             className={classes.featureCard}
           >
-            <ThemeIcon
-              size={44}
-              radius="md"
-              variant="light"
-              className={classes.featureIcon}
-            >
-              <IconRobot size={22} />
-            </ThemeIcon>
-            <Text fw={700} size="lg" mt="md" mb={6}>
-              {translation(
-                "home-page.aiTitle",
-                "Control AI agents using tags and a categorical keyring",
-              )}
-            </Text>
-            <Text size="sm" c="dimmed" mb="sm">
-              {translation(
-                "home-page.aiDesc1",
-                "Lock individual messages using a passkey to restrict access only to authorized AI agents (bots). This allows you to securely use AI tools (bots) while, at the same time, selectively restricting their access to your message contents.",
-              )}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {translation(
-                "home-page.aiDesc2",
-                "The AI agent can read your tags, but it cannot open and read your messages (when the categorical keyring feature is properly used).",
-              )}
-            </Text>
+            <Group align="flex-start" wrap="nowrap" gap="lg">
+              <ThemeIcon
+                size={44}
+                radius="md"
+                variant="light"
+                className={classes.featureIcon}
+                style={{ flexShrink: 0 }}
+              >
+                <IconRobot size={22} />
+              </ThemeIcon>
+              <div>
+                <Text fw={700} size="lg" mb={6}>
+                  {translation(
+                    "home-page.aiTitle",
+                    "Control AI agents using tags and a categorical keyring",
+                  )}
+                </Text>
+                <Text size="sm" c="dimmed" mb="sm">
+                  {translation(
+                    "home-page.aiDesc1",
+                    "Lock individual messages using a passkey to restrict access only to authorized AI agents (bots). This allows you to securely use AI tools (bots) while, at the same time, selectively restricting their access to your message contents.",
+                  )}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  {translation(
+                    "home-page.aiDesc2",
+                    "The AI agent can read your tags, but it cannot open and read your messages (when the categorical keyring feature is properly used).",
+                  )}
+                </Text>
+              </div>
+            </Group>
           </Card>
-        </SimpleGrid>
+        </Stack>
       </Container>
 
+      {/* ───────────── 3. SECURED DIGITAL IDENTITY ───────────── */}
       <div className={classes.altSection}>
         <Container size="lg">
           <Title order={2} className={classes.sectionTitle} mb="md">
@@ -619,6 +633,7 @@ export default function Home() {
         </Container>
       </div>
 
+      {/* ───────────── 4. COMMUNICATE WITHOUT PHONE OR EMAIL ───────────── */}
       <Container size="lg" className={classes.section}>
         <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="xl">
           <Card
@@ -704,6 +719,7 @@ export default function Home() {
         </SimpleGrid>
       </Container>
 
+      {/* ───────────── 5. CTA ───────────── */}
       <div className={classes.ctaSection}>
         <Container size="sm" className={classes.ctaContent}>
           <Title order={2} className={classes.ctaTitle} mb="sm">
