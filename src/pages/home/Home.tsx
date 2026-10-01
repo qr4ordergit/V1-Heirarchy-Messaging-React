@@ -6,6 +6,7 @@ import {
   Button,
   Card,
   Container,
+  Flex,
   Group,
   List,
   Menu,
@@ -26,7 +27,6 @@ import {
   IconGridDots,
   IconReportSearch,
   IconBuildingStore,
-  IconShieldLock,
   IconWorld,
   IconDeviceLaptop,
   IconMessages,
@@ -38,6 +38,10 @@ import {
   IconX,
   IconUsersGroup,
   IconRobot,
+  IconSparkles,
+  IconHourglass,
+  IconCalendarTime,
+  IconFileExport,
 } from "@tabler/icons-react";
 
 import classes from "./Home.module.css";
@@ -419,7 +423,11 @@ export default function Home() {
             padding="lg"
             className={classes.featureCard}
           >
-            <Group align="flex-start" wrap="nowrap" gap="lg">
+            <Flex
+              direction={{ base: "column", sm: "row" }}
+              align="flex-start"
+              gap="lg"
+            >
               <ThemeIcon
                 size={44}
                 radius="md"
@@ -449,7 +457,7 @@ export default function Home() {
                   )}
                 </Text>
               </div>
-            </Group>
+            </Flex>
           </Card>
 
           <Card
@@ -458,7 +466,11 @@ export default function Home() {
             padding="lg"
             className={classes.featureCard}
           >
-            <Group align="flex-start" wrap="nowrap" gap="lg">
+            <Flex
+              direction={{ base: "column", sm: "row" }}
+              align="flex-start"
+              gap="lg"
+            >
               <ThemeIcon
                 size={44}
                 radius="md"
@@ -488,7 +500,7 @@ export default function Home() {
                   )}
                 </Text>
               </div>
-            </Group>
+            </Flex>
           </Card>
         </Stack>
       </Container>
@@ -509,8 +521,12 @@ export default function Home() {
             )}
           </Text>
 
-          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xl">
-            <Stack gap={6} align="flex-start">
+          <SimpleGrid
+            cols={{ base: 1, sm: 2, md: 3 }}
+            spacing="xl"
+            style={{ paddingInline: "calc(var(--mantine-spacing-lg) + 1px)" }}
+          >
+            <div>
               <ThemeIcon
                 size={40}
                 radius="md"
@@ -519,7 +535,7 @@ export default function Home() {
               >
                 <IconWorld size={20} />
               </ThemeIcon>
-              <Text fw={600}>
+              <Text fw={700} size="lg" mt="md" mb={6}>
                 {translation("home-page.feature1_title2", "Browser Access")}
               </Text>
               <Text size="sm" c="dimmed">
@@ -528,9 +544,9 @@ export default function Home() {
                   "No app download required — ideal for privacy-conscious people and travellers.",
                 )}
               </Text>
-            </Stack>
+            </div>
 
-            <Stack gap={6} align="flex-start">
+            <div>
               <ThemeIcon
                 size={40}
                 radius="md"
@@ -539,7 +555,7 @@ export default function Home() {
               >
                 <IconDeviceLaptop size={20} />
               </ThemeIcon>
-              <Text fw={600}>
+              <Text fw={700} size="lg" mt="md" mb={6}>
                 {translation("home-page.feature2_title", "No Device Risk")}
               </Text>
               <Text size="sm" c="dimmed">
@@ -548,9 +564,9 @@ export default function Home() {
                   "Nothing installed on your phone means no risk if it's lost or stolen. Just close the browser and clear the cache when done.",
                 )}
               </Text>
-            </Stack>
+            </div>
 
-            <Stack gap={6} align="flex-start">
+            <div>
               <ThemeIcon
                 size={40}
                 radius="md"
@@ -559,7 +575,7 @@ export default function Home() {
               >
                 <IconKey size={20} />
               </ThemeIcon>
-              <Text fw={600}>
+              <Text fw={700} size="lg" mt="md" mb={6}>
                 {translation("home-page.feature5_title", "Passkey Locking")}
               </Text>
               <Text size="sm" c="dimmed">
@@ -568,7 +584,7 @@ export default function Home() {
                   "Lock your accounts with a passkey to restrict access to only your known contacts.",
                 )}
               </Text>
-            </Stack>
+            </div>
           </SimpleGrid>
         </Container>
       </div>
@@ -579,28 +595,12 @@ export default function Home() {
           {translation("home-page.txtMessagingTitle", "Messaging Features")}
         </Title>
 
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xl">
-          <Stack gap={6} align="flex-start">
-            <ThemeIcon
-              size={40}
-              radius="md"
-              variant="light"
-              className={classes.featureIcon}
-            >
-              <IconTag size={20} />
-            </ThemeIcon>
-            <Text fw={600}>
-              {translation("home-page.feature4_title2", "Tag Your Messages")}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {translation(
-                "home-page.feature4_desc2",
-                "Tag your favorite chats for faster searching and effortless archiving. Control AI agents (bots) using tags.",
-              )}
-            </Text>
-          </Stack>
-
-          <Stack gap={6} align="flex-start">
+        <SimpleGrid
+          cols={{ base: 1, sm: 2, md: 3 }}
+          spacing="xl"
+          style={{ paddingInline: "calc(var(--mantine-spacing-lg) + 1px)" }}
+        >
+          <div>
             <ThemeIcon
               size={40}
               radius="md"
@@ -609,7 +609,7 @@ export default function Home() {
             >
               <IconMessages size={20} />
             </ThemeIcon>
-            <Text fw={600}>
+            <Text fw={700} size="lg" mt="md" mb={6}>
               {translation("home-page.feature3_title", "DMs and Groups")}
             </Text>
             <Text size="sm" c="dimmed">
@@ -618,18 +618,98 @@ export default function Home() {
                 "Both direct messaging and groups are fully supported, side by side.",
               )}
             </Text>
-          </Stack>
+          </div>
 
-          <Stack gap={6} align="flex-start">
+          <div>
             <ThemeIcon
               size={40}
               radius="md"
               variant="light"
               className={classes.featureIcon}
             >
-              <IconShieldLock size={20} />
+              <IconTag size={20} />
             </ThemeIcon>
-            <Text fw={600}>
+            <Text fw={700} size="lg" mt="md" mb={6}>
+              {translation("home-page.feature4_title2", "Tag Your Messages")}
+            </Text>
+            <Text size="sm" c="dimmed">
+              {translation(
+                "home-page.feature4_desc2",
+                "Tag your favorite chats for faster searching and effortless archiving. Control AI agents (bots) using tags.",
+              )}
+            </Text>
+          </div>
+
+          <div>
+            <ThemeIcon
+              size={40}
+              radius="md"
+              variant="light"
+              className={classes.featureIcon}
+            >
+              <IconHourglass size={20} />
+            </ThemeIcon>
+            <Text fw={700} size="lg" mt="md" mb={6}>
+              {translation("home-page.feature7_title", "Disappearing Messages")}
+            </Text>
+            <Text size="sm" c="dimmed">
+              {translation(
+                "home-page.feature7_desc",
+                "Configure both DMs and groups with messages that automatically disappear after a set duration.",
+              )}
+            </Text>
+          </div>
+
+          <div>
+            <ThemeIcon
+              size={40}
+              radius="md"
+              variant="light"
+              className={classes.featureIcon}
+            >
+              <IconCalendarTime size={20} />
+            </ThemeIcon>
+            <Text fw={700} size="lg" mt="md" mb={6}>
+              {translation("home-page.feature8_title", "Scheduled Messages")}
+            </Text>
+            <Text size="sm" c="dimmed">
+              {translation(
+                "home-page.feature8_desc",
+                "Create a scheduled message list to send messages on a future date (one time, daily, weekly or monthly).",
+              )}
+            </Text>
+          </div>
+
+          <div>
+            <ThemeIcon
+              size={40}
+              radius="md"
+              variant="light"
+              className={classes.featureIcon}
+            >
+              <IconFileExport size={20} />
+            </ThemeIcon>
+            <Text fw={700} size="lg" mt="md" mb={6}>
+              {translation("home-page.feature9_title", "Chat Exports")}
+            </Text>
+            <Text size="sm" c="dimmed">
+              {translation(
+                "home-page.feature9_desc",
+                "Conveniently download your chats, with or without media, to access and analyze when offline.",
+              )}
+            </Text>
+          </div>
+
+          <div>
+            <ThemeIcon
+              size={40}
+              radius="md"
+              variant="light"
+              className={classes.featureIcon}
+            >
+              <IconSparkles size={20} />
+            </ThemeIcon>
+            <Text fw={700} size="lg" mt="md" mb={6}>
               {translation("home-page.feature6_title", "And Much More")}
             </Text>
             <Text size="sm" c="dimmed">
@@ -638,10 +718,11 @@ export default function Home() {
                 "This is just the start — your hub keeps growing with new, secure ways to stay connected.",
               )}
             </Text>
-          </Stack>
+          </div>
         </SimpleGrid>
       </Container>
 
+      {/* ───────────── 4. COMMUNICATE WITHOUT PHONE OR EMAIL ───────────── */}
       <div className={classes.altSection}>
         <Container size="lg">
           <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="xl">
@@ -662,13 +743,13 @@ export default function Home() {
               <Text fw={700} mt="md" mb={4}>
                 {translation(
                   "home-page.card1_label2",
-                  "Communicate using usernames",
+                  "Communicate without Phone or Email",
                 )}
               </Text>
               <Text size="sm" c="dimmed">
                 {translation(
                   "home-page.card1_desc2",
-                  "Add usernames to your hub account without handing over a phone number or email address. Access your data in multiple ways, never tied to one device.",
+                  "Add usernames to your registered hub account without handing over a phone number or email address. Access your data in multiple ways, never tied to one device.",
                 )}
               </Text>
             </Card>

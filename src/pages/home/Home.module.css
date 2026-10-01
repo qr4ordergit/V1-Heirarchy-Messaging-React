@@ -58,12 +58,12 @@
 }
 
 .section {
-  padding: 96px 0;
+  padding-block: 96px;
 }
 
 .altSection {
   background: #f6f5fb;
-  padding: 96px 0;
+  padding-block: 96px;
 }
 
 .sectionTitle {
@@ -82,7 +82,7 @@
 
 .ctaSection {
   background: linear-gradient(135deg, #4b3ff2, #2e23b0);
-  padding: 96px 0;
+  padding-block: 96px;
 }
 
 .ctaContent {
@@ -108,7 +108,7 @@
   .section,
   .altSection,
   .ctaSection {
-    padding: 72px 0;
+    padding-block: 72px;
   }
 }
 
@@ -135,7 +135,7 @@
   .section,
   .altSection,
   .ctaSection {
-    padding: 56px 0;
+    padding-block: 56px;
   }
 
   .control {
