@@ -557,46 +557,6 @@ export default function Home() {
                 variant="light"
                 className={classes.featureIcon}
               >
-                <IconMessages size={20} />
-              </ThemeIcon>
-              <Text fw={600}>
-                {translation("home-page.feature3_title", "DMs and Groups")}
-              </Text>
-              <Text size="sm" c="dimmed">
-                {translation(
-                  "home-page.feature3_desc",
-                  "Both direct messaging and groups are fully supported, side by side.",
-                )}
-              </Text>
-            </Stack>
-
-            <Stack gap={6} align="flex-start">
-              <ThemeIcon
-                size={40}
-                radius="md"
-                variant="light"
-                className={classes.featureIcon}
-              >
-                <IconTag size={20} />
-              </ThemeIcon>
-              <Text fw={600}>
-                {translation("home-page.feature4_title2", "Tag Your Messages")}
-              </Text>
-              <Text size="sm" c="dimmed">
-                {translation(
-                  "home-page.feature4_desc2",
-                  "Tag your favorite chats for faster searching and effortless archiving. Control AI agents (bots) using tags.",
-                )}
-              </Text>
-            </Stack>
-
-            <Stack gap={6} align="flex-start">
-              <ThemeIcon
-                size={40}
-                radius="md"
-                variant="light"
-                className={classes.featureIcon}
-              >
                 <IconKey size={20} />
               </ThemeIcon>
               <Text fw={600}>
@@ -609,115 +569,168 @@ export default function Home() {
                 )}
               </Text>
             </Stack>
-
-            <Stack gap={6} align="flex-start">
-              <ThemeIcon
-                size={40}
-                radius="md"
-                variant="light"
-                className={classes.featureIcon}
-              >
-                <IconShieldLock size={20} />
-              </ThemeIcon>
-              <Text fw={600}>
-                {translation("home-page.feature6_title", "And Much More")}
-              </Text>
-              <Text size="sm" c="dimmed">
-                {translation(
-                  "home-page.feature6_desc2",
-                  "This is just the start — your hub keeps growing with new, secure ways to stay connected.",
-                )}
-              </Text>
-            </Stack>
           </SimpleGrid>
         </Container>
       </div>
 
-      {/* ───────────── 4. COMMUNICATE WITHOUT PHONE OR EMAIL ───────────── */}
+      {/* ───────────── 3b. MESSAGING FEATURES ───────────── */}
       <Container size="lg" className={classes.section}>
-        <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="xl">
-          <Card
-            withBorder
-            radius="md"
-            padding="lg"
-            className={classes.featureCard}
-          >
-            <ThemeIcon
-              size={44}
-              radius="md"
-              variant="light"
-              className={classes.featureIcon}
-            >
-              <IconDeviceMobileOff size={22} />
-            </ThemeIcon>
-            <Text fw={700} mt="md" mb={4}>
-              {translation(
-                "home-page.card1_label2",
-                "Communicate without Phone or Email",
-              )}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {translation(
-                "home-page.card1_desc2",
-                "Add usernames to your registered hub account without handing over a phone number or email address. Access your data in multiple ways, never tied to one device.",
-              )}
-            </Text>
-          </Card>
+        <Title order={2} className={classes.sectionTitle} mb="xl">
+          {translation("home-page.txtMessagingTitle", "Messaging Features")}
+        </Title>
 
-          <Card
-            withBorder
-            radius="md"
-            padding="lg"
-            className={classes.featureCard}
-          >
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xl">
+          <Stack gap={6} align="flex-start">
             <ThemeIcon
-              size={44}
+              size={40}
               radius="md"
               variant="light"
               className={classes.featureIcon}
             >
-              <IconDatabaseOff size={22} />
+              <IconTag size={20} />
             </ThemeIcon>
-            <Text fw={700} mt="md" mb={4}>
-              {translation("home-page.card2_label", "Your Data Belongs to You")}
+            <Text fw={600}>
+              {translation("home-page.feature4_title2", "Tag Your Messages")}
             </Text>
             <Text size="sm" c="dimmed">
               {translation(
-                "home-page.card2_desc2",
-                "Unlike other messengers, your accounts aren't locked to a specific device. You have complete, secure access to all your data at all times. You can download all your data on a PC at any time.",
+                "home-page.feature4_desc2",
+                "Tag your favorite chats for faster searching and effortless archiving. Control AI agents (bots) using tags.",
               )}
             </Text>
-          </Card>
+          </Stack>
 
-          <Card
-            withBorder
-            radius="md"
-            padding="lg"
-            className={classes.featureCard}
-          >
+          <Stack gap={6} align="flex-start">
             <ThemeIcon
-              size={44}
+              size={40}
               radius="md"
               variant="light"
               className={classes.featureIcon}
             >
-              <IconEyeOff size={22} />
+              <IconMessages size={20} />
             </ThemeIcon>
-            <Text fw={700} mt="md" mb={4}>
-              {translation(
-                "home-page.card3_label",
-                "Zero Tracking, Real Encryption",
-              )}
+            <Text fw={600}>
+              {translation("home-page.feature3_title", "DMs and Groups")}
             </Text>
             <Text size="sm" c="dimmed">
               {translation(
-                "home-page.card3_desc2",
-                "Every message is end-to-end encrypted. Zero tracking, zero monitoring — and we never sell your data, because we don't have access to it. We don’t use sockets to connect to your device to protect your privacy and security.",
+                "home-page.feature3_desc",
+                "Both direct messaging and groups are fully supported, side by side.",
               )}
             </Text>
-          </Card>
+          </Stack>
+
+          <Stack gap={6} align="flex-start">
+            <ThemeIcon
+              size={40}
+              radius="md"
+              variant="light"
+              className={classes.featureIcon}
+            >
+              <IconShieldLock size={20} />
+            </ThemeIcon>
+            <Text fw={600}>
+              {translation("home-page.feature6_title", "And Much More")}
+            </Text>
+            <Text size="sm" c="dimmed">
+              {translation(
+                "home-page.feature6_desc2",
+                "This is just the start — your hub keeps growing with new, secure ways to stay connected.",
+              )}
+            </Text>
+          </Stack>
         </SimpleGrid>
       </Container>
+
+      <div className={classes.altSection}>
+        <Container size="lg">
+          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="xl">
+            <Card
+              withBorder
+              radius="md"
+              padding="lg"
+              className={classes.featureCard}
+            >
+              <ThemeIcon
+                size={44}
+                radius="md"
+                variant="light"
+                className={classes.featureIcon}
+              >
+                <IconDeviceMobileOff size={22} />
+              </ThemeIcon>
+              <Text fw={700} mt="md" mb={4}>
+                {translation(
+                  "home-page.card1_label2",
+                  "Communicate using usernames",
+                )}
+              </Text>
+              <Text size="sm" c="dimmed">
+                {translation(
+                  "home-page.card1_desc2",
+                  "Add usernames to your hub account without handing over a phone number or email address. Access your data in multiple ways, never tied to one device.",
+                )}
+              </Text>
+            </Card>
+
+            <Card
+              withBorder
+              radius="md"
+              padding="lg"
+              className={classes.featureCard}
+            >
+              <ThemeIcon
+                size={44}
+                radius="md"
+                variant="light"
+                className={classes.featureIcon}
+              >
+                <IconDatabaseOff size={22} />
+              </ThemeIcon>
+              <Text fw={700} mt="md" mb={4}>
+                {translation(
+                  "home-page.card2_label",
+                  "Your Data Belongs to You",
+                )}
+              </Text>
+              <Text size="sm" c="dimmed">
+                {translation(
+                  "home-page.card2_desc2",
+                  "Unlike other messengers, your accounts aren't locked to a specific device. You have complete, secure access to all your data at all times. You can download all your data on a PC at any time.",
+                )}
+              </Text>
+            </Card>
+
+            <Card
+              withBorder
+              radius="md"
+              padding="lg"
+              className={classes.featureCard}
+            >
+              <ThemeIcon
+                size={44}
+                radius="md"
+                variant="light"
+                className={classes.featureIcon}
+              >
+                <IconEyeOff size={22} />
+              </ThemeIcon>
+              <Text fw={700} mt="md" mb={4}>
+                {translation(
+                  "home-page.card3_label",
+                  "Zero Tracking, Real Encryption",
+                )}
+              </Text>
+              <Text size="sm" c="dimmed">
+                {translation(
+                  "home-page.card3_desc2",
+                  "Every message is end-to-end encrypted. Zero tracking, zero monitoring — and we never sell your data, because we don't have access to it. We don’t use sockets to connect to your device to protect your privacy and security.",
+                )}
+              </Text>
+            </Card>
+          </SimpleGrid>
+        </Container>
+      </div>
 
       {/* ───────────── 5. CTA ───────────── */}
       <div className={classes.ctaSection}>
