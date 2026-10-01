@@ -1,6 +1,10 @@
 {
   "skinLanguageContent": {
     "en": {
+      "commonKey": {
+        "permissionDenied": "Permission denied.",
+        "somethingWentWrong": "Unable to complete the request. Please try again."
+      },
       "signin": {
         "title": "Signing you in..."
       },
@@ -648,6 +652,8 @@
         "NAV-menu-media-encryption-toggle2": "Media encryption active"
       },
       "billing": {
+        "failedToFetchEstimate": "Failed to load billing estimate.",
+        "failedToFetchUsage": "Failed to load usage data.",
         "tooltipGoBack": "Go back",
         "txtMembership": "Membership:",
         "badgePaidMembership": "Paid Membership",
@@ -758,6 +764,10 @@
     "uk": {
       "signin": {
         "title": "Вхід у систему..."
+      },
+      "commonKey": {
+        "permissionDenied": "Доступ заборонено.",
+        "somethingWentWrong": "Не вдалося завершити запит. Будь ласка, спробуйте ще раз."
       },
       "profile": {
         "alertEnterTag": "Будь ласка, введіть назву тегу.",
@@ -1411,7 +1421,8 @@
         "subtitlePaid": "Усі функції розблоковано. Відстежуйте поточні квоти, ліміти та щомісячні витрати на комунальні послуги.",
         "subtitleFree": "Перегляньте активні безкоштовні ліміти або оновіть тариф для доступу до розширених інструментів ієрархії.",
         "loadingBillingData": "Завантаження даних про використання та оцінку рахунків...",
-
+        "failedToFetchEstimate": "Не вдалося завантажити розрахунок вартості.",
+        "failedToFetchUsage": "Не вдалося завантажити дані про використання.",
         "accordionFeaturesTitle": "Функції та використання",
         "accordionFeaturesDesc": "Детальний облік квот, лімітів та активних функцій",
         "txtActiveSubAllowances": "Активні ліміти підписки",

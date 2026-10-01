@@ -1,7 +1,10 @@
 import { notifications } from "@mantine/notifications";
+import { IconCheck } from "@tabler/icons-react";
+import { createElement } from "react";
 import { api } from "./axios";
 import { API_ENDPOINTS, withTargetUser } from "../utils/constant";
 import { getTranslation } from "../store/language/language.store";
+import { handleApiError } from "../utils/errorHandler";
 
 export interface UpdateMembershipPayload {
   is_paid: boolean;
@@ -81,8 +84,14 @@ export const getEstimateApi = async (): Promise<{
       return { estimate, invoiceGenerated };
     }
     return { estimate: null, invoiceGenerated: false };
-  } catch (error) {
-    console.error("Failed to load billing estimate:", error);
+  } catch (error: any) {
+    handleApiError(
+      error,
+      getTranslation(
+        "billing.failedToFetchEstimate",
+        "Failed to load billing estimate.",
+      ),
+    );
     return { estimate: null, invoiceGenerated: false };
   }
 };
@@ -98,7 +107,13 @@ export const getUsageApi = async (): Promise<UsageData | null> => {
     }
     return null;
   } catch (error: any) {
-    console.error("Failed to load usage data:", error);
+    handleApiError(
+      error,
+      getTranslation(
+        "billing.failedToFetchUsage",
+        "Failed to load usage data.",
+      ),
+    );
     return null;
   }
 };
@@ -126,6 +141,7 @@ export const updateMembershipStatusApi = async (
               "Membership status updated.",
             ),
         color: "green",
+        icon: createElement(IconCheck, { size: 18 }),
       });
       return true;
     }
@@ -142,16 +158,13 @@ export const updateMembershipStatusApi = async (
     });
     return false;
   } catch (error: any) {
-    notifications.show({
-      title: "",
-      message:
-        error.response?.data?.message ||
-        getTranslation(
-          "billing.membershipUpdateFailed",
-          "Failed to update membership status.",
-        ),
-      color: "red",
-    });
+    handleApiError(
+      error,
+      getTranslation(
+        "billing.membershipUpdateFailed",
+        "Failed to update membership status.",
+      ),
+    );
     return false;
   }
 };

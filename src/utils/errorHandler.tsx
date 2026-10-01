@@ -1,19 +1,31 @@
 import { createElement } from "react";
 import { notifications } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
+import { getTranslation } from "../store/language/language.store";
 
-export const handleApiError = (
-  error: any,
-  fallbackMessage: string = "Validation failed.",
-): void => {
+export const handleApiError = (error: any, fallbackMessage?: string): void => {
+  const status = error?.response?.status;
   const backendData = error?.response?.data;
 
-  const message =
-    backendData?.message ||
-    backendData?.error ||
-    (typeof backendData === "string" ? backendData : null) ||
-    error?.message ||
-    fallbackMessage;
+  let message: string;
+
+  if (status === 403) {
+    message = getTranslation(
+      "commonKey.permissionDenied",
+      "Permission Denied.",
+    );
+  } else {
+    message =
+      backendData?.message ||
+      // backendData?.error ||
+      // (typeof backendData === "string" ? backendData : null) ||
+      // error?.message ||
+      fallbackMessage ||
+      getTranslation(
+        "commonKey.somethingWentWrong",
+        "Unable to complete the request. Please try again.",
+      );
+  }
 
   notifications.show({
     title: "",
