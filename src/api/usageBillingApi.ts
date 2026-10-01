@@ -88,7 +88,7 @@ export const getEstimateApi = async (): Promise<{
     handleApiError(
       error,
       getTranslation(
-        "accountBilling.failedToFetchEstimate",
+        "account_billing.failedToFetchEstimate",
         "Failed to load billing estimate.",
       ),
     );
@@ -110,7 +110,7 @@ export const getUsageApi = async (): Promise<UsageData | null> => {
     handleApiError(
       error,
       getTranslation(
-        "accountBilling.failedToFetchUsage",
+        "account_billing.failedToFetchUsage",
         "Failed to load usage data.",
       ),
     );
@@ -133,11 +133,11 @@ export const updateMembershipStatusApi = async (
         title: "",
         message: isPaid
           ? getTranslation(
-              "accountBilling.upgradedSuccessfully",
+              "account_billing.upgradedSuccessfully",
               "Upgraded to Paid Membership successfully!",
             )
           : getTranslation(
-              "accountBilling.membershipUpdated",
+              "account_billing.membershipUpdated",
               "Membership status updated.",
             ),
         color: "green",
@@ -151,7 +151,7 @@ export const updateMembershipStatusApi = async (
       message:
         data?.message ||
         getTranslation(
-          "accountBilling.membershipUpdateFailed",
+          "account_billing.membershipUpdateFailed",
           "Failed to update membership status.",
         ),
       color: "red",
@@ -161,7 +161,7 @@ export const updateMembershipStatusApi = async (
     handleApiError(
       error,
       getTranslation(
-        "accountBilling.membershipUpdateFailed",
+        "account_billing.membershipUpdateFailed",
         "Failed to update membership status.",
       ),
     );

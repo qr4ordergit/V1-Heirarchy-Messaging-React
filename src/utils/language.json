@@ -651,7 +651,7 @@
         "NAV-menu-media-encryption-toggle1": "Enable media encryption",
         "NAV-menu-media-encryption-toggle2": "Media encryption active"
       },
-      "accountBilling": {
+      "account_billing": {
         "failedToFetchEstimate": "Failed to load billing estimate.",
         "failedToFetchUsage": "Failed to load usage data.",
         "tooltipGoBack": "Go back",
@@ -1412,7 +1412,7 @@
         "NAV-menu-media-encryption-toggle1": "Enable media encryption",
         "NAV-menu-media-encryption-toggle2": "Media encryption active"
       },
-      "accountBilling": {
+      "account_billing": {
         "tooltipGoBack": "Назад",
         "txtMembership": "Членство:",
         "badgePaidMembership": "Платне членство",
