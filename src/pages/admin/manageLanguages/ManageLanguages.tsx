@@ -50,7 +50,7 @@ const ManageLanguages = () => {
         file: `${fileName}.json`,
       });
       if (active !== "languages") {
-        await loadJSON(active)
+        await loadJSON(active);
       }
       Notification.success("Changes Saved Successfully");
     } catch (error) {
@@ -76,6 +76,15 @@ const ManageLanguages = () => {
       }
       const json = await axios.get(
         `${import.meta.env.VITE_SKIN_LANGUAGE_API_URL}/${fileName}.json`,
+        {
+          params: {
+            v: Date.now(),
+          },
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        },
       );
       setValue(JSON.stringify(json.data, null, 2));
       if (active !== "languages") {
@@ -115,8 +124,7 @@ const ManageLanguages = () => {
           variant={active === "languages" ? "filled" : "outline"}
           onClick={() => {
             onClicTab("languages");
-            setSelectedLang({value: "en",
-    label: "English",})
+            setSelectedLang({ value: "en", label: "English" });
           }}
         >
           Languages
@@ -129,10 +137,10 @@ const ManageLanguages = () => {
             value={selectedLang ? selectedLang.value : null}
             onChange={(_value, option) => {
               setSelectedLang(option);
-              if(option !== null){
+              if (option !== null) {
                 loadJSON(active, option.value);
-              }else{
-                setValue("")
+              } else {
+                setValue("");
               }
             }}
           />
