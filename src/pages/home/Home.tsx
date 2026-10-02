@@ -50,8 +50,8 @@ import { COGNITO_LOGIN_URL } from "../../config/cognito";
 import { useTranslation } from "../../store/language/language.store";
 import { ManageVideosService } from "../../api/services/manage.videos.service";
 import introVideoSrc from "../../assets/intro.mp4";
-
 import logo from "../../assets/logo.png";
+
 const HOME_INTRO_PAGE_NAME = "homepage-intro";
 
 export default function Home() {
@@ -287,7 +287,10 @@ export default function Home() {
               <UnstyledButton
                 onClick={openIntroVideo}
                 className={classes.introVideoBtn}
-                aria-label={"Watch intro video"}
+                aria-label={translation(
+                  "home-page.ariaWatchIntro",
+                  "Watch intro video",
+                )}
                 disabled={introVideoLoading}
               >
                 <IconPlayerPlayFilled size={16} />
@@ -346,7 +349,7 @@ export default function Home() {
           <Title order={2} className={classes.sectionTitle} mb="md">
             {translation(
               "home-page.txtHierarchicalTitle2",
-              "World’s first hierarchical messenger",
+              "World's first hierarchical messenger",
             )}
           </Title>
           <Text c="dimmed" size="lg" maw={640} mb="xl">
@@ -394,7 +397,7 @@ export default function Home() {
               >
                 {translation(
                   "home-page.listItem3b",
-                  "Comprehensive search and reporting tools available to monitor every account in your hierarchy.",
+                  "Comprehensive search and reporting tools to monitor every account in your hierarchy.",
                 )}
               </List.Item>
               <List.Item
@@ -453,7 +456,7 @@ export default function Home() {
                 <Text size="sm" c="dimmed">
                   {translation(
                     "home-page.unlimitedDesc2",
-                    "Currently, only certain countries (Ukraine, Moldova and Romania) are available for phone-number-based accounts, and any reported abuse will result in account suspension as per applicable laws.",
+                    "Phone-number-based accounts are currently available only in Ukraine, Moldova and Romania. Any reported abuse will result in account suspension in accordance with applicable laws.",
                   )}
                 </Text>
               </div>
@@ -490,13 +493,13 @@ export default function Home() {
                 <Text size="sm" c="dimmed" mb="sm">
                   {translation(
                     "home-page.aiDesc1",
-                    "Lock individual messages using a passkey to restrict access only to authorized AI agents (bots). This allows you to securely use AI tools (bots) while, at the same time, selectively restricting their access to your message contents.",
+                    "Lock individual messages with a passkey so that only authorized AI agents (bots) can access them. This lets you use AI tools securely while selectively restricting their access to your message contents.",
                   )}
                 </Text>
                 <Text size="sm" c="dimmed">
                   {translation(
                     "home-page.aiDesc2",
-                    "The AI agent can read your tags, but it cannot open and read your messages (when the categorical keyring feature is properly used).",
+                    "An AI agent can read your tags, but it cannot open and read your messages (when the categorical keyring feature is used properly).",
                   )}
                 </Text>
               </div>
@@ -722,9 +725,12 @@ export default function Home() {
         </SimpleGrid>
       </Container>
 
-      {/* ───────────── 4. COMMUNICATE WITHOUT PHONE OR EMAIL ───────────── */}
+      {/* ───────────── 4. KEY FEATURES ───────────── */}
       <div className={classes.altSection}>
         <Container size="lg">
+          <Title order={2} className={classes.sectionTitle} mb="xl">
+            {translation("home-page.txtKeyFeaturesTitle", "Key Features")}
+          </Title>
           <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="xl">
             <Card
               withBorder
@@ -777,7 +783,7 @@ export default function Home() {
               <Text size="sm" c="dimmed">
                 {translation(
                   "home-page.card2_desc2",
-                  "Unlike other messengers, your accounts aren't locked to a specific device. You have complete, secure access to all your data at all times. You can download all your data on a PC at any time.",
+                  "Unlike other messengers, your accounts aren't locked to a specific device. You have complete, secure access to all your data at all times, and you can download it all on a PC whenever you want.",
                 )}
               </Text>
             </Card>
@@ -805,7 +811,7 @@ export default function Home() {
               <Text size="sm" c="dimmed">
                 {translation(
                   "home-page.card3_desc2",
-                  "Every message is end-to-end encrypted. Zero tracking, zero monitoring — and we never sell your data, because we don't have access to it. We don’t use sockets to connect to your device to protect your privacy and security.",
+                  "Every message is end-to-end encrypted. Zero tracking, zero monitoring — and we never sell your data, because we don't have access to it. We don't use sockets to connect to your device, to protect your privacy and security.",
                 )}
               </Text>
             </Card>
