@@ -769,17 +769,6 @@ export default function Accounts() {
       await logout();
     } catch (err) {
       console.error("Logout request failed:", err);
-      notifications.show({
-        color: "red",
-        title: translation(
-          "accounts_page.ntfyLogoutIssueTitle",
-          "Logout issue",
-        ),
-        message: translation(
-          "accounts_page.ntfyLogoutIssueMsg",
-          "You've been signed out locally, but the server logout failed.",
-        ),
-      });
     } finally {
       clearTokens();
       ClearStore();
