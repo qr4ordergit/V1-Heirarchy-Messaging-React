@@ -823,11 +823,11 @@ const Profile = () => {
                         <Text fw={600} size="sm" className="text-gray-900">
                           {translation("profile.txtTagList", "Tags List")}
                         </Text>
-                        <Text size="xs" c="dimmed">
+                        {/* <Text size="xs" c="dimmed">
                           {tagsList.length}{" "}
                           {tagsList.length === 1 ? "tag" : "tags"}{" "}
                           {translation("profile.txtConfigured", "configured")}
-                        </Text>
+                        </Text> */}
                       </div>
                     </Group>
                     {tagsOpen ? (
@@ -971,7 +971,7 @@ const Profile = () => {
                             "Keyring List",
                           )}
                         </Text>
-                        <Text size="xs" c="dimmed">
+                        {/* <Text size="xs" c="dimmed">
                           {keyrings.length}{" "}
                           {keyrings.length === 1
                             ? translation("profile.txtCategory", "category")
@@ -980,7 +980,7 @@ const Profile = () => {
                                 "categories",
                               )}{" "}
                           {translation("profile.txtConfigured", "configured")}
-                        </Text>
+                        </Text> */}
                       </div>
                     </Group>
                     {keyringOpen ? (

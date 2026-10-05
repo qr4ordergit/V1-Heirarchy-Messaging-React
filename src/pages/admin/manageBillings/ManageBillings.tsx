@@ -12,8 +12,10 @@ import {
   ScrollArea,
   SimpleGrid,
   Stack,
+  Switch,
   Text,
   TextInput,
+  Textarea,
   ThemeIcon,
   Title,
   Tooltip,
@@ -23,6 +25,7 @@ import {
   IconArrowLeftRight,
   IconArrowRight,
   IconCheck,
+  IconCurrencyDollar,
   IconDatabase,
   IconEdit,
   IconMail,
@@ -32,64 +35,16 @@ import {
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useTranslation } from "../../../store/language/language.store";
-import { api } from "../../../api/axios";
-import { API_ENDPOINTS } from "../../../utils/constant";
-import { handleApiError } from "../../../utils/errorHandler";
-
-export interface PricingRule {
-  pricing_id: string;
-  pricing_type: string;
-  version: number;
-  status: string;
-  currency: string;
-  chat_accounts: {
-    free_quantity: number;
-    price_per_unit: string | number;
-  };
-  storage: {
-    free_bytes: number;
-    price_per_gb: string | number;
-  };
-  effective_from: string | null;
-  effective_until: string | null;
-  updated_at: string;
-}
-
-export interface UserDetails {
-  user_id: string;
-  email?: string;
-  status?: string;
-  username?: string;
-}
-
-export interface DefaultUserItem {
-  user_id: UserDetails | string;
-}
-
-export interface DefaultTierGroup {
-  pricing: PricingRule;
-  users: {
-    total: number;
-    items: DefaultUserItem[];
-    next_cursor: string | null;
-  };
-}
-
-export interface CustomTierItem {
-  user_id: string;
-  email?: string;
-  status?: string;
-  username?: string;
-  pricing: PricingRule;
-}
-
-export interface AdminPricingResponse {
-  message: string;
-  details: {
-    default: DefaultTierGroup;
-    custom: CustomTierItem[];
-  };
-}
+import {
+  type AdminUserItem,
+  type CustomTierItem,
+  type DefaultTierGroup,
+  type UpdatePricingPayload,
+  getAdminPricingDataApi,
+  patchPricingTierRatesApi,
+  reassignUserTierApi,
+  toggleUserStatusApi,
+} from "../../../api/manageBillingApi";
 
 const formatBytesToGb = (bytes: number): number => {
   return parseFloat((bytes / (1024 * 1024 * 1024)).toFixed(2));
@@ -97,26 +52,6 @@ const formatBytesToGb = (bytes: number): number => {
 
 const gbToBytes = (gb: number): number => {
   return Math.round(gb * 1024 * 1024 * 1024);
-};
-
-// Extracts standardized fields whether user_id is a nested object or a plain string
-const normalizeUser = (
-  raw: DefaultUserItem | CustomTierItem,
-): { user_id: string; email?: string; status?: string; username?: string } => {
-  if (typeof raw.user_id === "object" && raw.user_id !== null) {
-    return {
-      user_id: raw.user_id.user_id,
-      email: raw.user_id.email,
-      status: raw.user_id.status,
-      username: raw.user_id.username,
-    };
-  }
-  return {
-    user_id: raw.user_id as string,
-    email: (raw as CustomTierItem).email,
-    status: (raw as CustomTierItem).status,
-    username: (raw as CustomTierItem).username,
-  };
 };
 
 export default function ManageBillings() {
@@ -134,40 +69,41 @@ export default function ManageBillings() {
     "edit_default" | "edit_custom" | "move_to_custom"
   >("edit_default");
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
-  const [activePricingId, setActivePricingId] = useState<string>("");
+  const [activeTierVersion, setActiveTierVersion] = useState<number>(1);
 
   const [editFreeAccounts, setEditFreeAccounts] = useState<number>(0);
   const [editAccountPrice, setEditAccountPrice] = useState<number>(0);
   const [editFreeGb, setEditFreeGb] = useState<number>(0);
   const [editStoragePrice, setEditStoragePrice] = useState<number>(0);
+  const [changeReason, setChangeReason] = useState<string>("");
+  const [changeReasonError, setChangeReasonError] = useState<string | null>(
+    null,
+  );
+
   const [submittingRate, setSubmittingRate] = useState(false);
+  const [statusUpdatingUserId, setStatusUpdatingUserId] = useState<
+    string | null
+  >(null);
 
-  const fetchPricingData = async () => {
+  const loadData = async () => {
     setLoading(true);
-    try {
-      const endpoint = API_ENDPOINTS.ADMIN_PRICING || "/admin/pricing";
-      const res = await api.get<AdminPricingResponse>(endpoint);
-
-      if (res.data?.details) {
-        setDefaultTier(res.data.details.default);
-        setCustomTiers(res.data.details.custom || []);
-      }
-    } catch (error: any) {
-      handleApiError(error);
-    } finally {
-      setLoading(false);
+    const details = await getAdminPricingDataApi();
+    if (details) {
+      setDefaultTier(details.default);
+      setCustomTiers(details.custom || []);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
-    fetchPricingData();
+    loadData();
   }, []);
 
   const handleOpenEditDefault = () => {
     if (!defaultTier) return;
     setModalMode("edit_default");
-    setActivePricingId(defaultTier.pricing.pricing_id);
     setTargetUserId(null);
+    setActiveTierVersion(defaultTier.pricing.version);
 
     setEditFreeAccounts(defaultTier.pricing.chat_accounts.free_quantity);
     setEditAccountPrice(
@@ -175,13 +111,15 @@ export default function ManageBillings() {
     );
     setEditFreeGb(formatBytesToGb(defaultTier.pricing.storage.free_bytes));
     setEditStoragePrice(Number(defaultTier.pricing.storage.price_per_gb));
+    setChangeReason("");
+    setChangeReasonError(null);
     setRateModalOpened(true);
   };
 
   const handleOpenEditCustom = (customItem: CustomTierItem) => {
     setModalMode("edit_custom");
-    setActivePricingId(customItem.pricing.pricing_id);
     setTargetUserId(customItem.user_id);
+    setActiveTierVersion(customItem.pricing.version);
 
     setEditFreeAccounts(customItem.pricing.chat_accounts.free_quantity);
     setEditAccountPrice(
@@ -189,13 +127,15 @@ export default function ManageBillings() {
     );
     setEditFreeGb(formatBytesToGb(customItem.pricing.storage.free_bytes));
     setEditStoragePrice(Number(customItem.pricing.storage.price_per_gb));
+    setChangeReason("");
+    setChangeReasonError(null);
     setRateModalOpened(true);
   };
 
   const handleOpenMoveToCustom = (userId: string) => {
     setModalMode("move_to_custom");
     setTargetUserId(userId);
-    setActivePricingId(`custom#${userId}`);
+    setActiveTierVersion(defaultTier?.pricing?.version ?? 1);
 
     const basePricing = defaultTier?.pricing;
     setEditFreeAccounts(basePricing?.chat_accounts.free_quantity ?? 5);
@@ -204,78 +144,93 @@ export default function ManageBillings() {
       basePricing ? formatBytesToGb(basePricing.storage.free_bytes) : 5,
     );
     setEditStoragePrice(Number(basePricing?.storage.price_per_gb ?? 0.025));
+    setChangeReason("");
+    setChangeReasonError(null);
     setRateModalOpened(true);
   };
 
   const handleSaveRates = async () => {
-    setSubmittingRate(true);
-    const endpoint = API_ENDPOINTS.ADMIN_PRICING || "/admin/pricing";
+    if (!changeReason.trim()) {
+      setChangeReasonError(
+        translation(
+          "admin_billing.errorChangeReasonRequired",
+          "Please provide a reason for this rate change.",
+        ),
+      );
+      return;
+    }
 
-    const pricingPayload = {
+    setSubmittingRate(true);
+
+    const currencyCode = (defaultTier?.pricing?.currency || "USD")
+      .slice(0, 3)
+      .toUpperCase();
+
+    const commonRates = {
+      currency: currencyCode,
+      change_reason: changeReason.trim(),
+      expected_version: activeTierVersion,
       chat_accounts: {
-        free_quantity: editFreeAccounts,
-        price_per_unit: String(editAccountPrice),
+        free_quantity: Math.round(Number(editFreeAccounts) || 0),
+        price_per_unit: String(editAccountPrice ?? 0),
       },
       storage: {
-        free_bytes: gbToBytes(editFreeGb),
-        price_per_gb: String(editStoragePrice),
+        free_bytes: Math.round(gbToBytes(Number(editFreeGb) || 0)),
+        price_per_gb: String(editStoragePrice ?? 0),
       },
     };
 
-    try {
-      if (modalMode === "move_to_custom" && targetUserId) {
-        await api.post(`${endpoint}/reassign`, {
-          user_id: targetUserId,
-          target_tier: "custom",
-          pricing: pricingPayload,
-        });
+    let payload: UpdatePricingPayload;
 
-        notifications.show({
-          title: "",
-          message: translation(
-            "admin_billing.notiUserMovedSuccess",
-            "User moved to custom pricing tier successfully.",
-          ),
-          color: "green",
-          icon: <IconCheck size={16} />,
-        });
-      } else {
-        await api.put(endpoint, {
-          pricing_id: activePricingId,
-          user_id: targetUserId ?? undefined,
-          ...pricingPayload,
-        });
-
-        notifications.show({
-          title: "",
-          message: translation(
-            "admin_billing.notiPricingUpdated",
-            "Tier pricing configuration updated successfully.",
-          ),
-          color: "green",
-          icon: <IconCheck size={16} />,
-        });
+    if (modalMode === "edit_default") {
+      payload = {
+        pricing_type: "default",
+        ...commonRates,
+      };
+    } else {
+      if (!targetUserId) {
+        setSubmittingRate(false);
+        return;
       }
-
-      setRateModalOpened(false);
-      await fetchPricingData();
-    } catch (error: any) {
-      handleApiError(error);
-    } finally {
-      setSubmittingRate(false);
+      payload = {
+        pricing_type: "custom",
+        user_id: targetUserId,
+        ...commonRates,
+      };
     }
+
+    const success = await patchPricingTierRatesApi(payload);
+
+    if (success) {
+      notifications.show({
+        title: "",
+        message:
+          modalMode === "move_to_custom"
+            ? translation(
+                "admin_billing.notiUserMovedSuccess",
+                "User moved to custom pricing tier successfully.",
+              )
+            : translation(
+                "admin_billing.notiPricingUpdated",
+                "Tier pricing configuration updated successfully.",
+              ),
+        color: "green",
+        icon: <IconCheck size={16} />,
+      });
+      setRateModalOpened(false);
+      await loadData();
+    }
+
+    setSubmittingRate(false);
   };
 
   const handleReturnToDefault = async (userId: string) => {
-    try {
-      await api.post(
-        `${API_ENDPOINTS.ADMIN_PRICING || "/admin/pricing"}/reassign`,
-        {
-          user_id: userId,
-          target_tier: "default",
-        },
-      );
+    const success = await reassignUserTierApi({
+      user_id: userId,
+      target_tier: "default",
+    });
 
+    if (success) {
       notifications.show({
         title: "",
         message: translation(
@@ -285,10 +240,38 @@ export default function ManageBillings() {
         color: "green",
         icon: <IconCheck size={16} />,
       });
+      await loadData();
+    }
+  };
 
-      await fetchPricingData();
-    } catch (error: any) {
-      handleApiError(error);
+  const handleToggleUserStatus = async (user: AdminUserItem) => {
+    const isCurrentlyActive = user.status === "active";
+    const nextStatus: "active" | "inactive" = isCurrentlyActive
+      ? "inactive"
+      : "active";
+
+    setStatusUpdatingUserId(user.user_id);
+
+    const success = await toggleUserStatusApi(user.user_id, nextStatus);
+    setStatusUpdatingUserId(null);
+
+    if (success) {
+      notifications.show({
+        title: "",
+        message:
+          nextStatus === "active"
+            ? translation(
+                "admin_billing.notiUserActivated",
+                "User account has been activated successfully.",
+              )
+            : translation(
+                "admin_billing.notiUserDeactivated",
+                "User account has been deactivated successfully.",
+              ),
+        color: nextStatus === "active" ? "teal" : "gray",
+        icon: <IconCheck size={16} />,
+      });
+      await loadData();
     }
   };
 
@@ -296,84 +279,139 @@ export default function ManageBillings() {
     const items = defaultTier?.users.items || [];
     if (!defaultSearch.trim()) return items;
     const q = defaultSearch.toLowerCase();
-    return items.filter((item) => {
-      const u = normalizeUser(item);
-      return (
+    return items.filter(
+      (u) =>
         u.user_id.toLowerCase().includes(q) ||
         (u.email && u.email.toLowerCase().includes(q)) ||
-        (u.username && u.username.toLowerCase().includes(q))
-      );
-    });
+        (u.username && u.username.toLowerCase().includes(q)),
+    );
   }, [defaultTier, defaultSearch]);
 
   const filteredCustomUsers = useMemo(() => {
     if (!customSearch.trim()) return customTiers;
     const q = customSearch.toLowerCase();
-    return customTiers.filter((item) => {
-      return (
-        item.user_id.toLowerCase().includes(q) ||
-        (item.email && item.email.toLowerCase().includes(q)) ||
-        (item.username && item.username.toLowerCase().includes(q))
-      );
-    });
+    return customTiers.filter(
+      (c) =>
+        c.user_id.toLowerCase().includes(q) ||
+        (c.email && c.email.toLowerCase().includes(q)) ||
+        (c.username && c.username.toLowerCase().includes(q)),
+    );
   }, [customTiers, customSearch]);
 
-  const renderUserInfo = (user: {
-    user_id: string;
-    username?: string;
-    email?: string;
-    status?: string;
-  }) => (
-    <Group gap="xs" wrap="nowrap" align="center">
-      <ThemeIcon size={28} radius="xl" variant="light" color="gray">
-        <IconUser size={15} />
-      </ThemeIcon>
-      <div style={{ minWidth: 0 }}>
-        <Group gap="xs" wrap="nowrap" align="center">
-          {user.username && (
-            <Text size="xs" fw={700} c="dark" truncate>
-              {user.username}
-            </Text>
-          )}
-          <Text
-            size="xs"
-            fw={user.username ? 400 : 600}
-            className="font-mono text-gray-700"
-            truncate
+  const renderUserInfo = (user: AdminUserItem) => {
+    const isActive = user.status === "active";
+    const isUpdating = statusUpdatingUserId === user.user_id;
+
+    return (
+      <Group justify="space-between" align="center" wrap="nowrap" w="100%">
+        <Group gap="xs" wrap="nowrap" align="center" style={{ minWidth: 0 }}>
+          <ThemeIcon
+            size={30}
+            radius="xl"
+            variant="light"
+            color={isActive ? "indigo" : "gray"}
           >
-            {user.user_id}
-          </Text>
-          {user.status && (
-            <Badge
-              size="xs"
-              variant="dot"
-              color={user.status === "active" ? "teal" : "gray"}
-            >
-              {user.status}
-            </Badge>
-          )}
+            <IconUser size={16} />
+          </ThemeIcon>
+          <div style={{ minWidth: 0 }}>
+            <Group gap="xs" wrap="nowrap" align="center">
+              {user.username && (
+                <Text size="xs" fw={700} c="dark" truncate>
+                  {user.username}
+                </Text>
+              )}
+              <Text
+                size="xs"
+                fw={user.username ? 400 : 600}
+                className="font-mono text-gray-700"
+                truncate
+              >
+                {user.user_id}
+              </Text>
+              <Badge size="xs" variant="dot" color={isActive ? "teal" : "gray"}>
+                {user.status}
+              </Badge>
+            </Group>
+            {user.email && (
+              <Group gap={4} wrap="nowrap">
+                <IconMail size={12} className="text-gray-400 shrink-0" />
+                <Text size="xs" c="dimmed" truncate>
+                  {user.email}
+                </Text>
+              </Group>
+            )}
+          </div>
         </Group>
-        {user.email && (
-          <Group gap={4} wrap="nowrap">
-            <IconMail size={12} className="text-gray-400 shrink-0" />
-            <Text size="xs" c="dimmed" truncate>
-              {user.email}
-            </Text>
-          </Group>
-        )}
-      </div>
-    </Group>
-  );
+
+        <Tooltip
+          label={
+            isActive
+              ? translation(
+                  "admin_billing.ttDeactivateUser",
+                  "Click to deactivate user",
+                )
+              : translation(
+                  "admin_billing.ttActivateUser",
+                  "Click to activate user",
+                )
+          }
+          withArrow
+          position="left"
+        >
+          <span
+            style={{
+              display: "inline-flex",
+              cursor: isUpdating ? "not-allowed" : "pointer",
+            }}
+          >
+            <Switch
+              size="xs"
+              color="teal"
+              checked={isActive}
+              disabled={isUpdating}
+              onChange={() => handleToggleUserStatus(user)}
+              style={{ pointerEvents: isUpdating ? "none" : undefined }}
+            />
+          </span>
+        </Tooltip>
+      </Group>
+    );
+  };
+
+  const renderEstimateBadges = (estimate?: AdminUserItem["estimate"]) => {
+    if (!estimate) return null;
+    return (
+      <Group gap={6} wrap="wrap">
+        <Badge
+          size="xs"
+          variant="light"
+          color="indigo"
+          leftSection={<IconCurrencyDollar size={11} />}
+        >
+          {translation("admin_billing.txtTotal", "Total")}: $
+          {estimate.cost.total}
+        </Badge>
+        <Badge size="xs" variant="outline" color="gray">
+          {translation("admin_billing.txtAccountsTotal", "Accounts")}: $
+          {estimate.cost.chat_accounts}
+        </Badge>
+        <Badge size="xs" variant="outline" color="gray">
+          {translation("admin_billing.txtStorageTotal", "Storage")}: $
+          {estimate.cost.storage}
+        </Badge>
+      </Group>
+    );
+  };
 
   return (
-    <div className="w-full">
+    <div className="w-full relative" style={{ minHeight: 400 }}>
       <LoadingOverlay
         visible={loading}
         zIndex={10}
         overlayProps={{ radius: "sm", blur: 1 }}
         loaderProps={{ color: "indigo", type: "dots" }}
       />
-      {/* Header */}
+
       <Stack gap={4} mb="xl">
         <Title order={3} style={{ letterSpacing: "-0.5px" }}>
           {translation(
@@ -384,7 +422,7 @@ export default function ManageBillings() {
         <Text size="sm" c="dimmed">
           {translation(
             "admin_billing.subtitlePage",
-            "Configure default allowances, customize tier pricing rules, and allocate user assignments.",
+            "Configure default allowances, customize tier pricing rules, and manage user assignments and status.",
           )}
         </Text>
       </Stack>
@@ -440,18 +478,29 @@ export default function ManageBillings() {
                       <IconMessages size={14} />
                     </ThemeIcon>
                     <Text size="xs" fw={700}>
-                      Chat Accounts
+                      {translation(
+                        "admin_billing.txtChatAccounts",
+                        "Chat Accounts",
+                      )}
                     </Text>
                   </Group>
                   <Text size="xs" c="dimmed">
-                    Free Quantity:{" "}
+                    {translation(
+                      "admin_billing.txtFreeQuantity",
+                      "Free Quantity",
+                    )}
+                    :{" "}
                     <b className="text-gray-900">
                       {defaultTier.pricing.chat_accounts.free_quantity}{" "}
                       {translation("admin_billing.txtAccounts", "accounts")}
                     </b>
                   </Text>
                   <Text size="xs" c="dimmed">
-                    Rate per extra unit:{" "}
+                    {translation(
+                      "admin_billing.txtRatePerExtraUnit",
+                      "Rate per extra unit",
+                    )}
+                    :{" "}
                     <b className="text-gray-900">
                       ${defaultTier.pricing.chat_accounts.price_per_unit} /mo
                     </b>
@@ -476,14 +525,22 @@ export default function ManageBillings() {
                     </Text>
                   </Group>
                   <Text size="xs" c="dimmed">
-                    Free Storage:{" "}
+                    {translation(
+                      "admin_billing.txtFreeStorage",
+                      "Free Storage",
+                    )}
+                    :{" "}
                     <b className="text-gray-900">
                       {formatBytesToGb(defaultTier.pricing.storage.free_bytes)}{" "}
                       GB
                     </b>
                   </Text>
                   <Text size="xs" c="dimmed">
-                    Rate per extra GB:{" "}
+                    {translation(
+                      "admin_billing.txtRatePerExtraGB",
+                      "Rate per extra GB",
+                    )}
+                    :{" "}
                     <b className="text-gray-900">
                       ${defaultTier.pricing.storage.price_per_gb} /GB
                     </b>
@@ -494,7 +551,9 @@ export default function ManageBillings() {
           </Card>
         )}
 
+        {/* SIDE-BY-SIDE USER LISTS */}
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+          {/* DEFAULT PLAN USERS */}
           <Card
             withBorder
             radius="lg"
@@ -539,21 +598,22 @@ export default function ManageBillings() {
 
               <Divider />
 
-              <ScrollArea.Autosize mah={520} offsetScrollbars>
+              <ScrollArea.Autosize mah={540} offsetScrollbars>
                 <Stack gap="xs">
                   {filteredDefaultUsers.length > 0 ? (
-                    filteredDefaultUsers.map((item) => {
-                      const u = normalizeUser(item);
-                      return (
-                        <Paper
-                          key={u.user_id}
-                          p="xs"
-                          radius="md"
-                          withBorder
-                          bg="gray.0"
-                          className="flex items-center justify-between hover:bg-gray-100 transition-colors"
-                        >
-                          {renderUserInfo(u)}
+                    filteredDefaultUsers.map((u) => (
+                      <Paper
+                        key={u.user_id}
+                        p="xs"
+                        radius="md"
+                        withBorder
+                        bg="gray.0"
+                        className="flex flex-col gap-2 hover:bg-gray-100 transition-colors"
+                      >
+                        {renderUserInfo(u)}
+
+                        <Group justify="space-between" align="center" pt={2}>
+                          {renderEstimateBadges(u.estimate)}
 
                           <Tooltip
                             label={translation(
@@ -575,9 +635,9 @@ export default function ManageBillings() {
                               )}
                             </Button>
                           </Tooltip>
-                        </Paper>
-                      );
-                    })
+                        </Group>
+                      </Paper>
+                    ))
                   ) : (
                     <Text size="xs" c="dimmed" ta="center" py="xl">
                       {translation(
@@ -591,7 +651,7 @@ export default function ManageBillings() {
             </Stack>
           </Card>
 
-          {/* RIGHT: CUSTOM PLAN USERS */}
+          {/* CUSTOM PLAN USERS */}
           <Card
             withBorder
             radius="lg"
@@ -631,7 +691,7 @@ export default function ManageBillings() {
 
               <Divider />
 
-              <ScrollArea.Autosize mah={520} offsetScrollbars>
+              <ScrollArea.Autosize mah={540} offsetScrollbars>
                 <Stack gap="xs">
                   {filteredCustomUsers.length > 0 ? (
                     filteredCustomUsers.map((u) => (
@@ -643,8 +703,29 @@ export default function ManageBillings() {
                         bg="cyan.0"
                         className="flex flex-col gap-2 hover:bg-cyan-100/50 transition-colors"
                       >
-                        <Group justify="space-between" align="center">
-                          {renderUserInfo(u)}
+                        {renderUserInfo(u)}
+
+                        <Group gap={6}>
+                          <Badge size="xs" variant="outline" color="cyan">
+                            {translation(
+                              "admin_billing.txtAccounts",
+                              "Accounts",
+                            )}
+                            : {u.pricing.chat_accounts.free_quantity}{" "}
+                            {translation("admin_billing.txtFree", "free")} ($
+                            {u.pricing.chat_accounts.price_per_unit}
+                            /unit)
+                          </Badge>
+                          <Badge size="xs" variant="outline" color="teal">
+                            {translation("admin_billing.txtStorage", "Storage")}
+                            : {formatBytesToGb(u.pricing.storage.free_bytes)} GB
+                            {translation("admin_billing.txtFree", "free")} ($
+                            {u.pricing.storage.price_per_gb}/GB)
+                          </Badge>
+                        </Group>
+
+                        <Group justify="space-between" align="center" pt={2}>
+                          {renderEstimateBadges(u.estimate)}
 
                           <Group gap="xs">
                             <Tooltip
@@ -690,21 +771,6 @@ export default function ManageBillings() {
                             </Tooltip>
                           </Group>
                         </Group>
-
-                        {/* Custom rates chips */}
-                        <Group gap={6}>
-                          <Badge size="xs" variant="outline" color="cyan">
-                            Accounts: {u.pricing.chat_accounts.free_quantity}{" "}
-                            {translation("admin_billing.txtFree", "free")} ($
-                            {u.pricing.chat_accounts.price_per_unit}/unit)
-                          </Badge>
-                          <Badge size="xs" variant="outline" color="teal">
-                            {translation("admin_billing.txtStorage", "Storage")}
-                            : {formatBytesToGb(u.pricing.storage.free_bytes)} GB
-                            {translation("admin_billing.txtFree", "free")} ($
-                            {u.pricing.storage.price_per_gb}/GB)
-                          </Badge>
-                        </Group>
                       </Paper>
                     ))
                   ) : (
@@ -736,11 +802,11 @@ export default function ManageBillings() {
               : modalMode === "move_to_custom"
                 ? translation(
                     "admin_billing.titleMoveToCustom",
-                    `Set Custom Rates for `,
+                    "Set Custom Rates for ",
                   ) + (targetUserId || "")
                 : translation(
                     "admin_billing.titleEditCustomRates",
-                    `Edit Custom Rates: `,
+                    "Edit Custom Rates: ",
                   ) + (targetUserId || "")}
           </Text>
         }
@@ -829,6 +895,32 @@ export default function ManageBillings() {
               onChange={(val) => setEditStoragePrice(Number(val) || 0)}
             />
           </SimpleGrid>
+
+          <Divider label="Audit & Reason" labelPosition="left" />
+
+          <Textarea
+            label={translation(
+              "admin_billing.labelChangeReason",
+              "Change Reason",
+            )}
+            description={translation(
+              "admin_billing.descriptionChangeReason",
+              "Briefly explain why this rate change is being made",
+            )}
+            placeholder={translation(
+              "admin_billing.placeholderChangeReason",
+              "e.g., Annual plan adjustment, Promotional deal, Tier renegotiation...",
+            )}
+            size="xs"
+            rows={3}
+            withAsterisk
+            value={changeReason}
+            error={changeReasonError}
+            onChange={(e) => {
+              setChangeReason(e.currentTarget.value);
+              if (changeReasonError) setChangeReasonError(null);
+            }}
+          />
 
           <Group justify="flex-end" gap="xs" mt="lg">
             <Button

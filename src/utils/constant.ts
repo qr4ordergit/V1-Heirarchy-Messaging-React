@@ -9,7 +9,7 @@ dayjs.extend(timezone);
 export const API_BASE_URL =
   "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev/api";
 export const API_BASE_URL2 =
-  "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev";
+  "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev/admin";
 
 export const SKIN_LANGUAGE_URL =
   "https://messaging-service-media.s3.ap-south-1.amazonaws.com/skin-languages/messagingApp_skinLanguage_web.txt";
@@ -40,7 +40,9 @@ export const API_ENDPOINTS = {
   KEYRING_CATEGORIES: `${API_BASE_URL}/keyring-categories`,
   USAGE: `${API_BASE_URL}/usage`,
   ESTIMATE: `${API_BASE_URL}/estimate`,
-  ADMIN_PRICING: `${API_BASE_URL2}/admin/pricing`,
+  ADMIN_PRICING: `${API_BASE_URL2}/pricing`,
+  ACTIVATE_USER: `${API_BASE_URL2}/activate`,
+  DEACTIVATE_USER: `${API_BASE_URL2}/deactivate`,
 } as const;
 
 const avatarColors = [
@@ -147,8 +149,8 @@ const COMMON_PERMISSION = {
     delete: false,
   },
   "media-encryption": {
-      "active": true
-    },
+    active: true,
+  },
   contacts: {
     read: false,
     create: false,
