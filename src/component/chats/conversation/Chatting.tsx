@@ -200,7 +200,7 @@ export default function Chatting() {
         behavior: "smooth",
       });
     }
-  }, [messages, fetchLoader]);
+  }, [messages.length, fetchLoader]);
 
   useEffect(() => {
     triggerHandler();

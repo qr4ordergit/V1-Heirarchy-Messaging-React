@@ -74,7 +74,7 @@ function SchedularsPreviewModal() {
           {messages.length > 0 ? (
             messages.map((msg) => <ScheduledMsgCard key={msg._id} msg={msg} />)
           ) : (
-            <div>
+            <div className="text-red-500">
               {translation(
                 "chat_history.modal-schedule-empty",
                 "No scheduled messages found",

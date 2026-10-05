@@ -11,20 +11,19 @@ import { useAuthStore } from "../../../store/auth/auth.store";
 import { useParams } from "react-router";
 import { ENDPOINTS } from "../../../api/endpoints";
 import { useTagStore } from "../../../store/tags/tags.store";
-import { useDMListStore } from "../../../store/dm/dm.list.store";
-import { useGroupListStore } from "../../../store/groups/group.list.store";
 import ChatModalsProvider from "./modals/ChatModalsProvider";
 import { getApiErrorMessage } from "../../../api/getApiErrorMessage";
 import { Notification } from "../../../utils/notification";
+import dayjs from "dayjs";
+import { useChatStore } from "../../../store/chats/chats.store";
 
 function Conversation() {
   const { trigger } = useTriggerStore((state) => state);
-  const { storeContacts } = useContactStore((state) => state);
+  const { storeContacts, contacts } = useContactStore((state) => state);
   const { target_user } = useAuthStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
   const { storeCategoryTags } = useTagStore((state) => state);
-  const { dms } = useDMListStore((state) => state);
-  const { groups } = useGroupListStore((state) => state);
+  const { current_chat } = useChatStore((state) => state);
 
   const fetchTagsList = async () => {
     try {
@@ -63,6 +62,7 @@ function Conversation() {
   };
 
   const fetchContacts = async () => {
+    if (contacts.length > 0) return;
     try {
       const response = await api.get(withTargetUser(API_ENDPOINTS.CONTACTS));
 
@@ -75,32 +75,14 @@ function Conversation() {
   };
 
   const disappearingMsgModeChecker = () => {
-    if (!chatId) return false;
-
-    if (chatId.includes("group")) {
-      const group = groups.find(
-        (userDoc) => userDoc._id === decodeURIComponent(chatId),
-      );
-
-      if (group?.disappearing_messages?.enabled) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-
-    const chat = dms.find(
-      (userDoc) => userDoc._id === decodeURIComponent(chatId),
-    );
-
-    if (chat?.disappearing_messages?.enabled) {
+    if (current_chat?.disappearing_messages?.enabled) {
       return true;
     } else {
       return false;
     }
   };
 
-  const disappearingMode = useMemo(disappearingMsgModeChecker, [dms, groups]);
+  const disappearingMode = useMemo(disappearingMsgModeChecker, [current_chat]);
 
   useEffect(() => {
     fetchContacts();
@@ -119,7 +101,11 @@ function Conversation() {
               <Navbar />
               {disappearingMode && (
                 <div className="text-center text-gray-400 text-[12px]">
-                  Disappearing messages mode enabled
+                  Disappearing messages mode enabled on{" "}
+                  {dayjs
+                    .utc(current_chat.disappearing_messages?.updated_at)
+                    .local()
+                    .format("DD MMM YYYY")}
                 </div>
               )}
               <div className="flex-1 min-h-0">

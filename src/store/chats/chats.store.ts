@@ -38,8 +38,9 @@ interface CURRENT_CHAT {
     media_encryption?: boolean,
     profile_url?: string | null,
     disappearing_messages?: {
-        duration: number,
-        enabled: boolean,
+        duration?: number,
+        enabled?: boolean,
+        updated_at?: string
     } | null
     display_name?: string,
     admins?: string[],

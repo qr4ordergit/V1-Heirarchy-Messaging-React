@@ -80,6 +80,14 @@ function Navbar() {
 
       return allow;
     },
+    allowExport() {
+      let allow = true;
+      if (isGroup && !isAdmin) {
+        allow = false;
+      }
+
+      return allow;
+    },
   };
 
   const dataAssigner = () => {
@@ -355,12 +363,14 @@ function Navbar() {
                   "Scheduled Messages List",
                 )}
               </Menu.Item>
-              <Menu.Item
-                onClick={onExportChat}
-                leftSection={<IconProgressDown size={14} />}
-              >
-                {translation("chat_history.NAV-export", "Export chat")}
-              </Menu.Item>
+              {conditionalRenderer.allowExport() && (
+                <Menu.Item
+                  onClick={onExportChat}
+                  leftSection={<IconProgressDown size={14} />}
+                >
+                  {translation("chat_history.NAV-export", "Export chat")}
+                </Menu.Item>
+              )}
             </Menu.Dropdown>
           </Menu>
         </div>
