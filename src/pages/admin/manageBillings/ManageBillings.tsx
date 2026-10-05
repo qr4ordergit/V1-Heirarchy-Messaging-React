@@ -85,6 +85,11 @@ export default function ManageBillings() {
     string | null
   >(null);
 
+  const [confirmModalOpened, setConfirmModalOpened] = useState(false);
+  const [targetStatusUser, setTargetStatusUser] =
+    useState<AdminUserItem | null>(null);
+  const [statusConfirmText, setStatusConfirmText] = useState("");
+
   const loadData = async () => {
     setLoading(true);
     const details = await getAdminPricingDataApi();
@@ -244,6 +249,27 @@ export default function ManageBillings() {
     }
   };
 
+  const handlePromptToggleStatus = (user: AdminUserItem) => {
+    setTargetStatusUser(user);
+    setStatusConfirmText("");
+    setConfirmModalOpened(true);
+  };
+
+  const expectedActionWord =
+    targetStatusUser?.status === "active" ? "deactivate" : "activate";
+
+  const handleConfirmStatusChange = async () => {
+    if (!targetStatusUser) return;
+    if (statusConfirmText.trim().toLowerCase() !== expectedActionWord) return;
+
+    const userToUpdate = targetStatusUser;
+    setConfirmModalOpened(false);
+    setTargetStatusUser(null);
+    setStatusConfirmText("");
+
+    await handleToggleUserStatus(userToUpdate);
+  };
+
   const handleToggleUserStatus = async (user: AdminUserItem) => {
     const isCurrentlyActive = user.status === "active";
     const previousStatus = user.status;
@@ -255,24 +281,6 @@ export default function ManageBillings() {
       items.map((u) =>
         u.user_id === user.user_id ? { ...u, status: nextStatus } : u,
       );
-
-    setDefaultTier((prev) =>
-      prev
-        ? {
-            ...prev,
-            users: {
-              ...prev.users,
-              items: updateUserList(prev.users.items),
-            },
-          }
-        : prev,
-    );
-
-    setCustomTiers((prev) =>
-      prev.map((u) =>
-        u.user_id === user.user_id ? { ...u, status: nextStatus } : u,
-      ),
-    );
 
     setStatusUpdatingUserId(user.user_id);
 
@@ -292,9 +300,26 @@ export default function ManageBillings() {
                 "admin_billing.notiUserDeactivated",
                 "User account has been deactivated successfully.",
               ),
-        color: nextStatus === "active" ? "teal" : "gray",
+        color: nextStatus === "active" ? "teal" : "red",
         icon: <IconCheck size={16} />,
       });
+      setDefaultTier((prev) =>
+        prev
+          ? {
+              ...prev,
+              users: {
+                ...prev.users,
+                items: updateUserList(prev.users.items),
+              },
+            }
+          : prev,
+      );
+
+      setCustomTiers((prev) =>
+        prev.map((u) =>
+          u.user_id === user.user_id ? { ...u, status: nextStatus } : u,
+        ),
+      );
     } else {
       const rollbackList = (items: AdminUserItem[]) =>
         items.map((u) =>
@@ -374,7 +399,7 @@ export default function ManageBillings() {
               >
                 {user.user_id}
               </Text>
-              <Badge size="xs" variant="dot" color={isActive ? "teal" : "gray"}>
+              <Badge size="xs" variant="dot" color={isActive ? "teal" : "red"}>
                 {user.status}
               </Badge>
             </Group>
@@ -415,8 +440,18 @@ export default function ManageBillings() {
               color="teal"
               checked={isActive}
               disabled={isUpdating}
-              onChange={() => handleToggleUserStatus(user)}
+              onChange={() => handlePromptToggleStatus(user)}
               style={{ pointerEvents: isUpdating ? "none" : undefined }}
+              styles={{
+                track: {
+                  backgroundColor: !isActive
+                    ? "var(--mantine-color-red-6)"
+                    : undefined,
+                  borderColor: !isActive
+                    ? "var(--mantine-color-red-7)"
+                    : undefined,
+                },
+              }}
             />
           </span>
         </Tooltip>
@@ -988,6 +1023,126 @@ export default function ManageBillings() {
                     "Move & Apply Custom Rates",
                   )
                 : translation("admin_billing.buttonSaveRates", "Save Rates")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* CONFIRMATION POPUP FOR STATUS CHANGE */}
+      <Modal
+        opened={confirmModalOpened}
+        onClose={() => {
+          setConfirmModalOpened(false);
+          setTargetStatusUser(null);
+          setStatusConfirmText("");
+        }}
+        title={
+          <Text fw={700} size="md">
+            {expectedActionWord === "deactivate"
+              ? translation(
+                  "admin_billing.titleConfirmDeactivate",
+                  "Confirm User Deactivation",
+                )
+              : translation(
+                  "admin_billing.titleConfirmActivate",
+                  "Confirm User Activation",
+                )}
+          </Text>
+        }
+        centered
+        radius="md"
+        size="sm"
+      >
+        <Stack gap="sm">
+          <Text size="sm">
+            {expectedActionWord === "deactivate"
+              ? translation(
+                  "admin_billing.msgConfirmDeactivate",
+                  "Are you sure you want to deactivate this account? The user will temporarily lose access.",
+                )
+              : translation(
+                  "admin_billing.msgConfirmActivate",
+                  "Are you sure you want to activate this account? The user will regain access immediately.",
+                )}
+          </Text>
+
+          <Paper p="xs" bg="gray.1" radius="sm">
+            <Text size="xs" c="dimmed">
+              {translation("admin_billing.labelTargetUser", "Target user:")}{" "}
+              <b className="text-gray-900 font-mono">
+                {targetStatusUser?.username
+                  ? `${targetStatusUser.username} (${targetStatusUser.user_id})`
+                  : targetStatusUser?.user_id}
+              </b>
+            </Text>
+          </Paper>
+
+          <Text size="xs" c="dimmed" mt={4}>
+            {translation(
+              "admin_billing.txtTypeToConfirm",
+              "To confirm, please type",
+            )}{" "}
+            <span
+              style={{
+                fontFamily: "monospace",
+                fontWeight: 700,
+                color:
+                  expectedActionWord === "deactivate"
+                    ? "var(--mantine-color-red-7)"
+                    : "var(--mantine-color-teal-7)",
+              }}
+            >
+              {expectedActionWord}
+            </span>{" "}
+            {translation("admin_billing.txtBelow", "below:")}
+          </Text>
+
+          <TextInput
+            size="xs"
+            placeholder={expectedActionWord}
+            value={statusConfirmText}
+            onChange={(e) => setStatusConfirmText(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (
+                e.key === "Enter" &&
+                statusConfirmText.trim().toLowerCase() === expectedActionWord
+              ) {
+                handleConfirmStatusChange();
+              }
+            }}
+            autoFocus
+          />
+
+          <Group justify="flex-end" gap="xs" mt="md">
+            <Button
+              variant="default"
+              size="xs"
+              onClick={() => {
+                setConfirmModalOpened(false);
+                setTargetStatusUser(null);
+                setStatusConfirmText("");
+              }}
+            >
+              {translation("admin_billing.buttonCancel", "Cancel")}
+            </Button>
+
+            <Button
+              size="xs"
+              color={expectedActionWord === "deactivate" ? "red" : "teal"}
+              disabled={
+                statusConfirmText.trim().toLowerCase() !== expectedActionWord
+              }
+              onClick={handleConfirmStatusChange}
+            >
+              {expectedActionWord === "deactivate"
+                ? translation(
+                    "admin_billing.btnConfirmDeactivate",
+                    "Deactivate User",
+                  )
+                : translation(
+                    "admin_billing.btnConfirmActivate",
+                    "Activate User",
+                  )}
             </Button>
           </Group>
         </Stack>
