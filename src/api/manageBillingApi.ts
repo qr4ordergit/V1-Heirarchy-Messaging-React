@@ -48,7 +48,7 @@ export interface UserEstimate {
 export interface AdminUserItem {
   user_id: string;
   email?: string;
-  status: "active" | "inactive" | string;
+  status: "active" | "deactive" | string;
   username?: string;
   estimate?: UserEstimate;
 }
@@ -178,7 +178,7 @@ export const deactivateUserApi = async (
 
 export const toggleUserStatusApi = async (
   hubUserId: string,
-  targetStatus: "active" | "inactive",
+  targetStatus: "active" | "deactive",
 ): Promise<boolean> => {
   if (targetStatus === "active") {
     return activateUserApi(hubUserId);

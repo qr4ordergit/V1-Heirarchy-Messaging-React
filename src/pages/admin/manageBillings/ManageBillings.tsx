@@ -246,8 +246,8 @@ export default function ManageBillings() {
 
   const handleToggleUserStatus = async (user: AdminUserItem) => {
     const isCurrentlyActive = user.status === "active";
-    const nextStatus: "active" | "inactive" = isCurrentlyActive
-      ? "inactive"
+    const nextStatus: "active" | "deactive" = isCurrentlyActive
+      ? "deactive"
       : "active";
 
     setStatusUpdatingUserId(user.user_id);
