@@ -152,10 +152,10 @@ export const reassignUserTierApi = async (
 
 export const activateUserApi = async (hubUserId: string): Promise<boolean> => {
   try {
-    await api.patch(
+    const response = await api.patch(
       `${API_ENDPOINTS.ACTIVATE_USER}?hub=${encodeURIComponent(hubUserId)}`,
     );
-    return true;
+    return response.status === 200;
   } catch (error: any) {
     handleApiError(error, "admin_billing");
     return false;
@@ -166,10 +166,10 @@ export const deactivateUserApi = async (
   hubUserId: string,
 ): Promise<boolean> => {
   try {
-    await api.patch(
+    const response = await api.patch(
       `${API_ENDPOINTS.DEACTIVATE_USER}?hub=${encodeURIComponent(hubUserId)}`,
     );
-    return true;
+    return response.status === 200;
   } catch (error: any) {
     handleApiError(error, "admin_billing");
     return false;

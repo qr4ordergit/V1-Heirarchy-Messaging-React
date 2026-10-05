@@ -246,9 +246,33 @@ export default function ManageBillings() {
 
   const handleToggleUserStatus = async (user: AdminUserItem) => {
     const isCurrentlyActive = user.status === "active";
+    const previousStatus = user.status;
     const nextStatus: "active" | "deactive" = isCurrentlyActive
       ? "deactive"
       : "active";
+
+    const updateUserList = (items: AdminUserItem[]) =>
+      items.map((u) =>
+        u.user_id === user.user_id ? { ...u, status: nextStatus } : u,
+      );
+
+    setDefaultTier((prev) =>
+      prev
+        ? {
+            ...prev,
+            users: {
+              ...prev.users,
+              items: updateUserList(prev.users.items),
+            },
+          }
+        : prev,
+    );
+
+    setCustomTiers((prev) =>
+      prev.map((u) =>
+        u.user_id === user.user_id ? { ...u, status: nextStatus } : u,
+      ),
+    );
 
     setStatusUpdatingUserId(user.user_id);
 
@@ -271,7 +295,29 @@ export default function ManageBillings() {
         color: nextStatus === "active" ? "teal" : "gray",
         icon: <IconCheck size={16} />,
       });
-      await loadData();
+    } else {
+      const rollbackList = (items: AdminUserItem[]) =>
+        items.map((u) =>
+          u.user_id === user.user_id ? { ...u, status: previousStatus } : u,
+        );
+
+      setDefaultTier((prev) =>
+        prev
+          ? {
+              ...prev,
+              users: {
+                ...prev.users,
+                items: rollbackList(prev.users.items),
+              },
+            }
+          : prev,
+      );
+
+      setCustomTiers((prev) =>
+        prev.map((u) =>
+          u.user_id === user.user_id ? { ...u, status: previousStatus } : u,
+        ),
+      );
     }
   };
 
