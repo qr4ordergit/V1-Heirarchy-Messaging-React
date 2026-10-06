@@ -16,6 +16,7 @@ import { getApiErrorMessage } from "../../../api/getApiErrorMessage";
 import { Notification } from "../../../utils/notification";
 import dayjs from "dayjs";
 import { useChatStore } from "../../../store/chats/chats.store";
+import { useTranslation } from "../../../store/language/language.store";
 
 function Conversation() {
   const { trigger } = useTriggerStore((state) => state);
@@ -24,6 +25,7 @@ function Conversation() {
   const { chatId } = useParams<{ chatId: string }>();
   const { storeCategoryTags } = useTagStore((state) => state);
   const { current_chat } = useChatStore((state) => state);
+  const { translation } = useTranslation();
 
   const fetchTagsList = async () => {
     try {
@@ -101,11 +103,14 @@ function Conversation() {
               <Navbar />
               {disappearingMode && (
                 <div className="text-center text-gray-400 text-[12px]">
-                  Disappearing messages mode enabled on{" "}
+                  {translation(
+                    "chat_history.disappearing-active-text",
+                    "Disappearing messages mode enabled on",
+                  )}{" "}
                   {dayjs
                     .utc(current_chat.disappearing_messages?.updated_at)
                     .local()
-                    .format("DD MMM YYYY")}
+                    .format("DD MMM YYYY hh:mm A")}
                 </div>
               )}
               <div className="flex-1 min-h-0">

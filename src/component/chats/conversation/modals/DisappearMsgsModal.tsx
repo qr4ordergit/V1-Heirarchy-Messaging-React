@@ -10,6 +10,7 @@ import { ENDPOINTS } from "../../../../api/endpoints";
 import { useDMListStore } from "../../../../store/dm/dm.list.store";
 import { useGroupListStore } from "../../../../store/groups/group.list.store";
 import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
+import { useTranslation } from "../../../../store/language/language.store";
 
 interface TIMMER {
   days: number;
@@ -26,6 +27,7 @@ function DisappearMsgsModal() {
   const { groups, updateGroupDisappearingMode } = useGroupListStore(
     (state) => state,
   );
+  const { translation } = useTranslation();
 
   const [timmer, setTimmer] = useState<TIMMER>({
     days: 0,
@@ -219,7 +221,10 @@ function DisappearMsgsModal() {
     <Modal
       opened={trigger === TRIGGERS.disappearChatModal}
       onClose={onClose}
-      title={"Set timmer for disappearing messages"}
+      title={translation(
+        "chat_history.modal-disappearing-timmer-title",
+        "Set timmer for disappearing messages",
+      )}
     >
       <div className="flex gap-2">
         <NumberInput

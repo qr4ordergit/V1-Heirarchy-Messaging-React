@@ -59,7 +59,10 @@ function SchedularsPreviewModal() {
     <Modal
       opened={trigger === OPENERS.schedulerList}
       onClose={onClose}
-      title={"Scheduled messages"}
+      title={translation(
+        "chat_history.modal-schedule-msgs-title",
+        "Scheduled messages",
+      )}
       size={"xl"}
     >
       {fetchLoader ? (

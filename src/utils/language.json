@@ -675,7 +675,11 @@
         "tooltip-e2e": "Double Encryption",
         "tooltip-schedule": "Schedule message",
         "NAV-menu-media-encryption-toggle1": "Enable media encryption",
-        "NAV-menu-media-encryption-toggle2": "Media encryption active"
+        "NAV-menu-media-encryption-toggle2": "Media encryption active",
+        "disappearing-active-text": "Disappearing messages mode enabled on",
+        "modal-schedule-freq-text": "Frequency",
+        "modal-schedule-msgs-title": "Scheduled messages",
+        "modal-disappearing-timmer-title": "Set timmer for disappearing messages"
       },
       "account_billing": {
         "failedToFetchEstimate": "Failed to load billing estimate.",
@@ -1480,7 +1484,11 @@
         "tooltip-e2e": "Подвійне шифрування",
         "tooltip-schedule": "Запланувати повідомлення",
         "NAV-menu-media-encryption-toggle1": "Enable media encryption",
-        "NAV-menu-media-encryption-toggle2": "Media encryption active"
+        "NAV-menu-media-encryption-toggle2": "Media encryption active",
+        "disappearing-active-text": "Disappearing messages mode enabled on",
+        "modal-schedule-freq-text": "Repeat",
+        "modal-schedule-msgs-title": "Scheduled messages",
+        "modal-disappearing-timmer-title": "Set timmer for disappearing messages"
       },
       "account_billing": {
         "tooltipGoBack": "Назад",

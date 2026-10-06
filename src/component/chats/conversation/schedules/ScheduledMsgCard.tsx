@@ -107,7 +107,7 @@ function ScheduledMsgCard({ msg }: MSG) {
         <Text
           size="sm"
           className="text-gray-600"
-        >{`Repeat : ${msg.repeat} |`}</Text>
+        >{`${translation("chat_history.modal-schedule-freq-text", "Frequency")} : ${msg.repeat} |`}</Text>
         <Text size="sm">{`${msg.schedule_date ?? ""} ${msg?.schedule_time_12hr}`}</Text>
       </Flex>
     </Paper>
