@@ -1,8 +1,11 @@
 import { useState } from "react";
 import {
+  ActionIcon,
   Alert,
   Anchor,
   Button,
+  Group,
+  Menu,
   Paper,
   PasswordInput,
   PinInput,
@@ -10,12 +13,15 @@ import {
   Text,
   TextInput,
   Title,
+  Tooltip,
 } from "@mantine/core";
+import { IconCheck, IconLanguage } from "@tabler/icons-react";
 
 import { signup, verifyOtp } from "../../api/authApi";
 import { COGNITO_LOGIN_URL } from "../../config/cognito";
 import HubOrbit from "../../component/hubOrbit/HubOrbit";
 import { useTranslation } from "../../store/language/language.store";
+import logo from "../../assets/logo.png";
 import classes from "./Signup.module.css";
 
 const GROUP_NAME = "Hub";
@@ -35,7 +41,14 @@ interface SignupFormErrors {
 type Step = "signup" | "verify";
 
 export default function Signup() {
-  const { translation } = useTranslation();
+  const {
+    translation,
+    currentLang,
+    languages,
+    setLanguage,
+    isLoaded,
+    isLoadingLanguage,
+  } = useTranslation();
 
   const [step, setStep] = useState<Step>("signup");
   const [values, setValues] = useState<SignupFormValues>({
@@ -50,6 +63,10 @@ export default function Signup() {
 
   const [otp, setOtp] = useState("");
   const [otpError, setOtpError] = useState<string | null>(null);
+
+  const availableLanguages: [string, string][] = Object.entries(
+    languages || {},
+  ).filter((entry): entry is [string, string] => typeof entry[1] === "string");
 
   const handleChange =
     (field: keyof SignupFormValues) =>
@@ -175,24 +192,111 @@ export default function Signup() {
   };
   return (
     <div className={classes.wrapper}>
-      <Paper withBorder shadow="lg" radius="lg" p="xl" className={classes.card}>
-        <HubOrbit />
+      <div className={classes.langWrap}>
+        <Menu shadow="md" width={160} position="bottom-end" withinPortal>
+          <Menu.Target>
+            <Tooltip
+              label={translation(
+                "home-page.txtChangeLanguage",
+                "Change Language",
+              )}
+              position="left"
+              withArrow
+            >
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="lg"
+                radius="xl"
+                loading={
+                  (!isLoaded && availableLanguages.length === 0) ||
+                  isLoadingLanguage
+                }
+                aria-label={translation(
+                  "home-page.txtSelectLanguage",
+                  "Select Language",
+                )}
+                style={{
+                  backgroundColor: "rgba(20, 20, 30, 0.55)",
+                  color: "#ffffff",
+                }}
+              >
+                <IconLanguage size={22} />
+              </ActionIcon>
+            </Tooltip>
+          </Menu.Target>
 
-        <Title order={2} ta="center" className={classes.title} mb={8}>
+          <Menu.Dropdown>
+            <Menu.Label>
+              {translation("home-page.txtSelectLanguage", "Select Language")}
+            </Menu.Label>
+            {availableLanguages.length > 0 ? (
+              availableLanguages.map(([code, label]) => (
+                <Menu.Item
+                  key={code}
+                  onClick={() => setLanguage(code)}
+                  rightSection={
+                    currentLang === code ? (
+                      <IconCheck
+                        size={16}
+                        color="var(--mantine-color-indigo-6)"
+                      />
+                    ) : null
+                  }
+                  fw={currentLang === code ? 700 : 400}
+                >
+                  {label}
+                </Menu.Item>
+              ))
+            ) : (
+              <Menu.Item disabled>
+                {translation(
+                  "home-page.txtLoadingLanguages",
+                  "Loading languages...",
+                )}
+              </Menu.Item>
+            )}
+          </Menu.Dropdown>
+        </Menu>
+      </div>
+
+      <aside className={classes.showcase}>
+        <div className={classes.brandWrap}>
+          <Group gap="sm" align="center" wrap="nowrap">
+            <img src={logo} alt="Ukrchat logo" className={classes.brandLogo} />
+            <Text className={classes.brand}>Ukrchat.com</Text>
+          </Group>
+        </div>
+
+        <div className={classes.showcaseBody}>
+          <div className={classes.orbitBox}>
+            <HubOrbit />
+          </div>
+          <Title order={1} className={classes.showcaseTitle}>
+            {translation(
+              "signup.showcaseTitle",
+              "All your messenger accounts in one secure hub.",
+            )}
+          </Title>
+        </div>
+      </aside>
+
+      <Paper radius={0} className={classes.panel}>
+        <Title order={2} className={classes.title} mb={8}>
           {step === "signup"
             ? translation("signup.titleCreateHub", "Create Your Hub")
             : translation("signup.titleVerifyEmail", "Verify your email")}
         </Title>
 
         {step === "signup" ? (
-          <Text c="dimmed" ta="center" size="sm" mb="lg">
+          <Text c="dimmed" size="sm" mb="lg">
             {translation(
               "signup.txtSignupSubtitle",
               "This will be your main account. You can create multiple sub accounts with username, email or phone number.",
             )}
           </Text>
         ) : (
-          <Text c="dimmed" ta="center" size="sm" mb="lg">
+          <Text c="dimmed" size="sm" mb="lg">
             {translation("signup.txtSentCodeTo", "We sent a code to")}{" "}
             <strong>{values.email}</strong>
           </Text>
@@ -223,6 +327,7 @@ export default function Signup() {
                 value={values.email}
                 onChange={handleChange("email")}
                 error={errors.email}
+                size="md"
                 required
               />
               <PasswordInput
@@ -235,6 +340,7 @@ export default function Signup() {
                 value={values.password}
                 onChange={handleChange("password")}
                 error={errors.password}
+                size="md"
                 required
               />
               <PasswordInput
@@ -250,12 +356,14 @@ export default function Signup() {
                 value={values.confirmPassword}
                 onChange={handleChange("confirmPassword")}
                 error={errors.confirmPassword}
+                size="md"
                 required
               />
 
               <Button
                 type="submit"
                 fullWidth
+                size="md"
                 mt="xs"
                 radius="xl"
                 variant="gradient"

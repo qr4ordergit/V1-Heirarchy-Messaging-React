@@ -286,7 +286,8 @@
         "errPasswordMismatch": "Passwords do not match",
         "errOtpRequired": "Enter the 6-digit code sent to your email",
         "errSignupFailedGeneric": "Signup failed. Please try again.",
-        "errVerificationFailedGeneric": "Verification failed. Please try again."
+        "errVerificationFailedGeneric": "Verification failed. Please try again.",
+        "showcaseTitle": "All your messenger accounts in one secure hub."
       },
       "accounts_page": {
         "txtRootAccount": "Root Account",
@@ -1090,7 +1091,8 @@
         "errPasswordMismatch": "Паролі не збігаються",
         "errOtpRequired": "Введіть 6-значний код, надісланий на вашу пошту",
         "errSignupFailedGeneric": "Реєстрація не вдалася. Спробуйте ще раз.",
-        "errVerificationFailedGeneric": "Підтвердження не вдалося. Спробуйте ще раз."
+        "errVerificationFailedGeneric": "Підтвердження не вдалося. Спробуйте ще раз.",
+        "showcaseTitle": "Усі ваші акаунти месенджерів в одному безпечному хабі."
       },
       "accounts_page": {
         "txtRootAccount": "Основний обліковий запис",
