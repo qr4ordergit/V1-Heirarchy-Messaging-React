@@ -17,7 +17,11 @@ interface LangList {
   label: string;
 }
 
-const ManageLanguages = () => {
+interface ManageLanguagesProps {
+  web: boolean;
+}
+
+const ManageLanguages = ({ web }: ManageLanguagesProps) => {
   const [active, setActive] = useState<string>("list");
   const [value, setValue] = useState<string>("");
   const [loadingJSON, setLoadingJSON] = useState<boolean>(false);
@@ -44,6 +48,9 @@ const ManageLanguages = () => {
       let fileName = "language_list";
       if (active === "languages") {
         fileName = `${selectedLang.value}/${selectedLang.value}_language`;
+      }
+      if (!web) {
+        fileName = "mobile/" + fileName;
       }
       await ManageLanguagesServices.update({
         data: JSON.parse(value),
@@ -73,6 +80,9 @@ const ManageLanguages = () => {
       let fileName = "language_list";
       if (active === "languages") {
         fileName = `${langCode}/${langCode}_language`;
+      }
+      if (!web) {
+        fileName = "mobile/" + fileName;
       }
       const json = await axios.get(
         `${import.meta.env.VITE_SKIN_LANGUAGE_API_URL}/${fileName}.json`,

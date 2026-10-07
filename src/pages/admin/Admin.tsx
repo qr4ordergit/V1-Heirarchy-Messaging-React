@@ -30,7 +30,8 @@ export default function Admin() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [value, setValue] = useState<ComboboxItem | null>(null);
   const data = [
-    { value: "language", label: "Manage languages" },
+    { value: "web_language", label: "Manage Web languages" },
+    { value: "mobile_language", label: "Manage Mobile languages" },
     { value: "manage_video", label: "Manage videos" },
     { value: "billing", label: "Manage Billing" },
   ] as const;
@@ -91,7 +92,8 @@ export default function Admin() {
         onChange={(_value, option) => setValue(option)}
       />
 
-      {value !== null && value.value === "language" && <ManageLanguages />}
+      {value !== null && value.value === "web_language" && <ManageLanguages web={true}/>}
+      {value !== null && value.value === "mobile_language" && <ManageLanguages web={false}/>}
       {value !== null && value.value === "manage_video" && <ManageVideo />}
       {value !== null && value.value === "billing" && <ManageBillings />}
     </Container>
