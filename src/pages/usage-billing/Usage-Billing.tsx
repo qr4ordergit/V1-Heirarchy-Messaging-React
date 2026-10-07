@@ -27,7 +27,6 @@ import {
   IconDownload,
   IconLock,
   IconMail,
-  IconSparkles,
   IconTable,
   IconWallet,
 } from "@tabler/icons-react";
@@ -41,6 +40,8 @@ import {
   type UsageData,
 } from "../../api/usageBillingApi";
 import { useTranslation } from "../../store/language/language.store";
+import classes from "../accounts/Accounts.module.css";
+import logo from "../../assets/logo.png";
 
 export interface FeatureRowDef {
   key?: string;
@@ -486,7 +487,7 @@ export default function UsageBilling() {
     >
       <Container size="lg">
         {/* Header navigation & membership badge */}
-        <Group justify="space-between" align="center" mb="lg">
+        <Group justify="flex-start" align="center" gap="md" mb="lg">
           <Tooltip
             label={translation("account_billing.tooltipGoBack", "Go back")}
             position="right"
@@ -506,37 +507,9 @@ export default function UsageBilling() {
             </ActionIcon>
           </Tooltip>
 
-          <Group gap="xs">
-            <Text size="xs" c="dimmed" fw={600} tt="uppercase">
-              {translation("account_billing.txtMembership", "Membership:")}
-            </Text>
-            {isPaid ? (
-              <Badge
-                size="lg"
-                color="indigo"
-                variant="filled"
-                radius="sm"
-                leftSection={<IconCrown size={14} />}
-              >
-                {translation(
-                  "account_billing.badgePaidMembership",
-                  "Paid Membership",
-                )}
-              </Badge>
-            ) : (
-              <Badge
-                size="lg"
-                color="gray"
-                variant="light"
-                radius="sm"
-                leftSection={<IconSparkles size={14} />}
-              >
-                {translation(
-                  "account_billing.badgeFreeMembership",
-                  "Free Membership",
-                )}
-              </Badge>
-            )}
+          <Group gap="sm" align="center">
+            <img src={logo} alt="Ukrchat logo" className={classes.brandLogo} />
+            <Text className={classes.brand}>Ukrchat.com</Text>
           </Group>
         </Group>
 

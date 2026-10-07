@@ -22,7 +22,6 @@ import {
   IconChevronDown,
   IconChevronRight,
   IconCopy,
-  IconEdit,
   IconId,
   IconKey,
   // IconLogout,
@@ -1069,11 +1068,11 @@ const Profile = () => {
                                       handleOpenEditKeyringModal(cat)
                                     }
                                     title={translation(
-                                      "profile.tooltipEditKeyring",
-                                      "Edit Category",
+                                      "profile.tooltipAddKeyring",
+                                      "Add Category",
                                     )}
                                   >
-                                    <IconEdit size={15} />
+                                    <IconPlus size={15} />
                                   </ActionIcon>
                                   <ActionIcon
                                     size="sm"

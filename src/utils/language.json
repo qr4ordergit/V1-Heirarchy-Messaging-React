@@ -9,6 +9,7 @@
         "title": "Signing you in..."
       },
       "profile": {
+        "tooltipAddKeyring": "Add Category",
         "alertEnterTag": "Please enter a tag name.",
         "ntfyProfilePictureUpdated": "Profile picture updated successfully.",
         "txtAccDetails": "Account Details",
@@ -748,6 +749,15 @@
         "membershipUpdateFailed": "Failed to update membership status."
       },
       "admin_billing": {
+        "titleConfirmDeactivate": "Confirm User Deactivation",
+        "titleConfirmActivate": "Confirm User Activation",
+        "msgConfirmDeactivate": "Are you sure you want to deactivate this account? The user will temporarily lose access.",
+        "msgConfirmActivate": "Are you sure you want to activate this account? The user will regain access immediately.",
+        "labelTargetUser": "Target user:",
+        "txtTypeToConfirm": "To confirm, please type",
+        "txtBelow": "below:",
+        "btnConfirmDeactivate": "Deactivate User",
+        "btnConfirmActivate": "Activate User",
         "txtChatAccounts": "Chat Accounts",
         "txtFreeQuantity": "Free Quantity",
         "txtRatePerExtraUnit": "Rate per extra unit",
@@ -818,6 +828,7 @@
         "somethingWentWrong": "Не вдалося завершити запит. Будь ласка, спробуйте ще раз."
       },
       "profile": {
+        "tooltipAddKeyring": "Додати категорію ключів",
         "alertEnterTag": "Будь ласка, введіть назву тегу.",
         "ntfyProfilePictureUpdated": "Фото профілю успішно оновлено.",
         "txtAccDetails": "Дані облікового запису",
@@ -1556,6 +1567,15 @@
         "membershipUpdateFailed": "Не вдалося оновити статус членства."
       },
       "admin_billing": {
+        "titleConfirmDeactivate": "Підтвердження деактивації",
+        "titleConfirmActivate": "Підтвердження активації",
+        "msgConfirmDeactivate": "Ви впевнені, що хочете деактивувати цей обліковий запис? Користувач тимчасово втратить доступ.",
+        "msgConfirmActivate": "Ви впевнені, що хочете активувати цей обліковий запис? Користувач негайно отримає доступ.",
+        "labelTargetUser": "Користувач:",
+        "txtTypeToConfirm": "Для підтвердження введіть",
+        "txtBelow": "нижче:",
+        "btnConfirmDeactivate": "Деактивувати",
+        "btnConfirmActivate": "Активувати",
         "txtTotal": "Всього",
         "txtAccountsTotal": "Акаунти",
         "txtStorageTotal": "Сховище",
