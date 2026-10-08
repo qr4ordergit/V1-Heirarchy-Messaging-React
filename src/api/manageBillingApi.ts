@@ -142,8 +142,10 @@ export const reassignUserTierApi = async (
   payload: ReassignUserPayload,
 ): Promise<boolean> => {
   try {
-    await api.post(`${PRICING_ENDPOINT}/reassign`, payload);
-    return true;
+    const response = await api.delete(
+      `${PRICING_ENDPOINT}?user_id=${encodeURIComponent(payload.user_id)}`,
+    );
+    return response.status === 200;
   } catch (error: any) {
     handleApiError(error, "admin_billing");
     return false;
