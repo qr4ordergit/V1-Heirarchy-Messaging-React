@@ -135,6 +135,7 @@ const COMMON_PERMISSION = {
     create: false,
     update: false,
     delete: false,
+    "manual-password" : false
   },
   groups: {
     read: false,
@@ -147,6 +148,7 @@ const COMMON_PERMISSION = {
     create: false,
     update: false,
     delete: false,
+    "manual-password" : false
   },
   "media-encryption": {
     active: true,
@@ -218,6 +220,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "direct-messages|read": "View",
   "direct-messages|update": "Update",
   "direct-messages|delete": "Delete",
+  "direct-messages|manual-password": "Allow Manual Password",
 
   // Manage Groups
   "groups|create": "Create",
@@ -230,6 +233,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "group-messages|read": "View",
   "group-messages|update": "Update",
   "group-messages|delete": "Delete",
+  "group-messages|manual-password": "Allow Manual Password",
 
   // Media Encryption
   "media-encryption|active": "Allow",
