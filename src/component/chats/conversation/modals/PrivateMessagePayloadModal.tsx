@@ -7,6 +7,7 @@ import {
   Select,
   Stack,
   Text,
+  TextInput,
 } from "@mantine/core";
 import { useTriggerStore } from "../../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../../utils/constant";
@@ -20,6 +21,7 @@ import { useTranslation } from "../../../../store/language/language.store";
 import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
 import { getKeyringCategoriesApi } from "../../../../api/profileApi";
 import type { KeyringCategoryItem } from "../../../../api/profileApi";
+import useContactNameProvider from "../../../../hooks/useContactNameProvider";
 
 interface MembersResponse {
   data: {
@@ -34,9 +36,14 @@ function PrivateMessagePayloadModal() {
     (state) => state,
   );
   const { translation } = useTranslation();
+  const contactNameProvider = useContactNameProvider();
 
   const [members, setMembers] = useState<string[]>([]);
+  const [password, setPassword] = useState<string>("");
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [contactsMapping, setContactsMapping] = useState<{
+    [key: string]: string;
+  }>({});
 
   const [keyringCategories, setKeyringCategories] = useState<
     KeyringCategoryItem[]
@@ -50,9 +57,9 @@ function PrivateMessagePayloadModal() {
   const [loadingKeyrings, setLoadingKeyrings] = useState(false);
 
   const [fetchLoader, FetchFn] = useTransition();
-  const own_user_id = target_user ? target_user : userDetails?.username;
 
   const resetForm = () => {
+    setPassword("");
     setSelectedMembers([]);
     setSelectedCategoryId(null);
     setSelectedPasswordKey(null);
@@ -80,8 +87,9 @@ function PrivateMessagePayloadModal() {
 
     if (!chatId.includes("group")) {
       const id = decodeURIComponent(chatId);
+      const own_user_id =
+        targetUserDetails?.user_id || target_user || userDetails?.username;
       const member = id.split("#").filter((u) => u !== own_user_id);
-
       setMembers(member);
       return;
     }
@@ -97,7 +105,15 @@ function PrivateMessagePayloadModal() {
 
       if (response.status === 200) {
         let mems = response.data?.data?.members ?? [];
+        const own_user_id =
+          targetUserDetails?.user_id || target_user || userDetails?.username;
+
         mems = mems.filter((user) => user !== own_user_id);
+        mems = mems.map((u) => {
+          const savedMem = contactNameProvider(u);
+          setContactsMapping((prev) => ({ ...prev, [savedMem]: u }));
+          return savedMem;
+        });
         setMembers(mems);
       }
     } catch (error) {
@@ -125,21 +141,34 @@ function PrivateMessagePayloadModal() {
   const handleCategoryChange = (val: string | null) => {
     setSelectedCategoryId(val);
     setSelectedPasswordKey(null);
+
+    // If category is cleared, clear password so user can manually type
+    if (!val) {
+      setPassword("");
+    }
   };
 
   const handlePasswordKeyChange = (key: string | null) => {
     setSelectedPasswordKey(key);
+    if (key && activeCategory?.keyring_category_passwords) {
+      const resolvedPassword = activeCategory.keyring_category_passwords[key];
+      setPassword(String(resolvedPassword ?? ""));
+    } else {
+      setPassword("");
+    }
   };
 
   const onSubmit = async () => {
     try {
+      const mems = selectedMembers.map((u) => contactsMapping[u]);
       const payload: {
         [key: string]: unknown;
       } = {
-        users: selectedMembers,
+        users: mems,
         keyring_category_name:
           activeCategory?.keyring_category_name ?? undefined,
         keyring_password_key: selectedPasswordKey ?? undefined,
+        user_key: password,
       };
 
       if (selectedPasswordKey) {
@@ -161,6 +190,7 @@ function PrivateMessagePayloadModal() {
       Notification.error(getApiErrorMessage(error));
     }
   };
+
   useEffect(() => {
     if (trigger === TRIGGERS.privateMessageModal) {
       FetchFn(fetchGroupMembers);
@@ -187,6 +217,27 @@ function PrivateMessagePayloadModal() {
         )}
       >
         <Stack gap="sm">
+          <TextInput
+            label={translation(
+              "chat_history.modal-e2e-label1",
+              "Private password",
+            )}
+            placeholder={
+              isManualPasswordDisabled
+                ? translation(
+                    "chat_history.phSelectedFromKeyring",
+                    "Password populated from Keyring",
+                  )
+                : translation(
+                    "chat_history.modal-e2e-ph1",
+                    "Enter password manually",
+                  )
+            }
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isManualPasswordDisabled}
+          />
+
           <Select
             label={translation(
               "chat_history.selectKeyringCategory",
@@ -204,11 +255,16 @@ function PrivateMessagePayloadModal() {
             value={selectedCategoryId}
             onChange={handleCategoryChange}
             clearable
+            searchable
             disabled={loadingKeyrings}
           />
 
           {selectedCategoryId && (
             <Select
+              label={translation(
+                "chat_history.selectPasswordKey",
+                "Select Password",
+              )}
               placeholder={translation(
                 "chat_history.phSelectPasswordKey",
                 "Choose password key",
@@ -217,6 +273,7 @@ function PrivateMessagePayloadModal() {
               value={selectedPasswordKey}
               onChange={handlePasswordKeyChange}
               clearable
+              searchable
             />
           )}
 
@@ -228,6 +285,7 @@ function PrivateMessagePayloadModal() {
               )}
             </Text>
           )}
+
           {chatId?.includes("group") && (
             <MultiSelect
               label={translation(
@@ -237,6 +295,7 @@ function PrivateMessagePayloadModal() {
               placeholder={translation("chat_history.modal-e2e-ph2", "Select")}
               data={members}
               clearable
+              searchable
               loading={fetchLoader}
               value={selectedMembers}
               onChange={setSelectedMembers}
