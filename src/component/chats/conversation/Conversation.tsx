@@ -20,7 +20,7 @@ import { useTranslation } from "../../../store/language/language.store";
 
 function Conversation() {
   const { trigger } = useTriggerStore((state) => state);
-  const { storeContacts, contacts } = useContactStore((state) => state);
+  const { storeContacts } = useContactStore((state) => state);
   const { target_user } = useAuthStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
   const { storeCategoryTags } = useTagStore((state) => state);
@@ -64,7 +64,6 @@ function Conversation() {
   };
 
   const fetchContacts = async () => {
-    if (contacts.length > 0) return;
     try {
       const response = await api.get(withTargetUser(API_ENDPOINTS.CONTACTS));
 
