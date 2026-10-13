@@ -422,20 +422,6 @@ export default function ChatInput() {
         files: files_info,
       };
 
-      if (trigger === TRIGGERS.privateMessageSender) {
-        payload["user_key"] = triggerPayload?.password;
-        if (triggerPayload?.users && triggerPayload?.users?.length > 0) {
-          payload["users_list"] = [...triggerPayload?.users, own_user_id];
-        }
-        if (triggerPayload?.keyring_category_name) {
-          payload["keyring_category_name"] =
-            triggerPayload.keyring_category_name;
-        }
-        if (triggerPayload?.keyring_password_key) {
-          payload["keyring_password_key"] = triggerPayload.keyring_password_key;
-        }
-      }
-
       if (trigger.includes("schedulePayload")) {
         payload["schedule_time"] = triggerPayload?.schedule_time;
         payload["schedule_date"] = triggerPayload?.schedule_date;
