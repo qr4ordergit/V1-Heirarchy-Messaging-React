@@ -195,6 +195,7 @@ export default function ChatInput() {
       resetTrigger();
       setMessage("");
     } catch (error) {
+      resetTrigger();
       Notification.error(getApiErrorMessage(error));
     }
   };
