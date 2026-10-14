@@ -17,6 +17,9 @@ import { IconRefresh } from "@tabler/icons-react";
 import { useConversationTypeStore } from "../../store/conversation/conversation.type.store";
 import axios from "axios";
 import { useTranslation } from "../../store/language/language.store";
+import LockDmAndGroupModal, {
+  type LockDmAndGroupModalDataState,
+} from "../modal/LockDmAndGroupModal";
 
 interface SelectedDMState {
   chatID: string;
@@ -42,11 +45,19 @@ const DmList = () => {
     display_name: "",
   });
 
+  const [deleteOpened, setDeleteOpened] = useState(false);
+
+  const [lockDmAndGroupModalData, setLockDmAndGroupModalData] =
+    useState<LockDmAndGroupModalDataState>({
+      open: false,
+      for: "",
+      chat_id: "",
+      dmOrGroupName : ""
+    });
+
   const resetSelectedDM = () => {
     setSelectedDM({ chatID: "", display_name: "" });
   };
-
-  const [deleteOpened, setDeleteOpened] = useState(false);
 
   const handleDeleteClick = (id: string, display_name: string) => {
     setSelectedDM((prev) => ({
@@ -78,6 +89,15 @@ const DmList = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onCloseLockDmAndGroupModal = () => {
+    setLockDmAndGroupModalData({
+      open: false,
+      for: "",
+      chat_id: "",
+      dmOrGroupName : ""
+    });
   };
 
   const deleteDm = async (action: number) => {
@@ -121,6 +141,14 @@ const DmList = () => {
               conversation={conversation}
               onDelete={() =>
                 handleDeleteClick(conversation._id, conversation.display_name)
+              }
+              onSetLockDmAndGroupModalData={() =>
+                setLockDmAndGroupModalData({
+                  open: true,
+                  for: "DM",
+                  chat_id: conversation._id,
+                  dmOrGroupName : conversation.display_name
+                })
               }
             />
           ))}
@@ -177,6 +205,12 @@ const DmList = () => {
             </Button>
           </Group>
         </Modal>
+        {lockDmAndGroupModalData.open && (
+          <LockDmAndGroupModal
+            data={lockDmAndGroupModalData}
+            onClose={onCloseLockDmAndGroupModal}
+          />
+        )}
       </>
     ) : (
       <Center>

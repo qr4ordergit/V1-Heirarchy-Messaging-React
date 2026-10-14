@@ -17,6 +17,8 @@ import { IconRefresh } from "@tabler/icons-react";
 import GroupsItem from "../groupsItem/GroupsItem";
 import axios from "axios";
 import { useTranslation } from "../../store/language/language.store";
+import type { LockDmAndGroupModalDataState } from "../modal/LockDmAndGroupModal";
+import LockDmAndGroupModal from "../modal/LockDmAndGroupModal";
 
 interface SelectedGrouptate {
   group_id: string;
@@ -42,6 +44,14 @@ const GroupList = () => {
     group_id: "",
     group_name: "",
   });
+
+    const [lockDmAndGroupModalData, setLockDmAndGroupModalData] =
+      useState<LockDmAndGroupModalDataState>({
+        open: false,
+        for: "",
+        chat_id: "",
+        dmOrGroupName : ""
+      });
 
   const resetSelectedGroup = () => {
     setSelectedGroup({ group_id: "", group_name: "" });
@@ -70,6 +80,15 @@ const GroupList = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+    const onCloseLockDmAndGroupModal = () => {
+    setLockDmAndGroupModalData({
+      open: false,
+      for: "",
+      chat_id: "",
+      dmOrGroupName : ""
+    });
   };
 
   const leaveGroup = async () => {
@@ -113,6 +132,14 @@ const GroupList = () => {
               key={groups._id}
               groups={groups}
               onLeave={() => handleClickLeave(groups._id, groups.group_name)}
+              onSetLockDmAndGroupModalData={() =>
+                setLockDmAndGroupModalData({
+                  open: true,
+                  for: "GROUP",
+                  chat_id: groups._id,
+                  dmOrGroupName : groups.group_name
+                })
+              }
             />
           ))}
         </Stack>
@@ -162,6 +189,12 @@ const GroupList = () => {
             </Button>
           </Group>
         </Modal>
+        {lockDmAndGroupModalData.open && (
+          <LockDmAndGroupModal
+            data={lockDmAndGroupModalData}
+            onClose={onCloseLockDmAndGroupModal}
+          />
+        )}
       </>
     ) : (
       <Center>

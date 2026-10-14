@@ -9,19 +9,25 @@ import {
   Menu,
   Stack,
   Text,
+  Tooltip,
 } from "@mantine/core";
 import { formatConversationTime, getAvatarColor } from "../../utils/constant";
 import { ROUTES } from "../../router/routes";
-import { IconDotsVertical, IconLogout2 } from "@tabler/icons-react";
+import { IconDotsVertical, IconLock, IconLogout2 } from "@tabler/icons-react";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { useTranslation } from "../../store/language/language.store";
 
 interface GroupItemProps {
   groups: Groups;
   onLeave: () => void;
+  onSetLockDmAndGroupModalData: () => void;
 }
 
-const GroupsItem = ({ groups, onLeave }: GroupItemProps) => {
+const GroupsItem = ({
+  groups,
+  onLeave,
+  onSetLockDmAndGroupModalData,
+}: GroupItemProps) => {
   const { chatId } = useParams();
   const navigate = useNavigate();
   const { translation } = useTranslation();
@@ -73,29 +79,63 @@ const GroupsItem = ({ groups, onLeave }: GroupItemProps) => {
           <Text size="xs" c="dimmed">
             {formatConversationTime(groups.last_message)}
           </Text>
-          <Flex gap={6} align={"center"}>
+          <Flex gap={1} align={"center"}>
             {groups.unread_count > 0 && (
-              <Badge color="green" radius="lg" variant="filled" size="xs">
+              <Badge
+                color="green"
+                radius="lg"
+                variant="filled"
+                size="xs"
+                mr={"xs"}
+              >
                 {groups.unread_count}
               </Badge>
             )}
-            {!isAdmin && (
-              <Menu position="bottom-start" withArrow>
-                <Menu.Target>
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    size="sm"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      navigate(`/${ROUTES.CHATS}`);
-                    }}
-                  >
-                    <IconDotsVertical size={13} />
-                  </ActionIcon>
-                </Menu.Target>
+            <Tooltip
+              label={translation("chat_page.label_lock_group", "Lock group")}
+              fz={"xs"}
+              bg={"gray"}
+            >
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSetLockDmAndGroupModalData();
+                }}
+              >
+                <IconLock size={13} />
+              </ActionIcon>
+            </Tooltip>
+            <Menu position="bottom-start" withArrow>
+              <Menu.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    navigate(`/${ROUTES.CHATS}`);
+                  }}
+                >
+                  <IconDotsVertical size={13} />
+                </ActionIcon>
+              </Menu.Target>
 
-                <Menu.Dropdown>
+              <Menu.Dropdown>
+                <Menu.Item
+                  leftSection={<IconLock size={13} />}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onSetLockDmAndGroupModalData();
+                  }}
+                >
+                  <Text size="xs">
+                    {translation("chat_page.label_lock_group", "Lock group")}
+                  </Text>
+                </Menu.Item>
+                {!isAdmin && (
                   <Menu.Item
                     color="red"
                     leftSection={<IconLogout2 size={13} />}
@@ -111,9 +151,9 @@ const GroupsItem = ({ groups, onLeave }: GroupItemProps) => {
                       )}
                     </Text>
                   </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            )}
+                )}
+              </Menu.Dropdown>
+            </Menu>
           </Flex>
         </Stack>
       </Group>

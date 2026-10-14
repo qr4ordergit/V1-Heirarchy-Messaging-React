@@ -7,9 +7,10 @@ import {
   Menu,
   Stack,
   Text,
+  Tooltip,
 } from "@mantine/core";
 
-import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
+import { IconDotsVertical, IconLock, IconTrash } from "@tabler/icons-react";
 
 import { formatConversationTime, getAvatarColor } from "../../utils/constant";
 import { useNavigate, useParams } from "react-router";
@@ -19,11 +20,13 @@ import { useTranslation } from "../../store/language/language.store";
 interface ConversationItemProps {
   conversation: DM;
   onDelete: () => void;
+  onSetLockDmAndGroupModalData: () => void;
 }
 
 export default function ConversationItem({
   conversation,
   onDelete,
+  onSetLockDmAndGroupModalData,
 }: ConversationItemProps) {
   const { chatId } = useParams();
   const navigate = useNavigate();
@@ -64,12 +67,38 @@ export default function ConversationItem({
           <Text size="xs" c="dimmed">
             {formatConversationTime(conversation.last_message_timestamp)}
           </Text>
-          <Flex gap={6} align={"center"}>
+          <Flex gap={1} align={"center"}>
             {conversation.unread_count > 0 && (
-              <Badge color="green" radius="lg" variant="filled" size="xs">
+              <Badge
+                color="green"
+                radius="xl"
+                variant="filled"
+                size="xs"
+                mr={"xs"}
+              >
                 {conversation.unread_count}
               </Badge>
             )}
+            <Tooltip
+              label={translation(
+                "chat_page.label_lock_conversation",
+                "Lock conversation",
+              )}
+              fz={"xs"}
+              bg={"gray"}
+            >
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  // onSetLockDmAndGroupModalData();
+                }}
+              >
+                <IconLock size={13} />
+              </ActionIcon>
+            </Tooltip>
             <Menu position="bottom-start" withArrow>
               <Menu.Target>
                 <ActionIcon
@@ -86,6 +115,20 @@ export default function ConversationItem({
               </Menu.Target>
 
               <Menu.Dropdown>
+                 <Menu.Item
+                  leftSection={<IconLock size={13} />}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onSetLockDmAndGroupModalData();
+                  }}
+                >
+                  <Text size="xs">
+                    {translation(
+                      "chat_page.label_lock_conversation",
+                "Lock conversation",
+                    )}
+                  </Text>
+                </Menu.Item>
                 <Menu.Item
                   color="red"
                   leftSection={<IconTrash size={13} />}
