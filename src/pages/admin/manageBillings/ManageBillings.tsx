@@ -583,7 +583,8 @@ export default function ManageBillings() {
                     )}
                     :{" "}
                     <b className="text-gray-900">
-                      ${defaultTier.pricing.chat_accounts.price_per_unit} /mo
+                      ${defaultTier.pricing.chat_accounts.price_per_unit} /
+                      {translation("admin_billing.txtPerDay", "day")}
                     </b>
                   </Text>
                 </Paper>
