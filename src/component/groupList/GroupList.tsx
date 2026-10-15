@@ -19,6 +19,7 @@ import axios from "axios";
 import { useTranslation } from "../../store/language/language.store";
 import type { LockDmAndGroupModalDataState } from "../modal/LockDmAndGroupModal";
 import LockDmAndGroupModal from "../modal/LockDmAndGroupModal";
+import { DmGroupLockService, type UnlockPayload } from "../../api/services/dm.group.lock.service";
 
 interface SelectedGrouptate {
   group_id: string;
@@ -82,13 +83,14 @@ const GroupList = () => {
     }
   };
 
-    const onCloseLockDmAndGroupModal = () => {
+    const onCloseLockDmAndGroupModal = async () => {
     setLockDmAndGroupModalData({
       open: false,
       for: "",
       chat_id: "",
       dmOrGroupName : ""
     });
+    await loadGroups();
   };
 
   const leaveGroup = async () => {
@@ -117,6 +119,34 @@ const GroupList = () => {
     }
   };
 
+  const unLockGroup = async ({ for: target, chat_id }: UnlockPayload) => {
+    try {
+      setLoading(true);
+      await DmGroupLockService.unlock({
+        for: target,
+        chat_id: chat_id,
+      });
+      Notification.success(
+        translation(
+          "chat_page.success_msg_unlock_conversation",
+          "Group unlocked successfully",
+        ),
+      );
+      await loadGroups();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
+        Notification.error(error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadGroups();
@@ -138,6 +168,12 @@ const GroupList = () => {
                   for: "GROUP",
                   chat_id: groups._id,
                   dmOrGroupName : groups.group_name
+                })
+              }
+              unLock={() =>
+                unLockGroup({
+                  for: "GROUP",
+                  chat_id: groups._id,
                 })
               }
             />

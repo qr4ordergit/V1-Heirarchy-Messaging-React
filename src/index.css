@@ -1,1 +1,7 @@
 @import "tailwindcss";
+
+.mantine-Input-input::placeholder,
+.mantine-Select-input::placeholder {
+  color: #868e96 !important;
+  opacity: 1 !important;
+}

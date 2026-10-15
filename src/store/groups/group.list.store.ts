@@ -13,6 +13,7 @@ export interface Groups {
   last_message: string
   admins: string[]
   disappearing_messages?: DISAPPEAR_MODE | null
+  is_locked: null | Record<string, unknown>;
 }
 
 interface DISAPPEAR_MODE_PAYLOAD {

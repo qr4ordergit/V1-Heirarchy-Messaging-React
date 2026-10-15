@@ -7,7 +7,6 @@ import {
   Menu,
   Stack,
   Text,
-  Tooltip,
 } from "@mantine/core";
 
 import { IconDotsVertical, IconLock, IconTrash } from "@tabler/icons-react";
@@ -21,16 +20,19 @@ interface ConversationItemProps {
   conversation: DM;
   onDelete: () => void;
   onSetLockDmAndGroupModalData: () => void;
+  unLock:() => void;
 }
 
 export default function ConversationItem({
   conversation,
   onDelete,
   onSetLockDmAndGroupModalData,
+  unLock
 }: ConversationItemProps) {
   const { chatId } = useParams();
   const navigate = useNavigate();
   const { translation } = useTranslation();
+  const isLocked =  Object.keys(conversation.is_locked ?? {}).length > 0
   return (
     <Group
       justify="space-between"
@@ -79,26 +81,7 @@ export default function ConversationItem({
                 {conversation.unread_count}
               </Badge>
             )}
-            <Tooltip
-              label={translation(
-                "chat_page.label_lock_conversation",
-                "Lock conversation",
-              )}
-              fz={"xs"}
-              bg={"gray"}
-            >
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                size="sm"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  // onSetLockDmAndGroupModalData();
-                }}
-              >
-                <IconLock size={13} />
-              </ActionIcon>
-            </Tooltip>
+            {isLocked && <IconLock size={13} />}
             <Menu position="bottom-start" withArrow>
               <Menu.Target>
                 <ActionIcon
@@ -115,18 +98,29 @@ export default function ConversationItem({
               </Menu.Target>
 
               <Menu.Dropdown>
-                 <Menu.Item
+                <Menu.Item
                   leftSection={<IconLock size={13} />}
                   onClick={(event) => {
                     event.stopPropagation();
-                    onSetLockDmAndGroupModalData();
+                    if (!isLocked) {
+                      onSetLockDmAndGroupModalData();
+                      return
+                    }
+                    unLock()
                   }}
                 >
                   <Text size="xs">
-                    {translation(
+                    {
+                      !isLocked ?
+                    translation(
                       "chat_page.label_lock_conversation",
-                "Lock conversation",
-                    )}
+                      "Lock conversation",
+                    ) : 
+                    translation(
+                      "chat_page.label_unlock_conversation",
+                      "Unlock conversation",
+                    )
+                    }
                   </Text>
                 </Menu.Item>
                 <Menu.Item

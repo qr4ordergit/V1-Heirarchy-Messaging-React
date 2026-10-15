@@ -20,6 +20,10 @@ import { useTranslation } from "../../store/language/language.store";
 import LockDmAndGroupModal, {
   type LockDmAndGroupModalDataState,
 } from "../modal/LockDmAndGroupModal";
+import {
+  DmGroupLockService,
+  type UnlockPayload,
+} from "../../api/services/dm.group.lock.service";
 
 interface SelectedDMState {
   chatID: string;
@@ -52,7 +56,7 @@ const DmList = () => {
       open: false,
       for: "",
       chat_id: "",
-      dmOrGroupName : ""
+      dmOrGroupName: "",
     });
 
   const resetSelectedDM = () => {
@@ -91,13 +95,14 @@ const DmList = () => {
     }
   };
 
-  const onCloseLockDmAndGroupModal = () => {
+  const onCloseLockDmAndGroupModal = async () => {
     setLockDmAndGroupModalData({
       open: false,
       for: "",
       chat_id: "",
-      dmOrGroupName : ""
+      dmOrGroupName: "",
     });
+    await loadDMs();
   };
 
   const deleteDm = async (action: number) => {
@@ -126,6 +131,34 @@ const DmList = () => {
     }
   };
 
+  const unLockDm = async ({ for: target, chat_id }: UnlockPayload) => {
+    try {
+      setLoading(true);
+      await DmGroupLockService.unlock({
+        for: target,
+        chat_id: chat_id,
+      });
+      Notification.success(
+        translation(
+          "chat_page.success_msg_unlock_conversation",
+          "Conversation unlocked successfully",
+        ),
+      );
+      await loadDMs();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
+        Notification.error(error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadDMs();
@@ -147,7 +180,13 @@ const DmList = () => {
                   open: true,
                   for: "DM",
                   chat_id: conversation._id,
-                  dmOrGroupName : conversation.display_name
+                  dmOrGroupName: conversation.display_name,
+                })
+              }
+              unLock={() =>
+                unLockDm({
+                  for: "DM",
+                  chat_id: conversation._id,
                 })
               }
             />

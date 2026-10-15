@@ -9,7 +9,6 @@ import {
   Menu,
   Stack,
   Text,
-  Tooltip,
 } from "@mantine/core";
 import { formatConversationTime, getAvatarColor } from "../../utils/constant";
 import { ROUTES } from "../../router/routes";
@@ -21,16 +20,19 @@ interface GroupItemProps {
   groups: Groups;
   onLeave: () => void;
   onSetLockDmAndGroupModalData: () => void;
+  unLock: () => void;
 }
 
 const GroupsItem = ({
   groups,
   onLeave,
   onSetLockDmAndGroupModalData,
+  unLock
 }: GroupItemProps) => {
   const { chatId } = useParams();
   const navigate = useNavigate();
   const { translation } = useTranslation();
+  const isLocked =  Object.keys(groups.is_locked ?? {}).length > 0
 
   const { target_user, userDetails } = useAuthStore((state) => state);
   const isAdmin =
@@ -91,23 +93,7 @@ const GroupsItem = ({
                 {groups.unread_count}
               </Badge>
             )}
-            <Tooltip
-              label={translation("chat_page.label_lock_group", "Lock group")}
-              fz={"xs"}
-              bg={"gray"}
-            >
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                size="sm"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onSetLockDmAndGroupModalData();
-                }}
-              >
-                <IconLock size={13} />
-              </ActionIcon>
-            </Tooltip>
+            {isLocked && <IconLock size={13} />}
             <Menu position="bottom-start" withArrow>
               <Menu.Target>
                 <ActionIcon
@@ -128,11 +114,17 @@ const GroupsItem = ({
                   leftSection={<IconLock size={13} />}
                   onClick={(event) => {
                     event.stopPropagation();
-                    onSetLockDmAndGroupModalData();
+                    if (!isLocked) {
+                      onSetLockDmAndGroupModalData();
+                      return
+                    }
+                    unLock()
                   }}
                 >
                   <Text size="xs">
-                    {translation("chat_page.label_lock_group", "Lock group")}
+                    {!isLocked
+                      ? translation("chat_page.label_lock_group", "Lock group")
+                      : translation("chat_page.label_unlock_group", "unlock group")}
                   </Text>
                 </Menu.Item>
                 {!isAdmin && (

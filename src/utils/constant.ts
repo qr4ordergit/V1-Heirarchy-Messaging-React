@@ -135,7 +135,9 @@ const COMMON_PERMISSION = {
     create: false,
     update: false,
     delete: false,
-    "manual-password" : false
+    "manual-password": false,
+    DMchat_lock: false,
+    DMchat_unlock: false,
   },
   groups: {
     read: false,
@@ -148,7 +150,9 @@ const COMMON_PERMISSION = {
     create: false,
     update: false,
     delete: false,
-    "manual-password" : false
+    "manual-password": false,
+    groupchat_lock: false,
+    groupchat_unlock: false,
   },
   "media-encryption": {
     active: true,
@@ -221,6 +225,8 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "direct-messages|update": "Update",
   "direct-messages|delete": "Delete",
   "direct-messages|manual-password": "Allow Manual Password",
+  "direct-messages|DMchat_lock": "DM Chat Lock",
+  "direct-messages|DMchat_unlock": "DM Chat Unlock",
 
   // Manage Groups
   "groups|create": "Create",
@@ -234,6 +240,8 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "group-messages|update": "Update",
   "group-messages|delete": "Delete",
   "group-messages|manual-password": "Allow Manual Password",
+  "group-messages|groupchat_lock": "Group Chat Lock",
+  "group-messages|groupchat_unlock": "Group Chat Unlock",
 
   // Media Encryption
   "media-encryption|active": "Allow",

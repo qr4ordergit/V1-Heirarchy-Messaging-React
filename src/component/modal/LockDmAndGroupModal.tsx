@@ -17,7 +17,7 @@ import { Notification } from "../../utils/notification";
 import { useTranslation } from "../../store/language/language.store";
 import {
   DmGroupLockService,
-  type PutPayload,
+  type LockPayload,
 } from "../../api/services/dm.group.lock.service";
 
 export interface LockDmAndGroupModalDataState {
@@ -110,7 +110,7 @@ const LockDmAndGroupModal = ({ data, onClose }: Props) => {
       let payload = {
         for: data.for,
         chat_id: data.chat_id,
-      } as PutPayload;
+      } as LockPayload;
 
       if (keyringCategoriesData.user_key === "") {
         payload = {
@@ -124,7 +124,7 @@ const LockDmAndGroupModal = ({ data, onClose }: Props) => {
           user_key: keyringCategoriesData.user_key,
         };
       }
-      await DmGroupLockService.put(payload);
+      await DmGroupLockService.lock(payload);
       onClose();
       Notification.success(
         data.for === "DM" ?
