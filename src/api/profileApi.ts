@@ -21,18 +21,21 @@ export interface KeyringCategoryItem {
   keyring_category_id?: string;
   keyring_category_name: string;
   keyring_category_passwords: Record<string, string>;
+  "2fa"?: boolean;
   [key: string]: any;
 }
 
 export interface CreateKeyringCategoryPayload {
   keyring_category_name: string;
   keyring_category_passwords: Record<string, string>;
+  "2fa"?: boolean;
 }
 
 export interface UpdateKeyringCategoryPayload {
   keyring_category_id: string;
   keyring_category_name: string;
   keyring_category_passwords: Record<string, string>;
+  "2fa"?: boolean;
 }
 
 const showNotification = (message: string) => {
@@ -73,16 +76,43 @@ export const getTagsApi = async (): Promise<string[]> => {
 
 export const getKeyringCategoriesApi = async (
   keyringCategoryId?: string,
+  otp?: string,
 ): Promise<KeyringCategoryItem[]> => {
   try {
     let url = API_ENDPOINTS.KEYRING_CATEGORIES;
+    const queryParams: string[] = [];
+
     if (keyringCategoryId) {
-      url += `?keyring_category_id=${encodeURIComponent(keyringCategoryId)}`;
+      queryParams.push(
+        `keyring_category_id=${encodeURIComponent(keyringCategoryId)}`,
+      );
     }
+
+    if (otp) {
+      queryParams.push(`otp=${encodeURIComponent(otp)}`);
+    }
+
+    if (queryParams.length > 0) {
+      url += (url.includes("?") ? "&" : "?") + queryParams.join("&");
+    }
+
     const response = await api.get(withTargetUser(url));
-    const data = response.data;
+    const resData = response.data;
+
     if (response.status === 200) {
-      return data.categories || data.data || (Array.isArray(data) ? data : []);
+      if (
+        resData?.data &&
+        !Array.isArray(resData.data) &&
+        typeof resData.data === "object"
+      ) {
+        return [resData.data];
+      }
+      if (Array.isArray(resData?.data)) return resData.data;
+      if (Array.isArray(resData?.categories)) return resData.categories;
+      if (Array.isArray(resData)) return resData;
+      if (resData && typeof resData === "object" && resData._id)
+        return [resData];
+      return [];
     }
     throw new Error("Failed to fetch keyring categories");
   } catch (error: any) {

@@ -11,6 +11,7 @@ import {
   Group,
   Loader,
   Paper,
+  Select,
   SimpleGrid,
   Stack,
   Table,
@@ -20,7 +21,9 @@ import {
   Tooltip,
 } from "@mantine/core";
 import {
+  IconAlertCircle,
   IconArrowLeft,
+  IconCalendar,
   IconCheck,
   IconCreditCard,
   IconCrown,
@@ -75,6 +78,41 @@ const formatBytes = (bytes: number = 0): string => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 
+const generateBillingPeriods = () => {
+  const options = [];
+  const currentDate = new Date();
+
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() - i,
+      1,
+    );
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const periodValue = `${year}-${month}`;
+    const monthLabel = d.toLocaleString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+
+    options.push({
+      value: periodValue,
+      label: monthLabel,
+    });
+  }
+  return options;
+};
+
+const parseCost = (val: string | number | undefined | null): number => {
+  if (typeof val === "number") return Number.isFinite(val) ? val : 0;
+  if (typeof val === "string") {
+    const parsed = parseFloat(val);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+};
+
 export default function UsageBilling() {
   const navigate = useNavigate();
   const { translation } = useTranslation();
@@ -82,35 +120,60 @@ export default function UsageBilling() {
   const setUserDetails = useAuthStore((state) => (state as any).setUserDetails);
   const isPaid = Boolean((userDetails as any)?.is_paid);
 
+  const billingPeriodOptions = useMemo(() => generateBillingPeriods(), []);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>(
+    billingPeriodOptions[0]?.value || "2026-10",
+  );
+
   const [payingBill, setPayingBill] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const [loadingPeriod, setLoadingPeriod] = useState(false);
 
   const [usageData, setUsageData] = useState<UsageData | null>(null);
   const [estimateData, setEstimateData] = useState<EstimateData | null>(null);
-  const [canPayAndDownload, setCanPayAndDownload] = useState(false);
+  const [isInvoiceGenerated, setIsInvoiceGenerated] = useState<boolean>(false);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
+  const loadBillingData = async (period: string, isInitial = false) => {
+    if (isInitial) {
       setLoadingData(true);
+    } else {
+      setLoadingPeriod(true);
+    }
+
+    try {
       const [usageRes, estimateRes] = await Promise.all([
         getUsageApi(),
         getEstimateApi(),
       ]);
 
-      if (mounted) {
-        if (usageRes) setUsageData(usageRes);
-        if (estimateRes?.estimate) setEstimateData(estimateRes.estimate);
-        setCanPayAndDownload(Boolean(estimateRes?.invoiceGenerated));
-        setLoadingData(false);
-      }
-    })();
+      if (usageRes) setUsageData(usageRes);
+      if (estimateRes?.estimate) setEstimateData(estimateRes.estimate);
 
-    return () => {
-      mounted = false;
-    };
+      const invoiceStatus = Boolean(estimateRes?.invoiceGenerated);
+      setIsInvoiceGenerated(invoiceStatus);
+
+      if (estimateRes?.period && estimateRes.period !== period) {
+        setSelectedPeriod(estimateRes.period);
+      }
+    } finally {
+      if (isInitial) {
+        setLoadingData(false);
+      } else {
+        setLoadingPeriod(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    loadBillingData(selectedPeriod, true);
   }, []);
+
+  const handlePeriodChange = (val: string | null) => {
+    if (!val || val === selectedPeriod) return;
+    setSelectedPeriod(val);
+    loadBillingData(val, false);
+  };
 
   const freeFeatureDefs: FeatureRowDef[] = [
     {
@@ -265,21 +328,36 @@ export default function UsageBilling() {
     [freeFeatures, paidFeatures],
   );
 
-  const chatAccountEst = estimateData?.chat_accounts;
-  const storageEst = estimateData?.storage;
+  const accruedFrom = estimateData?.accrued_from;
+  const accruedThrough = estimateData?.accrued_through;
 
-  const chatUsage = chatAccountEst?.usage ?? 0;
-  const chatFreeUnits = chatAccountEst?.free_units ?? 5;
-  const chatUnitPrice = chatAccountEst?.unit_price ?? 1.0;
-  const chatEstimatedCost = chatAccountEst?.estimated_cost ?? 0.0;
-  const chatBillableUnits = chatAccountEst?.billable_units ?? 0;
+  const chatEstimatedCost = parseCost(
+    estimateData?.cost?.chat_accounts ?? estimateData?.total_chat_accounts_cost,
+  );
+  const storageEstimatedCost = parseCost(
+    estimateData?.cost?.storage ?? estimateData?.total_storage_cost,
+  );
+  const totalEstimatedCost = parseCost(
+    estimateData?.cost?.total ?? estimateData?.total_estimated_cost,
+  );
 
-  const storageUsageBytes = storageEst?.usage_bytes ?? 0;
-  const storageFreeBytes = storageEst?.free_bytes ?? 5368709120;
-  const storageUnitPrice = storageEst?.unit_price ?? 0.025;
-  const storageEstimatedCost = storageEst?.estimated_cost ?? 0.0;
+  const latestChat =
+    estimateData?.latest_day?.chat_accounts ?? estimateData?.chat_accounts;
+  const latestStorage =
+    estimateData?.latest_day?.storage ?? estimateData?.storage;
+  const billingUnit = estimateData?.latest_day?.pricing?.billing_unit;
+  const rateUnitSuffix = billingUnit === "per_day" ? "/d" : "/acct";
 
-  const totalEstimatedCost = estimateData?.total_estimated_cost ?? 0.0;
+  const chatUsage = latestChat?.usage ?? usageData?.chat_accounts ?? 0;
+  const chatFreeUnits = latestChat?.free_units ?? 5;
+  const chatBillableUnits =
+    latestChat?.billable_units ?? Math.max(0, chatUsage - chatFreeUnits);
+  const chatUnitPrice = parseCost(latestChat?.unit_price ?? 0.03);
+
+  const storageUsageBytes =
+    latestStorage?.usage_bytes ?? usageData?.storage_bytes?.total_bytes ?? 0;
+  const storageFreeBytes = latestStorage?.free_bytes ?? 5368709120; // 5 GB
+  const storageUnitPrice = parseCost(latestStorage?.unit_price ?? 0.025);
 
   const chatItemTitle = translation(
     "account_billing.itemChatAccounts",
@@ -288,11 +366,11 @@ export default function UsageBilling() {
 
   const chatItemDetail = translation(
     "account_billing.detailChatAccounts",
-    `${chatUsage} used (${chatBillableUnits} billable) • $${chatUnitPrice.toFixed(2)}/acct`,
+    `${chatUsage} used (${chatBillableUnits} billable) • $${chatUnitPrice.toFixed(4)}${rateUnitSuffix}`,
   )
     .replace("{usage}", String(chatUsage))
     .replace("{billable}", String(chatBillableUnits))
-    .replace("{rate}", chatUnitPrice.toFixed(2));
+    .replace("{rate}", chatUnitPrice.toFixed(4));
 
   const storageItemTitle = translation(
     "account_billing.itemStorageOverage",
@@ -301,10 +379,10 @@ export default function UsageBilling() {
 
   const storageItemDetail = translation(
     "account_billing.detailStorageOverage",
-    `${formatBytes(storageUsageBytes)} used • $${storageUnitPrice.toFixed(3)}/GB`,
+    `${formatBytes(storageUsageBytes)} used • $${storageUnitPrice.toFixed(4)}/GB`,
   )
     .replace("{usage}", formatBytes(storageUsageBytes))
-    .replace("{rate}", storageUnitPrice.toFixed(3));
+    .replace("{rate}", storageUnitPrice.toFixed(4));
 
   const billingItems = [
     {
@@ -486,7 +564,6 @@ export default function UsageBilling() {
       }}
     >
       <Container size="lg">
-        {/* Header navigation & membership badge */}
         <Group justify="flex-start" align="center" gap="md" mb="lg">
           <Tooltip
             label={translation("account_billing.tooltipGoBack", "Go back")}
@@ -644,13 +721,59 @@ export default function UsageBilling() {
                 <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
                   {/* Daily Utility Breakdown */}
                   <div style={{ gridColumn: "span 2" }}>
-                    <Paper withBorder radius="md" p="md" bg="white">
-                      <Title order={5} mb="sm">
-                        {translation(
-                          "account_billing.titleDailyBreakdown",
-                          "Daily Utility Breakdown",
+                    <Paper
+                      withBorder
+                      radius="md"
+                      p="md"
+                      bg="white"
+                      style={{ position: "relative" }}
+                    >
+                      {loadingPeriod && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            backgroundColor: "rgba(255, 255, 255, 0.7)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            zIndex: 2,
+                            borderRadius: "inherit",
+                          }}
+                        >
+                          <Loader size="sm" color="indigo" />
+                        </div>
+                      )}
+
+                      <Group
+                        justify="space-between"
+                        align="center"
+                        mb="sm"
+                        wrap="nowrap"
+                      >
+                        <Title order={5}>
+                          {translation(
+                            "account_billing.titleDailyBreakdown",
+                            "Daily Utility Breakdown",
+                          )}
+                        </Title>
+
+                        {accruedFrom && accruedThrough && (
+                          <Badge
+                            size="sm"
+                            variant="light"
+                            color="gray"
+                            radius="sm"
+                            leftSection={<IconCalendar size={12} />}
+                            styles={{
+                              root: { textTransform: "none", fontWeight: 500 },
+                            }}
+                          >
+                            {accruedFrom} — {accruedThrough}
+                          </Badge>
                         )}
-                      </Title>
+                      </Group>
+
                       <Table verticalSpacing="sm">
                         <Table.Thead bg="gray.0">
                           <Table.Tr>
@@ -696,44 +819,71 @@ export default function UsageBilling() {
                   {/* Invoice Summary Card */}
                   <Card withBorder radius="md" p="lg" bg="white">
                     <Stack gap="md">
-                      <Group justify="space-between">
-                        <Text fw={600} size="sm" c="dimmed">
+                      <Group
+                        justify="space-between"
+                        align="center"
+                        wrap="nowrap"
+                      >
+                        <Text fw={600} size="xs" c="dimmed" tt="uppercase">
                           {translation(
-                            "account_billing.txtInvoiceStatus",
-                            "Invoice Status",
+                            "account_billing.lblBillingCycle",
+                            "Billing Cycle",
                           )}
                         </Text>
-                        <Badge
-                          color={totalEstimatedCost > 0 ? "orange" : "green"}
-                          variant="light"
-                        >
-                          {totalEstimatedCost > 0
-                            ? translation("account_billing.badgeDue", "Due")
-                            : translation(
-                                "account_billing.badgeNoChargesDue",
-                                "No Charges Due",
-                              )}
-                        </Badge>
+                        <Select
+                          size="xs"
+                          w={160}
+                          data={billingPeriodOptions}
+                          value={selectedPeriod}
+                          onChange={handlePeriodChange}
+                          leftSection={<IconCalendar size={13} />}
+                          allowDeselect={false}
+                          styles={{
+                            input: {
+                              fontWeight: 600,
+                              fontSize: "12px",
+                            },
+                          }}
+                        />
                       </Group>
 
                       <Divider />
 
-                      {/* Current Accrued Cost */}
-                      <Stack gap={2}>
-                        <Text size="xs" c="dimmed" fw={600} tt="uppercase">
-                          {translation(
-                            "account_billing.txtCurrentAccruedCost",
-                            "Current Accrued Cost",
-                          )}
-                        </Text>
-                        <Title order={2}>
-                          ${totalEstimatedCost.toFixed(2)}
-                        </Title>
-                      </Stack>
+                      <Group
+                        justify="space-between"
+                        align="flex-end"
+                        wrap="wrap"
+                      >
+                        <Stack gap={2}>
+                          <Text size="xs" c="dimmed" fw={600} tt="uppercase">
+                            {translation(
+                              "account_billing.txtCurrentAccruedCost",
+                              "Current Accrued Cost",
+                            )}
+                          </Text>
+                          <Title order={2}>
+                            ${totalEstimatedCost.toFixed(2)}
+                          </Title>
+                        </Stack>
 
-                      {/* Action buttons conditionally rendered based on status */}
-                      {canPayAndDownload ? (
-                        <>
+                        {!isInvoiceGenerated && (
+                          <Badge
+                            size="sm"
+                            color="gray"
+                            variant="light"
+                            radius="sm"
+                            leftSection={<IconAlertCircle size={12} />}
+                          >
+                            {translation(
+                              "account_billing.txtInvoiceNotGenerated",
+                              "Invoice not generated yet",
+                            )}
+                          </Badge>
+                        )}
+                      </Group>
+
+                      {isInvoiceGenerated && (
+                        <Stack gap="xs" mt="xs">
                           <Button
                             fullWidth
                             color="indigo"
@@ -771,8 +921,8 @@ export default function UsageBilling() {
                               "Download PDF Summary",
                             )}
                           </Button>
-                        </>
-                      ) : null}
+                        </Stack>
+                      )}
                     </Stack>
                   </Card>
                 </SimpleGrid>

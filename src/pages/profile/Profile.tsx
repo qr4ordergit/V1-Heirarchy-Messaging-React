@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import {
   ActionIcon,
   Avatar,
+  Badge,
   Button,
   Card,
   Divider,
@@ -10,23 +11,27 @@ import {
   Loader,
   Modal,
   PasswordInput,
+  PinInput,
   Stack,
+  Switch,
   Text,
   TextInput,
   Textarea,
   Tooltip,
   UnstyledButton,
+  Paper,
 } from "@mantine/core";
 import {
   IconCheck,
   IconChevronDown,
   IconChevronRight,
-  IconCopy,
   IconId,
   IconKey,
-  // IconLogout,
+  IconLock,
   IconPencil,
   IconPlus,
+  IconSearch,
+  IconShieldLock,
   IconTag,
   IconTrash,
   IconUser,
@@ -35,7 +40,6 @@ import {
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { useTagStore } from "../../store/tags/tags.store";
-// import { logout } from "../../api/authApi";
 import {
   createKeyringCategoryApi,
   createTagApi,
@@ -48,7 +52,6 @@ import {
   uploadImageToS3Api,
 } from "../../api/profileApi";
 import type { KeyringCategoryItem } from "../../api/profileApi";
-// import { ROUTES } from "../../router/routes";
 import { notifications } from "@mantine/notifications";
 import { handleApiError } from "../../utils/errorHandler";
 import { useTranslation } from "../../store/language/language.store";
@@ -64,7 +67,6 @@ const Profile = () => {
   const { translation } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // const clearTokens = useAuthStore((state) => state.clearTokens);
   const userDetails = useAuthStore((state) => state.userDetails);
   const setTargetUserDetails = useAuthStore(
     (state) => state.setTargetUserDetails,
@@ -80,32 +82,31 @@ const Profile = () => {
 
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  // Account Details Accordion
   const [accountDetailsOpen, setAccountDetailsOpen] = useState(false);
   const [isEditingAccount, setIsEditingAccount] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [description, setDescription] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
-  // Tags Accordion
   const [tagsOpen, setTagsOpen] = useState(false);
+  const [tagSearchQuery, setTagSearchQuery] = useState("");
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [loadingTags, setLoadingTags] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [creatingTag, setCreatingTag] = useState(false);
   const [deletingTagId, setDeletingTagId] = useState<string | null>(null);
 
-  // Keyring Accordion
   const [keyringOpen, setKeyringOpen] = useState(false);
+  const [keyringSearchQuery, setKeyringSearchQuery] = useState("");
   const [keyrings, setKeyrings] = useState<KeyringCategoryItem[]>([]);
   const [loadingKeyrings, setLoadingKeyrings] = useState(false);
-  const [expandedKeyringId, setExpandedKeyringId] = useState<string | null>(
-    null,
-  );
 
   const [keyringModalOpened, setKeyringModalOpened] = useState(false);
   const [editingKeyringId, setEditingKeyringId] = useState<string | null>(null);
   const [categoryName, setCategoryName] = useState("");
+  const [is2faEnabled, setIs2faEnabled] = useState(false);
+  const [initial2faEnabled, setInitial2faEnabled] = useState(false);
+  const [modalSearchQuery, setModalSearchQuery] = useState("");
   const [passwordPairs, setPasswordPairs] = useState<PasswordPair[]>([
     { key: "", value: "" },
   ]);
@@ -113,6 +114,14 @@ const Profile = () => {
   const [deletingKeyringId, setDeletingKeyringId] = useState<string | null>(
     null,
   );
+
+  const [otpModalOpened, setOtpModalOpened] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    type: "edit" | "delete";
+    category: KeyringCategoryItem;
+  } | null>(null);
 
   const isSubRoute = ["/privacy", "/help", "/about"].includes(
     location.pathname,
@@ -293,14 +302,21 @@ const Profile = () => {
   const handleOpenAddKeyringModal = () => {
     setEditingKeyringId(null);
     setCategoryName("");
+    setIs2faEnabled(false);
+    setInitial2faEnabled(false);
+    setModalSearchQuery("");
     setPasswordPairs([{ key: "", value: "" }]);
     setKeyringModalOpened(true);
   };
 
-  const handleOpenEditKeyringModal = (item: KeyringCategoryItem) => {
-    const id = item.keyring_category_id || item._id || "";
+  const openKeyringModalDirectly = (item: KeyringCategoryItem) => {
+    const id = item._id || item.keyring_category_id || "";
+    const existing2fa = Boolean(item["2fa"]);
     setEditingKeyringId(id);
     setCategoryName(item.keyring_category_name || "");
+    setIs2faEnabled(existing2fa);
+    setInitial2faEnabled(existing2fa);
+    setModalSearchQuery("");
 
     const pairs: PasswordPair[] = [];
     if (
@@ -311,8 +327,103 @@ const Profile = () => {
         pairs.push({ key: k, value: String(v) });
       }
     }
+
     setPasswordPairs(pairs.length > 0 ? pairs : [{ key: "", value: "" }]);
     setKeyringModalOpened(true);
+  };
+
+  const handleEditKeyringClick = (item: KeyringCategoryItem) => {
+    if (item["2fa"] === true) {
+      setPendingAction({ type: "edit", category: item });
+      setOtpValue("");
+      setOtpModalOpened(true);
+    } else {
+      openKeyringModalDirectly(item);
+    }
+  };
+
+  const handleDeleteKeyringClick = (item: KeyringCategoryItem) => {
+    const id = item.keyring_category_id || item._id || "";
+    if (item["2fa"] === true) {
+      setPendingAction({ type: "delete", category: item });
+      setOtpValue("");
+      setOtpModalOpened(true);
+    } else {
+      executeDeleteKeyring(id);
+    }
+  };
+
+  const handleVerifyOtpSubmit = async () => {
+    if (!pendingAction || otpValue.trim().length < 4) return;
+
+    const catId =
+      pendingAction.category._id ||
+      pendingAction.category.keyring_category_id ||
+      "";
+
+    setVerifyingOtp(true);
+    try {
+      const fetchedItems = await getKeyringCategoriesApi(
+        catId,
+        otpValue.trim(),
+      );
+
+      const updatedCategory: KeyringCategoryItem = fetchedItems?.[0] || {
+        ...pendingAction.category,
+      };
+
+      if (!updatedCategory._id && catId) updatedCategory._id = catId;
+      if (!updatedCategory.keyring_category_id && catId)
+        updatedCategory.keyring_category_id = catId;
+
+      setKeyrings((prev) =>
+        prev.map((item) =>
+          item._id === catId || item.keyring_category_id === catId
+            ? { ...item, ...updatedCategory }
+            : item,
+        ),
+      );
+
+      setOtpModalOpened(false);
+      const action = pendingAction;
+      setPendingAction(null);
+      setOtpValue("");
+
+      if (action.type === "edit") {
+        openKeyringModalDirectly(updatedCategory);
+      } else if (action.type === "delete") {
+        await executeDeleteKeyring(catId);
+      }
+    } catch (err: any) {
+      handleApiError(err);
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  const executeDeleteKeyring = async (id: string) => {
+    setDeletingKeyringId(id);
+    try {
+      const success = await deleteKeyringCategoryApi(id);
+      if (success) {
+        notifications.show({
+          title: "",
+          message: translation(
+            "profile.notificationKeyringDeleted",
+            "Keyring category deleted successfully.",
+          ),
+          color: "green",
+          icon: <IconCheck size={18} />,
+        });
+        setKeyrings((prev) =>
+          prev.filter((item) => (item.keyring_category_id || item._id) !== id),
+        );
+      }
+    } catch (err: any) {
+      handleApiError(err);
+    } finally {
+      setDeletingKeyringId(null);
+    }
   };
 
   const handleAddPasswordPairRow = () => {
@@ -377,11 +488,17 @@ const Profile = () => {
     setSubmittingKeyring(true);
     try {
       if (editingKeyringId) {
-        const success = await updateKeyringCategoryApi({
+        const updatePayload: any = {
           keyring_category_id: editingKeyringId,
           keyring_category_name: trimmedCatName,
           keyring_category_passwords: passwordsMap,
-        });
+        };
+
+        if (is2faEnabled !== initial2faEnabled) {
+          updatePayload["2fa"] = is2faEnabled;
+        }
+
+        const success = await updateKeyringCategoryApi(updatePayload);
 
         if (success) {
           notifications.show({
@@ -400,6 +517,7 @@ const Profile = () => {
         const res = await createKeyringCategoryApi({
           keyring_category_name: trimmedCatName,
           keyring_category_passwords: passwordsMap,
+          "2fa": is2faEnabled,
         });
 
         if (res) {
@@ -423,43 +541,18 @@ const Profile = () => {
     }
   };
 
-  const handleDeleteKeyring = async (id: string) => {
-    setDeletingKeyringId(id);
-    try {
-      const success = await deleteKeyringCategoryApi(id);
-      if (success) {
-        notifications.show({
-          title: "",
-          message: translation(
-            "profile.notificationKeyringDeleted",
-            "Keyring category deleted successfully.",
-          ),
-          color: "green",
-          icon: <IconCheck size={18} />,
-        });
-        setKeyrings((prev) =>
-          prev.filter((item) => (item.keyring_category_id || item._id) !== id),
-        );
-      }
-    } catch (err: any) {
-      handleApiError(err);
-    } finally {
-      setDeletingKeyringId(null);
-    }
-  };
-
-  const handleCopyPasswordValue = (val: string) => {
-    navigator.clipboard.writeText(val);
-    notifications.show({
-      title: "",
-      message: translation(
-        "profile.notificationPasswordCopied",
-        "Password copied to clipboard!",
-      ),
-      color: "blue",
-      icon: <IconCopy size={16} />,
-    });
-  };
+  // const handleCopyPasswordValue = (val: string) => {
+  //   navigator.clipboard.writeText(val);
+  //   notifications.show({
+  //     title: "",
+  //     message: translation(
+  //       "profile.notificationPasswordCopied",
+  //       "Password copied to clipboard!",
+  //     ),
+  //     color: "blue",
+  //     icon: <IconCopy size={16} />,
+  //   });
+  // };
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -508,11 +601,6 @@ const Profile = () => {
     }
   };
 
-  // useEffect(() => {
-  //   fetchTagsList();
-  //   fetchKeyringsList();
-  // }, []);
-
   const handleToggleTags = async () => {
     if (tagsOpen) {
       setTagsOpen(false);
@@ -524,16 +612,34 @@ const Profile = () => {
       setTagsOpen(true);
     }
   };
-  // const handleLogout = async () => {
-  //   try {
-  //     await logout();
-  //   } catch (error: any) {
-  //     handleApiError(error);
-  //   } finally {
-  //     clearTokens();
-  //     navigate(ROUTES.HOME, { replace: true });
-  //   }
-  // };
+
+  const filteredTags = useMemo(() => {
+    if (!tagSearchQuery.trim()) return tagsList;
+    return tagsList.filter((tag) =>
+      tag.toLowerCase().includes(tagSearchQuery.toLowerCase().trim()),
+    );
+  }, [tagsList, tagSearchQuery]);
+
+  const filteredKeyrings = useMemo(() => {
+    if (!keyringSearchQuery.trim()) return keyrings;
+    const q = keyringSearchQuery.toLowerCase().trim();
+    return keyrings.filter(
+      (cat) =>
+        cat.keyring_category_name?.toLowerCase().includes(q) ||
+        Object.keys(cat.keyring_category_passwords || {}).some((k) =>
+          k.toLowerCase().includes(q),
+        ),
+    );
+  }, [keyrings, keyringSearchQuery]);
+
+  const filteredPasswordPairs = useMemo(() => {
+    if (!modalSearchQuery.trim()) return passwordPairs;
+    const q = modalSearchQuery.toLowerCase().trim();
+    return passwordPairs.filter(
+      (p) =>
+        p.key.toLowerCase().includes(q) || p.value.toLowerCase().includes(q),
+    );
+  }, [passwordPairs, modalSearchQuery]);
 
   const username =
     targetUserDetails?.phone_number ||
@@ -811,6 +917,7 @@ const Profile = () => {
               >
                 <UnstyledButton
                   onClick={handleToggleTags}
+                  disabled={loadingTags}
                   className="w-full px-5 py-4 cursor-pointer"
                 >
                   <Group justify="space-between" pr={"xs"}>
@@ -822,14 +929,11 @@ const Profile = () => {
                         <Text fw={600} size="sm" className="text-gray-900">
                           {translation("profile.txtTagList", "Tags List")}
                         </Text>
-                        {/* <Text size="xs" c="dimmed">
-                          {tagsList.length}{" "}
-                          {tagsList.length === 1 ? "tag" : "tags"}{" "}
-                          {translation("profile.txtConfigured", "configured")}
-                        </Text> */}
                       </div>
                     </Group>
-                    {tagsOpen ? (
+                    {loadingTags ? (
+                      <Loader size={16} color="indigo" />
+                    ) : tagsOpen ? (
                       <IconChevronDown size={18} className="text-gray-400" />
                     ) : (
                       <IconChevronRight size={18} className="text-gray-400" />
@@ -839,6 +943,35 @@ const Profile = () => {
 
                 {tagsOpen && (
                   <div className="px-5 pb-5 pt-3 border-t border-gray-100 space-y-3">
+                    {tagsList.length > 0 && (
+                      <TextInput
+                        size="xs"
+                        placeholder={translation(
+                          "profile.placeholderSearchTags",
+                          "Search tags...",
+                        )}
+                        leftSection={
+                          <IconSearch size={14} className="text-gray-400" />
+                        }
+                        value={tagSearchQuery}
+                        onChange={(e) =>
+                          setTagSearchQuery(e.currentTarget.value)
+                        }
+                        rightSection={
+                          tagSearchQuery && (
+                            <ActionIcon
+                              size="xs"
+                              variant="subtle"
+                              color="gray"
+                              onClick={() => setTagSearchQuery("")}
+                            >
+                              <IconX size={12} />
+                            </ActionIcon>
+                          )
+                        }
+                      />
+                    )}
+
                     {isAddingTag ? (
                       <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50 border border-gray-200">
                         <TextInput
@@ -899,9 +1032,9 @@ const Profile = () => {
                       <div className="flex justify-center items-center py-4">
                         <Loader size="sm" color="indigo" />
                       </div>
-                    ) : tagsList.length > 0 ? (
-                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                        {tagsList.map((tag, idx) => (
+                    ) : filteredTags.length > 0 ? (
+                      <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                        {filteredTags.map((tag, idx) => (
                           <div
                             key={`${tag}-${idx}`}
                             className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50/80 border border-gray-100 hover:bg-gray-100/60 transition-colors"
@@ -937,10 +1070,15 @@ const Profile = () => {
                     ) : (
                       <div className="py-2 text-center">
                         <Text size="xs" c="dimmed">
-                          {translation(
-                            "profile.txtNoTagsCreated",
-                            "No tags created yet.",
-                          )}
+                          {tagSearchQuery
+                            ? translation(
+                                "profile.txtNoTagsFound",
+                                "No matching tags found.",
+                              )
+                            : translation(
+                                "profile.txtNoTagsCreated",
+                                "No tags created yet.",
+                              )}
                         </Text>
                       </div>
                     )}
@@ -956,6 +1094,7 @@ const Profile = () => {
               >
                 <UnstyledButton
                   onClick={handleToggleKeyring}
+                  disabled={loadingKeyrings}
                   className="w-full px-5 py-4 cursor-pointer"
                 >
                   <Group justify="space-between" pr={"xs"}>
@@ -970,19 +1109,11 @@ const Profile = () => {
                             "Keyring List",
                           )}
                         </Text>
-                        {/* <Text size="xs" c="dimmed">
-                          {keyrings.length}{" "}
-                          {keyrings.length === 1
-                            ? translation("profile.txtCategory", "category")
-                            : translation(
-                                "profile.txtCategories",
-                                "categories",
-                              )}{" "}
-                          {translation("profile.txtConfigured", "configured")}
-                        </Text> */}
                       </div>
                     </Group>
-                    {keyringOpen ? (
+                    {loadingKeyrings ? (
+                      <Loader size={16} color="indigo" />
+                    ) : keyringOpen ? (
                       <IconChevronDown size={18} className="text-gray-400" />
                     ) : (
                       <IconChevronRight size={18} className="text-gray-400" />
@@ -992,6 +1123,35 @@ const Profile = () => {
 
                 {keyringOpen && (
                   <div className="px-5 pb-5 pt-3 border-t border-gray-100 space-y-3">
+                    {keyrings.length > 0 && (
+                      <TextInput
+                        size="xs"
+                        placeholder={translation(
+                          "profile.placeholderSearchKeyrings",
+                          "Search keyring categories or keys...",
+                        )}
+                        leftSection={
+                          <IconSearch size={14} className="text-gray-400" />
+                        }
+                        value={keyringSearchQuery}
+                        onChange={(e) =>
+                          setKeyringSearchQuery(e.currentTarget.value)
+                        }
+                        rightSection={
+                          keyringSearchQuery && (
+                            <ActionIcon
+                              size="xs"
+                              variant="subtle"
+                              color="gray"
+                              onClick={() => setKeyringSearchQuery("")}
+                            >
+                              <IconX size={12} />
+                            </ActionIcon>
+                          )
+                        }
+                      />
+                    )}
+
                     <Button
                       variant="subtle"
                       color="indigo"
@@ -1011,51 +1171,69 @@ const Profile = () => {
                       <div className="flex justify-center items-center py-4">
                         <Loader size="sm" color="indigo" />
                       </div>
-                    ) : keyrings.length > 0 ? (
+                    ) : filteredKeyrings.length > 0 ? (
                       <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                        {keyrings.map((cat, idx) => {
+                        {filteredKeyrings.map((cat, idx) => {
                           const catId =
                             cat.keyring_category_id || cat._id || String(idx);
-                          const isExpanded = expandedKeyringId === catId;
                           const passMap = cat.keyring_category_passwords || {};
                           const passEntries = Object.entries(passMap);
+                          const has2FA = cat["2fa"] === true;
 
                           return (
                             <div
                               key={catId}
-                              className="rounded-xl border border-gray-200 bg-gray-50/60 overflow-hidden"
+                              className="rounded-xl border border-gray-200 bg-white overflow-hidden p-3"
                             >
-                              <div className="flex items-center justify-between p-3 bg-white">
-                                <Group
-                                  gap="xs"
-                                  className="cursor-pointer flex-1"
-                                  onClick={() =>
-                                    setExpandedKeyringId(
-                                      isExpanded ? null : catId,
-                                    )
-                                  }
-                                >
+                              <div className="flex items-center justify-between">
+                                <Group gap="xs" className="flex-1">
                                   <IconKey
                                     size={16}
                                     className="text-indigo-600"
                                   />
                                   <div>
-                                    <div>
+                                    <Group gap={6} align="center">
                                       <Text
                                         size="xs"
                                         fw={700}
-                                        c="dimmed"
-                                        style={{ letterSpacing: "0.6px" }}
+                                        c="dark.7"
+                                        style={{ letterSpacing: "0.3px" }}
                                       >
                                         {cat.keyring_category_name}
                                       </Text>
-                                    </div>
-                                    <Text size="xs" c="dimmed">
-                                      {passEntries.length}{" "}
-                                      {passEntries.length === 1
-                                        ? "password key"
-                                        : "password keys"}
-                                    </Text>
+                                      {has2FA && (
+                                        <Badge
+                                          size="xs"
+                                          variant="light"
+                                          color="red"
+                                          p={0}
+                                          w={20}
+                                          h={20}
+                                          circle
+                                        >
+                                          <IconLock
+                                            size={11}
+                                            style={{ display: "block" }}
+                                          />
+                                        </Badge>
+                                      )}
+                                    </Group>
+
+                                    {!has2FA ? (
+                                      <Text size="xs" c="dimmed">
+                                        {passEntries.length}{" "}
+                                        {passEntries.length === 1
+                                          ? "password key"
+                                          : "password keys"}
+                                      </Text>
+                                    ) : (
+                                      <Text size="xs" c="dimmed">
+                                        {translation(
+                                          "profile.txtProtectedBy2FA",
+                                          "Encrypted & 2FA protected",
+                                        )}
+                                      </Text>
+                                    )}
                                   </div>
                                 </Group>
 
@@ -1064,12 +1242,10 @@ const Profile = () => {
                                     size="sm"
                                     variant="subtle"
                                     color="indigo"
-                                    onClick={() =>
-                                      handleOpenEditKeyringModal(cat)
-                                    }
+                                    onClick={() => handleEditKeyringClick(cat)}
                                     title={translation(
                                       "profile.tooltipAddKeyring",
-                                      "Add Category",
+                                      "Edit / Add Category",
                                     )}
                                   >
                                     <IconPlus size={15} />
@@ -1079,7 +1255,9 @@ const Profile = () => {
                                     variant="subtle"
                                     color="red"
                                     loading={deletingKeyringId === catId}
-                                    onClick={() => handleDeleteKeyring(catId)}
+                                    onClick={() =>
+                                      handleDeleteKeyringClick(cat)
+                                    }
                                     title={translation(
                                       "profile.tooltipDeleteKeyring",
                                       "Delete Category",
@@ -1087,77 +1265,8 @@ const Profile = () => {
                                   >
                                     <IconTrash size={15} />
                                   </ActionIcon>
-                                  <ActionIcon
-                                    size="sm"
-                                    variant="subtle"
-                                    color="gray"
-                                    onClick={() =>
-                                      setExpandedKeyringId(
-                                        isExpanded ? null : catId,
-                                      )
-                                    }
-                                  >
-                                    {isExpanded ? (
-                                      <IconChevronDown size={15} />
-                                    ) : (
-                                      <IconChevronRight size={15} />
-                                    )}
-                                  </ActionIcon>
                                 </Group>
                               </div>
-
-                              {/* Standard conditional render without Collapse */}
-                              {isExpanded && (
-                                <div className="p-3 pt-2 bg-gray-50/90 border-t border-gray-100 space-y-2">
-                                  {passEntries.length > 0 ? (
-                                    passEntries.map(([k, v], pIdx) => (
-                                      <div
-                                        key={`${k}-${pIdx}`}
-                                        className="flex items-center justify-between p-2 rounded-lg bg-white border border-gray-200 text-xs"
-                                      >
-                                        <div>
-                                          <Text fw={600} size="xs" c="gray.8">
-                                            {k}
-                                          </Text>
-                                          <Text
-                                            size="xs"
-                                            c="dimmed"
-                                            className="font-mono truncate max-w-50"
-                                          >
-                                            ••••••••
-                                          </Text>
-                                        </div>
-
-                                        <Tooltip
-                                          label={translation(
-                                            "profile.tooltipCopyPassword",
-                                            "Copy Password",
-                                          )}
-                                          withArrow
-                                        >
-                                          <ActionIcon
-                                            size="xs"
-                                            variant="light"
-                                            color="gray"
-                                            onClick={() =>
-                                              handleCopyPasswordValue(String(v))
-                                            }
-                                          >
-                                            <IconCopy size={13} />
-                                          </ActionIcon>
-                                        </Tooltip>
-                                      </div>
-                                    ))
-                                  ) : (
-                                    <Text size="xs" c="dimmed" ta="center">
-                                      {translation(
-                                        "profile.txtNoPasswordsInCat",
-                                        "No passwords configured in this category.",
-                                      )}
-                                    </Text>
-                                  )}
-                                </div>
-                              )}
                             </div>
                           );
                         })}
@@ -1165,40 +1274,21 @@ const Profile = () => {
                     ) : (
                       <div className="py-2 text-center">
                         <Text size="xs" c="dimmed">
-                          {translation(
-                            "profile.txtNoKeyringsCreated",
-                            "No keyring categories created yet.",
-                          )}
+                          {keyringSearchQuery
+                            ? translation(
+                                "profile.txtNoKeyringsFound",
+                                "No matching keyring categories found.",
+                              )
+                            : translation(
+                                "profile.txtNoKeyringsCreated",
+                                "No keyring categories created yet.",
+                              )}
                         </Text>
                       </div>
                     )}
                   </div>
                 )}
               </Card>
-
-              {/* LOGOUT BUTTON */}
-              {/* <Card
-                withBorder
-                radius="lg"
-                p={0}
-                className="w-full border-gray-200/90 shadow-xs bg-white hover:bg-red-50/40 hover:border-red-200 transition-all"
-              >
-                <UnstyledButton
-                  onClick={handleLogout}
-                  className="w-full px-5 py-4 cursor-pointer"
-                >
-                  <Group justify="space-between">
-                    <Group gap="md">
-                      <div className="p-2.5 rounded-xl bg-red-50 text-red-500">
-                        <IconLogout size={20} />
-                      </div>
-                      <Text fw={600} size="sm" className="text-red-500">
-                        {translation("profile.txtLogout", "Logout")}
-                      </Text>
-                    </Group>
-                  </Group>
-                </UnstyledButton>
-              </Card> */}
             </div>
           </Stack>
 
@@ -1285,6 +1375,34 @@ const Profile = () => {
             onChange={(e) => setCategoryName(e.currentTarget.value)}
           />
 
+          <Paper p="xs" bg="gray.0" radius="md" withBorder>
+            <Group justify="space-between" align="center">
+              <Group gap="xs">
+                <IconShieldLock size={18} className="text-indigo-600" />
+                <div>
+                  <Text size="xs" fw={600}>
+                    {translation(
+                      "profile.labelEnable2FA",
+                      "Enable 2FA Protection",
+                    )}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {translation(
+                      "profile.descEnable2FA",
+                      "Require OTP verification before editing or deleting",
+                    )}
+                  </Text>
+                </div>
+              </Group>
+              <Switch
+                size="sm"
+                color="indigo"
+                checked={is2faEnabled}
+                onChange={(e) => setIs2faEnabled(e.currentTarget.checked)}
+              />
+            </Group>
+          </Paper>
+
           <Divider
             label={translation(
               "profile.dividerCategoryPasswords",
@@ -1293,8 +1411,33 @@ const Profile = () => {
             labelPosition="center"
           />
 
-          <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-            {passwordPairs.map((pair, index) => (
+          {passwordPairs.length > 1 && (
+            <TextInput
+              size="xs"
+              placeholder={translation(
+                "profile.placeholderSearchModalKeys",
+                "Filter password keys...",
+              )}
+              leftSection={<IconSearch size={14} className="text-gray-400" />}
+              value={modalSearchQuery}
+              onChange={(e) => setModalSearchQuery(e.currentTarget.value)}
+              rightSection={
+                modalSearchQuery && (
+                  <ActionIcon
+                    size="xs"
+                    variant="subtle"
+                    color="gray"
+                    onClick={() => setModalSearchQuery("")}
+                  >
+                    <IconX size={12} />
+                  </ActionIcon>
+                )
+              }
+            />
+          )}
+
+          <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+            {filteredPasswordPairs.map((pair, index) => (
               <div
                 key={index}
                 className="flex items-center gap-2 p-2 bg-gray-50 rounded-xl border border-gray-200"
@@ -1377,6 +1520,68 @@ const Profile = () => {
               {editingKeyringId
                 ? translation("profile.btnUpdateCategory", "Update Category")
                 : translation("profile.btnSaveCategory", "Save Category")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={otpModalOpened}
+        onClose={() => {
+          setOtpModalOpened(false);
+          setPendingAction(null);
+          setOtpValue("");
+        }}
+        title={
+          <Group gap="xs">
+            <IconShieldLock size={18} className="text-red-600" />
+            <Text fw={700} size="md">
+              {translation("profile.modalTitle2FAAuth", "2FA Security Check")}
+            </Text>
+          </Group>
+        }
+        radius="lg"
+        size="sm"
+        centered
+      >
+        <Stack gap="md" align="center" py="xs">
+          <Text size="sm" ta="center" c="dimmed">
+            {translation(
+              "profile.msgEnter2FAOtp",
+              "This category is protected with Two-Factor Authentication. Please enter your verification code to proceed.",
+            )}
+          </Text>
+
+          <PinInput
+            length={6}
+            size="sm"
+            type="number"
+            autoFocus
+            value={otpValue}
+            onChange={setOtpValue}
+            disabled={verifyingOtp}
+          />
+
+          <Group justify="flex-end" gap="xs" w="100%" mt="sm">
+            <Button
+              variant="default"
+              size="xs"
+              onClick={() => {
+                setOtpModalOpened(false);
+                setPendingAction(null);
+                setOtpValue("");
+              }}
+            >
+              {translation("profile.btnCancel", "Cancel")}
+            </Button>
+            <Button
+              size="xs"
+              color="indigo"
+              loading={verifyingOtp}
+              disabled={otpValue.length < 4}
+              onClick={handleVerifyOtpSubmit}
+            >
+              {translation("profile.btnVerifyAndProceed", "Verify & Proceed")}
             </Button>
           </Group>
         </Stack>
