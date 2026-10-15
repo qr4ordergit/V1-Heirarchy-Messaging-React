@@ -124,7 +124,7 @@ const GroupsItem = ({
                   <Text size="xs">
                     {!isLocked
                       ? translation("chat_page.label_lock_group", "Lock group")
-                      : translation("chat_page.label_unlock_group", "unlock group")}
+                      : translation("chat_page.label_unlock_group", "Unlock group")}
                   </Text>
                 </Menu.Item>
                 {!isAdmin && (

@@ -29,7 +29,7 @@ export interface LockDmAndGroupModalDataState {
 
 interface Props {
   data: LockDmAndGroupModalDataState;
-  onClose: () => void;
+  onClose: (reload : boolean) => void;
 }
 
 interface LoadingState {
@@ -125,7 +125,7 @@ const LockDmAndGroupModal = ({ data, onClose }: Props) => {
         };
       }
       await DmGroupLockService.lock(payload);
-      onClose();
+      onClose(true);
       Notification.success(
         data.for === "DM" ?
         translation(
@@ -160,7 +160,7 @@ const LockDmAndGroupModal = ({ data, onClose }: Props) => {
   return (
     <Modal
       opened={data.open}
-      onClose={onClose}
+      onClose={()=>onClose(false)}
       title={
         <Text size="sm">
           {data.for === "DM" ? translation(

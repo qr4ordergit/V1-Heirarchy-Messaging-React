@@ -95,14 +95,14 @@ const DmList = () => {
     }
   };
 
-  const onCloseLockDmAndGroupModal = async () => {
+  const onCloseLockDmAndGroupModal = async (reload : boolean) => {
     setLockDmAndGroupModalData({
       open: false,
       for: "",
       chat_id: "",
       dmOrGroupName: "",
     });
-    await loadDMs();
+    if(reload)await loadDMs();
   };
 
   const deleteDm = async (action: number) => {

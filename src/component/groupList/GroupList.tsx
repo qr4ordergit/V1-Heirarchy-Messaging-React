@@ -83,14 +83,14 @@ const GroupList = () => {
     }
   };
 
-    const onCloseLockDmAndGroupModal = async () => {
+    const onCloseLockDmAndGroupModal = async (reload : boolean) => {
     setLockDmAndGroupModalData({
       open: false,
       for: "",
       chat_id: "",
       dmOrGroupName : ""
     });
-    await loadGroups();
+    if(reload)await loadGroups();
   };
 
   const leaveGroup = async () => {
