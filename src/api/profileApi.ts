@@ -36,6 +36,14 @@ export interface UpdateKeyringCategoryPayload {
   keyring_category_name: string;
   keyring_category_passwords: Record<string, string>;
   "2fa"?: boolean;
+  otp?: string;
+}
+
+export interface KeyringCategoryActionResponse {
+  success?: boolean;
+  message?: string;
+  secret_key?: string;
+  data?: KeyringCategoryItem & { secret_key?: string };
 }
 
 const showNotification = (message: string) => {
@@ -258,7 +266,7 @@ export const uploadImageToS3Api = async (
 
 export const createKeyringCategoryApi = async (
   payload: CreateKeyringCategoryPayload,
-): Promise<any | null> => {
+): Promise<KeyringCategoryActionResponse | null> => {
   try {
     const response = await api.post(
       withTargetUser(API_ENDPOINTS.KEYRING_CATEGORIES),
@@ -294,7 +302,7 @@ export const createKeyringCategoryApi = async (
 
 export const updateKeyringCategoryApi = async (
   payload: UpdateKeyringCategoryPayload,
-): Promise<boolean> => {
+): Promise<KeyringCategoryActionResponse | boolean> => {
   try {
     const response = await api.put(
       withTargetUser(API_ENDPOINTS.KEYRING_CATEGORIES),
@@ -302,7 +310,7 @@ export const updateKeyringCategoryApi = async (
     );
     const data = response.data;
     if (response.status === 200 || data?.success !== false) {
-      return true;
+      return data || true;
     }
     showNotification(
       data?.message ||

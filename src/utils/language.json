@@ -9,6 +9,16 @@
         "title": "Signing you in..."
       },
       "profile": {
+        "modalTitle2FASetup": "Set Up Two-Factor Authentication",
+        "txtScanAuthenticatorInstruction": "Scan this QR code using our authenticator app, Google Authenticator, or any TOTP-compatible app to generate your security codes.",
+        "lblSecretKeyManual": "Can't scan? Enter this code manually:",
+        "tooltipCopySecret": "Copy Secret Key",
+        "notiSecretCopied": "Secret key copied to clipboard!",
+        "btnDone2FASetup": "I've Saved This Code",
+        "alertEnterOtpToUpdate": "Please enter a valid OTP code to update this category.",
+        "lblEnterOtpToUpdate": "Enter 2FA OTP",
+        "descEnterOtpToUpdate": "Enter the verification code from your authenticator app to authorize changes.",
+        "placeholderUpdateOtp": "Enter 6-digit code...",
         "placeholderSearchTags": "Search tags...",
         "txtNoTagsFound": "No matching tags found.",
         "placeholderSearchKeyrings": "Search keyring categories or keys...",
@@ -747,7 +757,7 @@
         "itemChatAccounts": "Chat Accounts ({count} free)",
         "itemStorageOverage": "Storage Overage ({size} free)",
         "detailChatAccounts": "{usage} used ({billable} billable) • ${rate}{unit}",
-        "detailStorageOverage": "{usage} used • ${rate}/GB-{unit}",
+        "detailStorageOverage": "{usage} used • ${rate}/GB/{unit}",
 
         "unitDay": "day",
         "unitMonth": "month",
@@ -847,6 +857,16 @@
         "somethingWentWrong": "Не вдалося завершити запит. Будь ласка, спробуйте ще раз."
       },
       "profile": {
+        "modalTitle2FASetup": "Налаштування двофакторної автентифікації",
+        "txtScanAuthenticatorInstruction": "Відскануйте цей QR-код за допомогою нашого автентифікатора, Google Authenticator або будь-якого іншого додатка для автентифікації.",
+        "lblSecretKeyManual": "Не можете відсканувати? Введіть цей ключ вручну:",
+        "tooltipCopySecret": "Скопіювати секретний ключ",
+        "notiSecretCopied": "Секретний ключ скопійовано!",
+        "btnDone2FASetup": "Я зберіг цей код",
+        "alertEnterOtpToUpdate": "Будь ласка, введіть дійсний OTP-код для оновлення цієї категорії.",
+        "lblEnterOtpToUpdate": "Введіть 2FA OTP",
+        "descEnterOtpToUpdate": "Введіть код підтвердження з вашого додатка автентифікації для застосування змін.",
+        "placeholderUpdateOtp": "Введіть 6-значний код...",
         "placeholderSearchTags": "Пошук тегів...",
         "txtNoTagsFound": "Тегів не знайдено.",
         "placeholderSearchKeyrings": "Пошук категорій чи ключів...",
@@ -1585,7 +1605,7 @@
         "itemChatAccounts": "Облікові записи чату ({count} безкоштовно)",
         "itemStorageOverage": "Перевищення сховища ({size} безкоштовно)",
         "detailChatAccounts": "{usage} використано ({billable} платно) • ${rate}{unit}",
-        "detailStorageOverage": "{usage} використано • ${rate}/ГБ-{unit}",
+        "detailStorageOverage": "{usage} використано • ${rate}/ГБ/{unit}",
 
         "unitDay": "день",
         "unitMonth": "місяць",

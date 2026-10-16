@@ -25,6 +25,7 @@ import {
   IconCheck,
   IconChevronDown,
   IconChevronRight,
+  IconCopy,
   IconId,
   IconKey,
   IconLock,
@@ -55,6 +56,7 @@ import type { KeyringCategoryItem } from "../../api/profileApi";
 import { notifications } from "@mantine/notifications";
 import { handleApiError } from "../../utils/errorHandler";
 import { useTranslation } from "../../store/language/language.store";
+import { QRCodeSVG } from "qrcode.react";
 
 interface PasswordPair {
   key: string;
@@ -122,6 +124,11 @@ const Profile = () => {
     type: "edit" | "delete";
     category: KeyringCategoryItem;
   } | null>(null);
+
+  const [qrModalOpened, setQrModalOpened] = useState(false);
+  const [qrSecretKey, setQrSecretKey] = useState("");
+  const [qrCategoryName, setQrCategoryName] = useState("");
+  const [updateOtp, setUpdateOtp] = useState("");
 
   const isSubRoute = ["/privacy", "/help", "/about"].includes(
     location.pathname,
@@ -303,6 +310,7 @@ const Profile = () => {
     setEditingKeyringId(null);
     setCategoryName("");
     setIs2faEnabled(false);
+    setUpdateOtp("");
     setInitial2faEnabled(false);
     setModalSearchQuery("");
     setPasswordPairs([{ key: "", value: "" }]);
@@ -316,6 +324,7 @@ const Profile = () => {
     setCategoryName(item.keyring_category_name || "");
     setIs2faEnabled(existing2fa);
     setInitial2faEnabled(existing2fa);
+    setUpdateOtp("");
     setModalSearchQuery("");
 
     const pairs: PasswordPair[] = [];
@@ -487,7 +496,24 @@ const Profile = () => {
 
     setSubmittingKeyring(true);
     try {
+      let resultResponse: any = null;
+
       if (editingKeyringId) {
+        if (initial2faEnabled || is2faEnabled) {
+          if (!updateOtp.trim() || updateOtp.trim().length < 4) {
+            notifications.show({
+              title: "",
+              message: translation(
+                "profile.alertEnterOtpToUpdate",
+                "Please enter a valid OTP code to update this category.",
+              ),
+              color: "red",
+              icon: <IconX size={18} />,
+            });
+            setSubmittingKeyring(false);
+            return;
+          }
+        }
         const updatePayload: any = {
           keyring_category_id: editingKeyringId,
           keyring_category_name: trimmedCatName,
@@ -497,41 +523,46 @@ const Profile = () => {
         if (is2faEnabled !== initial2faEnabled) {
           updatePayload["2fa"] = is2faEnabled;
         }
-
-        const success = await updateKeyringCategoryApi(updatePayload);
-
-        if (success) {
-          notifications.show({
-            title: "",
-            message: translation(
-              "profile.notificationKeyringUpdated",
-              "Keyring category updated successfully.",
-            ),
-            color: "green",
-            icon: <IconCheck size={18} />,
-          });
-          setKeyringModalOpened(false);
-          await fetchKeyringsList();
+        if (updateOtp.trim()) {
+          updatePayload.otp = updateOtp.trim();
         }
+
+        resultResponse = await updateKeyringCategoryApi(updatePayload);
       } else {
-        const res = await createKeyringCategoryApi({
+        resultResponse = await createKeyringCategoryApi({
           keyring_category_name: trimmedCatName,
           keyring_category_passwords: passwordsMap,
           "2fa": is2faEnabled,
         });
+      }
 
-        if (res) {
-          notifications.show({
-            title: "",
-            message: translation(
-              "profile.notificationKeyringCreated",
-              "Keyring category created successfully.",
-            ),
-            color: "green",
-            icon: <IconCheck size={18} />,
-          });
-          setKeyringModalOpened(false);
-          await fetchKeyringsList();
+      if (resultResponse) {
+        notifications.show({
+          title: "",
+          message: editingKeyringId
+            ? translation(
+                "profile.notificationKeyringUpdated",
+                "Keyring category updated successfully.",
+              )
+            : translation(
+                "profile.notificationKeyringCreated",
+                "Keyring category created successfully.",
+              ),
+          color: "green",
+          icon: <IconCheck size={18} />,
+        });
+
+        setKeyringModalOpened(false);
+        setUpdateOtp("");
+        await fetchKeyringsList();
+
+        const secret =
+          resultResponse.secret_key || resultResponse.data?.secret_key;
+
+        if (secret && is2faEnabled) {
+          setQrSecretKey(secret);
+          setQrCategoryName(trimmedCatName);
+          setQrModalOpened(true);
         }
       }
     } catch (err: any) {
@@ -1403,6 +1434,38 @@ const Profile = () => {
             </Group>
           </Paper>
 
+          {Boolean(editingKeyringId && (initial2faEnabled || is2faEnabled)) && (
+            <Paper p="xs" bg="indigo.0" radius="md" withBorder>
+              <Stack gap={6}>
+                <Group gap="xs">
+                  <IconLock size={16} className="text-indigo-600" />
+                  <Text size="xs" fw={700} c="indigo.9">
+                    {translation(
+                      "profile.lblEnterOtpToUpdate",
+                      "Enter 2FA OTP",
+                    )}
+                  </Text>
+                </Group>
+                <Text size="xs" c="dimmed">
+                  {translation(
+                    "profile.descEnterOtpToUpdate",
+                    "Enter the verification code from your authenticator app to authorize changes.",
+                  )}
+                </Text>
+                <TextInput
+                  placeholder={translation(
+                    "profile.placeholderUpdateOtp",
+                    "Enter 6-digit code...",
+                  )}
+                  size="xs"
+                  maxLength={6}
+                  value={updateOtp}
+                  onChange={(e) => setUpdateOtp(e.currentTarget.value.trim())}
+                />
+              </Stack>
+            </Paper>
+          )}
+
           <Divider
             label={translation(
               "profile.dividerCategoryPasswords",
@@ -1584,6 +1647,113 @@ const Profile = () => {
               {translation("profile.btnVerifyAndProceed", "Verify & Proceed")}
             </Button>
           </Group>
+        </Stack>
+      </Modal>
+      {/* 2FA SETUP QR CODE MODAL */}
+      <Modal
+        opened={qrModalOpened}
+        onClose={() => {
+          setQrModalOpened(false);
+          setQrSecretKey("");
+          setQrCategoryName("");
+        }}
+        title={
+          <Group gap="xs">
+            <IconShieldLock size={20} className="text-indigo-600" />
+            <Text fw={700} size="md">
+              {translation(
+                "profile.modalTitle2FASetup",
+                "Set Up Two-Factor Authentication",
+              )}
+            </Text>
+          </Group>
+        }
+        radius="lg"
+        size="md"
+        centered
+      >
+        <Stack gap="md" align="center" py="xs">
+          <Text size="sm" ta="center" c="dimmed">
+            {translation(
+              "profile.txtScanAuthenticatorInstruction",
+              "Scan this QR code using our authenticator app, Google Authenticator, or any TOTP-compatible app to generate your security codes.",
+            )}
+          </Text>
+
+          {/* QR Code Card */}
+          <div className="p-4 bg-white rounded-2xl border border-gray-200 shadow-xs flex items-center justify-center">
+            {qrSecretKey && (
+              <QRCodeSVG
+                value={`otpauth://totp/Ukrchat:${encodeURIComponent(
+                  qrCategoryName || "Keyring",
+                )}?secret=${qrSecretKey}&issuer=Ukrchat`}
+                size={190}
+                level="M"
+                includeMargin
+              />
+            )}
+          </div>
+
+          {/* Text display of Secret Key with copy button */}
+          <div className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3">
+            <Text size="xs" c="dimmed" fw={600} mb={4} ta="center">
+              {translation(
+                "profile.lblSecretKeyManual",
+                "Can't scan? Enter this code manually:",
+              )}
+            </Text>
+            <Group justify="center" gap="xs">
+              <Text
+                size="xs"
+                fw={700}
+                className="font-mono tracking-wider break-all text-gray-800"
+              >
+                {qrSecretKey}
+              </Text>
+              <Tooltip
+                label={translation(
+                  "profile.tooltipCopySecret",
+                  "Copy Secret Key",
+                )}
+                withArrow
+              >
+                <ActionIcon
+                  size="sm"
+                  variant="light"
+                  color="indigo"
+                  onClick={() => {
+                    navigator.clipboard.writeText(qrSecretKey);
+                    notifications.show({
+                      title: "",
+                      message: translation(
+                        "profile.notiSecretCopied",
+                        "Secret key copied to clipboard!",
+                      ),
+                      color: "blue",
+                      icon: <IconCopy size={14} />,
+                    });
+                  }}
+                >
+                  <IconCopy size={14} />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+          </div>
+
+          <Button
+            fullWidth
+            color="indigo"
+            size="sm"
+            radius="md"
+            mt="xs"
+            onClick={() => {
+              setQrModalOpened(false);
+              setQrSecretKey("");
+              setQrCategoryName("");
+            }}
+          >
+            {translation("profile.btnDone2FASetup", "I've Saved This Code")}
+          </Button>
         </Stack>
       </Modal>
     </div>
