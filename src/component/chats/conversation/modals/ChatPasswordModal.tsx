@@ -39,9 +39,8 @@ function ChatPasswordModal() {
   const { target_user, userDetails } = useAuthStore((state) => state);
   const navigate = useNavigate();
   const { current_chat } = useChatStore((state) => state);
-  const { storeKeyringPasswords, keyringPasswords } = usePasswordManager(
-    (state) => state,
-  );
+  const { storeKeyringPasswords, keyringPasswords, updateKeyRingPassword } =
+    usePasswordManager((state) => state);
 
   const user_id = target_user ? target_user : userDetails?.username;
 
@@ -156,6 +155,7 @@ function ChatPasswordModal() {
           return;
         }
 
+        updateKeyRingPassword(res.data?.data);
         const keyAndPasswords = res.data?.data?.keyring_category_passwords;
         const keys = Object.keys(keyAndPasswords);
 

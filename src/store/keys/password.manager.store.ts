@@ -25,6 +25,7 @@ interface STORE {
     keyringPasswords: KEYRINGPASSWORD[]
     assignedKeyringPasswords: ASSIGNEDKEYRINGPASSWORD
     storeKeyringPasswords: (passwords: KEYRINGPASSWORD[]) => void
+    updateKeyRingPassword: (payload: KEYRINGPASSWORD) => void
     insertAssignedKeyringPassword: (payload: ASSIGNEDKEYRINGPASSWORDPAYLOAD) => void
 }
 
@@ -44,6 +45,17 @@ const usePasswordManager = create<STORE>((set) => ({
                 ...state.assignedKeyringPasswords,
                 [payload.id]: payload.payload
             }
+        }))
+    },
+
+    updateKeyRingPassword: (payload) => {
+        set((state) => ({
+            keyringPasswords: state.keyringPasswords.map((p) => {
+                if (p._id === payload._id) {
+                    return payload
+                }
+                return p
+            })
         }))
     },
 
