@@ -455,10 +455,11 @@ export default function UsageBilling() {
 
   const storageItemDetail = translation(
     "account_billing.detailStorageOverage",
-    `${formattedUsageStorage} used • $${storageUnitPrice.toFixed(4)}/GB`,
+    `${formattedUsageStorage} used • $${storageUnitPrice.toFixed(4)}/GB-${unitWord}`,
   )
     .replace(/{usage}/g, formattedUsageStorage)
-    .replace(/{rate}/g, storageUnitPrice.toFixed(4));
+    .replace(/{rate}/g, storageUnitPrice.toFixed(4))
+    .replace(/{unit}/g, unitWord);
 
   const billingItems = [
     {
