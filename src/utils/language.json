@@ -747,7 +747,7 @@
         "itemChatAccounts": "Chat Accounts ({count} free)",
         "itemStorageOverage": "Storage Overage ({size} free)",
         "detailChatAccounts": "{usage} used ({billable} billable) • ${rate}{unit}",
-        "detailStorageOverage": "{usage} used • ${rate}/GB",
+        "detailStorageOverage": "{usage} used • ${rate}/GB-{unit}",
 
         "unitDay": "day",
         "unitMonth": "month",
@@ -1585,7 +1585,7 @@
         "itemChatAccounts": "Облікові записи чату ({count} безкоштовно)",
         "itemStorageOverage": "Перевищення сховища ({size} безкоштовно)",
         "detailChatAccounts": "{usage} використано ({billable} платно) • ${rate}{unit}",
-        "detailStorageOverage": "{usage} використано • ${rate}/ГБ",
+        "detailStorageOverage": "{usage} використано • ${rate}/ГБ-{unit}",
 
         "unitDay": "день",
         "unitMonth": "місяць",
