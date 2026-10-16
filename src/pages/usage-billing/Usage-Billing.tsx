@@ -175,14 +175,44 @@ export default function UsageBilling() {
     loadBillingData(val, false);
   };
 
+  const accruedFrom = estimateData?.accrued_from;
+  const accruedThrough = estimateData?.accrued_through;
+
+  const chatEstimatedCost = parseCost(
+    estimateData?.cost?.chat_accounts ?? estimateData?.total_chat_accounts_cost,
+  );
+  const storageEstimatedCost = parseCost(
+    estimateData?.cost?.storage ?? estimateData?.total_storage_cost,
+  );
+  const totalEstimatedCost = parseCost(
+    estimateData?.cost?.total ?? estimateData?.total_estimated_cost,
+  );
+
+  const latestChat =
+    estimateData?.latest_day?.chat_accounts ?? estimateData?.chat_accounts;
+  const latestStorage =
+    estimateData?.latest_day?.storage ?? estimateData?.storage;
+  const billingUnit = estimateData?.latest_day?.pricing?.billing_unit;
+  const rateUnitSuffix = billingUnit === "per_day" ? "/d" : "/acct";
+
+  const chatUsage = latestChat?.usage ?? usageData?.chat_accounts ?? 0;
+  const chatFreeUnits = latestChat?.free_units ?? 5;
+  const chatBillableUnits =
+    latestChat?.billable_units ?? Math.max(0, chatUsage - chatFreeUnits);
+  const chatUnitPrice = parseCost(latestChat?.unit_price ?? 0.03);
+
+  const storageUsageBytes =
+    latestStorage?.usage_bytes ?? usageData?.storage_bytes?.total_bytes ?? 0;
+  const storageFreeBytes = latestStorage?.free_bytes ?? 5368709120; // 5 GB
+  const storageUnitPrice = parseCost(latestStorage?.unit_price ?? 0.025);
+
   const freeFeatureDefs: FeatureRowDef[] = [
     {
       key: "chat_accounts",
       featureKey: "account_billing.featChatAccountsTitle",
       featureDefault: "Chat Accounts",
       featureDescKey: "account_billing.featChatAccountsDesc",
-      featureDescDefault:
-        "First 5 accounts are free (Beyond 5 free accounts, $1 per account per month)",
+      featureDescDefault: `First ${chatFreeUnits} accounts are free (Beyond ${chatFreeUnits} free accounts, $${chatUnitPrice.toFixed(4)} per account per day)`,
       format: (val) => (val !== undefined ? String(val) : "0"),
     },
     {
@@ -190,8 +220,7 @@ export default function UsageBilling() {
       featureKey: "account_billing.featStorageTitle",
       featureDefault: "Storage",
       featureDescKey: "account_billing.featStorageDesc",
-      featureDescDefault:
-        "Up to 5GB storage free (Beyond 5GB, $0.025 per GB per month)",
+      featureDescDefault: `Up to ${formatBytes(storageFreeBytes)} storage free (Beyond ${formatBytes(storageFreeBytes)}, $${storageUnitPrice.toFixed(4)} per GB per day)`,
       format: (val) => formatBytes(val?.total_bytes ?? 0),
     },
     {
@@ -328,40 +357,9 @@ export default function UsageBilling() {
     [freeFeatures, paidFeatures],
   );
 
-  const accruedFrom = estimateData?.accrued_from;
-  const accruedThrough = estimateData?.accrued_through;
-
-  const chatEstimatedCost = parseCost(
-    estimateData?.cost?.chat_accounts ?? estimateData?.total_chat_accounts_cost,
-  );
-  const storageEstimatedCost = parseCost(
-    estimateData?.cost?.storage ?? estimateData?.total_storage_cost,
-  );
-  const totalEstimatedCost = parseCost(
-    estimateData?.cost?.total ?? estimateData?.total_estimated_cost,
-  );
-
-  const latestChat =
-    estimateData?.latest_day?.chat_accounts ?? estimateData?.chat_accounts;
-  const latestStorage =
-    estimateData?.latest_day?.storage ?? estimateData?.storage;
-  const billingUnit = estimateData?.latest_day?.pricing?.billing_unit;
-  const rateUnitSuffix = billingUnit === "per_day" ? "/d" : "/acct";
-
-  const chatUsage = latestChat?.usage ?? usageData?.chat_accounts ?? 0;
-  const chatFreeUnits = latestChat?.free_units ?? 5;
-  const chatBillableUnits =
-    latestChat?.billable_units ?? Math.max(0, chatUsage - chatFreeUnits);
-  const chatUnitPrice = parseCost(latestChat?.unit_price ?? 0.03);
-
-  const storageUsageBytes =
-    latestStorage?.usage_bytes ?? usageData?.storage_bytes?.total_bytes ?? 0;
-  const storageFreeBytes = latestStorage?.free_bytes ?? 5368709120; // 5 GB
-  const storageUnitPrice = parseCost(latestStorage?.unit_price ?? 0.025);
-
   const chatItemTitle = translation(
     "account_billing.itemChatAccounts",
-    `Chat Accounts (> ${chatFreeUnits} free)`,
+    `Chat Accounts (${chatFreeUnits} free)`,
   ).replace("{count}", String(chatFreeUnits));
 
   const chatItemDetail = translation(
@@ -374,7 +372,7 @@ export default function UsageBilling() {
 
   const storageItemTitle = translation(
     "account_billing.itemStorageOverage",
-    `Storage Overage (> ${formatBytes(storageFreeBytes)} free)`,
+    `Storage Overage (${formatBytes(storageFreeBytes)} free)`,
   ).replace("{size}", formatBytes(storageFreeBytes));
 
   const storageItemDetail = translation(
