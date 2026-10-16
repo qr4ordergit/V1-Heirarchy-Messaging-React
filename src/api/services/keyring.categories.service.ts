@@ -9,4 +9,16 @@ export const KeyringCategories = {
     );
     return response.data;
   },
+  otp: async (keyring_category_id: string, otp: string) => {
+    const response = await api.get(
+      withTargetUser(ENDPOINTS.KEYRING_CATEGORIES.LIST),
+      {
+        params: {
+          keyring_category_id: keyring_category_id,
+          otp: otp,
+        },
+      },
+    );
+    return response.data;
+  },
 };
