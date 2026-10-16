@@ -114,6 +114,8 @@ export const TRIGGERS = {
   exportChatModal: "exportChatModal",
   disappearChatModal: "disappearChatModal",
   schedulePayload: "schedule:schedulePayload",
+  chatPasswordModal: "chatPasswordModal",
+  chatPasswordPayload: "chatPasswordPayload"
 };
 
 export const OPENERS = {

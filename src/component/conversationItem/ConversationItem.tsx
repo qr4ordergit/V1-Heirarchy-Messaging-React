@@ -16,23 +16,34 @@ import { useNavigate, useParams } from "react-router";
 import { ROUTES } from "../../router/routes";
 import type { DM } from "../../store/dm/dm.list.store";
 import { useTranslation } from "../../store/language/language.store";
+import { useChatStore } from "../../store/chats/chats.store";
 interface ConversationItemProps {
   conversation: DM;
   onDelete: () => void;
   onSetLockDmAndGroupModalData: () => void;
-  unLock:() => void;
+  unLock: () => void;
 }
 
 export default function ConversationItem({
   conversation,
   onDelete,
   onSetLockDmAndGroupModalData,
-  unLock
+  unLock,
 }: ConversationItemProps) {
   const { chatId } = useParams();
   const navigate = useNavigate();
   const { translation } = useTranslation();
-  const isLocked =  Object.keys(conversation.is_locked ?? {}).length > 0
+  const isLocked = Object.keys(conversation.is_locked ?? {}).length > 0;
+  const { insertCurrentChat, emptyChatList } = useChatStore((state) => state);
+
+  const handleClick = () => {
+    emptyChatList();
+    insertCurrentChat({
+      ...conversation,
+    });
+
+    navigate(`/chats/${encodeURIComponent(conversation._id)}`);
+  };
   return (
     <Group
       justify="space-between"
@@ -43,9 +54,7 @@ export default function ConversationItem({
         borderRadius: 12,
         cursor: "pointer",
       }}
-      onClick={() => {
-        navigate(`/chats/${encodeURIComponent(conversation._id)}`);
-      }}
+      onClick={handleClick}
     >
       <Group gap="sm" wrap="nowrap">
         <Avatar
@@ -104,23 +113,21 @@ export default function ConversationItem({
                     event.stopPropagation();
                     if (!isLocked) {
                       onSetLockDmAndGroupModalData();
-                      return
+                      return;
                     }
-                    unLock()
+                    unLock();
                   }}
                 >
                   <Text size="xs">
-                    {
-                      !isLocked ?
-                    translation(
-                      "chat_page.label_lock_conversation",
-                      "Lock conversation",
-                    ) : 
-                    translation(
-                      "chat_page.label_unlock_conversation",
-                      "Unlock conversation",
-                    )
-                    }
+                    {!isLocked
+                      ? translation(
+                          "chat_page.label_lock_conversation",
+                          "Lock conversation",
+                        )
+                      : translation(
+                          "chat_page.label_unlock_conversation",
+                          "Unlock conversation",
+                        )}
                   </Text>
                 </Menu.Item>
                 <Menu.Item

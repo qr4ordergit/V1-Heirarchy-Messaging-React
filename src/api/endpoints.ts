@@ -10,7 +10,7 @@ export const ENDPOINTS = {
   },
   CHAT: {
     SEND: "/message",
-    GET: "/message?other_user=",
+    GET: "/message",
     DELETE: "/message",
     PUT: "/message",
   },
@@ -26,7 +26,7 @@ export const ENDPOINTS = {
     PATCH: "/permissions",
   },
   GROUP_CHAT: {
-    GET: "/groups-message?group_id=",
+    GET: "/groups-message",
     POST: "/groups-message",
     DELETE: "/groups-message",
     PUT: "/groups-message",
@@ -66,11 +66,11 @@ export const ENDPOINTS = {
     BASE: "/video-handler",
     ARRANGE: "/video-handler/arrange",
   },
-  KEYRING_CATEGORIES : {
-    LIST : "/keyring-categories"
+  KEYRING_CATEGORIES: {
+    LIST: "/keyring-categories"
   },
-  DM_GROUP_LOCK : {
-    PUT : "/chat_lock",
-    DELETE : "/chat_lock"
+  DM_GROUP_LOCK: {
+    PUT: "/chat_lock",
+    DELETE: "/chat_lock"
   }
 } as const;

@@ -15,6 +15,7 @@ import { ROUTES } from "../../router/routes";
 import { IconDotsVertical, IconLock, IconLogout2 } from "@tabler/icons-react";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { useTranslation } from "../../store/language/language.store";
+import { useChatStore } from "../../store/chats/chats.store";
 
 interface GroupItemProps {
   groups: Groups;
@@ -27,18 +28,28 @@ const GroupsItem = ({
   groups,
   onLeave,
   onSetLockDmAndGroupModalData,
-  unLock
+  unLock,
 }: GroupItemProps) => {
   const { chatId } = useParams();
   const navigate = useNavigate();
   const { translation } = useTranslation();
-  const isLocked =  Object.keys(groups.is_locked ?? {}).length > 0
+  const isLocked = Object.keys(groups.is_locked ?? {}).length > 0;
+  const { insertCurrentChat, emptyChatList } = useChatStore((state) => state);
 
   const { target_user, userDetails } = useAuthStore((state) => state);
   const isAdmin =
     target_user === ""
       ? userDetails !== null && groups.admins.includes(userDetails.username)
       : groups.admins.includes(target_user);
+
+  const handleClick = () => {
+    emptyChatList();
+    insertCurrentChat({
+      ...groups,
+      display_name: groups.group_name,
+    });
+    navigate(`/chats/${encodeURIComponent(groups._id)}`);
+  };
 
   return (
     <Group
@@ -50,9 +61,7 @@ const GroupsItem = ({
         borderRadius: 12,
         cursor: "pointer",
       }}
-      onClick={() => {
-        navigate(`/chats/${encodeURIComponent(groups._id)}`);
-      }}
+      onClick={handleClick}
     >
       <Group gap="sm" wrap="nowrap">
         <Avatar
@@ -116,15 +125,18 @@ const GroupsItem = ({
                     event.stopPropagation();
                     if (!isLocked) {
                       onSetLockDmAndGroupModalData();
-                      return
+                      return;
                     }
-                    unLock()
+                    unLock();
                   }}
                 >
                   <Text size="xs">
                     {!isLocked
                       ? translation("chat_page.label_lock_group", "Lock group")
-                      : translation("chat_page.label_unlock_group", "Unlock group")}
+                      : translation(
+                          "chat_page.label_unlock_group",
+                          "Unlock group",
+                        )}
                   </Text>
                 </Menu.Item>
                 {!isAdmin && (

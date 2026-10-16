@@ -4,6 +4,13 @@ interface DISAPPEAR_MODE {
   duration: number;
   enabled: boolean;
 }
+
+interface LOCKED_ITEM {
+  keyring_category_id?: string;
+  pass_label?: string;
+}
+
+type IS_LOCKED = Record<string, LOCKED_ITEM> | null;
 export interface DM {
   _id: string;
   display_name: string;
@@ -11,7 +18,7 @@ export interface DM {
   last_message_timestamp: string;
   profile_url?: string | null;
   disappearing_messages?: DISAPPEAR_MODE | null;
-  is_locked: null | Record<string, unknown>;
+  is_locked?: IS_LOCKED;
 }
 
 interface DISAPPEAR_MODE_PAYLOAD {

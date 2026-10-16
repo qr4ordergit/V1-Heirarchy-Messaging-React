@@ -34,6 +34,13 @@ interface TAG_STATUS_PAYLOAD {
     status: boolean
 }
 
+interface LOCKED_ITEM {
+    keyring_category_id?: string;
+    pass_label?: string;
+}
+
+type IS_LOCKED = Record<string, LOCKED_ITEM> | null;
+
 interface CURRENT_CHAT {
     media_encryption?: boolean,
     profile_url?: string | null,
@@ -44,6 +51,7 @@ interface CURRENT_CHAT {
     } | null
     display_name?: string,
     admins?: string[],
+    is_locked?: IS_LOCKED;
 
     [key: string]: unknown
 }
@@ -64,6 +72,7 @@ interface ChatsStore {
     updateTagStatus: (payload: TAG_STATUS_PAYLOAD) => void,
     filterChatsByText: (text: string) => void,
     emptyOGList: () => void,
+    emptyChatList: () => void,
     updateDecryptedMsg: (msg: MESSAGE) => void,
     decryptMediaUrlOfChat: (message_id: string, newUrl: File, mediaIndex: number) => void,
     enableDecryptedMediaOfChat: (message_id: string, mediaIndex: number) => void
@@ -137,6 +146,11 @@ export const useChatStore = create<ChatsStore>((set) => ({
     emptyOGList: () => {
         set(() => ({
             ogChats: []
+        }))
+    },
+    emptyChatList: () => {
+        set(() => ({
+            chats: []
         }))
     },
     updateDecryptedMsg: (msg) => {

@@ -12,7 +12,6 @@ import {
   IconTextRecognition,
   IconX,
 } from "@tabler/icons-react";
-import { useDMListStore } from "../../../store/dm/dm.list.store";
 import { useNavigate, useParams } from "react-router";
 import { useGroupListStore } from "../../../store/groups/group.list.store";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
@@ -20,7 +19,7 @@ import { OPENERS, TRIGGERS } from "../../../utils/constant";
 import { useTagStore } from "../../../store/tags/tags.store";
 import { useTranslation } from "../../../store/language/language.store";
 import { useOpenerStore } from "../../../store/openers/opener.store";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useAuthStore } from "../../../store/auth/auth.store";
 import { Notification } from "../../../utils/notification";
 import { getApiErrorMessage } from "../../../api/getApiErrorMessage";
@@ -35,7 +34,6 @@ interface ENCRYPTION_PAYLOAD {
 }
 
 function Navbar() {
-  const { dms } = useDMListStore((state) => state);
   const { groups } = useGroupListStore((state) => state);
   const { setTrigger, trigger, resetTrigger } = useTriggerStore(
     (state) => state,
@@ -44,9 +42,7 @@ function Navbar() {
   const { tagsWithCategories } = useTagStore((state) => state);
   const { translation } = useTranslation();
   const { userDetails, target_user } = useAuthStore((state) => state);
-  const { modifyCurrentChat, current_chat, insertCurrentChat } = useChatStore(
-    (state) => state,
-  );
+  const { modifyCurrentChat, current_chat } = useChatStore((state) => state);
 
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
@@ -88,34 +84,6 @@ function Navbar() {
 
       return allow;
     },
-  };
-
-  const dataAssigner = () => {
-    if (!chatId) return;
-
-    if (chatId.includes("group")) {
-      const chat = groups.find(
-        (userDoc) => userDoc._id === decodeURIComponent(chatId),
-      );
-
-      if (!chat) return;
-
-      insertCurrentChat({
-        ...chat,
-        display_name: chat?.group_name,
-        profile_url: chat?.profile_url,
-      });
-    } else {
-      const chat = dms.find(
-        (userDoc) => userDoc._id === decodeURIComponent(chatId),
-      );
-
-      insertCurrentChat({
-        ...chat,
-        display_name: chat?.display_name,
-        profile_url: chat?.profile_url,
-      });
-    }
   };
 
   const onRefresh = () => {
@@ -202,10 +170,6 @@ function Navbar() {
       Notification.error(getApiErrorMessage(error));
     }
   };
-
-  useEffect(() => {
-    dataAssigner();
-  }, [chatId, dms, groups]);
 
   return (
     <div className="bg-white rounded-full p-2 shadow">

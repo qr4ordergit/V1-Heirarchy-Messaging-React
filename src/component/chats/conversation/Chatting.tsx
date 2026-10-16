@@ -26,11 +26,15 @@ export default function Chatting() {
   const { chatId } = useParams<{ chatId: string }>();
   const nextPerson = useNextPerson();
   const viewport = useRef<HTMLDivElement>(null);
-  const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
+  const { trigger, resetTrigger, triggerPayload, setTrigger } = useTriggerStore(
     (state) => state,
   );
   const navigate = useNavigate();
-  const { targetUserDetails } = useAuthStore((state) => state);
+  const { targetUserDetails, target_user, userDetails } = useAuthStore(
+    (state) => state,
+  );
+  const { current_chat } = useChatStore((state) => state);
+  const user_id = target_user ? target_user : userDetails?.username;
 
   const [fetchLoader, FetchFn] = useTransition();
 
@@ -57,12 +61,21 @@ export default function Chatting() {
     try {
       if (!chatId) return;
 
-      const target_user = targetUserDetails?.user_id
-        ? `&target_user=${targetUserDetails?.user_id}`
-        : "";
-      const response = await api.get(
-        `${ENDPOINTS.CHAT.GET}${nextPerson(chatId)}${target_user}`,
-      );
+      let params = {
+        other_user: nextPerson(chatId),
+        target_user: target_user ? target_user : undefined,
+      };
+
+      if (trigger === TRIGGERS.chatPasswordPayload) {
+        params = {
+          ...params,
+          ...triggerPayload,
+        };
+      }
+
+      const response = await api.get(ENDPOINTS.CHAT.GET, {
+        params,
+      });
 
       if (!response.data?.success) {
         Notification.error(
@@ -85,13 +98,21 @@ export default function Chatting() {
     try {
       if (!chatId) return;
 
-      const target_user = targetUserDetails?.user_id
-        ? `&target_user=${targetUserDetails?.user_id}`
-        : "";
+      let params = {
+        group_id: encodeURIComponent(chatId),
+        target_user: target_user ? target_user : undefined,
+      };
 
-      const response = await api.get(
-        `${ENDPOINTS.GROUP_CHAT.GET}${encodeURIComponent(chatId)}${target_user}`,
-      );
+      if (trigger === TRIGGERS.chatPasswordPayload) {
+        params = {
+          ...params,
+          ...triggerPayload,
+        };
+      }
+
+      const response = await api.get(ENDPOINTS.GROUP_CHAT.GET, {
+        params,
+      });
 
       if (!response.data?.success) {
         Notification.error(
@@ -167,6 +188,19 @@ export default function Chatting() {
     }, 1500);
   };
 
+  const initialApiCalls = () => {
+    if (!user_id) return;
+
+    if (current_chat?.is_locked && current_chat.is_locked[user_id]) {
+      setTrigger({
+        toTrigger: TRIGGERS.chatPasswordModal,
+      });
+      return;
+    }
+
+    fetchChats();
+  };
+
   const triggerHandler = () => {
     switch (trigger) {
       case TRIGGERS.refreshChat:
@@ -176,6 +210,9 @@ export default function Chatting() {
       case TRIGGERS.searchByTag:
         FetchFn(fetchByTags);
         break;
+      case TRIGGERS.chatPasswordPayload:
+        fetchChats();
+        resetTrigger();
     }
   };
 
@@ -190,7 +227,7 @@ export default function Chatting() {
   };
 
   useEffect(() => {
-    fetchChats();
+    initialApiCalls();
   }, [chatId]);
 
   useEffect(() => {
