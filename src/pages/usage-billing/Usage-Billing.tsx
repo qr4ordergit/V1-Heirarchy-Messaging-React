@@ -48,10 +48,8 @@ import logo from "../../assets/logo.png";
 
 export interface FeatureRowDef {
   key?: string;
-  featureKey: string;
-  featureDefault: string;
-  featureDescKey?: string;
-  featureDescDefault?: string;
+  feature: string;
+  featureDescription?: string;
   defaultUsageKey?: string;
   defaultUsageFallback?: string;
   format?: (
@@ -70,17 +68,24 @@ export interface FeatureRowRendered {
   isPaidOnly?: boolean;
 }
 
-const formatBytes = (bytes: number = 0): string => {
-  if (!bytes || bytes <= 0) return "0 MB";
+// Localized bytes formatter (EN / UK)
+const formatBytesLocalized = (
+  bytes: number = 0,
+  lang: string = "en",
+): string => {
+  if (!bytes || bytes <= 0) return lang === "uk" ? "0 МБ" : "0 MB";
   const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const sizesEn = ["Bytes", "KB", "MB", "GB", "TB"];
+  const sizesUk = ["Байт", "КБ", "МБ", "ГБ", "ТБ"];
+  const sizes = lang === "uk" ? sizesUk : sizesEn;
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 
-const generateBillingPeriods = () => {
+const generateBillingPeriods = (lang: string = "en") => {
   const options = [];
   const currentDate = new Date();
+  const locale = lang === "uk" ? "uk-UA" : "en-US";
 
   for (let i = 0; i < 12; i++) {
     const d = new Date(
@@ -91,7 +96,7 @@ const generateBillingPeriods = () => {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const periodValue = `${year}-${month}`;
-    const monthLabel = d.toLocaleString("en-US", {
+    const monthLabel = d.toLocaleString(locale, {
       month: "long",
       year: "numeric",
     });
@@ -115,12 +120,19 @@ const parseCost = (val: string | number | undefined | null): number => {
 
 export default function UsageBilling() {
   const navigate = useNavigate();
-  const { translation } = useTranslation();
+
+  const { translation, currentLang } = useTranslation();
+  const curtLang = currentLang || "en";
+
   const userDetails = useAuthStore((state) => state.userDetails);
   const setUserDetails = useAuthStore((state) => (state as any).setUserDetails);
   const isPaid = Boolean((userDetails as any)?.is_paid);
 
-  const billingPeriodOptions = useMemo(() => generateBillingPeriods(), []);
+  const billingPeriodOptions = useMemo(
+    () => generateBillingPeriods(curtLang),
+    [curtLang],
+  );
+
   const [selectedPeriod, setSelectedPeriod] = useState<string>(
     billingPeriodOptions[0]?.value || "2026-10",
   );
@@ -192,8 +204,17 @@ export default function UsageBilling() {
     estimateData?.latest_day?.chat_accounts ?? estimateData?.chat_accounts;
   const latestStorage =
     estimateData?.latest_day?.storage ?? estimateData?.storage;
+
   const billingUnit = estimateData?.latest_day?.pricing?.billing_unit;
-  const rateUnitSuffix = billingUnit === "per_day" ? "/d" : "/acct";
+  const unitWord =
+    billingUnit === "per_day"
+      ? translation("account_billing.unitDay", "day")
+      : translation("account_billing.unitMonth", "month");
+
+  const rateUnitSuffix =
+    billingUnit === "per_day"
+      ? `/${translation("account_billing.unitDay", "d")}`
+      : `/${translation("account_billing.unitAccount", "acct")}`;
 
   const chatUsage = latestChat?.usage ?? usageData?.chat_accounts ?? 0;
   const chatFreeUnits = latestChat?.free_units ?? 5;
@@ -206,115 +227,172 @@ export default function UsageBilling() {
   const storageFreeBytes = latestStorage?.free_bytes ?? 5368709120; // 5 GB
   const storageUnitPrice = parseCost(latestStorage?.unit_price ?? 0.025);
 
-  const freeFeatureDefs: FeatureRowDef[] = [
-    {
-      key: "chat_accounts",
-      featureKey: "account_billing.featChatAccountsTitle",
-      featureDefault: "Chat Accounts",
-      featureDescKey: "account_billing.featChatAccountsDesc",
-      featureDescDefault: `First ${chatFreeUnits} accounts are free (Beyond ${chatFreeUnits} free accounts, $${chatUnitPrice.toFixed(4)} per account per day)`,
-      format: (val) => (val !== undefined ? String(val) : "0"),
-    },
-    {
-      key: "storage_bytes",
-      featureKey: "account_billing.featStorageTitle",
-      featureDefault: "Storage",
-      featureDescKey: "account_billing.featStorageDesc",
-      featureDescDefault: `Up to ${formatBytes(storageFreeBytes)} storage free (Beyond ${formatBytes(storageFreeBytes)}, $${storageUnitPrice.toFixed(4)} per GB per day)`,
-      format: (val) => formatBytes(val?.total_bytes ?? 0),
-    },
-    {
-      key: "cloud_cost",
-      featureKey: "account_billing.featCloudCostTitle",
-      featureDefault: "Cloud computing cost",
-      featureDescKey: "account_billing.featCloudCostDesc",
-      featureDescDefault: "Will be based on your actual daily usage",
-      defaultUsageKey: "account_billing.txtCurrentlyFree",
-      defaultUsageFallback: "Currently free",
-    },
-    {
-      key: "bulk_account_creation",
-      featureKey: "account_billing.featBulkAccountsTitle",
-      featureDefault: "Bulk account creation",
-      defaultUsageKey: "account_billing.txtUnlimited",
-      defaultUsageFallback: "Unlimited",
-    },
-    {
-      key: "hierarchical_access",
-      featureKey: "account_billing.featHierarchicalAccessTitle",
-      featureDefault: "Hierarchical Account Access",
-      defaultUsageKey: "account_billing.txtUnlimited",
-      defaultUsageFallback: "Unlimited",
-    },
-    {
-      key: "one_on_one_chat",
-      featureKey: "account_billing.featOneOnOneTitle",
-      featureDefault: "One on One Chat - (Encrypted)",
-      defaultUsageKey: "account_billing.txtUnlimited",
-      defaultUsageFallback: "Unlimited",
-    },
-    {
-      key: "group_chats",
-      featureKey: "account_billing.featGroupChatsTitle",
-      featureDefault: "Group Chats - (Encrypted)",
-      defaultUsageKey: "account_billing.txtUnlimited",
-      defaultUsageFallback: "Unlimited",
-    },
-    {
-      key: "double_encryption",
-      featureKey: "account_billing.featDoubleEncryptionTitle",
-      featureDefault: "Double Encryption with own password",
-      defaultUsageKey: "account_billing.txtUnlimited",
-      defaultUsageFallback: "Unlimited",
-    },
-    {
-      key: "scheduled_messages",
-      featureKey: "account_billing.featScheduledMsgsTitle",
-      featureDefault: "Scheduled Messages",
-      defaultUsageKey: "account_billing.txtUnlimited",
-      defaultUsageFallback: "Unlimited",
-    },
-    {
-      key: "disappearing_messages",
-      featureKey: "account_billing.featDisappearingMsgsTitle",
-      featureDefault: "Disappearing Messages",
-      defaultUsageKey: "account_billing.txtUnlimited",
-      defaultUsageFallback: "Unlimited",
-    },
-    {
-      key: "account_tags",
-      featureKey: "account_billing.featAccountTagsTitle",
-      featureDefault: "Account & Group Tags",
-      featureDescKey: "account_billing.featAccountTagsDesc",
-      featureDescDefault: "Convenient message filtering across your chats",
-      format: (val, _, t) =>
-        val !== undefined
-          ? `${val} ${t("account_billing.txtCreatedSuffix", "created")}`
-          : t("account_billing.txtUnlimited", "Unlimited"),
-      defaultUsageKey: "account_billing.txtUnlimited",
-      defaultUsageFallback: "Unlimited",
-    },
-    {
-      key: "export_chats",
-      featureKey: "account_billing.featExportChatsTitle",
-      featureDefault: "Export/Download Chats with Media",
-      defaultUsageKey: "account_billing.txtUnlimited",
-      defaultUsageFallback: "Unlimited",
-    },
-  ];
+  const formattedFreeStorage = formatBytesLocalized(storageFreeBytes, curtLang);
+  const formattedUsageStorage = formatBytesLocalized(
+    storageUsageBytes,
+    curtLang,
+  );
 
-  const paidFeatureDefs: FeatureRowDef[] = [
-    {
-      key: "premium_usernames",
-      featureKey: "account_billing.featPremiumUsernamesTitle",
-      featureDefault: "Premium Usernames",
-      featureDescKey: "account_billing.featPremiumUsernamesDesc",
-      featureDescDefault:
-        "Claim custom exclusive unique handles for your accounts",
-      format: (val) => (val !== undefined ? String(val) : "0"),
-      isPaidOnly: true,
-    },
-  ];
+  // Dynamic Feature Definitions rebuilt whenever language, usage, or estimate data changes
+  const freeFeatureDefs: FeatureRowDef[] = useMemo(() => {
+    return [
+      {
+        key: "chat_accounts",
+        feature: translation(
+          "account_billing.featChatAccountsTitle",
+          "Chat Accounts",
+        ),
+        featureDescription: translation(
+          "account_billing.featChatAccountsDesc",
+          `First ${chatFreeUnits} accounts are free (Beyond ${chatFreeUnits} free accounts, $${chatUnitPrice.toFixed(4)} per account per ${unitWord})`,
+        )
+          .replace(/{free}/g, String(chatFreeUnits))
+          .replace(/{price}/g, chatUnitPrice.toFixed(4))
+          .replace(/{unit}/g, unitWord),
+        format: (val) => (val !== undefined ? String(val) : "0"),
+      },
+      {
+        key: "storage_bytes",
+        feature: translation("account_billing.featStorageTitle", "Storage"),
+        featureDescription: translation(
+          "account_billing.featStorageDesc",
+          `Up to ${formattedFreeStorage} storage free (Beyond ${formattedFreeStorage}, $${storageUnitPrice.toFixed(4)} per GB per ${unitWord})`,
+        )
+          .replace(/{free}/g, formattedFreeStorage)
+          .replace(/{price}/g, storageUnitPrice.toFixed(4))
+          .replace(/{unit}/g, unitWord),
+        format: (val) => formatBytesLocalized(val?.total_bytes ?? 0, curtLang),
+      },
+      {
+        key: "cloud_cost",
+        feature: translation(
+          "account_billing.featCloudCostTitle",
+          "Cloud computing cost",
+        ),
+        featureDescription: translation(
+          "account_billing.featCloudCostDesc",
+          "Will be based on your actual daily usage",
+        ),
+        defaultUsageKey: "account_billing.txtCurrentlyFree",
+        defaultUsageFallback: "Currently free",
+      },
+      {
+        key: "bulk_account_creation",
+        feature: translation(
+          "account_billing.featBulkAccountsTitle",
+          "Bulk account creation",
+        ),
+        defaultUsageKey: "account_billing.txtUnlimited",
+        defaultUsageFallback: "Unlimited",
+      },
+      {
+        key: "hierarchical_access",
+        feature: translation(
+          "account_billing.featHierarchicalAccessTitle",
+          "Hierarchical Account Access",
+        ),
+        defaultUsageKey: "account_billing.txtUnlimited",
+        defaultUsageFallback: "Unlimited",
+      },
+      {
+        key: "one_on_one_chat",
+        feature: translation(
+          "account_billing.featOneOnOneTitle",
+          "One on One Chat - (Encrypted)",
+        ),
+        defaultUsageKey: "account_billing.txtUnlimited",
+        defaultUsageFallback: "Unlimited",
+      },
+      {
+        key: "group_chats",
+        feature: translation(
+          "account_billing.featGroupChatsTitle",
+          "Group Chats - (Encrypted)",
+        ),
+        defaultUsageKey: "account_billing.txtUnlimited",
+        defaultUsageFallback: "Unlimited",
+      },
+      {
+        key: "double_encryption",
+        feature: translation(
+          "account_billing.featDoubleEncryptionTitle",
+          "Double Encryption with own password",
+        ),
+        defaultUsageKey: "account_billing.txtUnlimited",
+        defaultUsageFallback: "Unlimited",
+      },
+      {
+        key: "scheduled_messages",
+        feature: translation(
+          "account_billing.featScheduledMsgsTitle",
+          "Scheduled Messages",
+        ),
+        defaultUsageKey: "account_billing.txtUnlimited",
+        defaultUsageFallback: "Unlimited",
+      },
+      {
+        key: "disappearing_messages",
+        feature: translation(
+          "account_billing.featDisappearingMsgsTitle",
+          "Disappearing Messages",
+        ),
+        defaultUsageKey: "account_billing.txtUnlimited",
+        defaultUsageFallback: "Unlimited",
+      },
+      {
+        key: "account_tags",
+        feature: translation(
+          "account_billing.featAccountTagsTitle",
+          "Account & Group Tags",
+        ),
+        featureDescription: translation(
+          "account_billing.featAccountTagsDesc",
+          "Convenient message filtering across your chats",
+        ),
+        format: (val, _, t) =>
+          val !== undefined
+            ? `${val} ${t("account_billing.txtCreatedSuffix", "created")}`
+            : t("account_billing.txtUnlimited", "Unlimited"),
+        defaultUsageKey: "account_billing.txtUnlimited",
+        defaultUsageFallback: "Unlimited",
+      },
+      {
+        key: "export_chats",
+        feature: translation(
+          "account_billing.featExportChatsTitle",
+          "Export/Download Chats with Media",
+        ),
+        defaultUsageKey: "account_billing.txtUnlimited",
+        defaultUsageFallback: "Unlimited",
+      },
+    ];
+  }, [
+    translation,
+    curtLang,
+    chatFreeUnits,
+    chatUnitPrice,
+    unitWord,
+    formattedFreeStorage,
+    storageUnitPrice,
+  ]);
+
+  const paidFeatureDefs: FeatureRowDef[] = useMemo(() => {
+    return [
+      {
+        key: "premium_usernames",
+        feature: translation(
+          "account_billing.featPremiumUsernamesTitle",
+          "Premium Usernames",
+        ),
+        featureDescription: translation(
+          "account_billing.featPremiumUsernamesDesc",
+          "Claim custom exclusive unique handles for your accounts",
+        ),
+        format: (val) => (val !== undefined ? String(val) : "0"),
+        isPaidOnly: true,
+      },
+    ];
+  }, [translation]);
 
   const resolveFeatures = (defs: FeatureRowDef[]): FeatureRowRendered[] => {
     return defs.map((def) => {
@@ -334,10 +412,8 @@ export default function UsageBilling() {
 
       return {
         key: def.key,
-        feature: translation(def.featureKey, def.featureDefault),
-        featureDescription: def.featureDescKey
-          ? translation(def.featureDescKey, def.featureDescDefault ?? "")
-          : undefined,
+        feature: def.feature,
+        featureDescription: def.featureDescription,
         usage: resolvedUsage,
         isPaidOnly: def.isPaidOnly,
       };
@@ -346,41 +422,43 @@ export default function UsageBilling() {
 
   const freeFeatures = useMemo(
     () => resolveFeatures(freeFeatureDefs),
-    [usageData, translation],
+    [freeFeatureDefs, usageData, translation],
   );
   const paidFeatures = useMemo(
     () => resolveFeatures(paidFeatureDefs),
-    [usageData, translation],
+    [paidFeatureDefs, usageData, translation],
   );
   const allCombinedFeatures = useMemo(
     () => [...freeFeatures, ...paidFeatures],
     [freeFeatures, paidFeatures],
   );
 
+  // Dynamic localized Billed Items & Activity Details
   const chatItemTitle = translation(
     "account_billing.itemChatAccounts",
     `Chat Accounts (${chatFreeUnits} free)`,
-  ).replace("{count}", String(chatFreeUnits));
+  ).replace(/{count}/g, String(chatFreeUnits));
 
   const chatItemDetail = translation(
     "account_billing.detailChatAccounts",
     `${chatUsage} used (${chatBillableUnits} billable) • $${chatUnitPrice.toFixed(4)}${rateUnitSuffix}`,
   )
-    .replace("{usage}", String(chatUsage))
-    .replace("{billable}", String(chatBillableUnits))
-    .replace("{rate}", chatUnitPrice.toFixed(4));
+    .replace(/{usage}/g, String(chatUsage))
+    .replace(/{billable}/g, String(chatBillableUnits))
+    .replace(/{rate}/g, chatUnitPrice.toFixed(4))
+    .replace(/{unit}/g, rateUnitSuffix);
 
   const storageItemTitle = translation(
     "account_billing.itemStorageOverage",
-    `Storage Overage (${formatBytes(storageFreeBytes)} free)`,
-  ).replace("{size}", formatBytes(storageFreeBytes));
+    `Storage Overage (${formattedFreeStorage} free)`,
+  ).replace(/{size}/g, formattedFreeStorage);
 
   const storageItemDetail = translation(
     "account_billing.detailStorageOverage",
-    `${formatBytes(storageUsageBytes)} used • $${storageUnitPrice.toFixed(4)}/GB`,
+    `${formattedUsageStorage} used • $${storageUnitPrice.toFixed(4)}/GB`,
   )
-    .replace("{usage}", formatBytes(storageUsageBytes))
-    .replace("{rate}", storageUnitPrice.toFixed(4));
+    .replace(/{usage}/g, formattedUsageStorage)
+    .replace(/{rate}/g, storageUnitPrice.toFixed(4));
 
   const billingItems = [
     {
@@ -562,6 +640,7 @@ export default function UsageBilling() {
       }}
     >
       <Container size="lg">
+        {/* Top Header */}
         <Group justify="flex-start" align="center" gap="md" mb="lg">
           <Tooltip
             label={translation("account_billing.tooltipGoBack", "Go back")}
