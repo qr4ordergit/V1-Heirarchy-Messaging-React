@@ -204,8 +204,7 @@ export default function Chatting() {
   const triggerHandler = () => {
     switch (trigger) {
       case TRIGGERS.refreshChat:
-        fetchChats();
-        resetTrigger();
+        initialApiCalls();
         break;
       case TRIGGERS.searchByTag:
         FetchFn(fetchByTags);

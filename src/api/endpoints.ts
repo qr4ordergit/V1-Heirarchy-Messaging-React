@@ -67,7 +67,8 @@ export const ENDPOINTS = {
     ARRANGE: "/video-handler/arrange",
   },
   KEYRING_CATEGORIES: {
-    LIST: "/keyring-categories"
+    LIST: "/keyring-categories",
+    REQ_OTP: "/get-2fa-otp"
   },
   DM_GROUP_LOCK: {
     PUT: "/chat_lock",

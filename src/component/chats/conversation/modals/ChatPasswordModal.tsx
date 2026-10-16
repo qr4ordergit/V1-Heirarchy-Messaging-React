@@ -2,10 +2,13 @@ import {
   Button,
   Divider,
   Fieldset,
+  Flex,
   Group,
   Modal,
   PasswordInput,
+  PinInput,
   Select,
+  Text,
 } from "@mantine/core";
 import { useTriggerStore } from "../../../../store/trigger/trigger.store";
 import { useAuthStore } from "../../../../store/auth/auth.store";
@@ -26,6 +29,8 @@ interface SUBMIT_PAYLOAD {
   keyring_password_key?: string;
   user_key?: string;
 }
+
+type FIELD = "KEY" | "OTP" | null;
 
 function ChatPasswordModal() {
   const { trigger, resetTrigger, setTrigger } = useTriggerStore(
@@ -55,8 +60,13 @@ function ChatPasswordModal() {
   const [selectedKeyRingCategoryKey, setselectedKeyRingCategoryKey] = useState<
     string | null
   >(null);
+  const [renderField, setRenderField] = useState<FIELD>(null);
+  const [otp, setOtp] = useState<string>("");
 
   const [keyRingLoader, KeyRingFn] = useTransition();
+  const [verifyLoader, VerifyFn] = useTransition();
+  const [apiPolling, setApiPolling] = useState<boolean>(false);
+  const [pollingAttempt, setPollingAttempt] = useState<number>(0);
 
   const onClose = () => {
     navigate("/chats");
@@ -101,18 +111,73 @@ function ChatPasswordModal() {
       return;
     }
 
-    const keys = Object.keys(passObj.keyring_category_passwords);
+    const keyAndPasswords = passObj.keyring_category_passwords;
+
+    if (!keyAndPasswords) {
+      setRenderField("OTP");
+      return;
+    }
+
+    const keys = Object.keys(keyAndPasswords);
 
     setKeyRingCategoryKeys(keys);
+    setRenderField("KEY");
+
+    if (!user_id) return;
+    const preferredKey = current_chat.is_locked?.[user_id]?.pass_label;
+
+    setselectedKeyRingCategoryKey(preferredKey || null);
   };
 
   const initialActions = () => {
     !isPasswordManual && fetchKeyRing();
   };
 
+  const handleVerify = () => {
+    VerifyFn(async () => {
+      if (otp.length !== 6) {
+        Notification.error("OTP must have 6 digits");
+        return;
+      }
+
+      const params = {
+        target_user: target_user ? target_user : undefined,
+        keyring_category_id: selectedKeyRingCategory,
+        otp: otp,
+      };
+
+      try {
+        const res = await api.get(ENDPOINTS.KEYRING_CATEGORIES.LIST, {
+          params,
+        });
+
+        if (!res.data?.is_valid_otp) {
+          Notification.error("OTP is invalid");
+          return;
+        }
+
+        const keyAndPasswords = res.data?.data?.keyring_category_passwords;
+        const keys = Object.keys(keyAndPasswords);
+
+        setKeyRingCategoryKeys(keys);
+        setRenderField("KEY");
+      } catch (error) {
+        Notification.error(getApiErrorMessage(error));
+      }
+    });
+  };
+
   const handleSubmit = () => {
-    if (manualPassword.trim().length === 0 && !selectedKeyRingCategory) {
-      Notification.error("Select or enter password to chat");
+    if (isPasswordManual && manualPassword.trim().length === 0) {
+      Notification.error("Enter password to chat");
+      return;
+    }
+
+    if (
+      !isPasswordManual &&
+      (!selectedKeyRingCategory || !selectedKeyRingCategoryKey)
+    ) {
+      Notification.error("Select keyring category and category key to chat");
       return;
     }
 
@@ -121,8 +186,16 @@ function ChatPasswordModal() {
     if (isPasswordManual) {
       payload["user_key"] = manualPassword;
     } else {
-      ((payload["keyring_category_id"] = selectedKeyRingCategory || ""),
-        (payload["keyring_password_key"] = selectedKeyRingCategoryKey || ""));
+      payload["keyring_category_id"] = selectedKeyRingCategory || "";
+      payload["keyring_password_key"] = selectedKeyRingCategoryKey || "";
+
+      if (!user_id) return;
+      let passObj = keyringPasswords.find(
+        (p) => p._id === selectedKeyRingCategory,
+      );
+
+      payload["user_key"] =
+        passObj?.keyring_category_passwords[selectedKeyRingCategoryKey || ""];
     }
 
     setTrigger({
@@ -133,9 +206,67 @@ function ChatPasswordModal() {
     });
   };
 
+  const requestOtp = async () => {
+    try {
+      const payload = {
+        keyring_category_id: selectedKeyRingCategory,
+      };
+
+      const params = {
+        target_user: target_user ? target_user : undefined,
+      };
+
+      const res = await api.post(
+        ENDPOINTS.KEYRING_CATEGORIES.REQ_OTP,
+        payload,
+        { params },
+      );
+
+      if (res.data?.status === "success") {
+        setOtp(res.data?.otp);
+        return "success";
+      }
+
+      if (res.data?.status === "rejected") {
+        Notification.error("OTP request rejected");
+        return "rejected";
+      }
+
+      return "repeat";
+    } catch (error) {
+      Notification.error(getApiErrorMessage(error));
+    }
+  };
+
   useEffect(() => {
     initialActions();
   }, []);
+
+  useEffect(() => {
+    if (!apiPolling) return;
+
+    if (pollingAttempt >= 30) {
+      setApiPolling(false);
+      setPollingAttempt(0);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      const status = await requestOtp();
+
+      if (status === "success" || status === "rejected") {
+        setApiPolling(false);
+        setPollingAttempt(0);
+        return;
+      }
+
+      setPollingAttempt((prev) => prev + 1);
+    }, 3000);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [apiPolling, pollingAttempt]);
 
   return (
     <Modal
@@ -152,7 +283,7 @@ function ChatPasswordModal() {
           value={manualPassword}
           onChange={(e) => setManualPassword(e.target.value)}
         />
-        <Divider my="md" label="or" labelPosition="center" />
+        <Divider my="md" label="OR" labelPosition="center" />
         <Select
           label="Keyring category"
           placeholder="Select"
@@ -166,22 +297,67 @@ function ChatPasswordModal() {
           onChange={handleChangeCategory}
           nothingFoundMessage="Nothing found..."
         />
-        <Select
-          label="Category key"
-          placeholder="Select"
-          data={keyRingCategoryKeys}
-          mt={"md"}
-          loading={keyRingLoader}
-          clearable
-          searchable
-          value={selectedKeyRingCategoryKey}
-          onChange={(e) => setselectedKeyRingCategoryKey(e)}
-          nothingFoundMessage="Nothing found..."
-          disabled={isPasswordManual}
-        />
-        <Group justify="flex-end" mt="md">
-          <Button onClick={handleSubmit}>Submit</Button>
-        </Group>
+        {renderField === "KEY" && (
+          <>
+            <Select
+              label="Category key"
+              placeholder="Select"
+              data={keyRingCategoryKeys}
+              mt={"md"}
+              loading={keyRingLoader}
+              clearable
+              searchable
+              value={selectedKeyRingCategoryKey}
+              onChange={(e) => setselectedKeyRingCategoryKey(e)}
+              nothingFoundMessage="Nothing found..."
+              disabled={isPasswordManual}
+            />
+          </>
+        )}
+
+        {renderField !== "OTP" && (
+          <Group justify="center" mt="md">
+            <Button onClick={handleSubmit}>Submit</Button>
+          </Group>
+        )}
+
+        {renderField === "OTP" && (
+          <>
+            <Text size="sm" fw={550} mt={"md"}>
+              Verify 2FA OTP
+            </Text>
+            <Flex justify={"space-between"} wrap={"wrap"}>
+              <PinInput
+                type={"number"}
+                length={6}
+                value={otp}
+                onChange={(e) => setOtp(e)}
+              />
+              <Button
+                loading={verifyLoader}
+                loaderProps={{ type: "dots" }}
+                onClick={handleVerify}
+              >
+                Verify
+              </Button>
+            </Flex>
+            {apiPolling ? (
+              <Text size="xs" mt={"xs"} className="text-center">
+                Requesting otp... Please wait
+              </Text>
+            ) : (
+              <Text
+                size="xs"
+                mt={"xs"}
+                td="underline"
+                className="cursor-pointer text-center"
+                onClick={() => setApiPolling(true)}
+              >
+                Get otp
+              </Text>
+            )}
+          </>
+        )}
       </Fieldset>
     </Modal>
   );
