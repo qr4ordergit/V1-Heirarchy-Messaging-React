@@ -222,7 +222,7 @@ function ChatPasswordModal() {
         { params },
       );
 
-      if (res.data?.status === "success") {
+      if (res.data?.status === "accepted") {
         setOtp(res.data?.otp);
         return "success";
       }
@@ -335,6 +335,7 @@ function ChatPasswordModal() {
               />
               <Button
                 loading={verifyLoader}
+                disabled={otp.length !== 6}
                 loaderProps={{ type: "dots" }}
                 onClick={handleVerify}
               >
