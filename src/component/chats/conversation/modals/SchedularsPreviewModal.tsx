@@ -64,6 +64,7 @@ function SchedularsPreviewModal() {
         "Scheduled messages",
       )}
       size={"xl"}
+      radius={"lg"}
     >
       {fetchLoader ? (
         <div>

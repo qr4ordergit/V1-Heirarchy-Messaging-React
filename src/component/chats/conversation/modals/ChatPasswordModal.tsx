@@ -274,6 +274,7 @@ function ChatPasswordModal() {
       onClose={onClose}
       withCloseButton={false}
       centered
+      radius={"lg"}
     >
       <Fieldset legend="Enter or select password to chat">
         <PasswordInput
@@ -282,13 +283,13 @@ function ChatPasswordModal() {
           disabled={!isPasswordManual}
           value={manualPassword}
           onChange={(e) => setManualPassword(e.target.value)}
+          size="xs"
         />
         <Divider my="md" label="OR" labelPosition="center" />
         <Select
           label="Keyring category"
           placeholder="Select"
           data={keyRingCategories}
-          mt={"md"}
           disabled={isPasswordManual}
           loading={keyRingLoader}
           clearable
@@ -296,6 +297,7 @@ function ChatPasswordModal() {
           value={selectedKeyRingCategory}
           onChange={handleChangeCategory}
           nothingFoundMessage="Nothing found..."
+          size="xs"
         />
         {renderField === "KEY" && (
           <>
@@ -311,13 +313,16 @@ function ChatPasswordModal() {
               onChange={(e) => setselectedKeyRingCategoryKey(e)}
               nothingFoundMessage="Nothing found..."
               disabled={isPasswordManual}
+              size="xs"
             />
           </>
         )}
 
         {renderField !== "OTP" && (
           <Group justify="center" mt="md">
-            <Button onClick={handleSubmit}>Submit</Button>
+            <Button onClick={handleSubmit} size="xs">
+              Submit
+            </Button>
           </Group>
         )}
 
@@ -332,12 +337,14 @@ function ChatPasswordModal() {
                 length={6}
                 value={otp}
                 onChange={(e) => setOtp(e)}
+                size="xs"
               />
               <Button
                 loading={verifyLoader}
                 disabled={otp.length !== 6}
                 loaderProps={{ type: "dots" }}
                 onClick={handleVerify}
+                size="xs"
               >
                 Verify
               </Button>

@@ -225,6 +225,7 @@ function DisappearMsgsModal() {
         "chat_history.modal-disappearing-timmer-title",
         "Set timmer for disappearing messages",
       )}
+      radius={"lg"}
     >
       <div className="flex gap-2">
         <NumberInput
@@ -233,6 +234,7 @@ function DisappearMsgsModal() {
           max={365}
           value={timmer.days}
           onChange={(e) => onChange(Number(e), "days")}
+          size="sm"
         />
         <NumberInput
           label="Hours"
@@ -240,6 +242,7 @@ function DisappearMsgsModal() {
           max={24}
           value={timmer.hours}
           onChange={(e) => onChange(Number(e), "hours")}
+          size="sm"
         />
         <NumberInput
           label="Minutes"
@@ -247,6 +250,7 @@ function DisappearMsgsModal() {
           max={60}
           value={timmer.minutes}
           onChange={(e) => onChange(Number(e), "minutes")}
+          size="sm"
         />
         <NumberInput
           label="Seconds"
@@ -255,6 +259,7 @@ function DisappearMsgsModal() {
           withAsterisk
           value={timmer.seconds}
           onChange={(e) => onChange(Number(e), "seconds")}
+          size="sm"
         />
       </div>
       <Group justify="center" className="mt-2">
