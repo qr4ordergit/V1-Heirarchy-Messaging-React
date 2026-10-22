@@ -38,6 +38,7 @@ import { useAuthStore } from "../../store/auth/auth.store";
 import {
   getEstimateApi,
   getUsageApi,
+  getUserBillingMonthlyApi,
   updateMembershipStatusApi,
   type EstimateData,
   type UsageData,
@@ -154,19 +155,29 @@ export default function UsageBilling() {
     }
 
     try {
-      const [usageRes, estimateRes] = await Promise.all([
-        getUsageApi(),
-        getEstimateApi(),
-      ]);
+      if (isInitial) {
+        const [usageRes, estimateRes] = await Promise.all([
+          getUsageApi(),
+          getEstimateApi(),
+        ]);
 
-      if (usageRes) setUsageData(usageRes);
-      if (estimateRes?.estimate) setEstimateData(estimateRes.estimate);
+        if (usageRes) setUsageData(usageRes);
+        if (estimateRes?.estimate) setEstimateData(estimateRes.estimate);
 
-      const invoiceStatus = Boolean(estimateRes?.invoiceGenerated);
-      setIsInvoiceGenerated(invoiceStatus);
+        const invoiceStatus = Boolean(estimateRes?.invoiceGenerated);
+        setIsInvoiceGenerated(invoiceStatus);
 
-      if (estimateRes?.period && estimateRes.period !== period) {
-        setSelectedPeriod(estimateRes.period);
+        if (estimateRes?.period && estimateRes.period !== period) {
+          setSelectedPeriod(estimateRes.period);
+        }
+      } else {
+        const username = userDetails?.username;
+        if (!username) return;
+
+        const overviewRes = await getUserBillingMonthlyApi(username, period);
+        if (overviewRes?.estimate) {
+          setEstimateData(overviewRes.estimate);
+        }
       }
     } finally {
       if (isInitial) {

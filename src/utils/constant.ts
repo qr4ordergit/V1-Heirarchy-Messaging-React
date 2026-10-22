@@ -41,6 +41,7 @@ export const API_ENDPOINTS = {
   USAGE: `${API_BASE_URL}/usage`,
   ESTIMATE: `${API_BASE_URL}/estimate`,
   ADMIN_PRICING: `${API_BASE_URL2}/pricing`,
+  OVERVIEW: `${API_BASE_URL2}/overview`,
   ACTIVATE_USER: `${API_BASE_URL2}/activate`,
   DEACTIVATE_USER: `${API_BASE_URL2}/deactivate`,
 } as const;
@@ -115,7 +116,7 @@ export const TRIGGERS = {
   disappearChatModal: "disappearChatModal",
   schedulePayload: "schedule:schedulePayload",
   chatPasswordModal: "chatPasswordModal",
-  chatPasswordPayload: "chatPasswordPayload"
+  chatPasswordPayload: "chatPasswordPayload",
 };
 
 export const OPENERS = {

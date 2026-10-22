@@ -101,6 +101,31 @@ export interface EstimateApiResponse {
   invoice_generated?: boolean;
   [key: string]: any;
 }
+export interface UserBillingMonthlyResponse {
+  message: string;
+  details: {
+    user_id: string;
+    period: string;
+    estimate: EstimateData;
+    invoice_generated: boolean;
+    invoice: any | null;
+  };
+}
+
+export const getUserBillingMonthlyApi = async (
+  userId: string,
+  period: string,
+): Promise<UserBillingMonthlyResponse["details"] | null> => {
+  try {
+    const response = await api.get<UserBillingMonthlyResponse>(
+      `${API_ENDPOINTS.OVERVIEW}?user_id=${encodeURIComponent(userId)}&period=${encodeURIComponent(period)}`,
+    );
+    return response.data?.details ?? null;
+  } catch (error: any) {
+    handleApiError(error, "account_billing");
+    return null;
+  }
+};
 
 const appendPeriodParam = (baseEndpoint: string, period?: string): string => {
   if (!period) return baseEndpoint;

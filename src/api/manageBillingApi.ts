@@ -4,7 +4,7 @@ import { handleApiError } from "../utils/errorHandler";
 
 export interface PricingRule {
   pricing_id: string;
-  pricing_type: string;
+  pricing_type: "default" | "custom" | string;
   version: number;
   status: string;
   currency: string;
@@ -21,28 +21,35 @@ export interface PricingRule {
   updated_at: string;
 }
 
-export interface UserEstimateCost {
-  chat_accounts: string;
-  storage: string;
-  total: string;
-}
-
-export interface UserEstimateUsage {
-  chat_accounts: number;
-  premium_usernames: number;
-  account_tags: number;
-  storage_bytes: number;
-}
-
-export interface UserEstimate {
-  snapshot_date: string;
-  usage: UserEstimateUsage;
-  pricing: {
-    pricing_id: string;
-    pricing_type: string;
-    currency: string;
+export interface UserBillingEstimate {
+  currency: string;
+  days_accrued?: number;
+  cost: {
+    total: string;
+    chat_accounts?: string;
+    storage?: string;
   };
-  cost: UserEstimateCost;
+}
+
+export interface UserPricingSummary {
+  pricing_id: string;
+  pricing_type: "default" | "custom" | string;
+  version: number;
+  chat_accounts?: {
+    free_quantity: number;
+    price_per_unit: string | number;
+  };
+  storage?: {
+    free_bytes: number;
+    price_per_gb: string | number;
+  };
+}
+
+export interface UserUnpaidInfo {
+  count: number;
+  amount_outstanding: string;
+  oldest_period: string | null;
+  currency: string | null;
 }
 
 export interface AdminUserItem {
@@ -50,28 +57,43 @@ export interface AdminUserItem {
   email?: string;
   status: "active" | "deactive" | string;
   username?: string;
-  estimate?: UserEstimate;
+  pricing: UserPricingSummary;
+  billing_estimate?: UserBillingEstimate;
+  estimate?: UserBillingEstimate;
+  last_bill_paid?: string | null;
+  unpaid?: UserUnpaidInfo;
 }
 
-export interface DefaultTierGroup {
-  pricing: PricingRule;
+export interface AdminPricingOverviewDetails {
+  period: string;
+  default_pricing: PricingRule;
   users: {
     total: number;
     items: AdminUserItem[];
     next_cursor: string | null;
   };
-}
-
-export interface CustomTierItem extends AdminUserItem {
-  pricing: PricingRule;
+  default?: {
+    pricing: PricingRule;
+    users: {
+      total: number;
+      items: AdminUserItem[];
+      next_cursor: string | null;
+    };
+  };
+  custom?: AdminUserItem[];
 }
 
 export interface AdminPricingResponse {
   message: string;
-  details: {
-    default: DefaultTierGroup;
-    custom: CustomTierItem[];
-  };
+  details: AdminPricingOverviewDetails;
+}
+
+export interface OverviewQueryParams {
+  limit?: number;
+  cursor?: string | null;
+  type?: "default" | "custom";
+  status?: "active" | "deactive";
+  dues?: "paid" | "unpaid";
 }
 
 export interface DefaultPricingPayload {
@@ -105,6 +127,53 @@ export interface CustomPricingPayload {
   };
 }
 
+export interface UserBillingOverviewDetails {
+  user_id: string;
+  period: string;
+  available_periods: string[];
+  estimate: {
+    currency: string;
+    days_accrued: number;
+    accrued_from: string;
+    accrued_through: string;
+    pricing_ids: string[];
+    cost: {
+      chat_accounts: string;
+      storage: string;
+      total: string;
+    };
+    latest_day: {
+      date: string;
+      pricing: {
+        pricing_id: string;
+        pricing_type: string;
+        version: number;
+        billing_unit?: string;
+      };
+      chat_accounts: {
+        usage: number;
+        free_units: number;
+        billable_units: number;
+        unit_price: string;
+        cost: string;
+      };
+      storage: {
+        usage_bytes: number;
+        free_bytes: number;
+        unit_price: string;
+        cost: string;
+      };
+    };
+  };
+  invoice_generated: boolean;
+  invoice: any | null;
+}
+
+export interface UserBillingOverviewResponse {
+  message: string;
+  details: UserBillingOverviewDetails;
+}
+
 export type UpdatePricingPayload = DefaultPricingPayload | CustomPricingPayload;
 
 export interface ReassignUserPayload {
@@ -112,13 +181,45 @@ export interface ReassignUserPayload {
   target_tier: "default" | "custom";
 }
 
-const PRICING_ENDPOINT = API_ENDPOINTS.ADMIN_PRICING || "/admin/pricing";
+const PRICING_ENDPOINT = API_ENDPOINTS.OVERVIEW || "/admin/overview";
 
-export const getAdminPricingDataApi = async (): Promise<
-  AdminPricingResponse["details"] | null
-> => {
+export const getAdminOverviewDataApi = async (
+  params?: OverviewQueryParams,
+): Promise<AdminPricingOverviewDetails | null> => {
   try {
-    const res = await api.get<AdminPricingResponse>(PRICING_ENDPOINT);
+    const queryParts: string[] = [];
+
+    if (params?.limit) queryParts.push(`limit=${params.limit}`);
+    if (params?.cursor)
+      queryParts.push(`cusor=${encodeURIComponent(params.cursor)}`);
+    if (params?.type) queryParts.push(`type=${params.type}`);
+    if (params?.status) queryParts.push(`status=${params.status}`);
+    if (params?.dues) queryParts.push(`dues=${params.dues}`);
+
+    const queryString = queryParts.length ? `?${queryParts.join("&")}` : "";
+    const res = await api.get<AdminPricingResponse>(
+      `${PRICING_ENDPOINT}${queryString}`,
+    );
+    return res.data?.details ?? null;
+  } catch (error: any) {
+    handleApiError(error, "admin_billing");
+    return null;
+  }
+};
+
+export const getUserBillingOverviewApi = async (
+  userId: string,
+  period?: string,
+): Promise<UserBillingOverviewDetails | null> => {
+  try {
+    const queryParts: string[] = [];
+    if (userId) queryParts.push(`user_id=${encodeURIComponent(userId)}`);
+    if (period) queryParts.push(`period=${encodeURIComponent(period)}`);
+
+    const queryString = queryParts.length ? `?${queryParts.join("&")}` : "";
+    const res = await api.get<UserBillingOverviewResponse>(
+      `${PRICING_ENDPOINT}${queryString}`,
+    );
     return res.data?.details ?? null;
   } catch (error: any) {
     handleApiError(error, "admin_billing");
