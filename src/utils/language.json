@@ -702,7 +702,19 @@
         "disappearing-active-text": "Disappearing messages mode enabled on",
         "modal-schedule-freq-text": "Frequency",
         "modal-schedule-msgs-title": "Scheduled messages",
-        "modal-disappearing-timmer-title": "Set timmer for disappearing messages"
+        "modal-disappearing-timmer-title": "Set timmer for disappearing messages",
+        "modal-chat-pass-legend": "Enter or select password to chat",
+        "modal-chat-pass-label1": "Password",
+        "modal-chat-pass-plc1": "Enter password",
+        "modal-chat-pass-label2": "Keyring category",
+        "modal-chat-pass-plc2": "Select",
+        "modal-chat-pass-label3": "Category key",
+        "modal-chat-pass-plc3": "Select",
+        "modal-chat-pass-btn-submit": "Submit",
+        "modal-chat-pass-label-verify": "Verify 2FA OTP",
+        "modal-chat-pass-btn-verify": "Verify",
+        "modal-chat-pass-otp-loader": "Requesting otp... Please wait",
+        "modal-chat-pass-link-verify": "Get otp"
       },
       "account_billing": {
         "failedToFetchEstimate": "Failed to load billing estimate.",
@@ -1550,7 +1562,19 @@
         "disappearing-active-text": "Disappearing messages mode enabled on",
         "modal-schedule-freq-text": "Repeat",
         "modal-schedule-msgs-title": "Scheduled messages",
-        "modal-disappearing-timmer-title": "Set timmer for disappearing messages"
+        "modal-disappearing-timmer-title": "Set timmer for disappearing messages",
+        "modal-chat-pass-legend": "Enter or select password to chat",
+        "modal-chat-pass-label1": "Password",
+        "modal-chat-pass-plc1": "Enter password",
+        "modal-chat-pass-label2": "Keyring category",
+        "modal-chat-pass-plc2": "Select",
+        "modal-chat-pass-label3": "Category key",
+        "modal-chat-pass-plc3": "Select",
+        "modal-chat-pass-btn-submit": "Submit",
+        "modal-chat-pass-label-verify": "Verify 2FA OTP",
+        "modal-chat-pass-btn-verify": "Verify",
+        "modal-chat-pass-otp-loader": "Requesting otp... Please wait",
+        "modal-chat-pass-link-verify": "Get otp"
       },
       "account_billing": {
         "failedToFetchEstimate": "Не вдалося завантажити орієнтовний рахунок.",

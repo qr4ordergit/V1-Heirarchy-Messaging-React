@@ -23,6 +23,7 @@ import { ENDPOINTS } from "../../../../api/endpoints";
 import usePasswordManager, {
   type KEYRINGPASSWORD,
 } from "../../../../store/keys/password.manager.store";
+import { useTranslation } from "../../../../store/language/language.store";
 
 interface SUBMIT_PAYLOAD {
   keyring_category_id?: string;
@@ -66,6 +67,8 @@ function ChatPasswordModal() {
   const [verifyLoader, VerifyFn] = useTransition();
   const [apiPolling, setApiPolling] = useState<boolean>(false);
   const [pollingAttempt, setPollingAttempt] = useState<number>(0);
+
+  const { translation } = useTranslation();
 
   const onClose = () => {
     navigate("/chats");
@@ -276,10 +279,18 @@ function ChatPasswordModal() {
       centered
       radius={"lg"}
     >
-      <Fieldset legend="Enter or select password to chat">
+      <Fieldset
+        legend={translation(
+          "chat_history.modal-chat-pass-legend",
+          "Enter or select password to chat",
+        )}
+      >
         <PasswordInput
-          label="Password"
-          placeholder="Enter password"
+          label={translation("chat_history.modal-chat-pass-label1", "Password")}
+          placeholder={translation(
+            "chat_history.modal-chat-pass-plc1",
+            "Enter password",
+          )}
           disabled={!isPasswordManual}
           value={manualPassword}
           onChange={(e) => setManualPassword(e.target.value)}
@@ -287,8 +298,14 @@ function ChatPasswordModal() {
         />
         <Divider my="md" label="OR" labelPosition="center" />
         <Select
-          label="Keyring category"
-          placeholder="Select"
+          label={translation(
+            "chat_history.modal-chat-pass-label2",
+            "Keyring category",
+          )}
+          placeholder={translation(
+            "chat_history.modal-chat-pass-plc2",
+            "Select",
+          )}
           data={keyRingCategories}
           disabled={isPasswordManual}
           loading={keyRingLoader}
@@ -302,8 +319,14 @@ function ChatPasswordModal() {
         {renderField === "KEY" && (
           <>
             <Select
-              label="Category key"
-              placeholder="Select"
+              label={translation(
+                "chat_history.modal-chat-pass-label3",
+                "Category key",
+              )}
+              placeholder={translation(
+                "chat_history.modal-chat-pass-plc3",
+                "Select",
+              )}
               data={keyRingCategoryKeys}
               mt={"md"}
               loading={keyRingLoader}
@@ -321,7 +344,7 @@ function ChatPasswordModal() {
         {renderField !== "OTP" && (
           <Group justify="center" mt="md">
             <Button onClick={handleSubmit} size="xs">
-              Submit
+              {translation("chat_history.modal-chat-pass-btn-submit", "Submit")}
             </Button>
           </Group>
         )}
@@ -329,7 +352,10 @@ function ChatPasswordModal() {
         {renderField === "OTP" && (
           <>
             <Text size="sm" fw={550} mt={"md"}>
-              Verify 2FA OTP
+              {translation(
+                "chat_history.modal-chat-pass-label-verify",
+                "Verify 2FA OTP",
+              )}
             </Text>
             <Flex justify={"space-between"} wrap={"wrap"}>
               <PinInput
@@ -346,12 +372,18 @@ function ChatPasswordModal() {
                 onClick={handleVerify}
                 size="xs"
               >
-                Verify
+                {translation(
+                  "chat_history.modal-chat-pass-btn-verify",
+                  "Verify",
+                )}
               </Button>
             </Flex>
             {apiPolling ? (
               <Text size="xs" mt={"xs"} className="text-center">
-                Requesting otp... Please wait
+                {translation(
+                  "chat_history.modal-chat-pass-otp-loader",
+                  "Requesting otp... Please wait",
+                )}
               </Text>
             ) : (
               <Text
@@ -361,7 +393,10 @@ function ChatPasswordModal() {
                 className="cursor-pointer text-center"
                 onClick={() => setApiPolling(true)}
               >
-                Get otp
+                {translation(
+                  "chat_history.modal-chat-pass-link-verify",
+                  "Get otp",
+                )}
               </Text>
             )}
           </>
