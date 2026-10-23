@@ -33,11 +33,9 @@ import {
   IconCheck,
   IconChevronRight,
   IconCurrencyDollar,
-  IconDatabase,
   IconEdit,
   IconExternalLink,
   IconMail,
-  IconMessages,
   IconSearch,
   IconUser,
   IconUserCheck,
@@ -825,129 +823,6 @@ export default function ManageBillings() {
       </Group>
 
       <Stack gap="xl">
-        {defaultPricing && (
-          <Card withBorder radius="lg" p="lg" bg="white" className="shadow-xs">
-            <Stack gap="md">
-              <Group justify="space-between" align="flex-start">
-                <div>
-                  <Group gap="xs" mb={4}>
-                    <Title order={4}>Standard Default Plan</Title>
-                    <Badge color="indigo" variant="light" radius="sm">
-                      {translation(
-                        "admin_billing.badgeDefaultTier",
-                        "Global Default",
-                      )}
-                    </Badge>
-                  </Group>
-                  <Text size="xs" c="dimmed">
-                    {translation("admin_billing.txtVersion", "Version")}{" "}
-                    {defaultPricing.version} •{" "}
-                    {translation("admin_billing.txtCurrency", "Currency")}:{" "}
-                    {defaultPricing.currency}
-                  </Text>
-                </div>
-
-                <Button
-                  size="xs"
-                  variant="light"
-                  color="indigo"
-                  leftSection={<IconEdit size={14} />}
-                  onClick={handleOpenEditDefault}
-                >
-                  {translation(
-                    "admin_billing.btnEditPricing",
-                    "Edit Default Rates",
-                  )}
-                </Button>
-              </Group>
-
-              <Divider />
-
-              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-                <Paper p="sm" radius="md" bg="gray.0" withBorder>
-                  <Group gap="xs" mb={4}>
-                    <ThemeIcon
-                      size={24}
-                      radius="xl"
-                      color="indigo"
-                      variant="light"
-                    >
-                      <IconMessages size={14} />
-                    </ThemeIcon>
-                    <Text size="xs" fw={700}>
-                      {translation(
-                        "admin_billing.txtChatAccounts",
-                        "Chat Accounts",
-                      )}
-                    </Text>
-                  </Group>
-                  <Text size="xs" c="dimmed">
-                    {translation(
-                      "admin_billing.txtFreeQuantity",
-                      "Free Quantity",
-                    )}
-                    :{" "}
-                    <b className="text-gray-900">
-                      {defaultPricing.chat_accounts.free_quantity}{" "}
-                      {translation("admin_billing.txtAccounts", "accounts")}
-                    </b>
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    {translation(
-                      "admin_billing.txtRatePerExtraUnit",
-                      "Rate per extra unit",
-                    )}
-                    :{" "}
-                    <b className="text-gray-900">
-                      ${defaultPricing.chat_accounts.price_per_unit} /
-                      {translation("admin_billing.txtPerDay", "day")}
-                    </b>
-                  </Text>
-                </Paper>
-
-                <Paper p="sm" radius="md" bg="gray.0" withBorder>
-                  <Group gap="xs" mb={4}>
-                    <ThemeIcon
-                      size={24}
-                      radius="xl"
-                      color="teal"
-                      variant="light"
-                    >
-                      <IconDatabase size={14} />
-                    </ThemeIcon>
-                    <Text size="xs" fw={700}>
-                      {translation(
-                        "admin_billing.txtStorageAllowance",
-                        "Storage Allowance",
-                      )}
-                    </Text>
-                  </Group>
-                  <Text size="xs" c="dimmed">
-                    {translation(
-                      "admin_billing.txtFreeStorage",
-                      "Free Storage",
-                    )}
-                    :{" "}
-                    <b className="text-gray-900">
-                      {formatBytesToGb(defaultPricing.storage.free_bytes)} GB
-                    </b>
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    {translation(
-                      "admin_billing.txtRatePerExtraGB",
-                      "Rate per extra GB",
-                    )}
-                    :{" "}
-                    <b className="text-gray-900">
-                      ${defaultPricing.storage.price_per_gb} /GB
-                    </b>
-                  </Text>
-                </Paper>
-              </SimpleGrid>
-            </Stack>
-          </Card>
-        )}
-
         {/* SIDE-BY-SIDE USER LISTS */}
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
           {/* DEFAULT PLAN USERS */}
@@ -965,7 +840,7 @@ export default function ManageBillings() {
             />
             <Stack gap="sm">
               <Group justify="space-between">
-                <Group gap="xs">
+                <Group gap="xs" align="center">
                   <ThemeIcon
                     size={28}
                     radius="xl"
@@ -974,12 +849,33 @@ export default function ManageBillings() {
                   >
                     <IconUser size={16} />
                   </ThemeIcon>
+
                   <Text fw={700} size="sm">
                     {translation(
                       "admin_billing.txtUserDefaultPricing",
                       "Users on Default Pricing",
                     )}
                   </Text>
+
+                  <Tooltip
+                    label={translation(
+                      "admin_billing.btnEditPricing",
+                      "Edit Default Rates",
+                    )}
+                    withArrow
+                    position="top"
+                  >
+                    <ActionIcon
+                      size="sm"
+                      variant="light"
+                      color="indigo"
+                      radius="md"
+                      onClick={handleOpenEditDefault}
+                      aria-label="Edit Default Rates"
+                    >
+                      <IconEdit size={14} />
+                    </ActionIcon>
+                  </Tooltip>
                 </Group>
                 <Badge color="indigo" variant="light">
                   {defaultTotal}{" "}

@@ -231,7 +231,7 @@ export const patchPricingTierRatesApi = async (
   payload: UpdatePricingPayload,
 ): Promise<boolean> => {
   try {
-    await api.patch(PRICING_ENDPOINT, payload);
+    await api.patch(API_ENDPOINTS.ADMIN_PRICING, payload);
     return true;
   } catch (error: any) {
     handleApiError(error, "admin_billing");
@@ -244,7 +244,7 @@ export const reassignUserTierApi = async (
 ): Promise<boolean> => {
   try {
     const response = await api.delete(
-      `${PRICING_ENDPOINT}?user_id=${encodeURIComponent(payload.user_id)}`,
+      `${API_ENDPOINTS.ADMIN_PRICING}?user_id=${encodeURIComponent(payload.user_id)}`,
     );
     return response.status === 200;
   } catch (error: any) {

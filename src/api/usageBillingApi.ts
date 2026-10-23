@@ -118,7 +118,7 @@ export const getUserBillingMonthlyApi = async (
 ): Promise<UserBillingMonthlyResponse["details"] | null> => {
   try {
     const response = await api.get<UserBillingMonthlyResponse>(
-      `${API_ENDPOINTS.OVERVIEW}?user_id=${encodeURIComponent(userId)}&period=${encodeURIComponent(period)}`,
+      `${API_ENDPOINTS.ESTIMATE}?user_id=${encodeURIComponent(userId)}&period=${encodeURIComponent(period)}`,
     );
     return response.data?.details ?? null;
   } catch (error: any) {
