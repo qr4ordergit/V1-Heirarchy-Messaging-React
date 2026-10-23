@@ -4,13 +4,13 @@ import { Alert, Center, Loader, Stack, Text } from "@mantine/core";
 
 import { useAuthStore, isAdminAccount } from "../../store/auth/auth.store";
 import { fetchUserDetails } from "../../api/userApi";
+import { establishSession } from "../../utils/authFlow";
 import { ROUTES } from "../../router/routes";
 import { useTranslation } from "../../store/language/language.store";
 export default function AuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const setTokens = useAuthStore((state) => state.setTokens);
   const setUserDetails = useAuthStore((state) => state.setUserDetails);
 
   const [error, setError] = useState<string | null>(null);
@@ -25,14 +25,19 @@ export default function AuthCallback() {
       return;
     }
 
-    setTokens({
-      accessToken,
-      idToken: idToken ?? "",
-      refreshToken: refreshToken ?? "",
-    });
-
     const completeAuthentication = async () => {
       try {
+        const session = await establishSession({
+          accessToken,
+          idToken: idToken ?? "",
+          refreshToken: refreshToken ?? "",
+        });
+
+        if (session.status === "limit_reached") {
+          navigate(ROUTES.SESSIONS, { replace: true });
+          return;
+        }
+
         const details = await fetchUserDetails();
 
         setUserDetails(details);
@@ -52,7 +57,7 @@ export default function AuthCallback() {
     };
 
     void completeAuthentication();
-  }, [searchParams, navigate, setTokens, setUserDetails]);
+  }, [searchParams, navigate, setUserDetails]);
 
   if (error) {
     return (

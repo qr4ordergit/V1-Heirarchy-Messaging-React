@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
   USER_DETAILS: `${API_BASE_URL}/user-details`,
   ACCOUNTS_LIST: `${API_BASE_URL}/user-access/sub-users-detail`,
   AUTH_LOGOUT: `${API_BASE_URL}/auth/logout`,
+  AUTH_USER_SESSION: `${API_BASE_URL}/auth/user-session`,
   CONTACTS: `${API_BASE_URL}/contacts`,
   VERIFY_USER: `${API_BASE_URL}/contacts/verify-user`,
   ADJACENCY_LIST: `${API_BASE_URL}/user-access/sub-users`,

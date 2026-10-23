@@ -1,7 +1,8 @@
 import { AxiosError } from "axios";
 import { api } from "./axios";
 import { API_ENDPOINTS } from "../utils/constant";
-import { LOGOUT_REDIRECT_URI } from "../config/cognito";
+// import { LOGOUT_REDIRECT_URI } from "../config/cognito";
+import { useAuthStore } from "../store/auth/auth.store";
 
 export interface SignupPayload {
   email: string;
@@ -87,11 +88,28 @@ export async function suggestUsername(
   }
 }
 
+// export async function logout(): Promise<LogoutResponse> {
+//   const logoutUrl = `${API_ENDPOINTS.AUTH_LOGOUT}?redirect_uri=${encodeURIComponent(LOGOUT_REDIRECT_URI)}`;
+
+//   try {
+//     const response = await api.post<LogoutResponse>(logoutUrl);
+
+//     return response.data;
+//   } catch (error) {
+//     throw new Error(
+//       extractErrorMessage(error, "Could not log out. Please try again."),
+//     );
+//   }
+// }
+
 export async function logout(): Promise<LogoutResponse> {
-  const logoutUrl = `${API_ENDPOINTS.AUTH_LOGOUT}?redirect_uri=${encodeURIComponent(LOGOUT_REDIRECT_URI)}`;
+  // The backend identifies the session to end from the refresh token.
+  const refreshToken = useAuthStore.getState().refreshToken ?? "";
 
   try {
-    const response = await api.post<LogoutResponse>(logoutUrl);
+    const response = await api.post<LogoutResponse>(API_ENDPOINTS.AUTH_LOGOUT, {
+      refresh_token: refreshToken,
+    });
 
     return response.data;
   } catch (error) {

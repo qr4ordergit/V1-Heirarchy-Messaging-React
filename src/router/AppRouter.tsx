@@ -4,8 +4,8 @@ import { HashRouter, Route, Routes } from "react-router";
 import { ROUTES } from "./routes";
 import LazyLoader from "../component/lazyLoader/LazyLoader";
 import RequireAuth from "./guards/RequireAuth";
-import { useAuthStore } from "../store/auth/auth.store";
 import Conversation from "../component/chats/conversation/Conversation";
+import { establishSession } from "../utils/authFlow";
 
 const Home = lazy(() => import("../pages/home/Home"));
 const NotFound = lazy(() => import("../pages/notFound/NotFound"));
@@ -25,9 +25,8 @@ const InviteRedirectHandler = lazy(
   () => import("../component/inviteRedirectHandler/InviteRedirectHandler"),
 );
 const Admin = lazy(() => import("../pages/admin/Admin"));
+const ActiveSessions = lazy(() => import("../pages/sessions/ActiveSessions"));
 function useCaptureTokensAnywhere() {
-  const setTokens = useAuthStore((state) => state.setTokens);
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
@@ -39,11 +38,17 @@ function useCaptureTokensAnywhere() {
       return;
     }
 
-    setTokens({
+    void establishSession({
       accessToken,
       idToken: idToken ?? "",
       refreshToken: refreshToken ?? "",
-    });
+    })
+      .then((result) => {
+        if (result.status === "limit_reached") {
+          window.location.hash = `#${ROUTES.SESSIONS}`;
+        }
+      })
+      .catch((err) => console.error("Session registration failed:", err));
 
     const cleanHash = window.location.hash.split("?")[0];
 
@@ -52,7 +57,7 @@ function useCaptureTokensAnywhere() {
       "",
       `${window.location.pathname}${cleanHash}`,
     );
-  }, [setTokens]);
+  }, []);
 }
 
 export default function AppRouter() {
@@ -65,6 +70,7 @@ export default function AppRouter() {
           <Route path={ROUTES.HOME} element={<Home />} />
           <Route path={ROUTES.REGISTER} element={<Signup />} />
           <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
+          <Route path={ROUTES.SESSIONS} element={<ActiveSessions />} />
 
           <Route element={<RequireAuth />}>
             <Route path={ROUTES.ACCOUNTS} element={<Accounts />} />

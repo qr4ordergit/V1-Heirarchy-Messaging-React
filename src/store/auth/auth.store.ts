@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { devtools, persist, createJSONStorage } from "zustand/middleware";
 
 import type { Account } from "../../api/accountApi";
+import type { ActiveSession } from "../../api/sessionApi";
 
 interface AuthTokens {
   accessToken: string;
@@ -42,6 +43,15 @@ interface AuthState {
 
   targetUserDetails: Account | null;
 
+  // Multi-device login: true while this login has not been accepted by the
+  // backend (still checking, or the 5-device limit was hit).
+  sessionPending: boolean;
+  pendingSessions: ActiveSession[] | null;
+  sessionMessage: string;
+
+  setSessionPending: (pending: boolean) => void;
+  setSessionLimit: (sessions: ActiveSession[] | null, message?: string) => void;
+
   setTokens: (tokens: AuthTokens) => void;
 
   setUserDetails: (details: UserDetails) => void;
@@ -60,6 +70,10 @@ export const useAuthStore = create<AuthState>()(
         accessToken: null,
         idToken: null,
         refreshToken: null,
+
+        sessionPending: false,
+        pendingSessions: null,
+        sessionMessage: "",
 
         isAuthenticated: false,
 
@@ -111,6 +125,16 @@ export const useAuthStore = create<AuthState>()(
             "auth/setTargetUserDetails",
           ),
 
+        setSessionPending: (pending) =>
+          set({ sessionPending: pending }, false, "auth/setSessionPending"),
+
+        setSessionLimit: (sessions, message = "") =>
+          set(
+            { pendingSessions: sessions, sessionMessage: message },
+            false,
+            "auth/setSessionLimit",
+          ),
+
         clearTokens: () =>
           set(
             {
@@ -119,6 +143,10 @@ export const useAuthStore = create<AuthState>()(
               refreshToken: null,
 
               isAuthenticated: false,
+
+              sessionPending: false,
+              pendingSessions: null,
+              sessionMessage: "",
 
               userDetails: null,
 
@@ -143,6 +171,8 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: state.refreshToken,
 
           isAuthenticated: state.isAuthenticated,
+
+          sessionPending: state.sessionPending,
 
           userDetails: state.userDetails,
 
