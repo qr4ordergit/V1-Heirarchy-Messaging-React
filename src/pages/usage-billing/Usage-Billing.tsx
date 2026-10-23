@@ -83,33 +83,6 @@ const formatBytesLocalized = (
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 
-const generateBillingPeriods = (lang: string = "en") => {
-  const options = [];
-  const currentDate = new Date();
-  const locale = lang === "uk" ? "uk-UA" : "en-US";
-
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() - i,
-      1,
-    );
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const periodValue = `${year}-${month}`;
-    const monthLabel = d.toLocaleString(locale, {
-      month: "long",
-      year: "numeric",
-    });
-
-    options.push({
-      value: periodValue,
-      label: monthLabel,
-    });
-  }
-  return options;
-};
-
 const parseCost = (val: string | number | undefined | null): number => {
   if (typeof val === "number") return Number.isFinite(val) ? val : 0;
   if (typeof val === "string") {
@@ -129,14 +102,8 @@ export default function UsageBilling() {
   const setUserDetails = useAuthStore((state) => (state as any).setUserDetails);
   const isPaid = Boolean((userDetails as any)?.is_paid);
 
-  const billingPeriodOptions = useMemo(
-    () => generateBillingPeriods(curtLang),
-    [curtLang],
-  );
-
-  const [selectedPeriod, setSelectedPeriod] = useState<string>(
-    billingPeriodOptions[0]?.value || "2026-10",
-  );
+  const [availablePeriods, setAvailablePeriods] = useState<string[]>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("");
 
   const [payingBill, setPayingBill] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
@@ -146,6 +113,25 @@ export default function UsageBilling() {
   const [usageData, setUsageData] = useState<UsageData | null>(null);
   const [estimateData, setEstimateData] = useState<EstimateData | null>(null);
   const [isInvoiceGenerated, setIsInvoiceGenerated] = useState<boolean>(false);
+
+  const periodSelectOptions = useMemo(() => {
+    const locale = currentLang === "uk" ? "uk-UA" : "en-US";
+
+    return availablePeriods.map((p) => {
+      const [year, month] = p.split("-").map(Number);
+      let label = p;
+
+      if (year && month) {
+        const d = new Date(year, month - 1, 1);
+        label = d.toLocaleString(locale, {
+          month: "long",
+          year: "numeric",
+        });
+      }
+
+      return { value: p, label };
+    });
+  }, [availablePeriods, currentLang]);
 
   const loadBillingData = async (period: string, isInitial = false) => {
     if (isInitial) {
@@ -166,9 +152,20 @@ export default function UsageBilling() {
 
         const invoiceStatus = Boolean(estimateRes?.invoiceGenerated);
         setIsInvoiceGenerated(invoiceStatus);
+        if (
+          estimateRes?.availablePeriods &&
+          estimateRes.availablePeriods.length > 0
+        ) {
+          setAvailablePeriods(estimateRes.availablePeriods);
+        }
 
         if (estimateRes?.period && estimateRes.period !== period) {
           setSelectedPeriod(estimateRes.period);
+        } else if (
+          estimateRes?.availablePeriods &&
+          estimateRes.availablePeriods.length > 0
+        ) {
+          setSelectedPeriod(estimateRes.availablePeriods[0]);
         }
       } else {
         const username = userDetails?.username;
@@ -922,7 +919,7 @@ export default function UsageBilling() {
                         <Select
                           size="xs"
                           w={160}
-                          data={billingPeriodOptions}
+                          data={periodSelectOptions}
                           value={selectedPeriod}
                           onChange={handlePeriodChange}
                           leftSection={<IconCalendar size={13} />}

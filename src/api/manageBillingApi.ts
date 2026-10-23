@@ -191,7 +191,7 @@ export const getAdminOverviewDataApi = async (
 
     if (params?.limit) queryParts.push(`limit=${params.limit}`);
     if (params?.cursor)
-      queryParts.push(`cusor=${encodeURIComponent(params.cursor)}`);
+      queryParts.push(`cursor=${encodeURIComponent(params.cursor)}`);
     if (params?.type) queryParts.push(`type=${params.type}`);
     if (params?.status) queryParts.push(`status=${params.status}`);
     if (params?.dues) queryParts.push(`dues=${params.dues}`);

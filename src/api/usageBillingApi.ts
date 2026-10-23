@@ -96,9 +96,11 @@ export interface EstimateData {
 export interface EstimateApiResponse {
   hub_user_id: string;
   period: string;
+  available_periods: string[];
   snapshot_date?: string;
   estimate: EstimateData;
   invoice_generated?: boolean;
+  invoice?: any | null;
   [key: string]: any;
 }
 export interface UserBillingMonthlyResponse {
@@ -137,6 +139,7 @@ export const getEstimateApi = async (): Promise<{
   estimate: EstimateData | null;
   invoiceGenerated: boolean;
   period?: string;
+  availablePeriods: string[];
 }> => {
   try {
     const rawEndpoint = withTargetUser(
@@ -152,9 +155,17 @@ export const getEstimateApi = async (): Promise<{
         data?.invoice_generated ?? data?.body?.invoice_generated ?? false,
       );
       const resPeriod = data?.period || data?.body?.period;
-      return { estimate, invoiceGenerated, period: resPeriod };
+      const availablePeriods: string[] =
+        data?.available_periods || (data as any)?.body?.available_periods || [];
+
+      return {
+        estimate,
+        invoiceGenerated,
+        period: resPeriod,
+        availablePeriods,
+      };
     }
-    return { estimate: null, invoiceGenerated: false };
+    return { estimate: null, invoiceGenerated: false, availablePeriods: [] };
   } catch (error: any) {
     handleApiError(
       error,
@@ -163,7 +174,7 @@ export const getEstimateApi = async (): Promise<{
         "Failed to load billing estimate.",
       ),
     );
-    return { estimate: null, invoiceGenerated: false };
+    return { estimate: null, invoiceGenerated: false, availablePeriods: [] };
   }
 };
 
