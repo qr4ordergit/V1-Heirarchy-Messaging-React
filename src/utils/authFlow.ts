@@ -54,7 +54,7 @@ export function establishSession(
 
 export async function completeLogin(tokens: OAuthTokens): Promise<string> {
   const result = await establishSession(tokens);
-  if (result.status === "limit_reached") return ROUTES.SESSIONS;
+  if (result.status === "active_count") return ROUTES.SESSIONS;
 
   const { setUserDetails } = useAuthStore.getState();
   const details = await fetchUserDetails();

@@ -12,7 +12,7 @@ export interface ActiveSession {
 
 export type RegisterSessionResult =
   | { status: "ok" }
-  | { status: "limit_reached"; message: string; sessions: ActiveSession[] };
+  | { status: "active_count"; message: string; sessions: ActiveSession[] };
 
 interface RawDevice {
   _id?: string;
@@ -77,17 +77,20 @@ function normalizeDevices(list: RawDevice[] | undefined): ActiveSession[] {
 }
 
 function isLimitBody(data: UserSessionBody | undefined): boolean {
-  return data?.success === false && Array.isArray(data.active_devices);
+  return (
+    data?.success === false &&
+    (Array.isArray(data.Device_List) || Array.isArray(data.active_devices))
+  );
 }
 
 function toLimitResult(data: UserSessionBody): RegisterSessionResult {
   return {
-    status: "limit_reached",
+    status: "active_count",
     message:
       data.error ||
       data.message ||
       "Maximum device limit reached. Please log out from another device.",
-    sessions: normalizeDevices(data.active_devices),
+    sessions: normalizeDevices(data.Device_List ?? data.active_devices),
   };
 }
 

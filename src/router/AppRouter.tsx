@@ -44,7 +44,7 @@ function useCaptureTokensAnywhere() {
       refreshToken: refreshToken ?? "",
     })
       .then((result) => {
-        if (result.status === "limit_reached") {
+        if (result.status === "active_count") {
           window.location.hash = `#${ROUTES.SESSIONS}`;
         }
       })

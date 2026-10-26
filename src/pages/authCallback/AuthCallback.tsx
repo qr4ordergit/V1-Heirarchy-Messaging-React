@@ -33,7 +33,7 @@ export default function AuthCallback() {
           refreshToken: refreshToken ?? "",
         });
 
-        if (session.status === "limit_reached") {
+        if (session.status === "active_count") {
           navigate(ROUTES.SESSIONS, { replace: true });
           return;
         }
