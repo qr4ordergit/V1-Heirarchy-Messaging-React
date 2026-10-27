@@ -90,7 +90,6 @@ export default function ConversationItem({
                 {conversation.unread_count}
               </Badge>
             )}
-            {isLocked && <IconLock size={13} />}
             <Menu position="bottom-start" withArrow>
               <Menu.Target>
                 <ActionIcon
