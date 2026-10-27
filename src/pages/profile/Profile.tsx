@@ -26,6 +26,7 @@ import {
   IconChevronDown,
   IconChevronRight,
   IconCopy,
+  IconEdit,
   IconId,
   IconKey,
   IconLock,
@@ -363,7 +364,8 @@ const Profile = () => {
   };
 
   const handleVerifyOtpSubmit = async () => {
-    if (!pendingAction || otpValue.trim().length < 4) return;
+    const otpValueTrimmed = otpValue.trim();
+    if (!pendingAction || otpValueTrimmed.length < 6) return;
 
     const catId =
       pendingAction.category._id ||
@@ -401,7 +403,7 @@ const Profile = () => {
       if (action.type === "edit") {
         openKeyringModalDirectly(updatedCategory);
       } else if (action.type === "delete") {
-        await executeDeleteKeyring(catId);
+        await executeDeleteKeyring(catId, otpValueTrimmed);
       }
     } catch (err: any) {
       handleApiError(err);
@@ -410,10 +412,10 @@ const Profile = () => {
     }
   };
 
-  const executeDeleteKeyring = async (id: string) => {
+  const executeDeleteKeyring = async (id: string, otp?: string) => {
     setDeletingKeyringId(id);
     try {
-      const success = await deleteKeyringCategoryApi(id);
+      const success = await deleteKeyringCategoryApi(id, otp);
       if (success) {
         notifications.show({
           title: "",
@@ -436,7 +438,7 @@ const Profile = () => {
   };
 
   const handleAddPasswordPairRow = () => {
-    setPasswordPairs([...passwordPairs, { key: "", value: "" }]);
+    setPasswordPairs([{ key: "", value: "" }, ...passwordPairs]);
   };
 
   const handleRemovePasswordPairRow = (index: number) => {
@@ -499,8 +501,8 @@ const Profile = () => {
       let resultResponse: any = null;
 
       if (editingKeyringId) {
-        if (initial2faEnabled || is2faEnabled) {
-          if (!updateOtp.trim() || updateOtp.trim().length < 4) {
+        if (initial2faEnabled) {
+          if (!updateOtp.trim() || updateOtp.trim().length < 6) {
             notifications.show({
               title: "",
               message: translation(
@@ -556,8 +558,7 @@ const Profile = () => {
         setUpdateOtp("");
         await fetchKeyringsList();
 
-        const secret =
-          resultResponse.secret_key || resultResponse.data?.secret_key;
+        const secret = resultResponse.secret_key;
 
         if (secret && is2faEnabled) {
           setQrSecretKey(secret);
@@ -1279,7 +1280,7 @@ const Profile = () => {
                                       "Edit / Add Category",
                                     )}
                                   >
-                                    <IconPlus size={15} />
+                                    <IconEdit size={15} />
                                   </ActionIcon>
                                   <ActionIcon
                                     size="sm"
@@ -1434,7 +1435,7 @@ const Profile = () => {
             </Group>
           </Paper>
 
-          {Boolean(editingKeyringId && (initial2faEnabled || is2faEnabled)) && (
+          {Boolean(editingKeyringId && initial2faEnabled) && (
             <Paper p="xs" bg="indigo.0" radius="md" withBorder>
               <Stack gap={6}>
                 <Group gap="xs">
@@ -1473,6 +1474,19 @@ const Profile = () => {
             )}
             labelPosition="center"
           />
+
+          <Button
+            size="xs"
+            variant="light"
+            color="indigo"
+            leftSection={<IconPlus size={14} />}
+            onClick={handleAddPasswordPairRow}
+          >
+            {translation(
+              "profile.btnAddMorePasswords",
+              "Add More Password Key-Value",
+            )}
+          </Button>
 
           {passwordPairs.length > 1 && (
             <TextInput
@@ -1552,19 +1566,6 @@ const Profile = () => {
               </div>
             ))}
           </div>
-
-          <Button
-            size="xs"
-            variant="light"
-            color="indigo"
-            leftSection={<IconPlus size={14} />}
-            onClick={handleAddPasswordPairRow}
-          >
-            {translation(
-              "profile.btnAddMorePasswords",
-              "Add More Password Key-Value",
-            )}
-          </Button>
 
           <Group justify="flex-end" gap="xs" mt="sm">
             <Button

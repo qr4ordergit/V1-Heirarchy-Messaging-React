@@ -334,11 +334,16 @@ export const updateKeyringCategoryApi = async (
 
 export const deleteKeyringCategoryApi = async (
   keyringCategoryId: string,
+  otp?: string,
 ): Promise<boolean> => {
   try {
+    const otpParam = otp?.trim()
+      ? `&otp=${encodeURIComponent(otp.trim())}`
+      : "";
     const url = `${API_ENDPOINTS.KEYRING_CATEGORIES}?keyring_category_id=${encodeURIComponent(
       keyringCategoryId,
-    )}`;
+    )}${otpParam}`;
+
     const response = await api.delete(withTargetUser(url));
     const data = response.data;
     if (
