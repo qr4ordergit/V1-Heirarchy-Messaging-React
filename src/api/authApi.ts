@@ -103,7 +103,6 @@ export async function suggestUsername(
 // }
 
 export async function logout(): Promise<LogoutResponse> {
-  // The backend identifies the session to end from the refresh token.
   const refreshToken = useAuthStore.getState().refreshToken ?? "";
 
   try {

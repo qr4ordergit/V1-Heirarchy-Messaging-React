@@ -1,5 +1,5 @@
 import axios from "axios";
-import { api } from "./axios";
+import { useAuthStore } from "../store/auth/auth.store";
 import { API_ENDPOINTS } from "../utils/constant";
 
 export interface ActiveSession {
@@ -33,8 +33,20 @@ interface UserSessionBody {
   Device_List?: RawDevice[];
 }
 
-export function getDeviceInfo() {
+async function detectBrave(): Promise<boolean> {
+  try {
+    const nav = navigator as Navigator & {
+      brave?: { isBrave?: () => Promise<boolean> };
+    };
+    return !!(await nav.brave?.isBrave?.());
+  } catch {
+    return false;
+  }
+}
+
+export async function getDeviceInfo() {
   const ua = navigator.userAgent;
+  const isBrave = await detectBrave();
 
   const platform = /Android/i.test(ua)
     ? "Android"
@@ -48,17 +60,19 @@ export function getDeviceInfo() {
             ? "Linux"
             : "Unknown";
 
-  const browser = /Edg\//i.test(ua)
-    ? "Edge"
-    : /OPR\//i.test(ua)
-      ? "Opera"
-      : /Firefox\//i.test(ua)
-        ? "Firefox"
-        : /Chrome\//i.test(ua)
-          ? "Chrome"
-          : /Safari\//i.test(ua)
-            ? "Safari"
-            : "Unknown";
+  const browser = isBrave
+    ? "Brave"
+    : /Edg\//i.test(ua)
+      ? "Edge"
+      : /OPR\//i.test(ua)
+        ? "Opera"
+        : /Firefox\//i.test(ua)
+          ? "Firefox"
+          : /Chrome\//i.test(ua)
+            ? "Chrome"
+            : /Safari\//i.test(ua)
+              ? "Safari"
+              : "Unknown";
 
   return { platform, browser, device_name: `${browser} on ${platform}` };
 }
@@ -98,7 +112,7 @@ export async function registerSession(
   accessToken: string,
   refreshToken: string,
 ): Promise<RegisterSessionResult> {
-  const { platform, browser, device_name } = getDeviceInfo();
+  const { platform, browser, device_name } = await getDeviceInfo();
 
   try {
     const response = await axios.post<UserSessionBody>(
@@ -139,9 +153,22 @@ export async function registerSession(
 }
 
 export async function revokeSession(id: string): Promise<void> {
-  await api.delete(API_ENDPOINTS.AUTH_USER_SESSION, {
-    data: { session_id: id },
-  });
+  const { accessToken } = useAuthStore.getState();
+
+  const response = await axios.post<UserSessionBody>(
+    API_ENDPOINTS.AUTH_USER_SESSION,
+    { session_id: id },
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken ?? ""}`,
+      },
+    },
+  );
+
+  if (response.data?.success === false && !isLimitBody(response.data)) {
+    throw new Error(response.data.error || "Could not log out that device.");
+  }
 }
 
 export async function revokeAllSessions(ids: string[]): Promise<void> {
