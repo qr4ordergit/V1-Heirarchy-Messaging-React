@@ -7,9 +7,9 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 export const API_BASE_URL =
-  "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev/api";
+  "https://53mxdgl1ok.execute-api.eu-central-1.amazonaws.com/dev/api";
 export const API_BASE_URL2 =
-  "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev/admin";
+  "https://53mxdgl1ok.execute-api.eu-central-1.amazonaws.com/dev/admin";
 
 export const SKIN_LANGUAGE_URL =
   "https://messaging-service-media.s3.ap-south-1.amazonaws.com/skin-languages/messagingApp_skinLanguage_web.txt";
