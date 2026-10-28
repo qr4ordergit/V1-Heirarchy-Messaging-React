@@ -1,9 +1,9 @@
 const COGNITO_DOMAIN = "https://auth.ukrchat.com";
 
-const CLIENT_ID = "65tl29mkauin3t0ic18cu0oifi";
+const CLIENT_ID = "23cit9rjklaebv2st7mip0b1h9";
 
 export const REDIRECT_URI =
-  "https://u2hjtodeyl.execute-api.ap-south-1.amazonaws.com/dev/api/callback";
+  "https://53mxdgl1ok.execute-api.eu-central-1.amazonaws.com/dev/api/callback";
 
 const FRONTEND_CALLBACK_URL = `${window.location.origin}`;
 
