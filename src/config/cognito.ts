@@ -1,5 +1,4 @@
-const COGNITO_DOMAIN =
-  "https://eu-central-1rvppqfgs7.auth.eu-central-1.amazoncognito.com";
+const COGNITO_DOMAIN = "https://auth.ukrchat.com";
 
 const CLIENT_ID = "23cit9rjklaebv2st7mip0b1h9";
 
