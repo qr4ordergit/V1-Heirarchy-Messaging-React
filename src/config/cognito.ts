@@ -1,4 +1,5 @@
-const COGNITO_DOMAIN = "https://auth.ukrchat.com";
+const COGNITO_DOMAIN =
+  "https://eu-central-1rvppqfgs7.auth.eu-central-1.amazoncognito.com";
 
 const CLIENT_ID = "23cit9rjklaebv2st7mip0b1h9";
 
@@ -10,9 +11,9 @@ const FRONTEND_CALLBACK_URL = `${window.location.origin}`;
 export const LOGOUT_REDIRECT_URI = `${window.location.origin}/#/`;
 
 export const COGNITO_LOGIN_URL =
-  `${COGNITO_DOMAIN}/login/continue?client_id=${CLIENT_ID}` +
+  `${COGNITO_DOMAIN}/login?client_id=${CLIENT_ID}` +
   `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
   `&response_type=code` +
   `&prompt=login` +
-  `&scope=email+openid+phone+aws.cognito.signin.user.admin` +
+  `&scope=aws.cognito.signin.user.admin+email+openid+phone` +
   `&state=${encodeURIComponent(FRONTEND_CALLBACK_URL)}`;
