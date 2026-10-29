@@ -182,7 +182,9 @@ export default function ChatInput() {
       finalMsg["double_encryption"] = false;
 
       if (finalMsg?.type !== "schedule") {
-        appendChats([finalMsg]);
+        appendChats({
+          messages: [finalMsg],
+        });
       } else {
         Notification.success(
           translation(
@@ -509,7 +511,9 @@ export default function ChatInput() {
           };
         });
         if (finalMsg?.type !== "schedule") {
-          appendChats([finalMsg]);
+          appendChats({
+            messages: [finalMsg],
+          });
         } else {
           Notification.success("Message scheduled successfully");
         }

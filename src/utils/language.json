@@ -714,7 +714,15 @@
         "modal-chat-pass-label-verify": "Verify 2FA OTP",
         "modal-chat-pass-btn-verify": "Verify",
         "modal-chat-pass-otp-loader": "Requesting otp... Please wait",
-        "modal-chat-pass-link-verify": "Get otp"
+        "modal-chat-pass-link-verify": "Get otp",
+        "modal-alert-success-title": "OTP received",
+        "modal-alert-success-content": "Kindly verify to validate.",
+        "modal-alert-reject-title": "OTP rejected",
+        "modal-alert-reject-content": "Retry again or try after sometime.",
+        "modal-alert-pending-title": "OTP approval pending",
+        "modal-alert-pending-content": "Retry again or try after sometime.",
+        "modal-alert-invalid-title": "Invalid otp",
+        "modal-alert-invalid-content": "Kindly enter correct otp."
       },
       "account_billing": {
         "failedToFetchEstimate": "Failed to load billing estimate.",
@@ -1594,7 +1602,15 @@
         "modal-chat-pass-label-verify": "Verify 2FA OTP",
         "modal-chat-pass-btn-verify": "Verify",
         "modal-chat-pass-otp-loader": "Requesting otp... Please wait",
-        "modal-chat-pass-link-verify": "Get otp"
+        "modal-chat-pass-link-verify": "Get otp",
+        "modal-alert-success-title": "OTP received",
+        "modal-alert-success-content": "Kindly verify to validate.",
+        "modal-alert-reject-title": "OTP rejected",
+        "modal-alert-reject-content": "Retry again or try after sometime.",
+        "modal-alert-pending-title": "OTP approval pending",
+        "modal-alert-pending-content": "Retry again or try after sometime.",
+        "modal-alert-invalid-title": "Invalid otp",
+        "modal-alert-invalid-content": "Kindly enter correct otp."
       },
       "account_billing": {
         "failedToFetchEstimate": "Не вдалося завантажити орієнтовний рахунок.",
