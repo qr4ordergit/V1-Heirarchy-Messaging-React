@@ -182,8 +182,9 @@ export async function revokeAllSessions(ids: string[]): Promise<void> {
 export async function fetchSessions(): Promise<ActiveSession[]> {
   const { accessToken } = useAuthStore.getState();
 
-  const response = await axios.get<UserSessionBody>(
+  const response = await axios.post<UserSessionBody>(
     API_ENDPOINTS.AUTH_USER_SESSION,
+    {},
     { headers: { Authorization: `Bearer ${accessToken ?? ""}` } },
   );
 
