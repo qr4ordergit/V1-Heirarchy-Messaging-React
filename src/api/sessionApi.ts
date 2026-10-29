@@ -8,6 +8,7 @@ export interface ActiveSession {
   platform?: string;
   browser?: string;
   created_at?: string;
+  is_current?: boolean;
 }
 
 export type RegisterSessionResult =
@@ -21,6 +22,8 @@ interface RawDevice {
   browser?: string;
   created_at?: string | { $date?: string };
   revoked_at?: unknown;
+  is_current?: boolean;
+  current?: boolean;
 }
 
 interface UserSessionBody {
@@ -87,6 +90,7 @@ function normalizeDevices(list: RawDevice[] | undefined): ActiveSession[] {
       browser: d.browser,
       created_at:
         typeof d.created_at === "string" ? d.created_at : d.created_at?.$date,
+      is_current: d.is_current ?? d.current,
     }));
 }
 
@@ -173,4 +177,20 @@ export async function revokeSession(id: string): Promise<void> {
 
 export async function revokeAllSessions(ids: string[]): Promise<void> {
   await Promise.all(ids.map((id) => revokeSession(id)));
+}
+
+export async function fetchSessions(): Promise<ActiveSession[]> {
+  const { accessToken } = useAuthStore.getState();
+
+  const response = await axios.get<UserSessionBody>(
+    API_ENDPOINTS.AUTH_USER_SESSION,
+    { headers: { Authorization: `Bearer ${accessToken ?? ""}` } },
+  );
+
+  if (response.data?.success === false && !isLimitBody(response.data)) {
+    throw new Error(response.data.error || "Could not load devices.");
+  }
+  return normalizeDevices(
+    response.data?.Device_List ?? response.data?.active_devices,
+  );
 }

@@ -36,6 +36,7 @@ import {
   IconDotsVertical,
   IconKey,
   IconLogout,
+  IconDevices,
   IconTrash,
   IconLock,
   IconLockOpen,
@@ -84,6 +85,7 @@ import { encryptPasskey, decryptPasskey } from "../../utils/passkeyCipher";
 import { initials } from "../../config/avatarColors";
 import classes from "./Accounts.module.css";
 import { ClearStore } from "../../store/clear.store";
+import DevicesModal from "../../component/modal/DevicesModal";
 import AccessAndPermission from "../../component/accessAndPermission/AccessAndPermission";
 
 import CreateAccountModal from "./Createaccountmodal";
@@ -179,6 +181,7 @@ export default function Accounts() {
   const bulkPollTimeoutRef = useRef<number | null>(null);
 
   const [loggingOut, setLoggingOut] = useState(false);
+  const [devicesOpen, setDevicesOpen] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -1228,6 +1231,10 @@ export default function Accounts() {
 
   return (
     <div className={classes.wrapper}>
+      <DevicesModal
+        opened={devicesOpen}
+        onClose={() => setDevicesOpen(false)}
+      />
       <Container size="md" py="xl">
         <Group justify="space-between" align="center" mb="xl">
           <Group gap="sm" align="center">
@@ -1310,6 +1317,19 @@ export default function Accounts() {
                     {translation(
                       "accounts_page.menuAccountBilling",
                       "Account Billing",
+                    )}
+                  </Menu.Item>
+
+                  <Menu.Divider m={0} />
+                  <Menu.Item
+                    leftSection={<IconDevices size={16} />}
+                    onClick={() => setDevicesOpen(true)}
+                    py="sm"
+                    fw={500}
+                  >
+                    {translation(
+                      "accounts_page.menuLoggedInDevices",
+                      "Logged-in Devices",
                     )}
                   </Menu.Item>
 

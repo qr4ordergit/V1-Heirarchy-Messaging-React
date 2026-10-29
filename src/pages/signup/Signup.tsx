@@ -19,6 +19,7 @@ import { IconCheck, IconLanguage } from "@tabler/icons-react";
 
 import { signup, verifyOtp } from "../../api/authApi";
 import { COGNITO_LOGIN_URL } from "../../config/cognito";
+import { useLogin } from "../../utils/useLogin";
 import HubOrbit from "../../component/hubOrbit/HubOrbit";
 import { useTranslation } from "../../store/language/language.store";
 import logo from "../../assets/logo.png";
@@ -41,6 +42,7 @@ interface SignupFormErrors {
 type Step = "signup" | "verify";
 
 export default function Signup() {
+  const { startLogin } = useLogin();
   const {
     translation,
     currentLang,
@@ -377,7 +379,12 @@ export default function Signup() {
                   "signup.txtAlreadyHaveAccount",
                   "Already have an account?",
                 )}{" "}
-                <Anchor href={COGNITO_LOGIN_URL} size="sm" fw={600}>
+                <Anchor
+                  href={COGNITO_LOGIN_URL}
+                  onClick={startLogin}
+                  size="sm"
+                  fw={600}
+                >
                   {translation("signup.btnLogin", "Login")}
                 </Anchor>
               </Text>

@@ -6,6 +6,7 @@ import LazyLoader from "../component/lazyLoader/LazyLoader";
 import RequireAuth from "./guards/RequireAuth";
 import Conversation from "../component/chats/conversation/Conversation";
 import { establishSession } from "../utils/authFlow";
+import { useAuthStore } from "../store/auth/auth.store";
 
 const Home = lazy(() => import("../pages/home/Home"));
 const NotFound = lazy(() => import("../pages/notFound/NotFound"));
@@ -60,8 +61,24 @@ function useCaptureTokensAnywhere() {
   }, []);
 }
 
+function useSyncAuthAcrossTabs() {
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== "auth-storage") return;
+      void useAuthStore.persist.rehydrate();
+      if (!event.newValue || !useAuthStore.getState().accessToken) {
+        useAuthStore.getState().clearTokens();
+        window.location.hash = `#${ROUTES.HOME}`;
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+}
+
 export default function AppRouter() {
   useCaptureTokensAnywhere();
+  useSyncAuthAcrossTabs();
 
   return (
     <HashRouter>

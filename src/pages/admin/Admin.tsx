@@ -11,7 +11,7 @@ import {
   type ComboboxItem,
 } from "@mantine/core";
 import classes from "./Admin.module.css";
-import { IconLogout, IconShieldLock } from "@tabler/icons-react";
+import { IconDevices, IconLogout, IconShieldLock } from "@tabler/icons-react";
 
 import { logout } from "../../api/authApi";
 import { useAuthStore } from "../../store/auth/auth.store";
@@ -20,6 +20,7 @@ import { ROUTES } from "../../router/routes";
 import ManageLanguages from "./manageLanguages/ManageLanguages";
 import ManageVideo from "./ManageVideos/ManageVideos";
 import ManageBillings from "./manageBillings/ManageBillings";
+import DevicesModal from "../../component/modal/DevicesModal";
 import logo from "../../assets/logo.png";
 
 export default function Admin() {
@@ -28,6 +29,7 @@ export default function Admin() {
   const clearTokens = useAuthStore((state) => state.clearTokens);
 
   const [loggingOut, setLoggingOut] = useState(false);
+  const [devicesOpen, setDevicesOpen] = useState(false);
   const [value, setValue] = useState<ComboboxItem | null>(null);
   const data = [
     { value: "web_language", label: "Manage Web languages" },
@@ -66,18 +68,33 @@ export default function Admin() {
           </Group>
         </Stack>
 
-        <Button
-          size="xs"
-          variant="outline"
-          color="red"
-          radius="xl"
-          leftSection={<IconLogout size={14} />}
-          onClick={handleLogout}
-          loading={loggingOut}
-        >
-          Logout
-        </Button>
+        <Group gap="xs">
+          <Button
+            size="xs"
+            variant="outline"
+            radius="xl"
+            leftSection={<IconDevices size={14} />}
+            onClick={() => setDevicesOpen(true)}
+          >
+            Devices
+          </Button>
+          <Button
+            size="xs"
+            variant="outline"
+            color="red"
+            radius="xl"
+            leftSection={<IconLogout size={14} />}
+            onClick={handleLogout}
+            loading={loggingOut}
+          >
+            Logout
+          </Button>
+        </Group>
       </Group>
+      <DevicesModal
+        opened={devicesOpen}
+        onClose={() => setDevicesOpen(false)}
+      />
       <Group gap="xs">
         <IconShieldLock size={18} />
         <Title order={5}>Admin Dashboard</Title>
@@ -92,8 +109,12 @@ export default function Admin() {
         onChange={(_value, option) => setValue(option)}
       />
 
-      {value !== null && value.value === "web_language" && <ManageLanguages web={true}/>}
-      {value !== null && value.value === "mobile_language" && <ManageLanguages web={false}/>}
+      {value !== null && value.value === "web_language" && (
+        <ManageLanguages web={true} />
+      )}
+      {value !== null && value.value === "mobile_language" && (
+        <ManageLanguages web={false} />
+      )}
       {value !== null && value.value === "manage_video" && <ManageVideo />}
       {value !== null && value.value === "billing" && <ManageBillings />}
     </Container>

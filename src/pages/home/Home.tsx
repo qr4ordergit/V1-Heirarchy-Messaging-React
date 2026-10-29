@@ -47,6 +47,8 @@ import {
 import classes from "./Home.module.css";
 import { ROUTES } from "../../router/routes";
 import { COGNITO_LOGIN_URL } from "../../config/cognito";
+import { useLogin } from "../../utils/useLogin";
+import { useAuthStore } from "../../store/auth/auth.store";
 import { useTranslation } from "../../store/language/language.store";
 import { ManageVideosService } from "../../api/services/manage.videos.service";
 import introVideoSrc from "../../assets/intro.mp4";
@@ -63,6 +65,15 @@ export default function Home() {
     isLoaded,
     isLoadingLanguage,
   } = useTranslation();
+
+  const { startLogin, enterWithStoredTokens, loggingIn } = useLogin();
+  const hasStoredTokens = useAuthStore(
+    (s) => !!s.accessToken && !!s.refreshToken,
+  );
+
+  useEffect(() => {
+    if (hasStoredTokens) void enterWithStoredTokens();
+  }, [hasStoredTokens, enterWithStoredTokens]);
 
   const [videoOpen, setVideoOpen] = useState(false);
   const videoOverlayRef = useRef<HTMLDivElement>(null);
@@ -135,7 +146,6 @@ export default function Home() {
 
   return (
     <div className={classes.page}>
-      {/* ───────────── HERO ───────────── */}
       <div className={classes.hero} style={{ position: "relative" }}>
         <Overlay
           gradient="linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, .75) 55%)"
@@ -269,6 +279,8 @@ export default function Home() {
               <Button
                 component="a"
                 href={COGNITO_LOGIN_URL}
+                onClick={startLogin}
+                loading={loggingIn}
                 variant="outline"
                 color="gray"
                 size="xl"
@@ -340,7 +352,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* ───────────── 1. PAID SERVICE: HIERARCHICAL ───────────── */}
       <div className={classes.altSection}>
         <Container size="lg">
           <Badge variant="light" size="lg" radius="sm" mb="md">
@@ -417,7 +428,6 @@ export default function Home() {
         </Container>
       </div>
 
-      {/* ───────────── 2. UNLIMITED ACCOUNTS + AI AGENTS ───────────── */}
       <Container size="lg" className={classes.section}>
         <Stack gap="xl">
           <Card
@@ -508,7 +518,6 @@ export default function Home() {
         </Stack>
       </Container>
 
-      {/* ───────────── 3. SECURED DIGITAL IDENTITY ───────────── */}
       <div className={classes.altSection}>
         <Container size="lg">
           <Title order={2} className={classes.sectionTitle} mb="md">
@@ -592,7 +601,6 @@ export default function Home() {
         </Container>
       </div>
 
-      {/* ───────────── 3b. MESSAGING FEATURES ───────────── */}
       <Container size="lg" className={classes.section}>
         <Title order={2} className={classes.sectionTitle} mb="xl">
           {translation("home-page.txtMessagingTitle", "Messaging Features")}
@@ -725,7 +733,6 @@ export default function Home() {
         </SimpleGrid>
       </Container>
 
-      {/* ───────────── 4. KEY FEATURES ───────────── */}
       <div className={classes.altSection}>
         <Container size="lg">
           <Title order={2} className={classes.sectionTitle} mb="xl">
@@ -819,7 +826,6 @@ export default function Home() {
         </Container>
       </div>
 
-      {/* ───────────── 5. CTA ───────────── */}
       <div className={classes.ctaSection}>
         <Container size="sm" className={classes.ctaContent}>
           <Title order={2} className={classes.ctaTitle} mb="sm">
@@ -848,6 +854,8 @@ export default function Home() {
             <Button
               component="a"
               href={COGNITO_LOGIN_URL}
+              onClick={startLogin}
+              loading={loggingIn}
               variant="default"
               size="xl"
               radius="xl"
