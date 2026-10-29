@@ -61,12 +61,17 @@ interface MODIFY_CURRENT_CHAT {
     value: unknown
 }
 
+interface APPEND_CHAT_PAYLOAD {
+    messages: MESSAGE[],
+    direction?: string
+}
+
 interface ChatsStore {
     chats: MESSAGE[];
     ogChats: MESSAGE[];
     current_chat: CURRENT_CHAT;
     addChats: (messages: MESSAGE[]) => void;
-    appendChats: (messages: MESSAGE[]) => void;
+    appendChats: (payload: APPEND_CHAT_PAYLOAD) => void;
     popChat: (message_id: string) => void;
     alterChat: (message_id: string, newMessage: string) => void;
     updateTagStatus: (payload: TAG_STATUS_PAYLOAD) => void,
@@ -92,11 +97,11 @@ export const useChatStore = create<ChatsStore>((set) => ({
             chats: alteredChats,
         }));
     },
-    appendChats: (messages) => {
-        const alteredChats = [...messages].reverse();
+    appendChats: (payload) => {
+        const alteredChats = [...payload.messages].reverse();
 
         set((state) => ({
-            chats: [...state.chats, ...alteredChats],
+            chats: payload?.direction === "up" ? [...alteredChats, ...state.chats] : [...state.chats, ...alteredChats]
         }));
     },
     popChat: (message_id) => {

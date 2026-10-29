@@ -1,6 +1,6 @@
 import {
+  Alert,
   Button,
-  Divider,
   Fieldset,
   Flex,
   Group,
@@ -24,6 +24,7 @@ import usePasswordManager, {
   type KEYRINGPASSWORD,
 } from "../../../../store/keys/password.manager.store";
 import { useTranslation } from "../../../../store/language/language.store";
+import { IconCircleX } from "@tabler/icons-react";
 
 interface SUBMIT_PAYLOAD {
   keyring_category_id?: string;
@@ -32,6 +33,9 @@ interface SUBMIT_PAYLOAD {
 }
 
 type FIELD = "KEY" | "OTP" | null;
+type ALERT_STATUS = "SUCCESS" | "REJECTED" | "PENDING" | "INVALID" | null;
+
+const POLLING_INTERVAL = 3000;
 
 function ChatPasswordModal() {
   const { trigger, resetTrigger, setTrigger } = useTriggerStore(
@@ -42,6 +46,7 @@ function ChatPasswordModal() {
   const { current_chat } = useChatStore((state) => state);
   const { storeKeyringPasswords, keyringPasswords, updateKeyRingPassword } =
     usePasswordManager((state) => state);
+  const { translation } = useTranslation();
 
   const user_id = target_user ? target_user : userDetails?.username;
 
@@ -67,8 +72,55 @@ function ChatPasswordModal() {
   const [verifyLoader, VerifyFn] = useTransition();
   const [apiPolling, setApiPolling] = useState<boolean>(false);
   const [pollingAttempt, setPollingAttempt] = useState<number>(0);
+  const [alertStatus, setAlertStatus] = useState<ALERT_STATUS>(null);
 
-  const { translation } = useTranslation();
+  const alerts = {
+    SUCCESS: {
+      color: "green",
+      title: translation(
+        "chat_history.modal-alert-success-title",
+        "OTP received",
+      ),
+      content: translation(
+        "chat_history.modal-alert-success-content",
+        "Kindly verify to validate.",
+      ),
+    },
+    REJECTED: {
+      color: "red",
+      title: translation(
+        "chat_history.modal-alert-reject-title",
+        "OTP rejected",
+      ),
+      content: translation(
+        "chat_history.modal-alert-reject-content",
+        "Retry again or try after sometime.",
+      ),
+    },
+    PENDING: {
+      color: "blue",
+      title: translation(
+        "chat_history.modal-alert-pending-title",
+        "OTP approval pending",
+      ),
+      content: translation(
+        "chat_history.modal-alert-pending-content",
+        "Retry again or try after sometime.",
+      ),
+    },
+    INVALID: {
+      color: "red",
+      title: translation(
+        "chat_history.modal-alert-invalid-title",
+        "Invalid otp",
+      ),
+      content: translation(
+        "chat_history.modal-alert-invalid-content",
+        "Kindly enter correct otp.",
+      ),
+    },
+  };
+  let OTP_SESSION_TIME = 120000;
 
   const onClose = () => {
     navigate("/chats");
@@ -132,10 +184,12 @@ function ChatPasswordModal() {
   };
 
   const initialActions = () => {
+    if (trigger !== TRIGGERS.chatPasswordModal) return;
     !isPasswordManual && fetchKeyRing();
   };
 
   const handleVerify = () => {
+    setAlertStatus(null);
     VerifyFn(async () => {
       if (otp.length !== 6) {
         Notification.error("OTP must have 6 digits");
@@ -154,7 +208,7 @@ function ChatPasswordModal() {
         });
 
         if (!res.data?.is_valid_otp) {
-          Notification.error("OTP is invalid");
+          setAlertStatus("INVALID");
           return;
         }
 
@@ -164,6 +218,11 @@ function ChatPasswordModal() {
 
         setKeyRingCategoryKeys(keys);
         setRenderField("KEY");
+
+        if (!user_id) return;
+        const preferredKey = current_chat.is_locked?.[user_id]?.pass_label;
+
+        setselectedKeyRingCategoryKey(preferredKey || null);
       } catch (error) {
         Notification.error(getApiErrorMessage(error));
       }
@@ -209,6 +268,24 @@ function ChatPasswordModal() {
     });
   };
 
+  const getSessionTime = async () => {
+    const params = {
+      target_user: target_user ? target_user : undefined,
+    };
+
+    try {
+      const res = await api.get(ENDPOINTS.KEYRING_CATEGORIES.GET_SESSION, {
+        params,
+      });
+
+      if (res.data?.success) {
+        OTP_SESSION_TIME = res.data?.data?.custom_totp_validity * 1000;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const requestOtp = async () => {
     try {
       const payload = {
@@ -227,11 +304,12 @@ function ChatPasswordModal() {
 
       if (res.data?.status === "accepted") {
         setOtp(res.data?.otp);
+        setAlertStatus("SUCCESS");
         return "success";
       }
 
       if (res.data?.status === "rejected") {
-        Notification.error("OTP request rejected");
+        setAlertStatus("REJECTED");
         return "rejected";
       }
 
@@ -241,16 +319,23 @@ function ChatPasswordModal() {
     }
   };
 
+  const requestOtpHandler = async () => {
+    setApiPolling(true);
+    setAlertStatus(null);
+    await getSessionTime();
+  };
+
   useEffect(() => {
     initialActions();
-  }, []);
+  }, [trigger]);
 
   useEffect(() => {
     if (!apiPolling) return;
 
-    if (pollingAttempt >= 30) {
+    if (pollingAttempt >= Math.floor(OTP_SESSION_TIME / POLLING_INTERVAL)) {
       setApiPolling(false);
       setPollingAttempt(0);
+      setAlertStatus("PENDING");
       return;
     }
 
@@ -264,7 +349,7 @@ function ChatPasswordModal() {
       }
 
       setPollingAttempt((prev) => prev + 1);
-    }, 3000);
+    }, POLLING_INTERVAL);
 
     return () => {
       clearTimeout(timer);
@@ -285,37 +370,45 @@ function ChatPasswordModal() {
           "Enter or select password to chat",
         )}
       >
-        <PasswordInput
-          label={translation("chat_history.modal-chat-pass-label1", "Password")}
-          placeholder={translation(
-            "chat_history.modal-chat-pass-plc1",
-            "Enter password",
-          )}
-          disabled={!isPasswordManual}
-          value={manualPassword}
-          onChange={(e) => setManualPassword(e.target.value)}
-          size="xs"
-        />
-        <Divider my="md" label="OR" labelPosition="center" />
-        <Select
-          label={translation(
-            "chat_history.modal-chat-pass-label2",
-            "Keyring category",
-          )}
-          placeholder={translation(
-            "chat_history.modal-chat-pass-plc2",
-            "Select",
-          )}
-          data={keyRingCategories}
-          disabled={isPasswordManual}
-          loading={keyRingLoader}
-          clearable
-          searchable
-          value={selectedKeyRingCategory}
-          onChange={handleChangeCategory}
-          nothingFoundMessage="Nothing found..."
-          size="xs"
-        />
+        {isPasswordManual && (
+          <PasswordInput
+            label={translation(
+              "chat_history.modal-chat-pass-label1",
+              "Password",
+            )}
+            placeholder={translation(
+              "chat_history.modal-chat-pass-plc1",
+              "Enter password",
+            )}
+            disabled={!isPasswordManual}
+            value={manualPassword}
+            onChange={(e) => setManualPassword(e.target.value)}
+            size="xs"
+          />
+        )}
+
+        {!isPasswordManual && (
+          <Select
+            label={translation(
+              "chat_history.modal-chat-pass-label2",
+              "Keyring category",
+            )}
+            placeholder={translation(
+              "chat_history.modal-chat-pass-plc2",
+              "Select",
+            )}
+            data={keyRingCategories}
+            disabled={isPasswordManual}
+            readOnly={keyRingLoader}
+            loading={keyRingLoader}
+            clearable
+            searchable
+            value={selectedKeyRingCategory}
+            onChange={handleChangeCategory}
+            nothingFoundMessage="Nothing found..."
+            size="xs"
+          />
+        )}
         {renderField === "KEY" && (
           <>
             <Select
@@ -339,14 +432,6 @@ function ChatPasswordModal() {
               size="xs"
             />
           </>
-        )}
-
-        {renderField !== "OTP" && (
-          <Group justify="center" mt="md">
-            <Button onClick={handleSubmit} size="xs">
-              {translation("chat_history.modal-chat-pass-btn-submit", "Submit")}
-            </Button>
-          </Group>
         )}
 
         {renderField === "OTP" && (
@@ -378,20 +463,45 @@ function ChatPasswordModal() {
                 )}
               </Button>
             </Flex>
-            {apiPolling ? (
-              <Text size="xs" mt={"xs"} className="text-center">
-                {translation(
-                  "chat_history.modal-chat-pass-otp-loader",
-                  "Requesting otp... Please wait",
-                )}
-              </Text>
-            ) : (
+            {apiPolling && (
+              <Flex mt={"sm"} justify={"center"} align={"center"} gap={2}>
+                <Text size="xs">
+                  {translation(
+                    "chat_history.modal-chat-pass-otp-loader",
+                    "Requesting otp... Please wait",
+                  )}
+                </Text>
+                <div>
+                  <IconCircleX
+                    size={20}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setApiPolling(false);
+                      setPollingAttempt(0);
+                    }}
+                  />
+                </div>
+              </Flex>
+            )}
+
+            {alertStatus && (
+              <Alert
+                variant="light"
+                color={alerts[alertStatus].color}
+                title={alerts[alertStatus].title}
+                className="mt-2"
+              >
+                {alerts[alertStatus].content}
+              </Alert>
+            )}
+
+            {!apiPolling && alertStatus !== "SUCCESS" && (
               <Text
                 size="xs"
                 mt={"xs"}
                 td="underline"
                 className="cursor-pointer text-center"
-                onClick={() => setApiPolling(true)}
+                onClick={requestOtpHandler}
               >
                 {translation(
                   "chat_history.modal-chat-pass-link-verify",
@@ -400,6 +510,14 @@ function ChatPasswordModal() {
               </Text>
             )}
           </>
+        )}
+
+        {renderField !== "OTP" && (
+          <Group justify="center" mt="md">
+            <Button onClick={handleSubmit} size="xs">
+              {translation("chat_history.modal-chat-pass-btn-submit", "Submit")}
+            </Button>
+          </Group>
         )}
       </Fieldset>
     </Modal>

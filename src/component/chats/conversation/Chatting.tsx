@@ -1,7 +1,13 @@
-import { Flex, ScrollArea, Stack, Text } from "@mantine/core";
+import { Flex, Loader, Text } from "@mantine/core";
 import { api } from "../../../api/axios";
 import { ENDPOINTS } from "../../../api/endpoints";
-import { Fragment, useEffect, useRef, useTransition } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { ConversationShimmer } from "../../loaders/shimmers/ConversationShimmer";
 import { Notification } from "../../../utils/notification";
 import { useChatStore, type MESSAGE } from "../../../store/chats/chats.store";
@@ -23,9 +29,15 @@ dayjs.extend(utc);
 export default function Chatting() {
   const messages = useChatStore((state) => state.chats);
   const addChats = useChatStore((state) => state.addChats);
+  const appendChats = useChatStore((state) => state.appendChats);
   const { chatId } = useParams<{ chatId: string }>();
   const nextPerson = useNextPerson();
   const viewport = useRef<HTMLDivElement>(null);
+  const scrollPositionRef = useRef({
+    scrollHeight: 0,
+    scrollTop: 0,
+  });
+
   const { trigger, resetTrigger, triggerPayload, setTrigger } = useTriggerStore(
     (state) => state,
   );
@@ -37,9 +49,16 @@ export default function Chatting() {
   const user_id = target_user ? target_user : userDetails?.username;
 
   const [fetchLoader, FetchFn] = useTransition();
+  const [paginationLoader, PaginationFn] = useTransition();
 
   const mediaDecryptor = useMediaDecryptor();
   const { translation } = useTranslation();
+
+  const [allowNewFetch, setAllowNewFetch] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [fetchWithPagination, setFetchWithPagination] =
+    useState<boolean>(false);
+  const [chatPassword, setChatPassword] = useState({});
 
   const formatMessageDate = (date: string) => {
     const messageDate = dayjs.utc(date).local();
@@ -64,12 +83,22 @@ export default function Chatting() {
       let params = {
         other_user: nextPerson(chatId),
         target_user: target_user ? target_user : undefined,
+        limit: 10,
+        page: currentPage,
       };
 
       if (trigger === TRIGGERS.chatPasswordPayload) {
         params = {
           ...params,
           ...triggerPayload,
+        };
+        setChatPassword({ ...triggerPayload });
+      }
+
+      if (Object.keys(chatPassword).length > 0) {
+        params = {
+          ...params,
+          ...chatPassword,
         };
       }
 
@@ -87,7 +116,28 @@ export default function Chatting() {
         return;
       }
 
-      addChats(response.data?.data?.messages);
+      if (allowNewFetch) {
+        appendChats({
+          messages: response.data?.data?.messages,
+          direction: "up",
+        });
+      } else {
+        addChats(response.data?.data?.messages);
+      }
+
+      setAllowNewFetch(response?.data?.data?.has_next);
+
+      if (response?.data?.data?.has_next) {
+        setCurrentPage(currentPage + 1);
+      } else {
+        setCurrentPage(1);
+      }
+
+      if (currentPage > 1) {
+        setFetchWithPagination(true);
+      } else {
+        setFetchWithPagination(false);
+      }
     } catch (error) {
       Notification.error(getApiErrorMessage(error));
       navigate("/chats");
@@ -101,12 +151,22 @@ export default function Chatting() {
       let params = {
         group_id: encodeURIComponent(chatId),
         target_user: target_user ? target_user : undefined,
+        page: currentPage,
+        limit: 10,
       };
 
       if (trigger === TRIGGERS.chatPasswordPayload) {
         params = {
           ...params,
           ...triggerPayload,
+        };
+        setChatPassword({ ...triggerPayload });
+      }
+
+      if (Object.keys(chatPassword).length > 0) {
+        params = {
+          ...params,
+          ...chatPassword,
         };
       }
 
@@ -124,7 +184,28 @@ export default function Chatting() {
         return;
       }
 
-      addChats(response.data?.data?.messages);
+      if (allowNewFetch) {
+        appendChats({
+          messages: response.data?.data?.messages,
+          direction: "up",
+        });
+      } else {
+        addChats(response.data?.data?.messages);
+      }
+
+      setAllowNewFetch(response?.data?.data?.has_next);
+
+      if (response?.data?.data?.has_next) {
+        setCurrentPage(currentPage + 1);
+      } else {
+        setCurrentPage(1);
+      }
+
+      if (currentPage > 1) {
+        setFetchWithPagination(true);
+      } else {
+        setFetchWithPagination(false);
+      }
     } catch (error) {
       Notification.error(getApiErrorMessage(error));
       navigate("/chats");
@@ -197,7 +278,6 @@ export default function Chatting() {
       });
       return;
     }
-
     fetchChats();
   };
 
@@ -225,11 +305,48 @@ export default function Chatting() {
     },
   };
 
+  const handlePagination = () => {
+    if (messages.length === 0) return;
+    if (paginationLoader) return;
+    const element = viewport.current;
+
+    if (!element || !allowNewFetch) return;
+
+    scrollPositionRef.current = {
+      scrollHeight: element.scrollHeight,
+      scrollTop: element.scrollTop,
+    };
+
+    if (element.scrollTop <= 0) {
+      if (chatId?.includes("group")) {
+        PaginationFn(fetchGroupsChats);
+      } else {
+        PaginationFn(fetchOneToOneChats);
+      }
+    }
+  };
+
+  // reset states
+  useEffect(() => {
+    setAllowNewFetch(false);
+    setCurrentPage(1);
+    setFetchWithPagination(false);
+    setChatPassword({});
+
+    scrollPositionRef.current = {
+      scrollHeight: 0,
+      scrollTop: 0,
+    };
+
+    addChats([]);
+  }, [current_chat]);
+
   useEffect(() => {
     initialApiCalls();
   }, [chatId]);
 
   useEffect(() => {
+    if (fetchWithPagination) return;
     if (viewport.current) {
       viewport.current.scrollTo({
         top: viewport.current.scrollHeight,
@@ -242,26 +359,45 @@ export default function Chatting() {
     triggerHandler();
   }, [trigger]);
 
+  useLayoutEffect(() => {
+    const element = viewport.current;
+    if (!element) return;
+
+    const { scrollHeight, scrollTop } = scrollPositionRef.current;
+
+    if (scrollHeight > 0 && element.scrollHeight > scrollHeight) {
+      element.scrollTop = scrollTop + (element.scrollHeight - scrollHeight);
+
+      scrollPositionRef.current = {
+        scrollHeight: 0,
+        scrollTop: 0,
+      };
+    }
+  }, [messages]);
+
   if (fetchLoader) return <ConversationShimmer />;
 
   return (
-    <ScrollArea
-      h={"100%"}
-      scrollbarSize={8}
-      offsetScrollbars
-      className="pb-2"
-      viewportRef={viewport}
+    <div
+      className="overflow-auto h-full"
+      onScroll={handlePagination}
+      ref={viewport}
     >
-      <Stack py="md" gap="sm" className="h-100">
+      <div className="flex flex-col gap-2 my-2">
+        {paginationLoader && (
+          <div className="text-center">
+            <Loader size={"sm"} />
+          </div>
+        )}
         {messages.map((msg, msgIndex) => {
           const newMsgDate = formatMessageDate(msg.created_on ?? "");
           const oldMsgDate = formatMessageDate(
             messages[msgIndex - 1]?.created_on ?? "",
           );
           return (
-            <Fragment key={msg._id}>
+            <div key={msg._id}>
               {newMsgDate !== oldMsgDate ? (
-                <Flex justify={"center"} className="sticky top-0">
+                <Flex justify={"center"} className="sticky top-0 mb-2 z-10">
                   <Text
                     className="bg-gray-400 rounded-full text-white opacity-80"
                     size="xs"
@@ -273,10 +409,10 @@ export default function Chatting() {
                 </Flex>
               ) : null}
               {conditionalRenderer.msgCardProvider(msg)}
-            </Fragment>
+            </div>
           );
         })}
-      </Stack>
-    </ScrollArea>
+      </div>
+    </div>
   );
 }
