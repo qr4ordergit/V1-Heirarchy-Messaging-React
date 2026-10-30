@@ -16,6 +16,7 @@ import { useNavigate } from "react-router";
 import { ROUTES } from "../../router/routes";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { useTranslation } from "../../store/language/language.store";
+import { useRef } from "react";
 
 export default function ConversationPanel() {
   const type = useConversationTypeStore((state) => state.type);
@@ -28,6 +29,7 @@ export default function ConversationPanel() {
 
   const navigate = useNavigate();
   const { translation } = useTranslation();
+  const viewportRef = useRef<HTMLDivElement>(null);
 
   const activeUsername =
     targetUserDetails?.display_name ||
@@ -59,10 +61,9 @@ export default function ConversationPanel() {
           minHeight: 0,
         }}
       >
-            <Text size="sm" c={"blue"}>
-              {activeUsername}
-              {" "}
-            </Text>
+        <Text size="sm" c={"blue"}>
+          {activeUsername}{" "}
+        </Text>
         <Input
           size="xs"
           placeholder={translation("chat_page.search_dm_groups", "Search")}
@@ -94,8 +95,8 @@ export default function ConversationPanel() {
             position: "relative",
           }}
         >
-          <ScrollArea h="100%" offsetScrollbars scrollbarSize={3}>
-            {type === "dm" ? <DmList /> : <GroupList />}
+          <ScrollArea h="100%" offsetScrollbars scrollbarSize={3} viewportRef={viewportRef}>
+            {type === "dm" ? <DmList viewportRef={viewportRef}/> : <GroupList />}
           </ScrollArea>
         </Box>
       </Stack>

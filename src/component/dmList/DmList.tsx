@@ -1,4 +1,10 @@
-import { useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { DmService } from "../../api/services/dm.service";
 import { useDMListStore } from "../../store/dm/dm.list.store";
 import { Notification } from "../../utils/notification";
@@ -29,8 +35,18 @@ interface SelectedDMState {
   chatID: string;
   display_name: string;
 }
+interface DmListProps {
+  viewportRef: RefObject<HTMLDivElement | null>;
+}
 
-const DmList = () => {
+interface DMCursor {
+  _id: string;
+  last_message: string;
+}
+
+const PAGE_SIZE = 10;
+
+const DmList = ({ viewportRef }: DmListProps) => {
   const dms = useDMListStore((state) => state.dms);
   const setDMs = useDMListStore((state) => state.setDMs);
   const reset = useDMListStore((state) => state.reset);
@@ -59,6 +75,14 @@ const DmList = () => {
       dmOrGroupName: "",
     });
 
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  const cursorRef = useRef<DMCursor | null>(null);
+  const hasMoreRef = useRef(true);
+  const loadingMoreRef = useRef(false);
+
   const resetSelectedDM = () => {
     setSelectedDM({ chatID: "", display_name: "" });
   };
@@ -75,11 +99,19 @@ const DmList = () => {
   const loadDMs = async () => {
     try {
       setLoading(true);
-      const dms = await DmService.getDMs({
-        limit: 50,
+
+      cursorRef.current = null;
+      hasMoreRef.current = true;
+
+      const res = await DmService.getDMs({
+        limit: PAGE_SIZE,
       });
 
-      setDMs(dms.data);
+      setDMs(res.data);
+
+      cursorRef.current = res.next_cursor;
+
+      hasMoreRef.current = res.data.length === PAGE_SIZE;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         Notification.error(
@@ -89,20 +121,21 @@ const DmList = () => {
       } else if (error instanceof Error) {
         Notification.error(error.message);
       }
+
       reset();
     } finally {
       setLoading(false);
     }
   };
 
-  const onCloseLockDmAndGroupModal = async (reload : boolean) => {
+  const onCloseLockDmAndGroupModal = async (reload: boolean) => {
     setLockDmAndGroupModalData({
       open: false,
       for: "",
       chat_id: "",
       dmOrGroupName: "",
     });
-    if(reload)await loadDMs();
+    if (reload) await loadDMs();
   };
 
   const deleteDm = async (action: number) => {
@@ -159,11 +192,74 @@ const DmList = () => {
     }
   };
 
+  const loadMoreDMs = useCallback(async () => {
+    if (loadingMoreRef.current || !hasMoreRef.current || !cursorRef.current) {
+      return;
+    }
+
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+
+    try {
+      const res = await DmService.getDMs({
+        limit: PAGE_SIZE,
+        cursor: cursorRef.current,
+      });
+
+      const newDMs = res.data;
+
+      if (newDMs.length > 0) {
+        setDMs([...useDMListStore.getState().dms, ...newDMs]);
+      }
+      cursorRef.current = res.next_cursor;
+
+      if (newDMs.length < PAGE_SIZE) {
+        hasMoreRef.current = false;
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
+        Notification.error(error.message);
+      }
+    } finally {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+    }
+  }, [setDMs]);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadDMs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const rootElement = viewportRef.current;
+    const targetElement = bottomRef.current;
+
+    if (!rootElement || !targetElement || loading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMoreDMs();
+        }
+      },
+      {
+        root: rootElement,
+        threshold: 0.1,
+      },
+    );
+
+    observer.observe(targetElement);
+
+    return () => observer.disconnect();
+  }, [loadMoreDMs, viewportRef, loading]);
+
   return !loading ? (
     filteredDMs.length > 0 ? (
       <>
@@ -191,6 +287,13 @@ const DmList = () => {
               }
             />
           ))}
+          <div ref={bottomRef} style={{ height: 10 }} />
+
+          {loadingMore && (
+            <Center py="xs">
+              <Loader size={18} />
+            </Center>
+          )}
         </Stack>
         <ActionIcon
           pos="absolute"
