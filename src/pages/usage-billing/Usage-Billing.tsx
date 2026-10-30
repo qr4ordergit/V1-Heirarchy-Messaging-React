@@ -1147,7 +1147,7 @@ export default function UsageBilling() {
 
                                     <Button
                                       size="xs"
-                                      color="red"
+                                      color="green"
                                       radius="md"
                                       leftSection={<IconWallet size={14} />}
                                       onClick={(e) => {
@@ -1562,7 +1562,7 @@ export default function UsageBilling() {
                           )}
                         </Group>
 
-                        {isInvoiceGenerated && (
+                        {/* {isInvoiceGenerated && (
                           <Stack gap="xs" mt="xs">
                             <Button
                               fullWidth
@@ -1595,7 +1595,7 @@ export default function UsageBilling() {
                               )}
                             </Button>
                           </Stack>
-                        )}
+                        )} */}
                       </Stack>
                     </Card>
                   </SimpleGrid>
