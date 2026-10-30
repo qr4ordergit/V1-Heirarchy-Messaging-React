@@ -169,6 +169,16 @@ export default function Accounts() {
 
   const isHubAccountLoggedIn = isHubAccount(userDetails);
 
+  const menuIdentifier =
+    userDetails?.display_name?.trim() ||
+    userDetails?.email ||
+    userDetails?.username ||
+    "";
+
+  const menuRoleLabel = isHubAccountLoggedIn
+    ? translation("accounts_page.txtRootAccount", "Root Account")
+    : translation("accounts_page.txtSubAccount", "Sub Account");
+
   const [accounts, setAccounts] = useState<Account[]>([]);
 
   const [loading, setLoading] = useState(true);
@@ -1243,142 +1253,128 @@ export default function Accounts() {
           </Group>
 
           <Group gap="xs" align="center">
-            {isHubAccountLoggedIn ? (
-              <Menu
-                shadow="lg"
-                width={280}
-                radius="md"
-                position="bottom-end"
-                offset={8}
-                withinPortal
-              >
-                <Menu.Target>
-                  <UnstyledButton
-                    className={classes.accountPill}
-                    aria-label={translation(
-                      "accounts_page.ariaAccountMenu",
-                      "Account menu",
-                    )}
-                  >
-                    <Avatar
-                      name={userDetails?.email || userDetails?.username || ""}
-                      size={30}
-                      colorIndex={0}
-                    />
-                    <IconChevronDown
-                      size={14}
-                      color="#9b96b8"
-                      style={{ marginRight: 6 }}
-                    />
-                  </UnstyledButton>
-                </Menu.Target>
-
-                <Menu.Dropdown p={0} style={{ overflow: "hidden" }}>
-                  <Stack
-                    gap={4}
-                    align="center"
-                    py="lg"
-                    px="md"
-                    className={classes.accountMenuHeader}
-                  >
-                    <Avatar
-                      name={userDetails?.email || userDetails?.username || ""}
-                      size={56}
-                      colorIndex={0}
-                    />
-                    <Text size="xs" c="dimmed" fw={600} tt="uppercase" mt={6}>
-                      {translation(
-                        "accounts_page.txtRootAccount",
-                        "Root Account",
-                      )}
-                    </Text>
-                    <Text
-                      size="sm"
-                      fw={700}
-                      ta="center"
-                      style={{ wordBreak: "break-word" }}
-                    >
-                      {userDetails?.email || userDetails?.username}
-                    </Text>
-                  </Stack>
-
-                  <Menu.Divider m={0} />
-                  <Menu.Item
-                    leftSection={
-                      <IconSparkles
-                        size={16}
-                        color="var(--mantine-color-indigo-6)"
-                      />
+            <Menu
+              shadow="lg"
+              width={280}
+              radius="md"
+              position="bottom-end"
+              offset={8}
+              withinPortal
+            >
+              <Menu.Target>
+                <UnstyledButton
+                  className={classes.accountPill}
+                  aria-label={translation(
+                    "accounts_page.ariaAccountMenu",
+                    "Account menu",
+                  )}
+                >
+                  <Avatar
+                    name={menuIdentifier}
+                    size={30}
+                    colorIndex={0}
+                    src={
+                      isHubAccountLoggedIn
+                        ? undefined
+                        : userDetails?.profile_picture
                     }
-                    onClick={() => navigate("/usage-billing")}
-                    py="sm"
-                    fw={500}
-                  >
-                    {translation(
-                      "accounts_page.menuAccountBilling",
-                      "Account Billing",
-                    )}
-                  </Menu.Item>
+                  />
+                  <IconChevronDown
+                    size={14}
+                    color="#9b96b8"
+                    style={{ marginRight: 6 }}
+                  />
+                </UnstyledButton>
+              </Menu.Target>
 
-                  <Menu.Divider m={0} />
-                  <Menu.Item
-                    leftSection={<IconDevices size={16} />}
-                    onClick={() => setDevicesOpen(true)}
-                    py="sm"
-                    fw={500}
+              <Menu.Dropdown p={0} style={{ overflow: "hidden" }}>
+                <Stack
+                  gap={4}
+                  align="center"
+                  py="lg"
+                  px="md"
+                  className={classes.accountMenuHeader}
+                >
+                  <Avatar
+                    name={menuIdentifier}
+                    size={56}
+                    colorIndex={0}
+                    src={
+                      isHubAccountLoggedIn
+                        ? undefined
+                        : userDetails?.profile_picture
+                    }
+                  />
+                  <Text size="xs" c="dimmed" fw={600} tt="uppercase" mt={6}>
+                    {menuRoleLabel}
+                  </Text>
+                  <Text
+                    size="sm"
+                    fw={700}
+                    ta="center"
+                    style={{ wordBreak: "break-word" }}
                   >
-                    {translation(
-                      "accounts_page.menuLoggedInDevices",
-                      "Logged-in Devices",
+                    {menuIdentifier}
+                  </Text>
+                  {!isHubAccountLoggedIn &&
+                    userDetails?.display_name?.trim() && (
+                      <Text size="xs" c="dimmed" ta="center">
+                        {userDetails.username}
+                      </Text>
                     )}
-                  </Menu.Item>
+                </Stack>
 
-                  <Menu.Divider m={0} />
-                  <Menu.Item
-                    leftSection={<IconLogout size={16} />}
-                    color="red"
-                    disabled={loggingOut}
-                    onClick={handleLogout}
-                    py="sm"
-                    fw={500}
-                  >
-                    {loggingOut
-                      ? translation(
-                          "accounts_page.btnLoggingOut",
-                          "Logging out…",
-                        )
-                      : translation("accounts_page.btnLogout", "Logout")}
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            ) : isMobile ? (
-              <ActionIcon
-                variant="light"
-                color="red"
-                radius="xl"
-                size="lg"
-                aria-label={translation("accounts_page.btnLogout", "Logout")}
-                disabled={loggingOut}
-                onClick={handleLogout}
-              >
-                {loggingOut ? (
-                  <Loader size={16} color="red" />
-                ) : (
-                  <IconLogout size={18} />
+                {/* Billing is a root-account feature */}
+                {isHubAccountLoggedIn && (
+                  <>
+                    <Menu.Divider m={0} />
+                    <Menu.Item
+                      leftSection={
+                        <IconSparkles
+                          size={16}
+                          color="var(--mantine-color-indigo-6)"
+                        />
+                      }
+                      onClick={() => navigate("/usage-billing")}
+                      py="sm"
+                      fw={500}
+                    >
+                      {translation(
+                        "accounts_page.menuAccountBilling",
+                        "Account Billing",
+                      )}
+                    </Menu.Item>
+                  </>
                 )}
-              </ActionIcon>
-            ) : (
-              <Button
-                leftSection={<IconLogout size={16} />}
-                radius="xl"
-                variant="light"
-                color="red"
-                loading={loggingOut}
-                onClick={handleLogout}
-              >
-                {translation("accounts_page.btnLogout", "Logout")}
-              </Button>
-            )}
+
+                <Menu.Divider m={0} />
+                <Menu.Item
+                  leftSection={<IconDevices size={16} />}
+                  onClick={() => setDevicesOpen(true)}
+                  py="sm"
+                  fw={500}
+                >
+                  {translation(
+                    "accounts_page.menuLoggedInDevices",
+                    "Logged-in Devices",
+                  )}
+                </Menu.Item>
+
+                <Menu.Divider m={0} />
+                <Menu.Item
+                  leftSection={<IconLogout size={16} />}
+                  color="red"
+                  disabled={loggingOut}
+                  onClick={handleLogout}
+                  py="sm"
+                  fw={500}
+                >
+                  {loggingOut
+                    ? translation("accounts_page.btnLoggingOut", "Logging out…")
+                    : translation("accounts_page.btnLogout", "Logout")}
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
 
             <Menu shadow="md" width={160} position="bottom-end" withinPortal>
               <Menu.Target>
