@@ -87,6 +87,11 @@ export default function Chatting() {
         page: currentPage,
       };
 
+      if (trigger === TRIGGERS.refreshChat) {
+        params.page = 1;
+        resetTrigger();
+      }
+
       if (trigger === TRIGGERS.chatPasswordPayload) {
         params = {
           ...params,
@@ -116,13 +121,16 @@ export default function Chatting() {
         return;
       }
 
-      if (allowNewFetch) {
+      if (allowNewFetch && params.page > 1) {
         appendChats({
           messages: response.data?.data?.messages,
           direction: "up",
         });
       } else {
         addChats(response.data?.data?.messages);
+        if (fetchWithPagination) {
+          setFetchWithPagination(false);
+        }
       }
 
       setAllowNewFetch(response?.data?.data?.has_next);

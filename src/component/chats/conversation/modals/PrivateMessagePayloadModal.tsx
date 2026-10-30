@@ -23,6 +23,7 @@ import { Notification } from "../../../../utils/notification";
 import { useNextPerson } from "../../../../hooks/useNextPerson";
 import { useParams } from "react-router";
 import useContactNameProvider from "../../../../hooks/useContactNameProvider";
+import { useTranslation } from "../../../../store/language/language.store";
 
 type RENDER = null | "OTP" | "LABELS";
 type TAB = "MANUAL PASSWORD" | "KEYRING";
@@ -76,6 +77,7 @@ function PrivateMessagePayloadModal() {
   const nextPerson = useNextPerson();
   const contactNameProvider = useContactNameProvider();
   const { chatId } = useParams<{ chatId: string }>();
+  const { translation } = useTranslation();
 
   const controller = new AbortController();
 
@@ -348,8 +350,14 @@ function PrivateMessagePayloadModal() {
         {state.tab === "MANUAL PASSWORD" && (
           <>
             <PasswordInput
-              label="Manual Password"
-              placeholder="Enter password"
+              label={translation(
+                "chat_history.modal-encrypt-create-label1",
+                "Manual Password",
+              )}
+              placeholder={translation(
+                "chat_history.modal-encrypt-create-plh1",
+                "Enter Password",
+              )}
               size="xs"
               className="flex-1"
               value={state.password}
@@ -364,8 +372,14 @@ function PrivateMessagePayloadModal() {
         {state.tab === "KEYRING" && (
           <>
             <Select
-              label="Keyring category"
-              placeholder="Select category"
+              label={translation(
+                "chat_history.modal-encrypt-create-label2",
+                "Keyring category",
+              )}
+              placeholder={translation(
+                "chat_history.modal-encrypt-create-plh2",
+                "Select category",
+              )}
               size="xs"
               data={categories}
               searchable
@@ -377,8 +391,14 @@ function PrivateMessagePayloadModal() {
             />
             {state.render === "LABELS" && (
               <Select
-                label="Password label"
-                placeholder="Select password label"
+                label={translation(
+                  "chat_history.modal-encrypt-create-label3",
+                  "Password label",
+                )}
+                placeholder={translation(
+                  "chat_history.modal-encrypt-create-plh3",
+                  "Select password label",
+                )}
                 size="xs"
                 mt={"sm"}
                 data={passwordLabels}
@@ -394,7 +414,10 @@ function PrivateMessagePayloadModal() {
             {state.render === "OTP" && (
               <div className="mt-2">
                 <Text size="xs" fw={500} mb={1}>
-                  Enter OTP and verify
+                  {translation(
+                    "chat_history.modal-encrypt-create-label4",
+                    "Enter OTP and verify",
+                  )}
                 </Text>
                 <Flex gap={10} justify={"start"} align={"center"}>
                   <PinInput
@@ -412,12 +435,18 @@ function PrivateMessagePayloadModal() {
                     loading={verifyLoader}
                     onClick={handleVerify}
                   >
-                    Verify
+                    {translation(
+                      "chat_history.modal-encrypt-create-btn1",
+                      "Verify",
+                    )}
                   </Button>
                 </Flex>
                 {isOtpInvalid && (
                   <Text size="xs" fw={500} mb={1} className="text-red-500">
-                    Incorrect otp
+                    {translation(
+                      "chat_history.modal-encrypt-create-error1",
+                      "Incorrect otp",
+                    )}
                   </Text>
                 )}
               </div>
@@ -427,8 +456,14 @@ function PrivateMessagePayloadModal() {
 
         {chatId?.includes("group") && (
           <MultiSelect
-            label="Group members"
-            placeholder="Select members"
+            label={translation(
+              "chat_history.modal-encrypt-create-label5",
+              "Group members",
+            )}
+            placeholder={translation(
+              "chat_history.modal-encrypt-create-plh5",
+              "Select members",
+            )}
             size="xs"
             mt={"sm"}
             searchable
@@ -451,7 +486,7 @@ function PrivateMessagePayloadModal() {
               size="xs"
               disabled={state.password.trim().length < 5}
             >
-              Submit
+              {translation("chat_history.modal-encrypt-create-btn2", "Submit")}
             </Button>
           ) : (
             <Button
@@ -459,7 +494,7 @@ function PrivateMessagePayloadModal() {
               onClick={() => handleSubmit("keyring")}
               disabled={!state.selectedCategory || !state.selectedPasswordLabel}
             >
-              Submit
+              {translation("chat_history.modal-encrypt-create-btn3", "Submit")}
             </Button>
           )}
         </Flex>
