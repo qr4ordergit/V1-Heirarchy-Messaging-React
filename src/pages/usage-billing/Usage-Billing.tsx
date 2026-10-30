@@ -28,6 +28,8 @@ import {
   IconCreditCard,
   IconCrown,
   IconDownload,
+  IconExternalLink,
+  IconFileInvoice,
   IconLock,
   IconMail,
   IconTable,
@@ -38,10 +40,12 @@ import { useAuthStore } from "../../store/auth/auth.store";
 import {
   getEstimateApi,
   getUsageApi,
-  getUserBillingMonthlyApi,
+  getUserInvoicesApi,
+  downloadInvoicePdfApi,
   updateMembershipStatusApi,
   type EstimateData,
   type UsageData,
+  type InvoiceItem,
 } from "../../api/usageBillingApi";
 import { useTranslation } from "../../store/language/language.store";
 import classes from "../accounts/Accounts.module.css";
@@ -69,7 +73,6 @@ export interface FeatureRowRendered {
   isPaidOnly?: boolean;
 }
 
-// Localized bytes formatter (EN / UK)
 const formatBytesLocalized = (
   bytes: number = 0,
   lang: string = "en",
@@ -90,6 +93,19 @@ const parseCost = (val: string | number | undefined | null): number => {
     return Number.isFinite(parsed) ? parsed : 0;
   }
   return 0;
+};
+
+const formatPeriodMonth = (periodStr: string, lang = "en") => {
+  if (!periodStr) return "";
+  const [year, month] = periodStr.split("-").map(Number);
+  if (year && month) {
+    const d = new Date(year, month - 1, 1);
+    return d.toLocaleString(lang === "uk" ? "uk-UA" : "en-US", {
+      month: "long",
+      year: "numeric",
+    });
+  }
+  return periodStr;
 };
 
 export default function UsageBilling() {
@@ -114,6 +130,16 @@ export default function UsageBilling() {
   const [estimateData, setEstimateData] = useState<EstimateData | null>(null);
   const [isInvoiceGenerated, setIsInvoiceGenerated] = useState<boolean>(false);
 
+  // Invoices & PDF URL mappings
+  const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
+  const [downloadingPeriod, setDownloadingPeriod] = useState<string | null>(
+    null,
+  );
+  const [pdfUrls, setPdfUrls] = useState<Record<string, string>>({});
+  const [loadingPdfPeriods, setLoadingPdfPeriods] = useState<
+    Record<string, boolean>
+  >({});
+
   const periodSelectOptions = useMemo(() => {
     const locale = currentLang === "uk" ? "uk-UA" : "en-US";
 
@@ -133,6 +159,15 @@ export default function UsageBilling() {
     });
   }, [availablePeriods, currentLang]);
 
+  // Current active cycle
+  const currentPeriod = useMemo(() => {
+    if (availablePeriods.length > 0) return availablePeriods[0];
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    return `${year}-${month}`;
+  }, [availablePeriods]);
+
   const loadBillingData = async (period: string, isInitial = false) => {
     if (isInitial) {
       setLoadingData(true);
@@ -142,16 +177,31 @@ export default function UsageBilling() {
 
     try {
       if (isInitial) {
-        const [usageRes, estimateRes] = await Promise.all([
+        const [usageRes, estimateRes, invoicesRes] = await Promise.all([
           getUsageApi(),
           getEstimateApi(),
+          getUserInvoicesApi(),
         ]);
 
         if (usageRes) setUsageData(usageRes);
         if (estimateRes?.estimate) setEstimateData(estimateRes.estimate);
 
+        if (invoicesRes?.invoices) {
+          setInvoices(invoicesRes.invoices);
+
+          // Pre-populate PDF map from pdf.url
+          const initialMap: Record<string, string> = {};
+          invoicesRes.invoices.forEach((inv) => {
+            if (inv.pdf?.url) {
+              initialMap[inv.period] = inv.pdf.url;
+            }
+          });
+          setPdfUrls(initialMap);
+        }
+
         const invoiceStatus = Boolean(estimateRes?.invoiceGenerated);
         setIsInvoiceGenerated(invoiceStatus);
+
         if (
           estimateRes?.availablePeriods &&
           estimateRes.availablePeriods.length > 0
@@ -167,14 +217,6 @@ export default function UsageBilling() {
         ) {
           setSelectedPeriod(estimateRes.availablePeriods[0]);
         }
-      } else {
-        const username = userDetails?.username;
-        if (!username) return;
-
-        const overviewRes = await getUserBillingMonthlyApi(username, period);
-        if (overviewRes?.estimate) {
-          setEstimateData(overviewRes.estimate);
-        }
       }
     } finally {
       if (isInitial) {
@@ -189,11 +231,185 @@ export default function UsageBilling() {
     loadBillingData(selectedPeriod, true);
   }, []);
 
-  const handlePeriodChange = (val: string | null) => {
+  // Fetch or refresh PDF URL
+  const ensurePdfUrl = async (periodStr: string): Promise<string | null> => {
+    if (pdfUrls[periodStr]) return pdfUrls[periodStr];
+
+    setLoadingPdfPeriods((prev) => ({ ...prev, [periodStr]: true }));
+    try {
+      const res = await downloadInvoicePdfApi(periodStr);
+      const url =
+        res?.download_url ||
+        (res as any)?.url ||
+        (res as any)?.pdf?.url ||
+        (res as any)?.pdf_url;
+
+      if (url) {
+        setPdfUrls((prev) => ({ ...prev, [periodStr]: url }));
+        return url;
+      }
+      return null;
+    } finally {
+      setLoadingPdfPeriods((prev) => ({ ...prev, [periodStr]: false }));
+    }
+  };
+
+  const handleAccordionChange = (activeIds: string | string[] | null) => {
+    if (!activeIds) return;
+    const ids = Array.isArray(activeIds) ? activeIds : [activeIds];
+
+    ids.forEach((id) => {
+      const inv = invoices.find((i) => i.invoice_id === id);
+      if (inv) {
+        if (inv.pdf?.url) {
+          setPdfUrls((prev) => ({ ...prev, [inv.period]: inv.pdf!.url }));
+        } else if (!pdfUrls[inv.period]) {
+          ensurePdfUrl(inv.period);
+        }
+      }
+    });
+  };
+
+  // Month change: skip if current active month, call download api for older months
+  const handlePeriodChange = async (val: string | null) => {
     if (!val || val === selectedPeriod) return;
     setSelectedPeriod(val);
-    loadBillingData(val, false);
+
+    if (val === currentPeriod) {
+      return;
+    }
+
+    setDownloadingPeriod(val);
+    try {
+      const res = await downloadInvoicePdfApi(val);
+
+      if (res?.error) {
+        notifications.show({
+          title: "",
+          message: res.error,
+          color: "orange",
+          icon: <IconAlertCircle size={16} />,
+        });
+      } else {
+        const downloadUrl =
+          res?.download_url ||
+          (res as any)?.url ||
+          (res as any)?.pdf?.url ||
+          (res as any)?.pdf_url;
+
+        if (downloadUrl) {
+          window.open(downloadUrl, "_blank", "noopener,noreferrer");
+          notifications.show({
+            title: "",
+            message: translation(
+              "account_billing.notiInvoiceDownloadStarted",
+              "Invoice download started.",
+            ),
+            color: "blue",
+            icon: <IconCheck size={16} />,
+          });
+        } else {
+          notifications.show({
+            title: "",
+            message: translation(
+              "account_billing.errInvoiceUrlMissing",
+              "Invoice PDF link is not available.",
+            ),
+            color: "red",
+          });
+        }
+      }
+    } catch {
+      notifications.show({
+        title: "",
+        message: translation(
+          "account_billing.failedToDownloadInvoice",
+          "Failed to download invoice.",
+        ),
+        color: "red",
+      });
+    } finally {
+      setDownloadingPeriod(null);
+    }
   };
+
+  const handleDownloadInvoice = async (
+    e: React.MouseEvent,
+    periodStr: string,
+  ) => {
+    e.stopPropagation();
+    setDownloadingPeriod(periodStr);
+
+    try {
+      let downloadUrl = pdfUrls[periodStr];
+      if (!downloadUrl) {
+        const inv = invoices.find((i) => i.period === periodStr);
+        if (inv?.pdf?.url) {
+          downloadUrl = inv.pdf.url;
+        }
+      }
+
+      if (!downloadUrl) {
+        const res = await downloadInvoicePdfApi(periodStr);
+        if (res?.error) {
+          notifications.show({
+            title: "",
+            message: res.error,
+            color: "orange",
+            icon: <IconAlertCircle size={16} />,
+          });
+          return;
+        }
+        downloadUrl =
+          res?.download_url ||
+          (res as any)?.url ||
+          (res as any)?.pdf?.url ||
+          (res as any)?.pdf_url;
+      }
+
+      if (downloadUrl) {
+        setPdfUrls((prev) => ({ ...prev, [periodStr]: downloadUrl }));
+        window.open(downloadUrl, "_blank", "noopener,noreferrer");
+        notifications.show({
+          title: "",
+          message: translation(
+            "account_billing.notiInvoiceDownloadStarted",
+            "Invoice download started.",
+          ),
+          color: "blue",
+          icon: <IconCheck size={16} />,
+        });
+      } else {
+        notifications.show({
+          title: "",
+          message: translation(
+            "account_billing.errInvoiceUrlMissing",
+            "Invoice PDF link is not available.",
+          ),
+          color: "red",
+        });
+      }
+    } catch {
+      notifications.show({
+        title: "",
+        message: translation(
+          "account_billing.failedToDownloadInvoice",
+          "Failed to download invoice.",
+        ),
+        color: "red",
+      });
+    } finally {
+      setDownloadingPeriod(null);
+    }
+  };
+
+  const pendingInvoices = useMemo(() => {
+    return invoices.filter(
+      (inv) =>
+        inv.status === "pending" ||
+        parseFloat(inv.amount_outstanding || "0") > 0,
+    );
+  }, [invoices]);
 
   const accruedFrom = estimateData?.accrued_from;
   const accruedThrough = estimateData?.accrued_through;
@@ -232,7 +448,7 @@ export default function UsageBilling() {
 
   const storageUsageBytes =
     latestStorage?.usage_bytes ?? usageData?.storage_bytes?.total_bytes ?? 0;
-  const storageFreeBytes = latestStorage?.free_bytes ?? 5368709120; // 5 GB
+  const storageFreeBytes = latestStorage?.free_bytes ?? 5368709120;
   const storageUnitPrice = parseCost(latestStorage?.unit_price ?? 0.025);
 
   const formattedFreeStorage = formatBytesLocalized(storageFreeBytes, curtLang);
@@ -241,7 +457,6 @@ export default function UsageBilling() {
     curtLang,
   );
 
-  // Dynamic Feature Definitions rebuilt whenever language, usage, or estimate data changes
   const freeFeatureDefs: FeatureRowDef[] = useMemo(() => {
     return [
       {
@@ -441,7 +656,6 @@ export default function UsageBilling() {
     [freeFeatures, paidFeatures],
   );
 
-  // Dynamic localized Billed Items & Activity Details
   const chatItemTitle = translation(
     "account_billing.itemChatAccounts",
     `Chat Accounts (${chatFreeUnits} free)`,
@@ -804,214 +1018,588 @@ export default function UsageBilling() {
               </Accordion.Control>
 
               <Accordion.Panel>
-                <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
-                  {/* Daily Utility Breakdown */}
-                  <div style={{ gridColumn: "span 2" }}>
+                <Stack gap="lg">
+                  {/* PENDING INVOICES ACCORDION */}
+                  {pendingInvoices.length > 0 && (
                     <Paper
                       withBorder
                       radius="md"
                       p="md"
-                      bg="white"
-                      style={{ position: "relative" }}
+                      bg="red.0"
+                      style={{ borderColor: "var(--mantine-color-red-3)" }}
                     >
-                      {loadingPeriod && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            inset: 0,
-                            backgroundColor: "rgba(255, 255, 255, 0.7)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            zIndex: 2,
-                            borderRadius: "inherit",
-                          }}
-                        >
-                          <Loader size="sm" color="indigo" />
-                        </div>
-                      )}
-
-                      <Group
-                        justify="space-between"
-                        align="center"
-                        mb="sm"
-                        wrap="nowrap"
-                      >
-                        <Title order={5}>
-                          {translation(
-                            "account_billing.titleDailyBreakdown",
-                            "Daily Utility Breakdown",
-                          )}
-                        </Title>
-
-                        {accruedFrom && accruedThrough && (
-                          <Badge
-                            size="sm"
+                      <Group justify="space-between" align="center" mb="xs">
+                        <Group gap="xs">
+                          <ThemeIcon
+                            color="red"
                             variant="light"
-                            color="gray"
-                            radius="sm"
-                            leftSection={<IconCalendar size={12} />}
-                            styles={{
-                              root: { textTransform: "none", fontWeight: 500 },
-                            }}
+                            radius="xl"
+                            size={26}
                           >
-                            {accruedFrom} — {accruedThrough}
-                          </Badge>
-                        )}
-                      </Group>
-
-                      <Table verticalSpacing="sm">
-                        <Table.Thead bg="gray.0">
-                          <Table.Tr>
-                            <Table.Th>
-                              {translation(
-                                "account_billing.thBilledItem",
-                                "Billed Item",
-                              )}
-                            </Table.Th>
-                            <Table.Th>
-                              {translation(
-                                "account_billing.thActivityRate",
-                                "Activity / Rate",
-                              )}
-                            </Table.Th>
-                            <Table.Th style={{ textAlign: "right" }}>
-                              {translation(
-                                "account_billing.thCurrentCost",
-                                "Current Cost ($)",
-                              )}
-                            </Table.Th>
-                          </Table.Tr>
-                        </Table.Thead>
-                        <Table.Tbody>
-                          {billingItems.map((item, idx) => (
-                            <Table.Tr key={idx}>
-                              <Table.Td fw={500}>{item.item}</Table.Td>
-                              <Table.Td>
-                                <Text size="sm" c="dimmed">
-                                  {item.detail}
-                                </Text>
-                              </Table.Td>
-                              <Table.Td style={{ textAlign: "right" }} fw={600}>
-                                ${item.cost.toFixed(2)}
-                              </Table.Td>
-                            </Table.Tr>
-                          ))}
-                        </Table.Tbody>
-                      </Table>
-                    </Paper>
-                  </div>
-
-                  {/* Invoice Summary Card */}
-                  <Card withBorder radius="md" p="lg" bg="white">
-                    <Stack gap="md">
-                      <Group
-                        justify="space-between"
-                        align="center"
-                        wrap="nowrap"
-                      >
-                        <Text fw={600} size="xs" c="dimmed" tt="uppercase">
-                          {translation(
-                            "account_billing.lblBillingCycle",
-                            "Billing Cycle",
-                          )}
-                        </Text>
-                        <Select
-                          size="xs"
-                          w={160}
-                          data={periodSelectOptions}
-                          value={selectedPeriod}
-                          onChange={handlePeriodChange}
-                          leftSection={<IconCalendar size={13} />}
-                          allowDeselect={false}
-                          styles={{
-                            input: {
-                              fontWeight: 600,
-                              fontSize: "12px",
-                            },
-                          }}
-                        />
-                      </Group>
-
-                      <Divider />
-
-                      <Group
-                        justify="space-between"
-                        align="flex-end"
-                        wrap="wrap"
-                      >
-                        <Stack gap={2}>
-                          <Text size="xs" c="dimmed" fw={600} tt="uppercase">
+                            <IconAlertCircle size={16} />
+                          </ThemeIcon>
+                          <Text fw={700} size="sm" c="red.9">
                             {translation(
-                              "account_billing.txtCurrentAccruedCost",
-                              "Current Accrued Cost",
+                              "account_billing.titlePendingBills",
+                              "Outstanding Invoices",
                             )}
                           </Text>
-                          <Title order={2}>
-                            ${totalEstimatedCost.toFixed(2)}
-                          </Title>
-                        </Stack>
-
-                        {!isInvoiceGenerated && (
-                          <Badge
-                            size="sm"
-                            color="gray"
-                            variant="light"
-                            radius="sm"
-                            leftSection={<IconAlertCircle size={12} />}
-                          >
-                            {translation(
-                              "account_billing.txtInvoiceNotGenerated",
-                              "Invoice not generated yet",
-                            )}
+                          <Badge color="red" size="sm" variant="filled">
+                            {pendingInvoices.length}{" "}
+                            {translation("account_billing.txtDue", "Due")}
                           </Badge>
-                        )}
+                        </Group>
                       </Group>
 
-                      {isInvoiceGenerated && (
-                        <Stack gap="xs" mt="xs">
-                          <Button
-                            fullWidth
-                            color="indigo"
-                            size="md"
-                            radius="md"
-                            leftSection={<IconWallet size={16} />}
-                            loading={payingBill}
-                            onClick={handlePayBill}
-                          >
-                            {translation(
-                              "account_billing.btnPayCurrentBill",
-                              "Pay Current Bill",
-                            )}
-                          </Button>
+                      <Accordion
+                        variant="separated"
+                        radius="md"
+                        onChange={handleAccordionChange}
+                      >
+                        {pendingInvoices.map((inv) => {
+                          const outstanding = parseFloat(
+                            inv.amount_outstanding || inv.total_due || "0",
+                          ).toFixed(2);
+                          const currentInvoicePdfUrl =
+                            pdfUrls[inv.period] || inv.pdf?.url;
+                          const isPdfLoading = Boolean(
+                            loadingPdfPeriods[inv.period],
+                          );
 
-                          <Button
-                            fullWidth
-                            variant="subtle"
-                            color="gray"
-                            size="xs"
-                            leftSection={<IconDownload size={14} />}
-                            onClick={() =>
-                              notifications.show({
-                                title: "",
-                                message: translation(
-                                  "account_billing.notiInvoiceDownloadStarted",
-                                  "Invoice download started.",
-                                ),
-                                color: "blue",
-                              })
-                            }
+                          return (
+                            <Accordion.Item
+                              key={inv.invoice_id}
+                              value={inv.invoice_id}
+                              style={{ backgroundColor: "#ffffff" }}
+                            >
+                              <Accordion.Control>
+                                <Group
+                                  justify="space-between"
+                                  align="center"
+                                  wrap="nowrap"
+                                  w="100%"
+                                  pr="xs"
+                                >
+                                  <Stack gap={2}>
+                                    <Group gap="xs">
+                                      <Text fw={700} size="sm">
+                                        {formatPeriodMonth(
+                                          inv.period,
+                                          curtLang,
+                                        )}
+                                      </Text>
+                                      <Badge
+                                        size="xs"
+                                        color="red"
+                                        variant="light"
+                                      >
+                                        {translation(
+                                          "account_billing.txtUnpaid",
+                                          "Unpaid",
+                                        )}
+                                      </Badge>
+                                    </Group>
+                                    {inv.due_at && (
+                                      <Text size="xs" c="dimmed">
+                                        {translation(
+                                          "account_billing.lblDue",
+                                          "Due",
+                                        )}
+                                        :{" "}
+                                        {new Date(
+                                          inv.due_at,
+                                        ).toLocaleDateString()}
+                                      </Text>
+                                    )}
+                                  </Stack>
+
+                                  <Group
+                                    gap="sm"
+                                    wrap="nowrap"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Text fw={700} size="sm" c="red.8">
+                                      ${outstanding}
+                                    </Text>
+
+                                    <Tooltip
+                                      label={translation(
+                                        "account_billing.btnDownloadPdf",
+                                        "Download Invoice PDF",
+                                      )}
+                                      withArrow
+                                    >
+                                      <ActionIcon
+                                        variant="light"
+                                        color="indigo"
+                                        size="md"
+                                        radius="md"
+                                        loading={
+                                          downloadingPeriod === inv.period
+                                        }
+                                        onClick={(e) =>
+                                          handleDownloadInvoice(e, inv.period)
+                                        }
+                                      >
+                                        <IconDownload size={16} />
+                                      </ActionIcon>
+                                    </Tooltip>
+
+                                    <Button
+                                      size="xs"
+                                      color="red"
+                                      radius="md"
+                                      leftSection={<IconWallet size={14} />}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handlePayBill();
+                                      }}
+                                    >
+                                      {translation(
+                                        "account_billing.btnPayNow",
+                                        "Pay Now",
+                                      )}
+                                    </Button>
+                                  </Group>
+                                </Group>
+                              </Accordion.Control>
+
+                              <Accordion.Panel>
+                                <Divider mb="sm" />
+                                <Stack gap="sm">
+                                  {/* Totals Summary */}
+                                  <SimpleGrid
+                                    cols={{ base: 2, sm: 4 }}
+                                    spacing="xs"
+                                  >
+                                    <Paper
+                                      p="xs"
+                                      radius="md"
+                                      bg="gray.0"
+                                      withBorder
+                                    >
+                                      <Text size="xs" c="dimmed">
+                                        {translation(
+                                          "account_billing.lblChatAccountsCost",
+                                          "Chat Accounts",
+                                        )}
+                                      </Text>
+                                      <Text fw={700} size="sm">
+                                        $
+                                        {parseFloat(
+                                          inv.cost?.chat_accounts || "0",
+                                        ).toFixed(2)}
+                                      </Text>
+                                    </Paper>
+
+                                    <Paper
+                                      p="xs"
+                                      radius="md"
+                                      bg="gray.0"
+                                      withBorder
+                                    >
+                                      <Text size="xs" c="dimmed">
+                                        {translation(
+                                          "account_billing.lblStorageCost",
+                                          "Storage",
+                                        )}
+                                      </Text>
+                                      <Text fw={700} size="sm">
+                                        $
+                                        {parseFloat(
+                                          inv.cost?.storage || "0",
+                                        ).toFixed(2)}
+                                      </Text>
+                                    </Paper>
+
+                                    <Paper
+                                      p="xs"
+                                      radius="md"
+                                      bg="gray.0"
+                                      withBorder
+                                    >
+                                      <Text size="xs" c="dimmed">
+                                        {translation(
+                                          "account_billing.lblDaysAccrued",
+                                          "Days Accrued",
+                                        )}
+                                      </Text>
+                                      <Text fw={700} size="sm">
+                                        {inv.days_accrued}{" "}
+                                        {translation(
+                                          "account_billing.txtDays",
+                                          "days",
+                                        )}
+                                      </Text>
+                                    </Paper>
+
+                                    <Paper
+                                      p="xs"
+                                      radius="md"
+                                      bg="red.0"
+                                      withBorder
+                                      style={{
+                                        borderColor:
+                                          "var(--mantine-color-red-2)",
+                                      }}
+                                    >
+                                      <Text size="xs" c="red.8" fw={600}>
+                                        {translation(
+                                          "account_billing.lblTotalOutstanding",
+                                          "Outstanding",
+                                        )}
+                                      </Text>
+                                      <Text fw={800} size="sm" c="red.9">
+                                        ${outstanding}
+                                      </Text>
+                                    </Paper>
+                                  </SimpleGrid>
+
+                                  {/* PDF Preview Container */}
+                                  <Paper
+                                    withBorder
+                                    radius="md"
+                                    p="xs"
+                                    bg="white"
+                                  >
+                                    <Group
+                                      justify="space-between"
+                                      align="center"
+                                      mb="xs"
+                                    >
+                                      <Group gap="xs">
+                                        <ThemeIcon
+                                          size={24}
+                                          radius="md"
+                                          color="indigo"
+                                          variant="light"
+                                        >
+                                          <IconFileInvoice size={14} />
+                                        </ThemeIcon>
+                                        <Text size="xs" fw={700}>
+                                          {translation(
+                                            "account_billing.titleInvoicePdfPreview",
+                                            "Invoice Document Preview",
+                                          )}
+                                        </Text>
+                                      </Group>
+
+                                      {currentInvoicePdfUrl && (
+                                        <Button
+                                          component="a"
+                                          href={currentInvoicePdfUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          variant="subtle"
+                                          size="compact-xs"
+                                          color="indigo"
+                                          rightSection={
+                                            <IconExternalLink size={12} />
+                                          }
+                                        >
+                                          {translation(
+                                            "account_billing.btnOpenInNewTab",
+                                            "Open in new tab",
+                                          )}
+                                        </Button>
+                                      )}
+                                    </Group>
+
+                                    {isPdfLoading ? (
+                                      <div
+                                        style={{
+                                          height: 480,
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          gap: 8,
+                                          backgroundColor: "#f8f9fa",
+                                          borderRadius: 8,
+                                        }}
+                                      >
+                                        <Loader size="sm" color="indigo" />
+                                        <Text size="xs" c="dimmed">
+                                          {translation(
+                                            "account_billing.loadingInvoicePdf",
+                                            "Loading invoice PDF...",
+                                          )}
+                                        </Text>
+                                      </div>
+                                    ) : currentInvoicePdfUrl ? (
+                                      <div
+                                        style={{
+                                          width: "100%",
+                                          height: "550px",
+                                          borderRadius: 8,
+                                          overflow: "hidden",
+                                          border: "1px solid #e9ecef",
+                                        }}
+                                      >
+                                        <iframe
+                                          src={currentInvoicePdfUrl}
+                                          title={`Invoice-${inv.period}`}
+                                          width="100%"
+                                          height="100%"
+                                          style={{ border: "none" }}
+                                        />
+                                      </div>
+                                    ) : (
+                                      <Paper
+                                        p="xl"
+                                        radius="md"
+                                        bg="gray.0"
+                                        style={{ textAlign: "center" }}
+                                      >
+                                        <Text size="xs" c="dimmed">
+                                          {translation(
+                                            "account_billing.txtPdfNotAvailable",
+                                            "Invoice PDF preview is not available.",
+                                          )}
+                                        </Text>
+                                        <Button
+                                          size="xs"
+                                          variant="light"
+                                          color="indigo"
+                                          mt="xs"
+                                          leftSection={
+                                            <IconDownload size={14} />
+                                          }
+                                          onClick={(e) =>
+                                            handleDownloadInvoice(e, inv.period)
+                                          }
+                                        >
+                                          {translation(
+                                            "account_billing.btnDownloadPdf",
+                                            "Download Invoice PDF",
+                                          )}
+                                        </Button>
+                                      </Paper>
+                                    )}
+                                  </Paper>
+                                </Stack>
+                              </Accordion.Panel>
+                            </Accordion.Item>
+                          );
+                        })}
+                      </Accordion>
+                    </Paper>
+                  )}
+
+                  {/* Daily Utility Breakdown & Current Cycle */}
+                  <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
+                    {/* Daily Utility Breakdown */}
+                    <div style={{ gridColumn: "span 2" }}>
+                      <Paper
+                        withBorder
+                        radius="md"
+                        p="md"
+                        bg="white"
+                        style={{ position: "relative" }}
+                      >
+                        {loadingPeriod && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              backgroundColor: "rgba(255, 255, 255, 0.7)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              zIndex: 2,
+                              borderRadius: "inherit",
+                            }}
                           >
+                            <Loader size="sm" color="indigo" />
+                          </div>
+                        )}
+
+                        <Group
+                          justify="space-between"
+                          align="center"
+                          mb="sm"
+                          wrap="nowrap"
+                        >
+                          <Title order={5}>
                             {translation(
-                              "account_billing.btnDownloadPdfSummary",
-                              "Download PDF Summary",
+                              "account_billing.titleDailyBreakdown",
+                              "Daily Utility Breakdown",
                             )}
-                          </Button>
-                        </Stack>
-                      )}
-                    </Stack>
-                  </Card>
-                </SimpleGrid>
+                          </Title>
+
+                          {accruedFrom && accruedThrough && (
+                            <Badge
+                              size="sm"
+                              variant="light"
+                              color="gray"
+                              radius="sm"
+                              leftSection={<IconCalendar size={12} />}
+                              styles={{
+                                root: {
+                                  textTransform: "none",
+                                  fontWeight: 500,
+                                },
+                              }}
+                            >
+                              {accruedFrom} — {accruedThrough}
+                            </Badge>
+                          )}
+                        </Group>
+
+                        <Table verticalSpacing="sm">
+                          <Table.Thead bg="gray.0">
+                            <Table.Tr>
+                              <Table.Th>
+                                {translation(
+                                  "account_billing.thBilledItem",
+                                  "Billed Item",
+                                )}
+                              </Table.Th>
+                              <Table.Th>
+                                {translation(
+                                  "account_billing.thActivityRate",
+                                  "Activity / Rate",
+                                )}
+                              </Table.Th>
+                              <Table.Th style={{ textAlign: "right" }}>
+                                {translation(
+                                  "account_billing.thCurrentCost",
+                                  "Current Cost ($)",
+                                )}
+                              </Table.Th>
+                            </Table.Tr>
+                          </Table.Thead>
+                          <Table.Tbody>
+                            {billingItems.map((item, idx) => (
+                              <Table.Tr key={idx}>
+                                <Table.Td fw={500}>{item.item}</Table.Td>
+                                <Table.Td>
+                                  <Text size="sm" c="dimmed">
+                                    {item.detail}
+                                  </Text>
+                                </Table.Td>
+                                <Table.Td
+                                  style={{ textAlign: "right" }}
+                                  fw={600}
+                                >
+                                  ${item.cost.toFixed(2)}
+                                </Table.Td>
+                              </Table.Tr>
+                            ))}
+                          </Table.Tbody>
+                        </Table>
+                      </Paper>
+                    </div>
+
+                    {/* Invoice Summary Card */}
+                    <Card withBorder radius="md" p="lg" bg="white">
+                      <Stack gap="md">
+                        <Group
+                          justify="space-between"
+                          align="center"
+                          wrap="nowrap"
+                        >
+                          <Text fw={600} size="xs" c="dimmed" tt="uppercase">
+                            {translation(
+                              "account_billing.lblBillingCycle",
+                              "Billing Cycle",
+                            )}
+                          </Text>
+                          <Select
+                            size="xs"
+                            w={160}
+                            data={periodSelectOptions}
+                            value={selectedPeriod}
+                            onChange={handlePeriodChange}
+                            leftSection={<IconCalendar size={13} />}
+                            rightSection={
+                              downloadingPeriod ? (
+                                <Loader size={12} color="indigo" />
+                              ) : null
+                            }
+                            allowDeselect={false}
+                            styles={{
+                              input: {
+                                fontWeight: 600,
+                                fontSize: "12px",
+                              },
+                            }}
+                          />
+                        </Group>
+
+                        <Divider />
+
+                        <Group
+                          justify="space-between"
+                          align="flex-end"
+                          wrap="wrap"
+                        >
+                          <Stack gap={2}>
+                            <Text size="xs" c="dimmed" fw={600} tt="uppercase">
+                              {translation(
+                                "account_billing.txtCurrentAccruedCost",
+                                "Current Accrued Cost",
+                              )}
+                            </Text>
+                            <Title order={2}>
+                              ${totalEstimatedCost.toFixed(2)}
+                            </Title>
+                          </Stack>
+
+                          {!isInvoiceGenerated && (
+                            <Badge
+                              size="sm"
+                              color="gray"
+                              variant="light"
+                              radius="sm"
+                              leftSection={<IconAlertCircle size={12} />}
+                            >
+                              {translation(
+                                "account_billing.txtInvoiceNotGenerated",
+                                "Invoice not generated yet",
+                              )}
+                            </Badge>
+                          )}
+                        </Group>
+
+                        {isInvoiceGenerated && (
+                          <Stack gap="xs" mt="xs">
+                            <Button
+                              fullWidth
+                              color="indigo"
+                              size="md"
+                              radius="md"
+                              leftSection={<IconWallet size={16} />}
+                              loading={payingBill}
+                              onClick={handlePayBill}
+                            >
+                              {translation(
+                                "account_billing.btnPayCurrentBill",
+                                "Pay Current Bill",
+                              )}
+                            </Button>
+
+                            <Button
+                              fullWidth
+                              variant="subtle"
+                              color="gray"
+                              size="xs"
+                              leftSection={<IconDownload size={14} />}
+                              onClick={(e) =>
+                                handleDownloadInvoice(e, selectedPeriod)
+                              }
+                            >
+                              {translation(
+                                "account_billing.btnDownloadPdfSummary",
+                                "Download PDF Summary",
+                              )}
+                            </Button>
+                          </Stack>
+                        )}
+                      </Stack>
+                    </Card>
+                  </SimpleGrid>
+                </Stack>
               </Accordion.Panel>
             </Accordion.Item>
           </Accordion>

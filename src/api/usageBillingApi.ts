@@ -113,6 +113,72 @@ export interface UserBillingMonthlyResponse {
     invoice: any | null;
   };
 }
+export interface InvoicePdfDetails {
+  url: string;
+  expires_in?: number;
+}
+
+export interface InvoiceItem {
+  invoice_id: string;
+  period: string;
+  status: "pending" | "paid" | string;
+  currency: string;
+  days_accrued: number;
+  accrued_from: string;
+  accrued_through: string;
+  issued_at: string;
+  due_at: string;
+  cost: {
+    chat_accounts: string;
+    storage: string;
+  };
+  total_due: string;
+  amount_paid: string;
+  amount_outstanding: string;
+  pdf?: InvoicePdfDetails | null;
+}
+
+export interface InvoicesApiResponse {
+  hub_user_id: string;
+  count: number;
+  total_outstanding: Record<string, string>;
+  invoices: InvoiceItem[];
+}
+
+export const getUserInvoicesApi =
+  async (): Promise<InvoicesApiResponse | null> => {
+    try {
+      const endpoint = withTargetUser(
+        API_ENDPOINTS.INVOICES || "/api/invoices",
+      );
+      const response = await api.get<InvoicesApiResponse>(endpoint);
+      return response.status === 200 ? response.data : null;
+    } catch (error: any) {
+      handleApiError(error, "account_billing");
+      return null;
+    }
+  };
+
+export const downloadInvoicePdfApi = async (
+  period: string,
+): Promise<{ download_url?: string; url?: string; error?: string } | null> => {
+  try {
+    const rawEndpoint = withTargetUser(
+      API_ENDPOINTS.INVOICES || "/api/invoices",
+    );
+    const separator = rawEndpoint.includes("?") ? "&" : "?";
+    const endpoint = `${rawEndpoint}${separator}period=${encodeURIComponent(period)}`;
+
+    const response = await api.get(endpoint);
+    return response.data;
+  } catch (error: any) {
+    if (error?.response?.data) {
+      return error.response.data;
+    }
+    handleApiError(error, "account_billing");
+    return null;
+  }
+};
 
 export const getUserBillingMonthlyApi = async (
   userId: string,

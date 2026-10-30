@@ -41,6 +41,7 @@ export const API_ENDPOINTS = {
   KEYRING_CATEGORIES: `${API_BASE_URL}/keyring-categories`,
   USAGE: `${API_BASE_URL}/usage`,
   ESTIMATE: `${API_BASE_URL}/estimate`,
+  INVOICES: `${API_BASE_URL}/invoices`,
   ADMIN_PRICING: `${API_BASE_URL2}/pricing`,
   OVERVIEW: `${API_BASE_URL2}/overview`,
   ACTIVATE_USER: `${API_BASE_URL2}/activate`,
