@@ -9,7 +9,6 @@ import {
   SegmentedControl,
   Select,
   Text,
-  TextInput,
 } from "@mantine/core";
 import { useTriggerStore } from "../../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../../utils/constant";
@@ -41,13 +40,6 @@ interface STATE {
   otp: string;
 }
 
-interface SUBMIT_PAYLOAD {
-  users: string[];
-  keyring_category_name?: string;
-  keyring_password_key?: string;
-  user_key: string;
-}
-
 const initialState: STATE = {
   tab: "MANUAL PASSWORD",
   selectedCategory: null,
@@ -69,7 +61,6 @@ function DecryptPrivateMsgDialog() {
   const { target_user } = useAuthStore((state) => state);
   const { translation } = useTranslation();
 
-  const [password, setPassword] = useState<string>("");
   const [categories, setCategories] = useState<string[]>([]);
   const [passwordLabels, setPasswordLabels] = useState<string[]>([]);
   const [isOtpInvalid, setIsOtpInvalid] = useState<boolean>(false);
@@ -241,7 +232,7 @@ function DecryptPrivateMsgDialog() {
   };
 
   const onDecrypt = async (mode: string) => {
-    if (mode === "manual" && password.trim().length < 1) {
+    if (mode === "manual" && state.password.trim().length < 1) {
       Notification.error("Password is mandatory");
       return;
     }
@@ -258,7 +249,7 @@ function DecryptPrivateMsgDialog() {
       }
 
       if (mode === "manual") {
-        payload["password"] = password;
+        payload["password"] = state.password;
       }
 
       const params = {
