@@ -126,7 +126,7 @@ export async function registerSession(
         platform,
         browser,
         device_name,
-        app_id: "ukrchat",
+        appId: "messaging.ukr.project",
       },
       {
         headers: {
@@ -185,7 +185,9 @@ export async function fetchSessions(): Promise<ActiveSession[]> {
 
   const response = await axios.post<UserSessionBody>(
     API_ENDPOINTS.AUTH_USER_SESSION,
-    {},
+    {
+      appId: "messaging.ukr.project",
+    },
     { headers: { Authorization: `Bearer ${accessToken ?? ""}` } },
   );
 
