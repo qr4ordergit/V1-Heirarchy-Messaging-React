@@ -121,7 +121,7 @@ export default function UsageBilling() {
   const [availablePeriods, setAvailablePeriods] = useState<string[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
 
-  const [payingBill, setPayingBill] = useState(false);
+  // const [payingBill, setPayingBill] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [loadingPeriod, setLoadingPeriod] = useState(false);
@@ -711,9 +711,9 @@ export default function UsageBilling() {
   };
 
   const handlePayBill = () => {
-    setPayingBill(true);
+    // setPayingBill(true);
     setTimeout(() => {
-      setPayingBill(false);
+      // setPayingBill(false);
       notifications.show({
         title: "",
         message: translation(
