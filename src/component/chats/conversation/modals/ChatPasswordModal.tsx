@@ -67,12 +67,12 @@ function ChatPasswordModal() {
   >(null);
   const [renderField, setRenderField] = useState<FIELD>(null);
   const [otp, setOtp] = useState<string>("");
-
-  const [keyRingLoader, KeyRingFn] = useTransition();
-  const [verifyLoader, VerifyFn] = useTransition();
   const [apiPolling, setApiPolling] = useState<boolean>(false);
   const [pollingAttempt, setPollingAttempt] = useState<number>(0);
   const [alertStatus, setAlertStatus] = useState<ALERT_STATUS>(null);
+
+  const [keyRingLoader, KeyRingFn] = useTransition();
+  const [verifyLoader, VerifyFn] = useTransition();
 
   const alerts = {
     SUCCESS: {
@@ -325,6 +325,19 @@ function ChatPasswordModal() {
     await getSessionTime();
   };
 
+  const resetStates = () => {
+    setManualPassword("");
+    setKeyRIngCategories([]);
+    setKeyRingCategoryKeys([]);
+    setSelectedKeyRingCategory(null);
+    setselectedKeyRingCategoryKey(null);
+    setRenderField(null);
+    setOtp("");
+    setApiPolling(false);
+    setPollingAttempt(0);
+    setAlertStatus(null);
+  };
+
   useEffect(() => {
     initialActions();
   }, [trigger]);
@@ -355,6 +368,13 @@ function ChatPasswordModal() {
       clearTimeout(timer);
     };
   }, [apiPolling, pollingAttempt]);
+
+  // reset state
+  useEffect(() => {
+    return () => {
+      resetStates();
+    };
+  }, []);
 
   return (
     <Modal
@@ -388,126 +408,129 @@ function ChatPasswordModal() {
         )}
 
         {!isPasswordManual && (
-          <Select
-            label={translation(
-              "chat_history.modal-chat-pass-label2",
-              "Keyring category",
-            )}
-            placeholder={translation(
-              "chat_history.modal-chat-pass-plc2",
-              "Select",
-            )}
-            data={keyRingCategories}
-            disabled={isPasswordManual}
-            readOnly={keyRingLoader}
-            loading={keyRingLoader}
-            clearable
-            searchable
-            value={selectedKeyRingCategory}
-            onChange={handleChangeCategory}
-            nothingFoundMessage="Nothing found..."
-            size="xs"
-          />
-        )}
-        {renderField === "KEY" && (
           <>
             <Select
               label={translation(
-                "chat_history.modal-chat-pass-label3",
-                "Category key",
+                "chat_history.modal-chat-pass-label2",
+                "Keyring category",
               )}
               placeholder={translation(
-                "chat_history.modal-chat-pass-plc3",
+                "chat_history.modal-chat-pass-plc2",
                 "Select",
               )}
-              data={keyRingCategoryKeys}
-              mt={"md"}
+              data={keyRingCategories}
+              disabled={isPasswordManual}
+              readOnly={keyRingLoader}
               loading={keyRingLoader}
               clearable
               searchable
-              value={selectedKeyRingCategoryKey}
-              onChange={(e) => setselectedKeyRingCategoryKey(e)}
+              value={selectedKeyRingCategory}
+              onChange={handleChangeCategory}
               nothingFoundMessage="Nothing found..."
-              disabled={isPasswordManual}
               size="xs"
             />
-          </>
-        )}
 
-        {renderField === "OTP" && (
-          <>
-            <Text size="sm" fw={550} mt={"md"}>
-              {translation(
-                "chat_history.modal-chat-pass-label-verify",
-                "Verify 2FA OTP",
-              )}
-            </Text>
-            <Flex justify={"space-between"} wrap={"wrap"}>
-              <PinInput
-                type={"number"}
-                length={6}
-                value={otp}
-                onChange={(e) => setOtp(e)}
-                size="xs"
-              />
-              <Button
-                loading={verifyLoader}
-                disabled={otp.length !== 6}
-                loaderProps={{ type: "dots" }}
-                onClick={handleVerify}
-                size="xs"
-              >
-                {translation(
-                  "chat_history.modal-chat-pass-btn-verify",
-                  "Verify",
-                )}
-              </Button>
-            </Flex>
-            {apiPolling && (
-              <Flex mt={"sm"} justify={"center"} align={"center"} gap={2}>
-                <Text size="xs">
+            {renderField === "KEY" && (
+              <>
+                <Select
+                  label={translation(
+                    "chat_history.modal-chat-pass-label3",
+                    "Category key",
+                  )}
+                  placeholder={translation(
+                    "chat_history.modal-chat-pass-plc3",
+                    "Select",
+                  )}
+                  data={keyRingCategoryKeys}
+                  mt={"md"}
+                  loading={keyRingLoader}
+                  clearable
+                  searchable
+                  value={selectedKeyRingCategoryKey}
+                  onChange={(e) => setselectedKeyRingCategoryKey(e)}
+                  nothingFoundMessage="Nothing found..."
+                  disabled={isPasswordManual}
+                  size="xs"
+                />
+              </>
+            )}
+
+            {renderField === "OTP" && (
+              <>
+                <Text size="sm" fw={550} mt={"md"}>
                   {translation(
-                    "chat_history.modal-chat-pass-otp-loader",
-                    "Requesting otp... Please wait",
+                    "chat_history.modal-chat-pass-label-verify",
+                    "Verify 2FA OTP",
                   )}
                 </Text>
-                <div>
-                  <IconCircleX
-                    size={20}
-                    className="cursor-pointer"
-                    onClick={() => {
-                      setApiPolling(false);
-                      setPollingAttempt(0);
-                    }}
+                <Flex justify={"space-between"} wrap={"wrap"}>
+                  <PinInput
+                    type={"number"}
+                    length={6}
+                    value={otp}
+                    onChange={(e) => setOtp(e)}
+                    size="xs"
                   />
-                </div>
-              </Flex>
-            )}
-
-            {alertStatus && (
-              <Alert
-                variant="light"
-                color={alerts[alertStatus].color}
-                title={alerts[alertStatus].title}
-                className="mt-2"
-              >
-                {alerts[alertStatus].content}
-              </Alert>
-            )}
-
-            {!apiPolling && alertStatus !== "SUCCESS" && (
-              <Text
-                size="xs"
-                mt={"xs"}
-                td="underline"
-                className="cursor-pointer text-center"
-                onClick={requestOtpHandler}
-              >
-                {translation(
-                  "chat_history.modal-chat-pass-link-verify",
-                  "Get otp",
+                  <Button
+                    loading={verifyLoader}
+                    disabled={otp.length !== 6}
+                    loaderProps={{ type: "dots" }}
+                    onClick={handleVerify}
+                    size="xs"
+                  >
+                    {translation(
+                      "chat_history.modal-chat-pass-btn-verify",
+                      "Verify",
+                    )}
+                  </Button>
+                </Flex>
+                {apiPolling && (
+                  <Flex mt={"sm"} justify={"center"} align={"center"} gap={2}>
+                    <Text size="xs">
+                      {translation(
+                        "chat_history.modal-chat-pass-otp-loader",
+                        "Requesting otp... Please wait",
+                      )}
+                    </Text>
+                    <div>
+                      <IconCircleX
+                        size={20}
+                        className="cursor-pointer"
+                        onClick={() => {
+                          setApiPolling(false);
+                          setPollingAttempt(0);
+                        }}
+                      />
+                    </div>
+                  </Flex>
                 )}
-              </Text>
+
+                {alertStatus && (
+                  <Alert
+                    variant="light"
+                    color={alerts[alertStatus].color}
+                    title={alerts[alertStatus].title}
+                    className="mt-2"
+                  >
+                    {alerts[alertStatus].content}
+                  </Alert>
+                )}
+
+                {!apiPolling && alertStatus !== "SUCCESS" && (
+                  <Text
+                    size="xs"
+                    mt={"xs"}
+                    td="underline"
+                    className="cursor-pointer text-center"
+                    onClick={requestOtpHandler}
+                  >
+                    {translation(
+                      "chat_history.modal-chat-pass-link-verify",
+                      "Get otp",
+                    )}
+                  </Text>
+                )}
+              </>
             )}
           </>
         )}

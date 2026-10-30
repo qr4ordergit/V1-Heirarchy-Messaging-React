@@ -19,13 +19,14 @@ import { OPENERS, TRIGGERS } from "../../../utils/constant";
 import { useTagStore } from "../../../store/tags/tags.store";
 import { useTranslation } from "../../../store/language/language.store";
 import { useOpenerStore } from "../../../store/openers/opener.store";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useAuthStore } from "../../../store/auth/auth.store";
 import { Notification } from "../../../utils/notification";
 import { getApiErrorMessage } from "../../../api/getApiErrorMessage";
 import { api } from "../../../api/axios";
 import { ENDPOINTS } from "../../../api/endpoints";
 import { useChatStore } from "../../../store/chats/chats.store";
+import { useDMListStore } from "../../../store/dm/dm.list.store";
 
 interface ENCRYPTION_PAYLOAD {
   chat_id: string;
@@ -35,6 +36,7 @@ interface ENCRYPTION_PAYLOAD {
 
 function Navbar() {
   const { groups } = useGroupListStore((state) => state);
+  const { dms } = useDMListStore((state) => state);
   const { setTrigger, trigger, resetTrigger } = useTriggerStore(
     (state) => state,
   );
@@ -42,7 +44,9 @@ function Navbar() {
   const { tagsWithCategories } = useTagStore((state) => state);
   const { translation } = useTranslation();
   const { userDetails, target_user } = useAuthStore((state) => state);
-  const { modifyCurrentChat, current_chat } = useChatStore((state) => state);
+  const { modifyCurrentChat, current_chat, insertCurrentChat } = useChatStore(
+    (state) => state,
+  );
 
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
@@ -170,6 +174,28 @@ function Navbar() {
       Notification.error(getApiErrorMessage(error));
     }
   };
+
+  const initialActions = () => {
+    const isCurrentChatExist = Object.keys(current_chat).length > 0;
+
+    if (isCurrentChatExist) return;
+    if (!chatId) return;
+
+    let chat = null;
+    if (chatId?.includes("group")) {
+      chat = groups.find((grp) => grp._id === decodeURIComponent(chatId));
+    } else {
+      chat = dms.find((dm) => dm._id === decodeURIComponent(chatId));
+    }
+
+    insertCurrentChat({
+      ...chat,
+    });
+  };
+
+  useEffect(() => {
+    initialActions();
+  }, [dms, groups]);
 
   return (
     <div className="bg-white rounded-full p-2 shadow">
