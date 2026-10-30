@@ -126,6 +126,7 @@ export async function registerSession(
         platform,
         browser,
         device_name,
+        app_id: "ukrchat",
       },
       {
         headers: {
