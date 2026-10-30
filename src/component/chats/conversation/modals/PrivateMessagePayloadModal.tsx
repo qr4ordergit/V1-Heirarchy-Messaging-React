@@ -1,314 +1,469 @@
 import {
   Button,
-  Fieldset,
-  Group,
+  Flex,
   Modal,
   MultiSelect,
+  PasswordInput,
+  PinInput,
+  SegmentedControl,
   Select,
-  Stack,
   Text,
-  TextInput,
 } from "@mantine/core";
-import { useTriggerStore } from "../../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../../utils/constant";
-import { api } from "../../../../api/axios";
-import { ENDPOINTS } from "../../../../api/endpoints";
-import { useParams } from "react-router";
-import { useEffect, useState, useTransition } from "react";
+import { useTriggerStore } from "../../../../store/trigger/trigger.store";
+import { useEffect, useReducer, useState, useTransition } from "react";
 import { useAuthStore } from "../../../../store/auth/auth.store";
-import { Notification } from "../../../../utils/notification";
-import { useTranslation } from "../../../../store/language/language.store";
+import { ENDPOINTS } from "../../../../api/endpoints";
+import { api } from "../../../../api/axios";
+import usePasswordManager, {
+  type KEYRINGPASSWORD,
+} from "../../../../store/keys/password.manager.store";
 import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
-import { getKeyringCategoriesApi } from "../../../../api/profileApi";
-import type { KeyringCategoryItem } from "../../../../api/profileApi";
+import { Notification } from "../../../../utils/notification";
+import { useNextPerson } from "../../../../hooks/useNextPerson";
+import { useParams } from "react-router";
 import useContactNameProvider from "../../../../hooks/useContactNameProvider";
 
-interface MembersResponse {
-  data: {
-    members?: string[];
-  };
+type RENDER = null | "OTP" | "LABELS";
+type TAB = "MANUAL PASSWORD" | "KEYRING";
+interface STATE {
+  tab: TAB;
+  selectedCategory: string | null;
+  password: string;
+  selectedPasswordLabel: string | null;
+  render: RENDER;
+  otp: string;
+  selectedMembers: string[];
 }
 
+interface SUBMIT_PAYLOAD {
+  users: string[];
+  keyring_category_id?: string;
+  keyring_category_name?: string;
+  keyring_password_key?: string;
+  user_key: string;
+}
+
+const initialState: STATE = {
+  tab: "MANUAL PASSWORD",
+  selectedCategory: null,
+  password: "",
+  selectedPasswordLabel: null,
+  render: null,
+  otp: "",
+  selectedMembers: [],
+};
+
 function PrivateMessagePayloadModal() {
-  const { trigger, resetTrigger, setTrigger } = useTriggerStore();
-  const { chatId } = useParams<{ chatId: string }>();
-  const { userDetails, targetUserDetails, target_user } = useAuthStore(
+  const { trigger, resetTrigger, setTrigger } = useTriggerStore(
     (state) => state,
   );
-  const { translation } = useTranslation();
+  const { target_user, userDetails } = useAuthStore((state) => state);
+  const { storeKeyringPasswords, keyringPasswords, updateKeyRingPassword } =
+    usePasswordManager((state) => state);
+
+  const [categories, setCategories] = useState<string[]>([]);
+  const [passwordLabels, setPasswordLabels] = useState<string[]>([]);
+  const [isOtpInvalid, setIsOtpInvalid] = useState<boolean>(false);
+  const [members, setMembers] = useState<{ label: string; value: string }[]>(
+    [],
+  );
+
+  const [keyRingLoader, KeyRingFn] = useTransition();
+  const [verifyLoader, VerifyFn] = useTransition();
+  const [fetchMembersLoader, FetchMembersFn] = useTransition();
+
+  const nextPerson = useNextPerson();
   const contactNameProvider = useContactNameProvider();
+  const { chatId } = useParams<{ chatId: string }>();
 
-  const [members, setMembers] = useState<string[]>([]);
-  const [password, setPassword] = useState<string>("");
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-  const [contactsMapping, setContactsMapping] = useState<{
-    [key: string]: string;
-  }>({});
+  const controller = new AbortController();
 
-  const [keyringCategories, setKeyringCategories] = useState<
-    KeyringCategoryItem[]
-  >([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null,
-  );
-  const [selectedPasswordKey, setSelectedPasswordKey] = useState<string | null>(
-    null,
-  );
-  const [loadingKeyrings, setLoadingKeyrings] = useState(false);
+  // ---------------reducer : START----------------------
 
-  const [fetchLoader, FetchFn] = useTransition();
+  type STATE_ACTION =
+    | { type: "RESET" }
+    | { type: "SET_TAB"; payload: TAB }
+    | { type: "SET_CATEGORY"; payload: string | null }
+    | { type: "SET_PASSWORD_LABEL"; payload: string | null }
+    | { type: "SET_PASSWORD"; payload: string }
+    | { type: "SET_RENDER"; payload: RENDER }
+    | { type: "SET_OTP"; payload: string }
+    | { type: "SET_SELECTED_MEMBERS"; payload: string[] };
 
-  const resetForm = () => {
-    setPassword("");
-    setSelectedMembers([]);
-    setSelectedCategoryId(null);
-    setSelectedPasswordKey(null);
+  const stateReducer = (state: STATE, action: STATE_ACTION): STATE => {
+    switch (action.type) {
+      case "SET_TAB":
+        return { ...state, tab: action.payload };
+
+      case "SET_CATEGORY":
+        return { ...state, selectedCategory: action.payload };
+
+      case "SET_PASSWORD_LABEL":
+        return { ...state, selectedPasswordLabel: action.payload };
+
+      case "SET_PASSWORD":
+        return { ...state, password: action.payload };
+
+      case "SET_RENDER":
+        return { ...state, render: action.payload };
+
+      case "SET_OTP":
+        return { ...state, otp: action.payload };
+
+      case "SET_SELECTED_MEMBERS":
+        return { ...state, selectedMembers: action.payload };
+
+      case "RESET":
+        return initialState;
+
+      default:
+        return state;
+    }
   };
 
+  const [state, dispatch] = useReducer(stateReducer, initialState);
+
+  // ---------------reducer : END----------------------
+
   const onClose = () => {
-    resetForm();
     resetTrigger();
   };
 
-  const fetchKeyrings = async () => {
-    setLoadingKeyrings(true);
-    try {
-      const data = await getKeyringCategoriesApi();
-      setKeyringCategories(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Failed to load keyring categories:", error);
-    } finally {
-      setLoadingKeyrings(false);
-    }
+  const fetchKeyRing = () => {
+    KeyRingFn(async () => {
+      const params = {
+        target_user: target_user ? target_user : undefined,
+      };
+
+      try {
+        const res = await api.get(ENDPOINTS.KEYRING_CATEGORIES.LIST, {
+          params,
+          signal: controller.signal,
+        });
+
+        if (res.data?.success) {
+          storeKeyringPasswords(res.data?.data);
+
+          const list = res.data?.data?.map(
+            (p: KEYRINGPASSWORD) => p?.keyring_category_name,
+          );
+
+          setCategories(list);
+        }
+      } catch (error) {
+        Notification.error(getApiErrorMessage(error));
+      }
+    });
   };
 
-  const fetchGroupMembers = async () => {
-    if (!chatId) return;
+  const handleCategorySelect = (e: string | null) => {
+    dispatch({ type: "SET_CATEGORY", payload: e });
 
-    if (!chatId.includes("group")) {
-      const id = decodeURIComponent(chatId);
-      const own_user_id =
-        targetUserDetails?.user_id || target_user || userDetails?.username;
-      const member = id.split("#").filter((u) => u !== own_user_id);
-      setMembers(member);
+    if (!e) {
+      dispatch({ type: "SET_RENDER", payload: null });
       return;
     }
 
-    try {
-      const targetUserQuery =
-        targetUserDetails?.user_id || target_user
-          ? `&target_user=${targetUserDetails?.user_id || target_user}`
-          : "";
-      const response = await api.get<MembersResponse>(
-        `${ENDPOINTS.GROUPS.GETMEMBERS}?group_id=${encodeURIComponent(chatId)}${targetUserQuery}`,
-      );
+    const passwordsObj = keyringPasswords.find(
+      (pass) => pass.keyring_category_name === e,
+    )?.keyring_category_passwords;
 
-      if (response.status === 200) {
-        let mems = response.data?.data?.members ?? [];
-        const own_user_id =
-          targetUserDetails?.user_id || target_user || userDetails?.username;
+    if (!passwordsObj) {
+      setPasswordLabels([]);
+      dispatch({ type: "SET_RENDER", payload: "OTP" });
+      return;
+    }
 
-        mems = mems.filter((user) => user !== own_user_id);
-        mems = mems.map((u) => {
-          const savedMem = contactNameProvider(u);
-          setContactsMapping((prev) => ({ ...prev, [savedMem]: u }));
-          return savedMem;
-        });
-        setMembers(mems);
-      }
-    } catch (error) {
-      Notification.error(getApiErrorMessage(error));
+    const passwords = Object.keys(passwordsObj);
+    setPasswordLabels(passwords);
+    dispatch({ type: "SET_RENDER", payload: "LABELS" });
+  };
+
+  const handlePasswordLabelSelect = (e: string | null) => {
+    dispatch({ type: "SET_PASSWORD_LABEL", payload: e });
+
+    if (!e) return;
+
+    const pass = keyringPasswords.find(
+      (p) => p.keyring_category_name === state.selectedCategory,
+    )?.keyring_category_passwords?.[e];
+
+    if (!pass) return;
+
+    dispatch({ type: "SET_PASSWORD", payload: pass });
+  };
+
+  const handleOtpChange = (e: string) => {
+    dispatch({ type: "SET_OTP", payload: e });
+
+    if (isOtpInvalid) {
+      setIsOtpInvalid(false);
     }
   };
 
-  const activeCategory = keyringCategories.find(
-    (c) => (c.keyring_category_id || c._id) === selectedCategoryId,
-  );
+  const handleVerify = () => {
+    VerifyFn(async () => {
+      const cat_id = keyringPasswords.find(
+        (cat) => cat.keyring_category_name === state.selectedCategory,
+      )?._id;
 
-  const categorySelectData = keyringCategories.map((c) => ({
-    value: c.keyring_category_id || c._id || "",
-    label: c.keyring_category_name,
-  }));
+      if (!cat_id) return;
 
-  const passwordKeySelectData = activeCategory?.keyring_category_passwords
-    ? Object.keys(activeCategory.keyring_category_passwords).map((k) => ({
-        value: k,
-        label: k,
-      }))
-    : [];
-
-  // When a category is picked or cleared
-  const handleCategoryChange = (val: string | null) => {
-    setSelectedCategoryId(val);
-    setSelectedPasswordKey(null);
-
-    // If category is cleared, clear password so user can manually type
-    if (!val) {
-      setPassword("");
-    }
-  };
-
-  const handlePasswordKeyChange = (key: string | null) => {
-    setSelectedPasswordKey(key);
-    if (key && activeCategory?.keyring_category_passwords) {
-      const resolvedPassword = activeCategory.keyring_category_passwords[key];
-      setPassword(String(resolvedPassword ?? ""));
-    } else {
-      setPassword("");
-    }
-  };
-
-  const onSubmit = async () => {
-    try {
-      const mems = selectedMembers.map((u) => contactsMapping[u]);
-      const payload: {
-        [key: string]: unknown;
-      } = {
-        users: mems,
-        keyring_category_name:
-          activeCategory?.keyring_category_name ?? undefined,
-        keyring_password_key: selectedPasswordKey ?? undefined,
-        user_key: password,
+      const params = {
+        target_user: target_user ? target_user : undefined,
+        keyring_category_id: cat_id,
+        otp: state.otp,
       };
 
-      if (selectedPasswordKey) {
-        payload["user_key"] =
-          activeCategory?.keyring_category_passwords[selectedPasswordKey];
+      try {
+        const res = await api.get(ENDPOINTS.KEYRING_CATEGORIES.LIST, {
+          params,
+          signal: controller.signal,
+        });
+
+        if (!res.data?.is_valid_otp) {
+          setIsOtpInvalid(true);
+          return;
+        }
+
+        updateKeyRingPassword(res.data?.data);
+        const keyAndPasswords = res.data?.data?.keyring_category_passwords;
+        const keys = Object.keys(keyAndPasswords);
+
+        if (keys.length === 0) return;
+
+        setPasswordLabels(keys);
+        dispatch({ type: "SET_RENDER", payload: "LABELS" });
+      } catch (error) {
+        Notification.error(getApiErrorMessage(error));
       }
+    });
+  };
 
-      if (!chatId?.includes("group")) {
-        payload.users = members;
-      }
+  const handleSubmit = (type: string) => {
+    const nextPersonId = nextPerson(chatId ?? "");
 
-      setTrigger({
-        toTrigger: TRIGGERS.privateMessageSender,
-        payload,
-      });
+    const payload: SUBMIT_PAYLOAD = {
+      users: [],
+      user_key: state.password,
+    };
 
-      resetForm();
-    } catch (error) {
-      Notification.error(getApiErrorMessage(error));
+    if (!chatId?.includes("group") && nextPersonId) {
+      payload.users = [nextPersonId];
     }
+
+    if (chatId?.includes("group")) {
+      payload.users = state.selectedMembers;
+    }
+
+    if (type === "keyring") {
+      if (!state.selectedCategory || !state.selectedPasswordLabel) return;
+
+      const cat_Id = keyringPasswords.find(
+        (key) => key.keyring_category_name === state.selectedCategory,
+      )?._id;
+
+      payload["keyring_category_name"] = state.selectedCategory;
+      payload["keyring_category_id"] = cat_Id;
+      payload["keyring_password_key"] = state.selectedPasswordLabel;
+    }
+
+    setTrigger({
+      toTrigger: TRIGGERS.privateMessageSender,
+      payload: { ...payload },
+    });
+  };
+
+  const fetchGroupMembers = () => {
+    if (!chatId) return;
+    if (!chatId.includes("group")) return;
+
+    FetchMembersFn(async () => {
+      try {
+        const params = {
+          target_user: target_user ? target_user : undefined,
+          group_id: encodeURIComponent(chatId),
+        };
+        const response = await api.get(ENDPOINTS.GROUPS.GETMEMBERS, {
+          params,
+          signal: controller.signal,
+        });
+
+        if (response.status === 200) {
+          let mems = response.data?.data?.members ?? [];
+          const own_user_id = target_user ? target_user : userDetails?.username;
+
+          if (!Array.isArray(mems)) return;
+
+          mems = mems.filter((user) => user !== own_user_id);
+
+          mems = mems.map((u: string) => {
+            const savedMem = contactNameProvider(u);
+            return {
+              label: savedMem,
+              value: u,
+            };
+          });
+
+          setMembers(mems);
+        }
+      } catch (error) {
+        Notification.error(getApiErrorMessage(error));
+      }
+    });
+  };
+
+  const initialActions = () => {
+    fetchKeyRing();
+    fetchGroupMembers();
   };
 
   useEffect(() => {
     if (trigger === TRIGGERS.privateMessageModal) {
-      FetchFn(fetchGroupMembers);
-      void fetchKeyrings();
+      initialActions();
     }
-  }, [trigger]);
 
-  const isManualPasswordDisabled = Boolean(selectedCategoryId);
+    return () => {
+      controller.abort();
+      dispatch({ type: "RESET" });
+    };
+  }, [trigger]);
 
   return (
     <Modal
       opened={trigger === TRIGGERS.privateMessageModal}
       onClose={onClose}
-      title={translation(
-        "chat_history.modal-e2e-title",
-        "Enter password to make message & select group members if you want to mention",
-      )}
-      radius="md"
+      withCloseButton={false}
+      centered
+      radius={"lg"}
     >
-      <Fieldset
-        legend={translation(
-          "chat_history.modal-e2e-legend",
-          "Private message information",
+      <SegmentedControl
+        fullWidth
+        data={["MANUAL PASSWORD", "KEYRING"]}
+        value={state.tab}
+        onChange={(e) => dispatch({ type: "SET_TAB", payload: e })}
+      />
+      <div className="m-4">
+        {state.tab === "MANUAL PASSWORD" && (
+          <>
+            <PasswordInput
+              label="Manual Password"
+              placeholder="Enter password"
+              size="xs"
+              className="flex-1"
+              value={state.password}
+              onChange={(e) =>
+                dispatch({ type: "SET_PASSWORD", payload: e.target.value })
+              }
+              disabled={state.selectedCategory ? true : false}
+            />
+          </>
         )}
-      >
-        <Stack gap="sm">
-          <TextInput
-            label={translation(
-              "chat_history.modal-e2e-label1",
-              "Private password",
-            )}
-            placeholder={
-              isManualPasswordDisabled
-                ? translation(
-                    "chat_history.phSelectedFromKeyring",
-                    "Password populated from Keyring",
-                  )
-                : translation(
-                    "chat_history.modal-e2e-ph1",
-                    "Enter password manually",
-                  )
-            }
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isManualPasswordDisabled}
-          />
 
-          <Select
-            label={translation(
-              "chat_history.selectKeyringCategory",
-              "Keyring Category (Optional)",
-            )}
-            placeholder={
-              loadingKeyrings
-                ? translation("common.loading", "Loading...")
-                : translation(
-                    "chat_history.phSelectKeyringCat",
-                    "Choose saved category",
-                  )
-            }
-            data={categorySelectData}
-            value={selectedCategoryId}
-            onChange={handleCategoryChange}
-            clearable
-            searchable
-            disabled={loadingKeyrings}
-          />
-
-          {selectedCategoryId && (
+        {state.tab === "KEYRING" && (
+          <>
             <Select
-              label={translation(
-                "chat_history.selectPasswordKey",
-                "Select Password",
-              )}
-              placeholder={translation(
-                "chat_history.phSelectPasswordKey",
-                "Choose password key",
-              )}
-              data={passwordKeySelectData}
-              value={selectedPasswordKey}
-              onChange={handlePasswordKeyChange}
-              clearable
+              label="Keyring category"
+              placeholder="Select category"
+              size="xs"
+              data={categories}
               searchable
-            />
-          )}
-
-          {isManualPasswordDisabled && (
-            <Text size="xs" c="dimmed">
-              {translation(
-                "chat_history.txtKeyringActiveNote",
-                "Manual typing disabled while Keyring Category is selected. Clear category above to type manually.",
-              )}
-            </Text>
-          )}
-
-          {chatId?.includes("group") && (
-            <MultiSelect
-              label={translation(
-                "chat_history.modal-e2e-label2",
-                "Select group members",
-              )}
-              placeholder={translation("chat_history.modal-e2e-ph2", "Select")}
-              data={members}
               clearable
-              searchable
-              loading={fetchLoader}
-              value={selectedMembers}
-              onChange={setSelectedMembers}
+              loading={keyRingLoader}
+              readOnly={keyRingLoader}
+              onChange={(e) => handleCategorySelect(e)}
+              value={state.selectedCategory}
             />
-          )}
+            {state.render === "LABELS" && (
+              <Select
+                label="Password label"
+                placeholder="Select password label"
+                size="xs"
+                mt={"sm"}
+                data={passwordLabels}
+                searchable
+                clearable
+                loading={keyRingLoader}
+                readOnly={keyRingLoader}
+                onChange={(e) => handlePasswordLabelSelect(e)}
+                value={state.selectedPasswordLabel}
+              />
+            )}
 
-          <Group justify="flex-end" mt="md">
-            <Button onClick={onSubmit}>
-              {translation("chat_history.modal-e2e-btn", "Submit")}
+            {state.render === "OTP" && (
+              <div className="mt-2">
+                <Text size="xs" fw={500} mb={1}>
+                  Enter OTP and verify
+                </Text>
+                <Flex gap={10} justify={"start"} align={"center"}>
+                  <PinInput
+                    type={"number"}
+                    length={6}
+                    size="xs"
+                    value={state.otp}
+                    onChange={handleOtpChange}
+                    error={isOtpInvalid}
+                  />
+                  <Button
+                    size="xs"
+                    disabled={state.otp.length !== 6}
+                    loaderProps={{ type: "dots" }}
+                    loading={verifyLoader}
+                    onClick={handleVerify}
+                  >
+                    Verify
+                  </Button>
+                </Flex>
+                {isOtpInvalid && (
+                  <Text size="xs" fw={500} mb={1} className="text-red-500">
+                    Incorrect otp
+                  </Text>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {chatId?.includes("group") && (
+          <MultiSelect
+            label="Group members"
+            placeholder="Select members"
+            size="xs"
+            mt={"sm"}
+            searchable
+            clearable
+            loading={fetchMembersLoader}
+            readOnly={fetchMembersLoader}
+            data={members}
+            value={state.selectedMembers}
+            onChange={(e) => {
+              console.log(e);
+              dispatch({ type: "SET_SELECTED_MEMBERS", payload: e });
+            }}
+          />
+        )}
+
+        <Flex mt={"md"} justify={"center"}>
+          {state.tab === "MANUAL PASSWORD" ? (
+            <Button
+              onClick={() => handleSubmit("manualPassword")}
+              size="xs"
+              disabled={state.password.trim().length < 5}
+            >
+              Submit
             </Button>
-          </Group>
-        </Stack>
-      </Fieldset>
+          ) : (
+            <Button
+              size="xs"
+              onClick={() => handleSubmit("keyring")}
+              disabled={!state.selectedCategory || !state.selectedPasswordLabel}
+            >
+              Submit
+            </Button>
+          )}
+        </Flex>
+      </div>
     </Modal>
   );
 }

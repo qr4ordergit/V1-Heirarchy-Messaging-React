@@ -123,6 +123,7 @@ export const TRIGGERS = {
 export const OPENERS = {
   schedulerList: "schedulerList",
   editScheduledMsg: "editScheduledMsg",
+  doubleEncryption_init: "doubleEncryption_init"
 };
 
 export const CIPHER_SECRET =

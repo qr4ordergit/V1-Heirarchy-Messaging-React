@@ -1,12 +1,10 @@
 import { notifications } from "@mantine/notifications";
-import {
-  IconCheck,
-  IconX,
-  IconInfoCircle,
-} from "@tabler/icons-react";
+import { IconCheck, IconX, IconInfoCircle } from "@tabler/icons-react";
 
 export const Notification = {
-  success: (message: string, title = "") => {
+  success: (message: string | null, title = "") => {
+    if (!message) return;
+
     notifications.show({
       title,
       message,
@@ -15,7 +13,9 @@ export const Notification = {
     });
   },
 
-  error: (message: string, title = "") => {
+  error: (message: string | null, title = "") => {
+    if (!message) return;
+
     notifications.show({
       title,
       message,
@@ -24,7 +24,9 @@ export const Notification = {
     });
   },
 
-  info: (message: string, title = "") => {
+  info: (message: string | null, title = "") => {
+    if (!message) return;
+
     notifications.show({
       title,
       message,

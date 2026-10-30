@@ -181,21 +181,26 @@ function Navbar() {
     if (isCurrentChatExist) return;
     if (!chatId) return;
 
-    let chat = null;
     if (chatId?.includes("group")) {
-      chat = groups.find((grp) => grp._id === decodeURIComponent(chatId));
-    } else {
-      chat = dms.find((dm) => dm._id === decodeURIComponent(chatId));
-    }
+      const chat = groups.find((grp) => grp._id === decodeURIComponent(chatId));
 
-    insertCurrentChat({
-      ...chat,
-    });
+      if (!chat && !isCurrentChatExist) return;
+
+      insertCurrentChat({
+        ...chat,
+        display_name: chat?.group_name,
+      });
+    } else {
+      const chat = dms.find((dm) => dm._id === decodeURIComponent(chatId));
+      if (!chat && !isCurrentChatExist) return;
+
+      insertCurrentChat({ ...chat });
+    }
   };
 
   useEffect(() => {
     initialActions();
-  }, [dms, groups]);
+  }, [dms.length, groups.length]);
 
   return (
     <div className="bg-white rounded-full p-2 shadow">

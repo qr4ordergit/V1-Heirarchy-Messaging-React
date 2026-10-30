@@ -139,6 +139,7 @@ export default function ChatInput() {
         if (triggerPayload?.keyring_category_name) {
           payload["keyring_category_name"] =
             triggerPayload.keyring_category_name;
+          payload["keyring_category_id"] = triggerPayload.keyring_category_id;
         }
         if (triggerPayload?.keyring_password_key) {
           payload["keyring_password_key"] = triggerPayload.keyring_password_key;
