@@ -1,0 +1,342 @@
+<svg viewBox="15 180 1425 415" style="width:100%;height:auto;overflow:visible;display:block">
+            <defs>
+              <filter id="hier-card-shadow" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+                <feDropShadow dx="3.18" dy="0" stdDeviation="4.96" flood-color="#000000" flood-opacity="0.28"/>
+              </filter>
+              <clipPath id="plate-clip-0"><rect x="0" y="340" width="310" height="560"/></clipPath>
+              <clipPath id="plate-clip-1"><rect x="290" y="340" width="300" height="560"/></clipPath>
+              <clipPath id="plate-clip-2"><rect x="580" y="340" width="300" height="560"/></clipPath>
+              <clipPath id="plate-clip-3"><rect x="865" y="340" width="300" height="560"/></clipPath>
+              <clipPath id="plate-clip-4"><rect x="1150" y="340" width="310" height="560"/></clipPath>
+              <filter id="hier-active-glow-0" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                <feOffset dx="20" dy="20"/>
+                <feGaussianBlur stdDeviation="50"/>
+                <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+                <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 0.682353 0 0 0 0 0 0 0 0 1 0"/>
+                <feBlend mode="normal" in2="shape" result="effect1_innerShadow"/>
+              </filter>
+              <filter id="hier-active-glow-1" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                <feOffset dx="10" dy="20"/>
+                <feGaussianBlur stdDeviation="50"/>
+                <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+                <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 0.682353 0 0 0 0 0 0 0 0 1 0"/>
+                <feBlend mode="normal" in2="shape" result="effect1_innerShadow"/>
+              </filter>
+              <filter id="hier-active-glow-2" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                <feOffset dx="0" dy="20"/>
+                <feGaussianBlur stdDeviation="50"/>
+                <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+                <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 0.682353 0 0 0 0 0 0 0 0 1 0"/>
+                <feBlend mode="normal" in2="shape" result="effect1_innerShadow"/>
+              </filter>
+              <filter id="hier-active-glow-3" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                <feOffset dx="-10" dy="20"/>
+                <feGaussianBlur stdDeviation="50"/>
+                <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+                <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 0.682353 0 0 0 0 0 0 0 0 1 0"/>
+                <feBlend mode="normal" in2="shape" result="effect1_innerShadow"/>
+              </filter>
+              <filter id="hier-active-glow-4" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                <feOffset dx="-20" dy="20"/>
+                <feGaussianBlur stdDeviation="50"/>
+                <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+                <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 0.682353 0 0 0 0 0 0 0 0 1 0"/>
+                <feBlend mode="normal" in2="shape" result="effect1_innerShadow"/>
+              </filter>
+              <filter id="hier-portrait-blur" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+                <feGaussianBlur stdDeviation="7.5"/>
+              </filter>
+              <filter id="hier-lock-glow" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+                <feDropShadow dx="0" dy="0" stdDeviation="22" flood-color="#FFF600" flood-opacity="0.95"/>
+              </filter>
+              <filter id="hier-dot-shadow" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="1" dy="1" stdDeviation="1" flood-color="#000000" flood-opacity="0.35"/>
+              </filter>
+              <linearGradient id="paint0_bg" x1="39" y1="204.9" x2="320.6" y2="253.9" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#ECECEC"/>
+                <stop offset="0.5" stop-color="#DADADA"/>
+                <stop offset="1" stop-color="#C5C5C5"/>
+              </linearGradient>
+              <linearGradient id="paint2_bg" x1="551.8" y1="239" x2="275" y2="297.9" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#ECECEC"/>
+                <stop offset="0.5" stop-color="#DADADA"/>
+                <stop offset="1" stop-color="#C5C5C5"/>
+              </linearGradient>
+              <radialGradient id="paint4_bg" cx="0" cy="0" r="1" gradientTransform="matrix(112.612 134.557 -112.612 472.483 727.953 389.701)" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#ECECEC"/>
+                <stop offset="0.55" stop-color="#D9D9D9"/>
+                <stop offset="1" stop-color="#C5C5C5"/>
+              </radialGradient>
+              <linearGradient id="paint3_bg" x1="902.9" y1="239" x2="1179.8" y2="297.9" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#C5C5C5"/>
+                <stop offset="0.5" stop-color="#DADADA"/>
+                <stop offset="1" stop-color="#ECECEC"/>
+              </linearGradient>
+              <linearGradient id="paint1_bg" x1="1416.4" y1="204.9" x2="1134.7" y2="253.9" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#C5C5C5"/>
+                <stop offset="0.5" stop-color="#DADADA"/>
+                <stop offset="1" stop-color="#ECECEC"/>
+              </linearGradient>
+              <linearGradient id="paint5_vig" x1="151.7" y1="398.0" x2="151.7" y2="562.0" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#000000" stop-opacity="0"/>
+                <stop offset="0.28" stop-color="#000000" stop-opacity="0.14"/>
+                <stop offset="0.58" stop-color="#000000" stop-opacity="0.52"/>
+                <stop offset="0.82" stop-color="#000000" stop-opacity="0.86"/>
+                <stop offset="1" stop-color="#000000" stop-opacity="0.98"/>
+              </linearGradient>
+              <linearGradient id="paint7_vig" x1="439.5" y1="395.0" x2="439.5" y2="532.0" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#000000" stop-opacity="0"/>
+                <stop offset="0.28" stop-color="#000000" stop-opacity="0.14"/>
+                <stop offset="0.58" stop-color="#000000" stop-opacity="0.52"/>
+                <stop offset="0.82" stop-color="#000000" stop-opacity="0.86"/>
+                <stop offset="1" stop-color="#000000" stop-opacity="0.98"/>
+              </linearGradient>
+              <linearGradient id="paint9_vig" x1="727.7" y1="394.0" x2="727.7" y2="518.0" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#000000" stop-opacity="0"/>
+                <stop offset="0.28" stop-color="#000000" stop-opacity="0.14"/>
+                <stop offset="0.58" stop-color="#000000" stop-opacity="0.52"/>
+                <stop offset="0.82" stop-color="#000000" stop-opacity="0.86"/>
+                <stop offset="1" stop-color="#000000" stop-opacity="0.98"/>
+              </linearGradient>
+              <linearGradient id="paint8_vig" x1="1015.3" y1="395.0" x2="1015.3" y2="532.0" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#000000" stop-opacity="0"/>
+                <stop offset="0.28" stop-color="#000000" stop-opacity="0.14"/>
+                <stop offset="0.58" stop-color="#000000" stop-opacity="0.52"/>
+                <stop offset="0.82" stop-color="#000000" stop-opacity="0.86"/>
+                <stop offset="1" stop-color="#000000" stop-opacity="0.98"/>
+              </linearGradient>
+              <linearGradient id="paint6_vig" x1="1303.7" y1="398.0" x2="1303.7" y2="562.0" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#000000" stop-opacity="0"/>
+                <stop offset="0.28" stop-color="#000000" stop-opacity="0.14"/>
+                <stop offset="0.58" stop-color="#000000" stop-opacity="0.52"/>
+                <stop offset="0.82" stop-color="#000000" stop-opacity="0.86"/>
+                <stop offset="1" stop-color="#000000" stop-opacity="0.98"/>
+              </linearGradient>
+              <pattern id="pat-char-0" patternContentUnits="objectBoundingBox" width="1" height="1">
+                <image href="assets/char_cutout_0.png" width="1.055" height="1" x="-0.027" y="0" preserveAspectRatio="none"/>
+              </pattern>
+              <pattern id="pat-char-1" patternContentUnits="objectBoundingBox" width="1" height="1">
+                <image href="assets/char_cutout_1.png" width="1" height="1" x="0" y="0" preserveAspectRatio="none"/>
+              </pattern>
+              <pattern id="pat-char-2" patternContentUnits="objectBoundingBox" width="1" height="1">
+                <image href="assets/char_cutout_2.png" width="1.066" height="1.069" x="-0.066" y="-0.035" preserveAspectRatio="none"/>
+              </pattern>
+              <pattern id="pat-char-3" patternContentUnits="objectBoundingBox" width="1" height="1">
+                <image href="assets/char_cutout_3.png" width="1.005" height="1" x="-0.002" y="0" preserveAspectRatio="none"/>
+              </pattern>
+              <pattern id="pat-char-4" patternContentUnits="objectBoundingBox" width="1" height="1">
+                <image href="assets/char_cutout_4.png" width="1.051" height="1" x="-0.025" y="0" preserveAspectRatio="none"/>
+              </pattern>
+            </defs>
+            <g class="hier-char-group" style="cursor:pointer" data-char-idx="0">
+              <g clip-path="url(#plate-clip-0)">
+                <g class="hier-plate-group">
+                  <image href="assets/char_0_plate.png" x="13.26" y="379.21" width="282.31" height="476.00" preserveAspectRatio="none"/>
+                  <g class="hier-plate-en-overlay">
+                    <g transform="matrix(0.994522 -0.104528 0 1 65.04 575.13)">
+                      <rect x="-6" y="-4" width="169.79" height="47.49" rx="5" fill="#DCDCDC"/>
+                      <text x="78.89" y="17.99" text-anchor="middle" fill="#050505" font-family="Geologica, Inter, sans-serif" font-size="17" font-weight="700">Access Level</text>
+                      <text x="78.89" y="32.24" text-anchor="middle" fill="#050505" font-family="Geologica, Inter, sans-serif" font-size="13" font-weight="600">(CRUD)</text>
+                    </g>
+                    <g transform="matrix(0.994522 -0.104528 0 1 59.13 637.61)">
+                      <rect x="-4" y="-5" width="102.87" height="27.76" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="13.50" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Create</text>
+                    </g>
+                    <g transform="matrix(0.994522 -0.104528 0 1 59.13 687.60)">
+                      <rect x="-4" y="-5" width="102.87" height="25.13" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="11.50" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Read</text>
+                    </g>
+                    <g transform="matrix(0.994522 -0.104528 0 1 59.13 735.61)">
+                      <rect x="-4" y="-5" width="102.87" height="27.76" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="13.50" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Update</text>
+                    </g>
+                    <g transform="matrix(0.994522 -0.104528 0 1 59.13 782.96)">
+                      <rect x="-4" y="-5" width="102.87" height="30.39" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="15.50" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Delete</text>
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <path d="M39.1214 277.442C39.0649 243.639 39.0366 226.737 49.8512 217.177C60.6658 207.617 77.436 209.718 110.976 213.921L208.774 226.174C235.468 229.519 248.815 231.191 256.814 240.272C264.812 249.352 264.787 262.804 264.738 289.706L264.369 489.192C264.319 515.877 264.295 529.219 256.355 538.245C248.415 547.271 235.184 548.996 208.724 552.447L111.671 565.104C78.1009 569.481 61.3157 571.67 50.4489 562.145C39.5822 552.619 39.5538 535.692 39.4971 501.838L39.1214 277.442Z" fill="url(#paint0_bg)" filter="url(#hier-card-shadow)"/>
+              <path class="hier-active-glow-layer" d="M39.1214 277.442C39.0649 243.639 39.0366 226.737 49.8512 217.177C60.6658 207.617 77.436 209.718 110.976 213.921L208.774 226.174C235.468 229.519 248.815 231.191 256.814 240.272C264.812 249.352 264.787 262.804 264.738 289.706L264.369 489.192C264.319 515.877 264.295 529.219 256.355 538.245C248.415 547.271 235.184 548.996 208.724 552.447L111.671 565.104C78.1009 569.481 61.3157 571.67 50.4489 562.145C39.5822 552.619 39.5538 535.692 39.4971 501.838L39.1214 277.442Z" fill="#E9E9E9" filter="url(#hier-active-glow-0)"/>
+              <path class="hier-portrait-layer" d="M39 284.412C39 254.281 39 239.216 48.3605 229.855C57.7209 220.495 72.7864 220.495 102.917 220.495H200.306C230.437 220.495 245.503 220.495 254.863 229.855C264.224 239.216 264.224 254.281 264.224 284.412V489.379C264.224 516.167 264.224 529.561 256.257 538.615C248.29 547.668 235.005 549.371 208.434 552.778L111.045 565.263C77.4766 569.567 60.6923 571.719 49.8461 562.174C39 552.63 39 535.708 39 501.865L39 284.412Z" fill="url(#pat-char-0)"/>
+              <path d="M39.1214 277.442C39.0649 243.639 39.0366 226.737 49.8512 217.177C60.6658 207.617 77.436 209.718 110.976 213.921L208.774 226.174C235.468 229.519 248.815 231.191 256.814 240.272C264.812 249.352 264.787 262.804 264.738 289.706L264.369 489.192C264.319 515.877 264.295 529.219 256.355 538.245C248.415 547.271 235.184 548.996 208.724 552.447L111.671 565.104C78.1009 569.481 61.3157 571.67 50.4489 562.145C39.5822 552.619 39.5538 535.692 39.4971 501.838L39.1214 277.442Z" fill="url(#paint5_vig)"/>
+              <text transform="matrix(0.994522 -0.104528 0 1 101.37 520.5)" fill="white" font-family="Geologica, Inter, sans-serif" font-size="23.1" font-weight="200">Manager</text>
+              <g class="hier-lock-group" filter="url(#hier-lock-glow)">
+                <image class="hier-lock-shackle" href="assets/lock_shackle.png" x="106.7" y="316" width="95.6" height="93.9"/>
+                <image href="assets/lock_body.png" x="105" y="355.3" width="99.1" height="88.7"/>
+              </g>
+              <g class="hier-peer-dots" data-dots-for="0" filter="url(#hier-dot-shadow)"></g>
+            </g>
+            <g class="hier-char-group" style="cursor:pointer" data-char-idx="1">
+              <g clip-path="url(#plate-clip-1)">
+                <g class="hier-plate-group">
+                  <image href="assets/char_1_plate.png" x="303.40" y="359.67" width="276.44" height="466.11" preserveAspectRatio="none"/>
+                  <g class="hier-plate-en-overlay">
+                    <g transform="matrix(0.99863 -0.052336 0 1 363.43 556.61)">
+                      <rect x="-6" y="-4" width="167.95" height="44.45" rx="5" fill="#DCDCDC"/>
+                      <text x="77.97" y="16.54" text-anchor="middle" fill="#050505" font-family="Geologica, Inter, sans-serif" font-size="17" font-weight="700">Access Level</text>
+                      <text x="77.97" y="29.63" text-anchor="middle" fill="#050505" font-family="Geologica, Inter, sans-serif" font-size="13" font-weight="600">(CRUD)</text>
+                    </g>
+                    <g transform="matrix(0.99863 -0.052336 0 1 357.58 614.47)">
+                      <rect x="-4" y="-5" width="101.92" height="26.25" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="12.35" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Create</text>
+                    </g>
+                    <g transform="matrix(0.99863 -0.052336 0 1 357.58 659.97)">
+                      <rect x="-4" y="-5" width="101.92" height="24.30" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="10.87" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Read</text>
+                    </g>
+                    <g transform="matrix(0.99863 -0.052336 0 1 357.58 704.82)">
+                      <rect x="-4" y="-5" width="101.92" height="25.60" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="11.86" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Update</text>
+                    </g>
+                    <g transform="matrix(0.99863 -0.052336 0 1 357.58 750.33)">
+                      <rect x="-4" y="-5" width="101.92" height="26.90" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="12.84" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Delete</text>
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <path d="M551.816 311.241C551.816 282.496 551.816 268.124 543.028 258.873C534.24 249.623 519.887 248.887 491.18 247.415L393.776 242.42C362.248 240.803 346.484 239.995 336.538 249.443C326.593 258.892 326.593 274.676 326.593 306.246V473.5C326.593 504.923 326.593 520.634 336.479 530.074C346.366 539.515 362.06 538.791 393.449 537.342L490.853 532.846C519.703 531.515 534.128 530.849 542.972 521.587C551.816 512.325 551.816 497.885 551.816 469.005V311.241Z" fill="url(#paint2_bg)" filter="url(#hier-card-shadow)"/>
+              <path class="hier-active-glow-layer" d="M551.816 311.241C551.816 282.496 551.816 268.124 543.028 258.873C534.24 249.623 519.887 248.887 491.18 247.415L393.776 242.42C362.248 240.803 346.484 239.995 336.538 249.443C326.593 258.892 326.593 274.676 326.593 306.246V473.5C326.593 504.923 326.593 520.634 336.479 530.074C346.366 539.515 362.06 538.791 393.449 537.342L490.853 532.846C519.703 531.515 534.128 530.849 542.972 521.587C551.816 512.325 551.816 497.885 551.816 469.005V311.241Z" fill="#E9E9E9" filter="url(#hier-active-glow-1)"/>
+              <path class="hier-portrait-layer" d="M326.593 269.397C326.593 239.266 326.593 224.201 335.954 214.84C345.314 205.48 360.38 205.48 390.511 205.48H487.9C518.03 205.48 533.096 205.48 542.456 214.84C551.817 224.201 551.817 239.266 551.817 269.397V469.419C551.817 498.37 551.817 512.846 542.943 522.115C534.069 531.384 519.607 532.014 490.683 533.275L393.294 537.52C361.971 538.886 346.309 539.568 336.451 530.131C326.593 520.693 326.593 505.017 326.593 473.664L326.593 269.397Z" fill="url(#pat-char-1)"/>
+              <path d="M551.816 311.241C551.816 282.496 551.816 268.124 543.028 258.873C534.24 249.623 519.887 248.887 491.18 247.415L393.776 242.42C362.248 240.803 346.484 239.995 336.538 249.443C326.593 258.892 326.593 274.676 326.593 306.246V473.5C326.593 504.923 326.593 520.634 336.479 530.074C346.366 539.515 362.06 538.791 393.449 537.342L490.853 532.846C519.703 531.515 534.128 530.849 542.972 521.587C551.816 512.325 551.816 497.885 551.816 469.005V311.241Z" fill="url(#paint7_vig)"/>
+              <text transform="matrix(0.99863 -0.052336 0 1 388.963 492.5)" fill="white" font-family="Geologica, Inter, sans-serif" font-size="23.1" font-weight="200">Accountant</text>
+              <g class="hier-lock-group" filter="url(#hier-lock-glow)">
+                <image class="hier-lock-shackle" href="assets/lock_shackle.png" x="397.7" y="316.5" width="95.6" height="93.9"/>
+                <image href="assets/lock_body.png" x="396" y="355.8" width="99.1" height="88.7"/>
+              </g>
+              <g class="hier-peer-dots" data-dots-for="1" filter="url(#hier-dot-shadow)"></g>
+            </g>
+            <g class="hier-char-group" style="cursor:pointer" data-char-idx="2">
+              <g clip-path="url(#plate-clip-2)">
+                <g class="hier-plate-group">
+                  <image href="assets/char_2_plate.png" x="594.04" y="349.18" width="274.90" height="463.50" preserveAspectRatio="none"/>
+                  <g class="hier-plate-en-overlay">
+                    <g transform="matrix(1 0 0 1 650.91 546.37)">
+                      <rect x="-6" y="-4" width="164.80" height="44.39" rx="5" fill="#DCDCDC"/>
+                      <text x="76.40" y="16.51" text-anchor="middle" fill="#050505" font-family="Geologica, Inter, sans-serif" font-size="17" font-weight="700">Access Level</text>
+                      <text x="76.40" y="29.58" text-anchor="middle" fill="#050505" font-family="Geologica, Inter, sans-serif" font-size="13" font-weight="600">(CRUD)</text>
+                    </g>
+                    <g transform="matrix(1 0 0 1 645.18 599.24)">
+                      <rect x="-4" y="-5" width="100.31" height="27.20" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="13.07" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Create</text>
+                    </g>
+                    <g transform="matrix(1 0 0 1 645.18 643.18)">
+                      <rect x="-4" y="-5" width="100.31" height="23.38" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="10.17" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Read</text>
+                    </g>
+                    <g transform="matrix(1 0 0 1 645.18 685.86)">
+                      <rect x="-4" y="-5" width="100.31" height="24.01" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="10.65" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Update</text>
+                    </g>
+                    <g transform="matrix(1 0 0 1 645.18 729.17)">
+                      <rect x="-4" y="-5" width="100.31" height="25.92" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="12.10" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Delete</text>
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <rect x="615.341" y="255.145" width="225.224" height="269.113" rx="31.9548" fill="url(#paint4_bg)" filter="url(#hier-card-shadow)"/>
+              <rect class="hier-active-glow-layer" x="615.341" y="255.145" width="225.224" height="269.113" rx="31.9548" fill="#E9E9E9" filter="url(#hier-active-glow-2)"/>
+              <rect class="hier-portrait-layer" x="615.341" y="187" width="225.224" height="337.258" rx="31.9586" fill="url(#pat-char-2)"/>
+              <rect x="615.341" y="255.145" width="225.224" height="269.113" rx="31.9548" fill="url(#paint9_vig)"/>
+              <text x="701.966" y="475.233" fill="white" font-family="Geologica, Inter, sans-serif" font-size="23.1" font-weight="200">CEO</text>
+              <g class="hier-lock-group" filter="url(#hier-lock-glow)">
+                <image class="hier-lock-shackle" href="assets/lock_shackle.png" x="678.7" y="316.5" width="95.6" height="93.9"/>
+                <image href="assets/lock_body.png" x="677" y="355.8" width="99.1" height="88.7"/>
+              </g>
+              <g class="hier-peer-dots" data-dots-for="2" filter="url(#hier-dot-shadow)"></g>
+            </g>
+            <g class="hier-char-group" style="cursor:pointer" data-char-idx="3">
+              <g clip-path="url(#plate-clip-3)">
+                <g class="hier-plate-group">
+                  <image href="assets/char_3_plate.png" x="880.63" y="357.57" width="276.81" height="466.73" preserveAspectRatio="none"/>
+                  <g class="hier-plate-en-overlay">
+                    <g transform="matrix(0.999229 0.0392598 0 1 940.41 550.63)">
+                      <rect x="-6" y="-4" width="167.95" height="46.40" rx="5" fill="#DCDCDC"/>
+                      <text x="77.97" y="17.47" text-anchor="middle" fill="#050505" font-family="Geologica, Inter, sans-serif" font-size="17" font-weight="700">Access Level</text>
+                      <text x="77.97" y="31.31" text-anchor="middle" fill="#050505" font-family="Geologica, Inter, sans-serif" font-size="13" font-weight="600">(CRUD)</text>
+                    </g>
+                    <g transform="matrix(0.999229 0.0392598 0 1 934.56 605.24)">
+                      <rect x="-4" y="-5" width="101.92" height="27.55" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="13.34" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Create</text>
+                    </g>
+                    <g transform="matrix(0.999229 0.0392598 0 1 934.56 650.09)">
+                      <rect x="-4" y="-5" width="101.92" height="24.95" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="11.36" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Read</text>
+                    </g>
+                    <g transform="matrix(0.999229 0.0392598 0 1 934.56 694.29)">
+                      <rect x="-4" y="-5" width="101.92" height="26.25" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="12.35" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Update</text>
+                    </g>
+                    <g transform="matrix(0.999229 0.0392598 0 1 934.56 738.49)">
+                      <rect x="-4" y="-5" width="101.92" height="27.55" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="13.34" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Delete</text>
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <path d="M902.935 311.241C902.935 282.496 902.935 268.124 911.723 258.873C920.51 249.623 934.864 248.887 963.571 247.415L1060.98 242.42C1092.5 240.803 1108.27 239.995 1118.21 249.443C1128.16 258.892 1128.16 274.676 1128.16 306.246V473.5C1128.16 504.923 1128.16 520.634 1118.27 530.074C1108.39 539.515 1092.69 538.791 1061.3 537.342L963.898 532.846C935.048 531.515 920.623 530.849 911.779 521.587C902.935 512.325 902.935 497.885 902.935 469.005V311.241Z" fill="url(#paint3_bg)" filter="url(#hier-card-shadow)"/>
+              <path class="hier-active-glow-layer" d="M902.935 311.241C902.935 282.496 902.935 268.124 911.723 258.873C920.51 249.623 934.864 248.887 963.571 247.415L1060.98 242.42C1092.5 240.803 1108.27 239.995 1118.21 249.443C1128.16 258.892 1128.16 274.676 1128.16 306.246V473.5C1128.16 504.923 1128.16 520.634 1118.27 530.074C1108.39 539.515 1092.69 538.791 1061.3 537.342L963.898 532.846C935.048 531.515 920.623 530.849 911.779 521.587C902.935 512.325 902.935 497.885 902.935 469.005V311.241Z" fill="#E9E9E9" filter="url(#hier-active-glow-3)"/>
+              <path class="hier-portrait-layer" d="M902.935 267.087C902.935 236.956 902.935 221.891 912.295 212.53C921.656 203.17 936.721 203.17 966.852 203.17H1064.24C1094.37 203.17 1109.44 203.17 1118.8 212.53C1128.16 221.891 1128.16 236.956 1128.16 267.087V473.492C1128.16 504.918 1128.16 520.632 1118.27 530.073C1108.38 539.515 1082.69 538.791 1061.29 537.342L963.905 532.847C935.052 531.515 920.625 530.849 911.78 521.586C902.935 512.323 902.935 497.881 902.935 468.997V267.087Z" fill="url(#pat-char-3)"/>
+              <path d="M902.935 311.241C902.935 282.496 902.935 268.124 911.723 258.873C920.51 249.623 934.864 248.887 963.571 247.415L1060.98 242.42C1092.5 240.803 1108.27 239.995 1118.21 249.443C1128.16 258.892 1128.16 274.676 1128.16 306.246V473.5C1128.16 504.923 1128.16 520.634 1118.27 530.074C1108.39 539.515 1092.69 538.791 1061.3 537.342L963.898 532.846C935.048 531.515 920.623 530.849 911.779 521.587C902.935 512.325 902.935 497.885 902.935 469.005V311.241Z" fill="url(#paint8_vig)"/>
+              <text transform="matrix(0.999229 0.0392598 0 1 949.134 486.5)" fill="white" font-family="Geologica, Inter, sans-serif" font-size="23.1" font-weight="200">Marketer</text>
+              <g class="hier-lock-group" filter="url(#hier-lock-glow)">
+                <image class="hier-lock-shackle" href="assets/lock_shackle.png" x="971.7" y="316.5" width="95.6" height="93.9"/>
+                <image href="assets/lock_body.png" x="970" y="355.8" width="99.1" height="88.7"/>
+              </g>
+              <g class="hier-peer-dots" data-dots-for="3" filter="url(#hier-dot-shadow)"></g>
+            </g>
+            <g class="hier-char-group" style="cursor:pointer" data-char-idx="4">
+              <g clip-path="url(#plate-clip-4)">
+                <g class="hier-plate-group">
+                  <image href="assets/char_4_plate.png" x="1167.31" y="376.51" width="280.07" height="472.22" preserveAspectRatio="none"/>
+                  <g class="hier-plate-en-overlay">
+                    <g transform="matrix(0.993068 0.117537 0 1 1227.79 560.00)">
+                      <rect x="-6" y="-4" width="169.79" height="48.80" rx="5" fill="#DCDCDC"/>
+                      <text x="78.89" y="18.63" text-anchor="middle" fill="#050505" font-family="Geologica, Inter, sans-serif" font-size="17" font-weight="700">Access Level</text>
+                      <text x="78.89" y="33.37" text-anchor="middle" fill="#050505" font-family="Geologica, Inter, sans-serif" font-size="13" font-weight="600">(CRUD)</text>
+                    </g>
+                    <g transform="matrix(0.993068 0.117537 0 1 1221.88 615.91)">
+                      <rect x="-4" y="-5" width="102.87" height="29.73" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="15.00" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Create</text>
+                    </g>
+                    <g transform="matrix(0.993068 0.117537 0 1 1221.88 663.26)">
+                      <rect x="-4" y="-5" width="102.87" height="27.76" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="13.50" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Read</text>
+                    </g>
+                    <g transform="matrix(0.993068 0.117537 0 1 1221.88 709.96)">
+                      <rect x="-4" y="-5" width="102.87" height="29.73" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="15.00" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Update</text>
+                    </g>
+                    <g transform="matrix(0.993068 0.117537 0 1 1221.88 756.65)">
+                      <rect x="-4" y="-5" width="102.87" height="31.05" rx="4" fill="#DEDEDE"/>
+                      <text x="3" y="15.99" fill="#111111" font-family="Geologica, Inter, sans-serif" font-size="13.5" font-weight="300">Delete</text>
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <path d="M1416.25 277.442C1416.31 243.639 1416.33 226.737 1405.52 217.177C1394.7 207.617 1377.93 209.718 1344.39 213.921L1246.6 226.174C1219.9 229.519 1206.56 231.191 1198.56 240.272C1190.56 249.352 1190.58 262.804 1190.63 289.706L1191 489.192C1191.05 515.877 1191.08 529.219 1199.02 538.245C1206.96 547.271 1220.19 548.996 1246.65 552.447L1343.7 565.104C1377.27 569.481 1394.05 571.67 1404.92 562.145C1415.79 552.619 1415.82 535.692 1415.87 501.838L1416.25 277.442Z" fill="url(#paint1_bg)" filter="url(#hier-card-shadow)"/>
+              <path class="hier-active-glow-layer" d="M1416.25 277.442C1416.31 243.639 1416.33 226.737 1405.52 217.177C1394.7 207.617 1377.93 209.718 1344.39 213.921L1246.6 226.174C1219.9 229.519 1206.56 231.191 1198.56 240.272C1190.56 249.352 1190.58 262.804 1190.63 289.706L1191 489.192C1191.05 515.877 1191.08 529.219 1199.02 538.245C1206.96 547.271 1220.19 548.996 1246.65 552.447L1343.7 565.104C1377.27 569.481 1394.05 571.67 1404.92 562.145C1415.79 552.619 1415.82 535.692 1415.87 501.838L1416.25 277.442Z" fill="#E9E9E9" filter="url(#hier-active-glow-4)"/>
+              <path class="hier-portrait-layer" d="M1190.53 284.412C1190.53 254.281 1190.53 239.216 1199.89 229.855C1209.25 220.495 1224.31 220.495 1254.44 220.495H1351.97C1382.14 220.495 1397.23 220.495 1406.59 229.871C1415.96 239.248 1415.93 254.333 1415.89 284.503L1415.58 501.094C1415.53 534.841 1415.51 551.714 1404.68 561.24C1393.86 570.766 1377.12 568.649 1343.64 564.414L1246.42 552.118C1219.81 548.751 1206.5 547.067 1198.51 538.009C1190.53 528.951 1190.53 515.536 1190.53 488.706V284.412Z" fill="url(#pat-char-4)"/>
+              <path d="M1416.25 277.442C1416.31 243.639 1416.33 226.737 1405.52 217.177C1394.7 207.617 1377.93 209.718 1344.39 213.921L1246.6 226.174C1219.9 229.519 1206.56 231.191 1198.56 240.272C1190.56 249.352 1190.58 262.804 1190.63 289.706L1191 489.192C1191.05 515.877 1191.08 529.219 1199.02 538.245C1206.96 547.271 1220.19 548.996 1246.65 552.447L1343.7 565.104C1377.27 569.481 1394.05 571.67 1404.92 562.145C1415.79 552.619 1415.82 535.692 1415.87 501.838L1416.25 277.442Z" fill="url(#paint6_vig)"/>
+              <text transform="matrix(0.993068 0.117537 0 1 1260.98 510.5)" fill="white" font-family="Geologica, Inter, sans-serif" font-size="23.1" font-weight="200">Team Lead</text>
+              <g class="hier-peer-dots" data-dots-for="4" filter="url(#hier-dot-shadow)"></g>
+            </g>
+          </svg>

@@ -2,46 +2,28 @@ import { Link } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActionIcon,
-  Badge,
-  Button,
-  Card,
-  Container,
-  Flex,
+  Burger,
+  Collapse,
+  Drawer,
   Group,
-  List,
   Menu,
-  Overlay,
+  Modal,
   SimpleGrid,
   Stack,
   Text,
-  ThemeIcon,
   Title,
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import {
-  IconDeviceMobileOff,
-  IconEyeOff,
-  IconDatabaseOff,
-  IconSitemap,
-  IconGridDots,
-  IconReportSearch,
-  IconBuildingStore,
-  IconWorld,
-  IconDeviceLaptop,
-  IconMessages,
-  IconTag,
-  IconKey,
-  IconLanguage,
+  IconArrowRight,
+  IconBrandAndroid,
+  IconBrandApple,
   IconCheck,
-  IconPlayerPlayFilled,
+  IconLanguage,
+  IconChevronRight,
   IconX,
-  IconUsersGroup,
-  IconRobot,
-  IconSparkles,
-  IconHourglass,
-  IconCalendarTime,
-  IconFileExport,
 } from "@tabler/icons-react";
 
 import classes from "./Home.module.css";
@@ -52,9 +34,294 @@ import { useAuthStore } from "../../store/auth/auth.store";
 import { useTranslation } from "../../store/language/language.store";
 import { ManageVideosService } from "../../api/services/manage.videos.service";
 import introVideoSrc from "../../assets/intro.mp4";
-import logo from "../../assets/logo.png";
+import BrandLogo from "../../component/brand/BrandLogo";
+import HierarchyStage from "./HierarchyStage";
 
 const HOME_INTRO_PAGE_NAME = "homepage-intro";
+const img = (name: string) =>
+  new URL(`../../assets/home/${name}`, import.meta.url).href;
+
+const scrollToId = (id: string) =>
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+
+const NAV = [
+  { id: "section-about", key: "navAbout", def: "About Project" },
+  { id: "section-download", key: "navDownload", def: "Download" },
+  { id: "section-security", key: "navSecurity", def: "Security" },
+  { id: "section-pricing", key: "navPricing", def: "Pricing" },
+  { id: "section-faq", key: "navSupport", def: "Support" },
+];
+
+const HERO_SLIDES = [
+  {
+    image: "hero_business.jpg",
+    tag: ["heroTagBusiness", "For Business"],
+    text: [
+      "heroTextBusiness",
+      "Role Hierarchy (CRUD): Management centrally assigns permissions and revokes employee access in one click. Safe AI: Tag-based workflow automation without the risk of leaking trade secrets to AI models.",
+    ],
+  },
+  {
+    image: "hero_family.jpg",
+    tag: ["heroTagFamily", "For Family"],
+    text: [
+      "heroTextFamily",
+      "Parental Control Without Spying: Parents view and restrict suspicious contacts without invading their child's private messages. Connect From Any Screen: A child can message parents from any computer or tablet if their phone battery dies. Zero Tracking: No ads, trackers, or selling of your family's location or interest data.",
+    ],
+  },
+  {
+    image: "hero_military.jpg",
+    tag: ["heroTagMilitary", "For Military"],
+    text: [
+      "heroTextMilitary",
+      "Zero-Footprint: Runs in the browser without installation. Close the tab — zero files or cache remain on the phone during inspection. SIM-Free & Socketless Anonymity: Registration without a phone number and communication without a persistent network trace. HQ Protection: If a device is lost, HQ instantly removes the soldier's node from the communication tree.",
+    ],
+  },
+];
+
+const CRUD = [
+  [
+    "C",
+    "Create",
+    "Registering a new user profile, creating a new chat room, or sending a new message in a dialogue",
+  ],
+  [
+    "R",
+    "Read",
+    "Loading message history in a selected chat, viewing active rooms, searching contacts, or opening a peer's profile",
+  ],
+  [
+    "U",
+    "Update",
+    "Editing an already sent message, updating status ('online' / 'typing...'), or changing an avatar or group title",
+  ],
+  [
+    "D",
+    "Delete",
+    "Deleting your own message (for yourself or everyone), closing a chat room, or deleting an account",
+  ],
+];
+
+const ABOUT_VIDEOS = [
+  [
+    "01",
+    "For Managers & Employees",
+    "Step-by-step video overview: how to work with client chats through the browser without installing third-party apps on a personal smartphone.",
+  ],
+  [
+    "02",
+    "Automation via Semantic Tags",
+    "How the isolated Hash (#) AI bot sorts orders and builds reports by tags (#HotLead, #UrgentDeal) without access to the text of your conversations.",
+  ],
+  [
+    "03",
+    "Building Department Structure",
+    "How to deploy a tree structure of a company or unit in 2 minutes and centrally configure CRUD roles.",
+  ],
+  [
+    "04",
+    "Fundamental Principles",
+    "Technical overview of Zero Device Footprint, True E2EE, Categorical Keyring and socketless data transfer protocols.",
+  ],
+];
+
+const STATS = [
+  [
+    "100%",
+    "Secure Connection (HTTPS / WSS)",
+    "End-to-end E2EE encryption of every data packet without storing keys on the server",
+  ],
+  [
+    "50,000",
+    "Daily Active Users",
+    "Corporate hubs, logistics teams, and defense units across Ukraine",
+  ],
+  [
+    "0.01 sec",
+    "To Wipe a Dialogue Without Traces",
+    "Instant session zeroing in device RAM on command or by closing the browser tab",
+  ],
+];
+
+const STORES = [
+  {
+    rating: "4.6",
+    reviews: "over 1,000,000 reviews",
+    title: "UKRCHAT for Android",
+    btn: "Download for Android",
+    icon: <IconBrandAndroid size={20} />,
+    phone: "phone_android.png",
+    cls: "storeA",
+  },
+  {
+    rating: "4.8",
+    reviews: "over 500,000 reviews",
+    title: "UKRCHAT for iPhone",
+    btn: "Download for iPhone",
+    icon: <IconBrandApple size={20} />,
+    phone: "phone_iphone.png",
+    cls: "storeB",
+  },
+];
+
+const SECURITY_CARDS = [
+  [
+    "sec_card_1.jpg",
+    "Isolated AI",
+    "AI helps sort and search, but physically has no access to the text of your conversations.",
+  ],
+  [
+    "sec_card_2.jpg",
+    "Socketless Architecture",
+    "Protection against network direction finding. Communication leaves no persistent radio-electronic signature.",
+  ],
+  ["sec_card_3.jpg", "", ""],
+];
+
+const SECURITY_PRINCIPLES: [string, string][] = [
+  [
+    "Client-Grade End-to-End Encryption (True E2EE)",
+    "Mathematical guarantee of privacy: only conversation participants hold the keys. The server cannot read messages even if requested.",
+  ],
+  [
+    "Categorical Keyring & Passkey",
+    "AI helps sort and search, but physically has zero access to the text of your conversations.",
+  ],
+  [
+    "Anonymous Identity Without SIM Binding",
+    "Your digital identity is never tied to a plastic SIM card or passport.",
+  ],
+  [
+    "Instant Hierarchical Offboarding (1-Click Revocation)",
+    "Instant access revocation: protect your unit or business assets in a single second.",
+  ],
+  [
+    "Full Data Sovereignty & No-Logs Policy",
+    "We don't know who you are, whom you talk to, or what about. Your data belongs solely to you.",
+  ],
+  [
+    "OTP (One-Time Password)",
+    "Sign in via One-Time Password (OTP): no permanent passwords to crack or forget. The single-use code verifies login and expires immediately.",
+  ],
+];
+
+const PARTNERS = [
+  "Diia",
+  "Luxoptica",
+  "Monobank",
+  "Nova Poshta",
+  "Silpo",
+  "DTEK",
+  "Ukrainska Pravda",
+];
+
+const PLANS = [
+  {
+    id: "free",
+    name: "Free",
+    sub: "Our starter plan",
+    mark: "FREE",
+    price: 0,
+    priceSub: "Free forever",
+    cta: "Sign Up",
+    tone: "blue",
+    features: [
+      "Personal & group chats",
+      "End-to-end E2EE encryption",
+      "Unlimited username accounts",
+      "Socketless & SIM-free communication",
+      "Access via any web browser",
+    ],
+  },
+  {
+    id: "business",
+    name: "Business",
+    sub: "Most essential features",
+    mark: "BUSINESS",
+    price: 2,
+    priceSub: "Per user per month",
+    cta: "Subscribe",
+    tone: "dark",
+    features: [
+      "Everything in (Free)",
+      "OTP registration",
+      "Instant access revocation",
+      "Database export lock",
+      "Core roles & permissions",
+      "Hierarchy (up to 100 accounts)",
+    ],
+  },
+  {
+    id: "max",
+    name: "Maximum",
+    sub: "All features unlocked",
+    mark: "MAX",
+    price: 5,
+    priceSub: "Per user per month",
+    cta: "Subscribe",
+    tone: "blue",
+    features: [
+      "Everything in (Business)",
+      "Full granular CRUD permission matrix",
+      "AI integration via Keyring",
+      "Forced in-memory RAM session",
+      "Centralized monitoring",
+      "Unlimited hierarchy & branches",
+    ],
+  },
+];
+
+const FAQ = [
+  [
+    "What does 'Zero-Footprint' mean?",
+    "Zero Device Footprint means the messenger runs directly in your browser without installing apps. As soon as you close the browser tab, the session in RAM is immediately zeroed out — leaving zero files, cache, or databases on the device.",
+  ],
+  [
+    "How is UKRchat different from Signal or Telegram?",
+    "UKRchat is built around a centralized role hierarchy (CRUD): accounts and client databases belong to the organization, the 'Delete' button can be disabled for staff, no SIM card is required to register, and AI bots are isolated by the Categorical Keyring system.",
+  ],
+  [
+    "Is a SIM card required for registration?",
+    "No. Your digital identity in UKRchat is not tied to a plastic SIM card or passport. Work accounts are generated by username and One-Time Password (OTP) in one click.",
+  ],
+  [
+    "How does AI help if messages are encrypted?",
+    "Thanks to Categorical Keyring technology, the Hash (#) AI assistant only sees permitted semantic tags (#HotLead, #Urgent, #Payment) to sort chats and build reports, but physically lacks the cryptographic keys to read your message text or view photos.",
+  ],
+  [
+    "What happens when an employee leaves or a phone is lost?",
+    "Instant hierarchical offboarding (1-Click Revocation) is triggered: an administrator or HQ revokes node access in one click. The session closes in 0.01 sec, keeping all dialogue history and client records safe.",
+  ],
+];
+
+const FOOTER_COLS: [string, [string, string][]][] = [
+  [
+    "Product",
+    [
+      ["CRUD Hierarchy", "section-hierarchy"],
+      ["Zero-Footprint Browser", "section-security"],
+      ["Isolated AI (Keyring)", "section-security"],
+      ["Team Pricing", "section-pricing"],
+    ],
+  ],
+  [
+    "Download",
+    [
+      ["iOS (App Store)", "section-download"],
+      ["Android (Google Play)", "section-download"],
+      ["Web Client (No Traces)", "section-security"],
+      ["API Documentation", "section-about"],
+    ],
+  ],
+  [
+    "Information",
+    [
+      ["About Project", "section-about"],
+      ["FAQ", "section-faq"],
+      ["Support", "section-faq"],
+    ],
+  ],
+];
 
 export default function Home() {
   const {
@@ -65,807 +332,847 @@ export default function Home() {
     isLoaded,
     isLoadingLanguage,
   } = useTranslation();
+  const t = (key: string, def: string) => translation(`home-page.${key}`, def);
 
-  const { startLogin, enterWithStoredTokens, loggingIn } = useLogin();
+  const { startLogin, enterWithStoredTokens } = useLogin();
   const hasStoredTokens = useAuthStore(
     (s) => !!s.accessToken && !!s.refreshToken,
   );
+  const isMobile = useMediaQuery("(max-width: 62em)");
 
   useEffect(() => {
     if (hasStoredTokens) void enterWithStoredTokens();
   }, [hasStoredTokens, enterWithStoredTokens]);
 
-  const [videoOpen, setVideoOpen] = useState(false);
-  const videoOverlayRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
   const [introVideoUrl, setIntroVideoUrl] = useState<string>(introVideoSrc);
-  const [introVideoLoading, setIntroVideoLoading] = useState(true);
+  const [secOpen, setSecOpen] = useState(false);
+  const [video, setVideo] = useState<{ title: string; desc: string } | null>(
+    null,
+  );
 
   useEffect(() => {
     let cancelled = false;
-
     (async () => {
       try {
         const videos = await ManageVideosService.list(HOME_INTRO_PAGE_NAME);
         const featured = videos
           .filter((v) => v.s3_link)
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[0];
-
-        if (!cancelled && featured?.s3_link) {
-          setIntroVideoUrl(featured.s3_link);
-        }
+        if (!cancelled && featured?.s3_link) setIntroVideoUrl(featured.s3_link);
       } catch (err) {
         console.error("Could not load homepage intro video:", err);
-      } finally {
-        if (!cancelled) setIntroVideoLoading(false);
       }
     })();
-
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const openIntroVideo = () => setVideoOpen(true);
-  const closeIntroVideo = () => setVideoOpen(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const go = (id: string) => {
+    setDrawerOpen(false);
+    scrollToId(id);
+  };
 
-  useEffect(() => {
-    if (!videoOpen) return;
+  /* ---------- hero: infinite sliding track ---------- */
+  const N = HERO_SLIDES.length;
+  const track = [HERO_SLIDES[N - 1], ...HERO_SLIDES, HERO_SLIDES[0]];
+  const [pos, setPos] = useState(1);
+  const [animate, setAnimate] = useState(true);
+  const active = (pos - 1 + N) % N;
 
-    document.body.style.overflow = "hidden";
-
-    const el = videoOverlayRef.current;
-    if (el?.requestFullscreen) {
-      el.requestFullscreen().catch(() => {});
+  const next = () => {
+    setAnimate(true);
+    setPos((p) => p + 1);
+  };
+  const goTo = (i: number) => {
+    setAnimate(true);
+    setPos(i + 1);
+  };
+  const onTrackEnd = () => {
+    if (pos === N + 1) {
+      setAnimate(false);
+      setPos(1);
+    } else if (pos === 0) {
+      setAnimate(false);
+      setPos(N);
     }
+  };
+  useEffect(() => {
+    const timer = window.setInterval(next, 7000);
+    return () => window.clearInterval(timer);
+  }, [pos]);
 
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeIntroVideo();
-    };
-    const onFullscreenChange = () => {
-      if (!document.fullscreenElement) closeIntroVideo();
-    };
+  const [yearly, setYearly] = useState(false);
+  const priceOf = (p: number) =>
+    yearly ? `${+(p * 0.7).toFixed(1)}$` : `${p}$`;
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-    window.addEventListener("keydown", onKeyDown);
-    document.addEventListener("fullscreenchange", onFullscreenChange);
+  const [hierActive, setHierActive] = useState(false);
 
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("fullscreenchange", onFullscreenChange);
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
-      }
-    };
-  }, [videoOpen]);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const els = rootRef.current?.querySelectorAll("[data-reveal]");
+    if (!els) return;
+    const io = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add(classes.visible);
+            io.unobserve(e.target);
+          }
+        }),
+      { threshold: 0.12 },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
 
   const availableLanguages: [string, string][] = Object.entries(
     languages || {},
   ).filter((entry): entry is [string, string] => typeof entry[1] === "string");
 
+  const reveal = { "data-reveal": true, className: classes.reveal } as const;
+
   return (
-    <div className={classes.page}>
-      <div className={classes.hero} style={{ position: "relative" }}>
-        <Overlay
-          gradient="linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, .75) 55%)"
-          opacity={1}
-          zIndex={0}
-        />
+    <div
+      className={`${classes.page} ${hierActive ? classes.hierBlur : ""}`}
+      ref={rootRef}
+    >
+      <header className={classes.header}>
+        <div className={classes.headerInner}>
+          <UnstyledButton
+            className={classes.logoBtn}
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            aria-label="UKRCHAT"
+          >
+            <BrandLogo size={26} className={classes.logoIcon} />
+            <span className={classes.logoText}>UKRCHAT</span>
+          </UnstyledButton>
 
-        <div
-          style={{
-            position: "absolute",
-            top: 18,
-            right: 22,
-            zIndex: 10,
-          }}
-        >
-          <Menu shadow="md" width={160} position="bottom-end" withinPortal>
-            <Menu.Target>
-              <Tooltip
-                label={translation(
-                  "home-page.txtChangeLanguage",
-                  "Change Language",
-                )}
-                position="left"
-                withArrow
-              >
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="lg"
-                  radius="xl"
-                  loading={
-                    (!isLoaded && availableLanguages.length === 0) ||
-                    isLoadingLanguage
-                  }
-                  aria-label={translation(
-                    "home-page.txtSelectLanguage",
-                    "Select Language",
-                  )}
-                  style={{
-                    backgroundColor: "rgba(20, 20, 30, 0.45)",
-                    color: "#ffffff",
-                  }}
+          {!isMobile && (
+            <nav className={classes.nav}>
+              {NAV.map((n) => (
+                <UnstyledButton
+                  key={n.id}
+                  className={classes.navLink}
+                  onClick={() => go(n.id)}
                 >
-                  <IconLanguage size={22} />
-                </ActionIcon>
-              </Tooltip>
-            </Menu.Target>
+                  {t(n.key, n.def)}
+                </UnstyledButton>
+              ))}
+            </nav>
+          )}
 
-            <Menu.Dropdown>
-              <Menu.Label>
-                {translation("home-page.txtSelectLanguage", "Select Language")}
-              </Menu.Label>
-              {availableLanguages.length > 0 ? (
-                availableLanguages.map(([code, label]) => (
-                  <Menu.Item
-                    key={code}
-                    onClick={() => setLanguage(code)}
-                    rightSection={
-                      currentLang === code ? (
-                        <IconCheck
-                          size={16}
-                          color="var(--mantine-color-indigo-6)"
-                        />
-                      ) : null
+          <Group gap="xs" wrap="nowrap">
+            <Menu shadow="md" width={160} position="bottom-end" withinPortal>
+              <Menu.Target>
+                <Tooltip
+                  label={t("txtChangeLanguage", "Change Language")}
+                  position="bottom"
+                  withArrow
+                >
+                  <ActionIcon
+                    variant="subtle"
+                    size="lg"
+                    radius="xl"
+                    className={classes.headerIcon}
+                    loading={
+                      (!isLoaded && availableLanguages.length === 0) ||
+                      isLoadingLanguage
                     }
-                    fw={currentLang === code ? 700 : 400}
+                    aria-label={t("txtSelectLanguage", "Select Language")}
                   >
-                    {label}
+                    <IconLanguage size={20} />
+                  </ActionIcon>
+                </Tooltip>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Label>
+                  {t("txtSelectLanguage", "Select Language")}
+                </Menu.Label>
+                {availableLanguages.length > 0 ? (
+                  availableLanguages.map(([code, label]) => (
+                    <Menu.Item
+                      key={code}
+                      onClick={() => setLanguage(code)}
+                      rightSection={
+                        currentLang === code ? (
+                          <IconCheck
+                            size={16}
+                            color="var(--mantine-color-indigo-6)"
+                          />
+                        ) : null
+                      }
+                      fw={currentLang === code ? 700 : 400}
+                    >
+                      {label}
+                    </Menu.Item>
+                  ))
+                ) : (
+                  <Menu.Item disabled>
+                    {t("txtLoadingLanguages", "Loading languages...")}
                   </Menu.Item>
-                ))
-              ) : (
-                <Menu.Item disabled>
-                  {translation(
-                    "home-page.txtLoadingLanguages",
-                    "Loading languages...",
-                  )}
-                </Menu.Item>
-              )}
-            </Menu.Dropdown>
-          </Menu>
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            top: 18,
-            left: 22,
-            zIndex: 10,
-          }}
-        >
-          <Group gap="sm" align="center" wrap="nowrap">
-            <img src={logo} alt="Ukrchat logo" className={classes.brandLogo} />
-            <Text className={classes.brand}>Ukrchat.com</Text>
-          </Group>
-        </div>
-        <Container
-          size="md"
-          className={classes.heroContent}
-          style={{ zIndex: 1 }}
-        >
-          <Text className={classes.eyebrow}>
-            {translation(
-              "home-page.txtEyebrowMsg2",
-              "Messenger for road warriors!",
-            )}
-          </Text>
-          <Title className={classes.title}>
-            {translation(
-              "home-page.txtTitleMsg2",
-              "All your messenger accounts in one secure hub.",
-            )}
-          </Title>
-          <Text className={classes.description} size="xl" mt="lg">
-            {translation(
-              "home-page.txtDescriptionMsg2",
-              "Tired of carrying multiple phones? Create all your messenger accounts in one hub — access it from any browser or using an app, without tying your account to any specific device.",
-            )}
-          </Text>
-
-          <Group mt="xl" gap="lg" align="center">
-            <Group gap="md" wrap="wrap">
-              <Button
-                component={Link}
-                to={ROUTES.REGISTER}
-                variant="gradient"
-                size="xl"
-                radius="xl"
-                className={classes.control}
-              >
-                {translation("home-page.btnCreateHub", "Create Your Hub")}
-              </Button>
-              <Button
-                component="a"
-                href={COGNITO_LOGIN_URL}
-                onClick={startLogin}
-                loading={loggingIn}
-                variant="outline"
-                color="gray"
-                size="xl"
-                radius="xl"
-                className={classes.control}
-                style={{
-                  color: "#ffffff",
-                  borderColor: "rgba(255,255,255,0.6)",
-                }}
-              >
-                {translation("home-page.btnLogin", "Login")}
-              </Button>
-            </Group>
-
-            <Group gap={10} align="center" wrap="nowrap">
-              <UnstyledButton
-                onClick={openIntroVideo}
-                className={classes.introVideoBtn}
-                aria-label={translation(
-                  "home-page.ariaWatchIntro",
-                  "Watch intro video",
                 )}
-                disabled={introVideoLoading}
-              >
-                <IconPlayerPlayFilled size={16} />
-              </UnstyledButton>
-              <UnstyledButton
-                onClick={openIntroVideo}
-                className={classes.introVideoLabel}
-              >
-                {translation("home-page.txtWatchIntro", "Watch Intro")}
-              </UnstyledButton>
-            </Group>
-          </Group>
-        </Container>
-      </div>
+              </Menu.Dropdown>
+            </Menu>
 
-      {videoOpen && (
-        <div
-          ref={videoOverlayRef}
-          className={classes.videoOverlay}
-          onClick={closeIntroVideo}
-        >
-          <button
-            type="button"
-            className={classes.videoCloseBtn}
-            onClick={(e) => {
-              e.stopPropagation();
-              closeIntroVideo();
-            }}
-            aria-label={translation("home-page.ariaCloseVideo", "Close video")}
-          >
-            <IconX size={22} />
-          </button>
-          <video
-            ref={videoRef}
-            className={classes.videoPlayer}
-            src={introVideoUrl}
-            controls
-            autoPlay
-            playsInline
-            onClick={(e) => e.stopPropagation()}
-          >
-            {translation(
-              "home-page.txtVideoNotSupported",
-              "Your browser does not support embedded videos.",
-            )}
-          </video>
-        </div>
-      )}
-
-      <div className={classes.altSection}>
-        <Container size="lg">
-          <Badge variant="light" size="lg" radius="sm" mb="md">
-            {translation("home-page.badgePaidService", "Paid Service")}
-          </Badge>
-          <Title order={2} className={classes.sectionTitle} mb="md">
-            {translation(
-              "home-page.txtHierarchicalTitle2",
-              "World's first hierarchical messenger",
-            )}
-          </Title>
-          <Text c="dimmed" size="lg" maw={640} mb="xl">
-            {translation(
-              "home-page.txtHierarchicalDesc",
-              "Create hierarchical accounts and manage them centrally — built for companies, sales teams, and families alike.",
-            )}
-          </Text>
-
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xl">
-            <List spacing="md" size="sm" center>
-              <List.Item
-                icon={
-                  <ThemeIcon radius="xl" size={28} variant="light">
-                    <IconSitemap size={16} />
-                  </ThemeIcon>
-                }
-              >
-                {translation(
-                  "home-page.listItem1",
-                  "Companies can create hierarchical accounts for employees, monitored centrally from one place.",
-                )}
-              </List.Item>
-              <List.Item
-                icon={
-                  <ThemeIcon radius="xl" size={28} variant="light">
-                    <IconGridDots size={16} />
-                  </ThemeIcon>
-                }
-              >
-                {translation(
-                  "home-page.listItem2b",
-                  "Set granular CRUD (Create/Read/Update/Delete) permissions for every account using a permissions grid.",
-                )}
-              </List.Item>
-            </List>
-
-            <List spacing="md" size="sm" center>
-              <List.Item
-                icon={
-                  <ThemeIcon radius="xl" size={28} variant="light">
-                    <IconReportSearch size={16} />
-                  </ThemeIcon>
-                }
-              >
-                {translation(
-                  "home-page.listItem3b",
-                  "Comprehensive search and reporting tools to monitor every account in your hierarchy.",
-                )}
-              </List.Item>
-              <List.Item
-                icon={
-                  <ThemeIcon radius="xl" size={28} variant="light">
-                    <IconBuildingStore size={16} />
-                  </ThemeIcon>
-                }
-              >
-                {translation(
-                  "home-page.listItem4b",
-                  "Manage sales channels and supply chains — or let parents oversee accounts for their children's safety.",
-                )}
-              </List.Item>
-            </List>
-          </SimpleGrid>
-        </Container>
-      </div>
-
-      <Container size="lg" className={classes.section}>
-        <Stack gap="xl">
-          <Card
-            withBorder
-            radius="md"
-            padding="lg"
-            className={classes.featureCard}
-          >
-            <Flex
-              direction={{ base: "column", sm: "row" }}
-              align="flex-start"
-              gap="lg"
-            >
-              <ThemeIcon
-                size={44}
-                radius="md"
-                variant="light"
-                className={classes.featureIcon}
-                style={{ flexShrink: 0 }}
-              >
-                <IconUsersGroup size={22} />
-              </ThemeIcon>
-              <div>
-                <Text fw={700} size="lg" mb={6}>
-                  {translation(
-                    "home-page.unlimitedTitle",
-                    "Create unlimited accounts based on usernames or phone numbers",
-                  )}
-                </Text>
-                <Text size="sm" c="dimmed" mb="sm">
-                  {translation(
-                    "home-page.unlimitedDesc1",
-                    "You can create an unlimited number of username-based accounts in your hub. You can also create an unlimited number of phone-number-based accounts, as long as you own the phone number and can receive the confirmation one-time password (OTP).",
-                  )}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  {translation(
-                    "home-page.unlimitedDesc2",
-                    "Phone-number-based accounts are currently available only in Ukraine, Moldova and Romania. Any reported abuse will result in account suspension in accordance with applicable laws.",
-                  )}
-                </Text>
-              </div>
-            </Flex>
-          </Card>
-
-          <Card
-            withBorder
-            radius="md"
-            padding="lg"
-            className={classes.featureCard}
-          >
-            <Flex
-              direction={{ base: "column", sm: "row" }}
-              align="flex-start"
-              gap="lg"
-            >
-              <ThemeIcon
-                size={44}
-                radius="md"
-                variant="light"
-                className={classes.featureIcon}
-                style={{ flexShrink: 0 }}
-              >
-                <IconRobot size={22} />
-              </ThemeIcon>
-              <div>
-                <Text fw={700} size="lg" mb={6}>
-                  {translation(
-                    "home-page.aiTitle",
-                    "Control AI agents using tags and a categorical keyring",
-                  )}
-                </Text>
-                <Text size="sm" c="dimmed" mb="sm">
-                  {translation(
-                    "home-page.aiDesc1",
-                    "Lock individual messages with a passkey so that only authorized AI agents (bots) can access them. This lets you use AI tools securely while selectively restricting their access to your message contents.",
-                  )}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  {translation(
-                    "home-page.aiDesc2",
-                    "An AI agent can read your tags, but it cannot open and read your messages (when the categorical keyring feature is used properly).",
-                  )}
-                </Text>
-              </div>
-            </Flex>
-          </Card>
-        </Stack>
-      </Container>
-
-      <div className={classes.altSection}>
-        <Container size="lg">
-          <Title order={2} className={classes.sectionTitle} mb="md">
-            {translation(
-              "home-page.txtSecuredTitle",
-              "Secured Digital Identity",
-            )}
-          </Title>
-          <Text c="dimmed" size="lg" maw={640} mb="xl">
-            {translation(
-              "home-page.txtSecuredDesc2",
-              "Optionally, you can access your account from any browser — ideal for soldiers on the front sending messages to their loved ones.",
-            )}
-          </Text>
-
-          <SimpleGrid
-            cols={{ base: 1, sm: 2, md: 3 }}
-            spacing="xl"
-            style={{ paddingInline: "calc(var(--mantine-spacing-lg) + 1px)" }}
-          >
-            <div>
-              <ThemeIcon
-                size={40}
-                radius="md"
-                variant="light"
-                className={classes.featureIcon}
-              >
-                <IconWorld size={20} />
-              </ThemeIcon>
-              <Text fw={700} size="lg" mt="md" mb={6}>
-                {translation("home-page.feature1_title2", "Browser Access")}
-              </Text>
-              <Text size="sm" c="dimmed">
-                {translation(
-                  "home-page.feature1_desc",
-                  "No app download required — ideal for privacy-conscious people and travellers.",
-                )}
-              </Text>
-            </div>
-
-            <div>
-              <ThemeIcon
-                size={40}
-                radius="md"
-                variant="light"
-                className={classes.featureIcon}
-              >
-                <IconDeviceLaptop size={20} />
-              </ThemeIcon>
-              <Text fw={700} size="lg" mt="md" mb={6}>
-                {translation("home-page.feature2_title", "No Device Risk")}
-              </Text>
-              <Text size="sm" c="dimmed">
-                {translation(
-                  "home-page.feature2_desc",
-                  "Nothing installed on your phone means no risk if it's lost or stolen. Just close the browser and clear the cache when done.",
-                )}
-              </Text>
-            </div>
-
-            <div>
-              <ThemeIcon
-                size={40}
-                radius="md"
-                variant="light"
-                className={classes.featureIcon}
-              >
-                <IconKey size={20} />
-              </ThemeIcon>
-              <Text fw={700} size="lg" mt="md" mb={6}>
-                {translation("home-page.feature5_title", "Passkey Locking")}
-              </Text>
-              <Text size="sm" c="dimmed">
-                {translation(
-                  "home-page.feature5_desc",
-                  "Lock your accounts with a passkey to restrict access to only your known contacts.",
-                )}
-              </Text>
-            </div>
-          </SimpleGrid>
-        </Container>
-      </div>
-
-      <Container size="lg" className={classes.section}>
-        <Title order={2} className={classes.sectionTitle} mb="xl">
-          {translation("home-page.txtMessagingTitle", "Messaging Features")}
-        </Title>
-
-        <SimpleGrid
-          cols={{ base: 1, sm: 2, md: 3 }}
-          spacing="xl"
-          style={{ paddingInline: "calc(var(--mantine-spacing-lg) + 1px)" }}
-        >
-          <div>
-            <ThemeIcon
-              size={40}
-              radius="md"
-              variant="light"
-              className={classes.featureIcon}
-            >
-              <IconMessages size={20} />
-            </ThemeIcon>
-            <Text fw={700} size="lg" mt="md" mb={6}>
-              {translation("home-page.feature3_title", "DMs and Groups")}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {translation(
-                "home-page.feature3_desc",
-                "Both direct messaging and groups are fully supported, side by side.",
-              )}
-            </Text>
-          </div>
-
-          <div>
-            <ThemeIcon
-              size={40}
-              radius="md"
-              variant="light"
-              className={classes.featureIcon}
-            >
-              <IconTag size={20} />
-            </ThemeIcon>
-            <Text fw={700} size="lg" mt="md" mb={6}>
-              {translation("home-page.feature4_title2", "Tag Your Messages")}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {translation(
-                "home-page.feature4_desc2",
-                "Tag your favorite chats for faster searching and effortless archiving. Control AI agents (bots) using tags.",
-              )}
-            </Text>
-          </div>
-
-          <div>
-            <ThemeIcon
-              size={40}
-              radius="md"
-              variant="light"
-              className={classes.featureIcon}
-            >
-              <IconHourglass size={20} />
-            </ThemeIcon>
-            <Text fw={700} size="lg" mt="md" mb={6}>
-              {translation("home-page.feature7_title", "Disappearing Messages")}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {translation(
-                "home-page.feature7_desc",
-                "Configure both DMs and groups with messages that automatically disappear after a set duration.",
-              )}
-            </Text>
-          </div>
-
-          <div>
-            <ThemeIcon
-              size={40}
-              radius="md"
-              variant="light"
-              className={classes.featureIcon}
-            >
-              <IconCalendarTime size={20} />
-            </ThemeIcon>
-            <Text fw={700} size="lg" mt="md" mb={6}>
-              {translation("home-page.feature8_title", "Scheduled Messages")}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {translation(
-                "home-page.feature8_desc",
-                "Create a scheduled message list to send messages on a future date (one time, daily, weekly or monthly).",
-              )}
-            </Text>
-          </div>
-
-          <div>
-            <ThemeIcon
-              size={40}
-              radius="md"
-              variant="light"
-              className={classes.featureIcon}
-            >
-              <IconFileExport size={20} />
-            </ThemeIcon>
-            <Text fw={700} size="lg" mt="md" mb={6}>
-              {translation("home-page.feature9_title", "Chat Exports")}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {translation(
-                "home-page.feature9_desc",
-                "Conveniently download your chats, with or without media, to access and analyze when offline.",
-              )}
-            </Text>
-          </div>
-
-          <div>
-            <ThemeIcon
-              size={40}
-              radius="md"
-              variant="light"
-              className={classes.featureIcon}
-            >
-              <IconSparkles size={20} />
-            </ThemeIcon>
-            <Text fw={700} size="lg" mt="md" mb={6}>
-              {translation("home-page.feature6_title", "And Much More")}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {translation(
-                "home-page.feature6_desc2",
-                "This is just the start — your hub keeps growing with new, secure ways to stay connected.",
-              )}
-            </Text>
-          </div>
-        </SimpleGrid>
-      </Container>
-
-      <div className={classes.altSection}>
-        <Container size="lg">
-          <Title order={2} className={classes.sectionTitle} mb="xl">
-            {translation("home-page.txtKeyFeaturesTitle", "Key Features")}
-          </Title>
-          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="xl">
-            <Card
-              withBorder
-              radius="md"
-              padding="lg"
-              className={classes.featureCard}
-            >
-              <ThemeIcon
-                size={44}
-                radius="md"
-                variant="light"
-                className={classes.featureIcon}
-              >
-                <IconDeviceMobileOff size={22} />
-              </ThemeIcon>
-              <Text fw={700} mt="md" mb={4}>
-                {translation(
-                  "home-page.card1_label2",
-                  "Communicate without Phone or Email",
-                )}
-              </Text>
-              <Text size="sm" c="dimmed">
-                {translation(
-                  "home-page.card1_desc2",
-                  "Add usernames to your registered hub account without handing over a phone number or email address. Access your data in multiple ways, never tied to one device.",
-                )}
-              </Text>
-            </Card>
-
-            <Card
-              withBorder
-              radius="md"
-              padding="lg"
-              className={classes.featureCard}
-            >
-              <ThemeIcon
-                size={44}
-                radius="md"
-                variant="light"
-                className={classes.featureIcon}
-              >
-                <IconDatabaseOff size={22} />
-              </ThemeIcon>
-              <Text fw={700} mt="md" mb={4}>
-                {translation(
-                  "home-page.card2_label",
-                  "Your Data Belongs to You",
-                )}
-              </Text>
-              <Text size="sm" c="dimmed">
-                {translation(
-                  "home-page.card2_desc2",
-                  "Unlike other messengers, your accounts aren't locked to a specific device. You have complete, secure access to all your data at all times, and you can download it all on a PC whenever you want.",
-                )}
-              </Text>
-            </Card>
-
-            <Card
-              withBorder
-              radius="md"
-              padding="lg"
-              className={classes.featureCard}
-            >
-              <ThemeIcon
-                size={44}
-                radius="md"
-                variant="light"
-                className={classes.featureIcon}
-              >
-                <IconEyeOff size={22} />
-              </ThemeIcon>
-              <Text fw={700} mt="md" mb={4}>
-                {translation(
-                  "home-page.card3_label",
-                  "Zero Tracking, Real Encryption",
-                )}
-              </Text>
-              <Text size="sm" c="dimmed">
-                {translation(
-                  "home-page.card3_desc2",
-                  "Every message is end-to-end encrypted. Zero tracking, zero monitoring — and we never sell your data, because we don't have access to it. We don't use sockets to connect to your device, to protect your privacy and security.",
-                )}
-              </Text>
-            </Card>
-          </SimpleGrid>
-        </Container>
-      </div>
-
-      <div className={classes.ctaSection}>
-        <Container size="sm" className={classes.ctaContent}>
-          <Title order={2} className={classes.ctaTitle} mb="sm">
-            {translation(
-              "home-page.ctaTitle2",
-              "Ready to create your hub account?",
-            )}
-          </Title>
-          <Text c="dimmed" mb="xl">
-            {translation(
-              "home-page.ctaDesc2",
-              "Set up your account instantly.",
-            )}
-          </Text>
-          <Group justify="center">
-            <Button
-              component={Link}
-              to={ROUTES.REGISTER}
-              variant="gradient"
-              size="xl"
-              radius="xl"
-              className={classes.control}
-            >
-              {translation("home-page.btnCreateHub", "Create Your Hub")}
-            </Button>
-            <Button
-              component="a"
+            <a
               href={COGNITO_LOGIN_URL}
               onClick={startLogin}
-              loading={loggingIn}
-              variant="default"
-              size="xl"
-              radius="xl"
-              className={classes.control}
+              className={classes.loginBtn}
             >
-              {translation("home-page.btnLogin", "Login")}
-            </Button>
+              {t("btnLogin", "Login")}
+            </a>
+
+            {isMobile && (
+              <Burger
+                opened={drawerOpen}
+                onClick={() => setDrawerOpen((o) => !o)}
+                color="white"
+                size="sm"
+                aria-label="Menu"
+              />
+            )}
           </Group>
-        </Container>
-      </div>
+        </div>
+      </header>
+
+      <Drawer
+        opened={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        position="right"
+        size="xs"
+        title="UKRCHAT"
+        zIndex={400}
+      >
+        <Stack gap="xs">
+          {NAV.map((n) => (
+            <UnstyledButton
+              key={n.id}
+              className={classes.drawerLink}
+              onClick={() => go(n.id)}
+            >
+              {t(n.key, n.def)}
+            </UnstyledButton>
+          ))}
+        </Stack>
+      </Drawer>
+
+      <main>
+        <section
+          className={`${classes.hero} ${classes.blurTarget}`}
+          onClick={next}
+          title="Click the picture to switch slide"
+        >
+          <div className={classes.heroFrame}>
+            <div
+              className={classes.heroTrack}
+              style={{
+                transform: `translateX(-${pos * 100}%)`,
+                transition: animate
+                  ? "transform 0.72s cubic-bezier(0.22, 1, 0.36, 1)"
+                  : "none",
+              }}
+              onTransitionEnd={onTrackEnd}
+            >
+              {track.map((s, i) => (
+                <div
+                  key={i}
+                  className={classes.heroSlide}
+                  aria-hidden={i !== pos}
+                >
+                  <img src={img(s.image)} alt="" className={classes.heroImg} />
+                  <div className={classes.heroBlur} />
+                  <div className={classes.heroGrad} />
+                  <div className={classes.heroCopy}>
+                    <div className={classes.heroCopyInner}>
+                      <div className={classes.heroTag}>
+                        {t(s.tag[0], s.tag[1])}
+                      </div>
+                      <h1 className={classes.heroTitle}>
+                        {t(
+                          "heroTitle",
+                          "The world's first hierarchical messenger",
+                        )}
+                      </h1>
+                      <p className={classes.heroDesc}>
+                        {t(s.text[0], s.text[1])}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className={classes.dots} onClick={(e) => e.stopPropagation()}>
+              {HERO_SLIDES.map((s, i) => (
+                <button
+                  key={s.image}
+                  type="button"
+                  aria-label={`Slide ${i + 1}`}
+                  className={`${classes.dot} ${i === active ? classes.dotActive : ""}`}
+                  onClick={() => goTo(i)}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className={classes.darkWrap}>
+          <section id="section-hierarchy" className={classes.hierarchy}>
+            <div
+              {...reveal}
+              className={`${classes.reveal} ${classes.blurTarget}`}
+              style={{
+                textAlign: "center",
+                maxWidth: 760,
+                margin: "0 auto 40px",
+              }}
+            >
+              <Title order={2} className={classes.h2}>
+                {t("hierarchyTitle", "How the Hierarchy Works")}
+              </Title>
+              <Text className={classes.lead}>
+                {t(
+                  "hierarchyText",
+                  "Instead of chaotic chats where every participant is their own admin, the system builds a clear vertical of access keys. Channels belong to the organization, while employees receive only temporary permissions to work with them.",
+                )}
+              </Text>
+            </div>
+
+            <HierarchyStage onActiveChange={setHierActive} />
+          </section>
+
+          <div className={`${classes.watermarkWrap} ${classes.blurTarget}`}>
+            <div className={classes.watermark}>
+              <BrandLogo size={960} />
+            </div>
+
+            <section id="section-crud" className={classes.narrow}>
+              <p
+                {...reveal}
+                className={`${classes.reveal} ${classes.crudLead}`}
+              >
+                {t(
+                  "crudLead",
+                  "By combining these four operations, you have complete control over your profile and communication history on the platform.",
+                )}
+              </p>
+              <div className={classes.crudGrid}>
+                {CRUD.map(([letter, title, text], i) => (
+                  <div
+                    key={letter}
+                    data-reveal
+                    style={{ transitionDelay: `${i * 90}ms` }}
+                    className={`${classes.reveal} ${classes.crudCard}`}
+                  >
+                    <div className={classes.crudLetter}>{letter}</div>
+                    <div className={classes.crudDivider} />
+                    <h3 className={classes.crudTitle}>{title}</h3>
+                    <p className={classes.crudText}>{text}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section
+              id="section-about"
+              className={classes.narrow}
+              style={{ paddingTop: 80, paddingBottom: 80 }}
+            >
+              <div
+                {...reveal}
+                className={`${classes.reveal} ${classes.aboutGrid}`}
+              >
+                <div>
+                  <h2 className={classes.h2Left}>
+                    {t(
+                      "aboutTitle",
+                      "Everything You Need to Know About the Project",
+                    )}
+                  </h2>
+                  <p className={classes.aboutText}>
+                    {t(
+                      "aboutText",
+                      "A complete breakdown of security architecture, access permissions, and a step-by-step guide for administrators and teams.",
+                    )}
+                  </p>
+                  <button
+                    type="button"
+                    className={classes.outlineBtn}
+                    onClick={() => scrollToId("section-security")}
+                  >
+                    {t("btnAboutMore", "More About the Project")}
+                  </button>
+                </div>
+                <div className={classes.videoList}>
+                  {ABOUT_VIDEOS.map(([n, title, desc]) => (
+                    <button
+                      key={n}
+                      type="button"
+                      className={classes.videoLink}
+                      onClick={() =>
+                        setVideo({ title: `${n}. ${title}`, desc })
+                      }
+                    >
+                      <span className={classes.videoLinkLeft}>
+                        <span className={classes.videoNum}>{n}</span>
+                        <span className={classes.videoTitle}>{title}</span>
+                      </span>
+                      <span className={classes.videoPlay}>
+                        <IconChevronRight size={16} stroke={2} />
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className={classes.statGrid}>
+                {STATS.map(([value, label, text], i) => (
+                  <div
+                    key={label}
+                    data-reveal
+                    style={{ transitionDelay: `${i * 90}ms` }}
+                    className={`${classes.reveal} ${classes.statCard}`}
+                  >
+                    <div className={classes.statValue}>
+                      {value.endsWith(" sec") ? (
+                        <>
+                          {value.slice(0, -4)}{" "}
+                          <span className={classes.statUnit}>sec</span>
+                        </>
+                      ) : (
+                        value
+                      )}
+                    </div>
+                    <div className={classes.statLabel}>{label}</div>
+                    <p className={classes.statText}>{text}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <section
+            id="section-download"
+            className={`${classes.narrow} ${classes.blurTarget}`}
+            style={{ paddingTop: 64, paddingBottom: 112 }}
+          >
+            <h2 {...reveal} className={`${classes.reveal} ${classes.h2Center}`}>
+              {t("downloadTitle", "Use the App on Your Preferred Platform")}
+            </h2>
+            <SimpleGrid cols={{ base: 1, md: 2 }} spacing={32} {...reveal}>
+              {STORES.map((c) => (
+                <div
+                  key={c.title}
+                  className={`${classes.storeCard} ${classes[c.cls]}`}
+                >
+                  <div className={classes.storeTop}>
+                    <div>
+                      <div className={classes.rating}>
+                        <span>{c.rating}</span>
+                        <span className={classes.stars}>★★★★★</span>
+                        <span className={classes.reviews}>• {c.reviews}</span>
+                      </div>
+                      <h3 className={classes.storeTitle}>{c.title}</h3>
+                    </div>
+                    <button type="button" className={classes.storeBtn}>
+                      {c.icon}
+                      <span>{c.btn}</span>
+                    </button>
+                  </div>
+                  <div className={classes.phoneWrap}>
+                    <img
+                      src={img(c.phone)}
+                      alt={c.title}
+                      className={classes.phone}
+                    />
+                  </div>
+                </div>
+              ))}
+            </SimpleGrid>
+          </section>
+        </div>
+
+        <div className={`${classes.lightWrap} ${classes.blurTarget}`}>
+          {/* ---------- security ---------- */}
+          <section id="section-security" className={classes.lightNarrow}>
+            <div
+              {...reveal}
+              className={`${classes.reveal} ${classes.lightHead}`}
+            >
+              <h2 className={classes.h2Dark}>
+                {t("securityTitle", "UKRCHAT Security")}
+              </h2>
+              <p className={classes.subDark}>
+                {t(
+                  "securitySub",
+                  "Your communication. Your security. Your rules.",
+                )}
+              </p>
+            </div>
+
+            <div
+              {...reveal}
+              className={`${classes.reveal} ${classes.bentoWide}`}
+            >
+              <div className={classes.bentoImgWrap}>
+                <img
+                  src={img("sec_top_laptop.jpg")}
+                  alt="Zero Device Footprint"
+                  className={classes.bentoImg}
+                />
+                <div className={classes.bentoFade} />
+                <button
+                  type="button"
+                  className={classes.morePill}
+                  onClick={() => setSecOpen(true)}
+                >
+                  {t("btnMore", "More")}
+                </button>
+              </div>
+              <div className={classes.bentoBody}>
+                <div style={{ margin: "auto 0" }}>
+                  <h3 className={classes.bentoTitle}>Zero Device Footprint</h3>
+                  <p className={classes.bentoText}>
+                    Close the browser — your device is completely clean. No
+                    files, databases, or system traces left behind.
+                  </p>
+                </div>
+                <div style={{ textAlign: "right", marginTop: 24 }}>
+                  <button
+                    type="button"
+                    className={classes.learnMore}
+                    onClick={() => scrollToId("section-faq")}
+                  >
+                    <span>Learn More</span>
+                    <IconArrowRight size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              {...reveal}
+              className={`${classes.reveal} ${classes.bentoRow}`}
+            >
+              {SECURITY_CARDS.map(([image, title, text]) => (
+                <div
+                  key={image}
+                  className={classes.bentoCard}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSecOpen(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") setSecOpen(true);
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  <div className={classes.bentoCardImgWrap}>
+                    <img
+                      src={img(image)}
+                      alt={title}
+                      className={classes.bentoCardImg}
+                    />
+                    <span className={classes.morePill}>
+                      {t("btnMore", "More")}
+                    </span>
+                  </div>
+                  {text && (
+                    <div className={classes.bentoCardBody}>
+                      <h4>{title}</h4>
+                      <p>{text}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section
+            id="section-trust"
+            style={{ padding: "32px 0", marginBottom: 64, overflow: "hidden" }}
+          >
+            <div
+              {...reveal}
+              className={`${classes.reveal} ${classes.lightHead}`}
+              style={{ textAlign: "center" }}
+            >
+              <h2 className={`${classes.h2Dark} ${classes.h2Trust}`}>
+                {t("trustTitle", "Trusted By")}
+              </h2>
+              <p className={classes.subDark}>
+                {t("trustSub", "Leaders of the Ukrainian market")}
+              </p>
+            </div>
+            <div className={classes.marquee}>
+              <div className={classes.marqueeTrack}>
+                {[0, 1].map((set) => (
+                  <div
+                    key={set}
+                    className={classes.marqueeSet}
+                    aria-hidden={set === 1}
+                  >
+                    {PARTNERS.map((name, i) => (
+                      <img
+                        key={name}
+                        src={img(`partner_${i}.png`)}
+                        alt={set === 0 ? name : ""}
+                        className={classes.partner}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section
+            id="section-pricing"
+            className={classes.lightNarrow}
+            style={{ maxWidth: 1020, paddingBottom: 24 }}
+          >
+            <div
+              {...reveal}
+              className={`${classes.reveal} ${classes.pricingHead}`}
+            >
+              <h2 className={classes.h2Dark}>
+                {t("pricingTitle", "Create Your Hub for Free")}
+              </h2>
+              <div className={classes.billing}>
+                <button
+                  type="button"
+                  className={classes.billMonthly}
+                  onClick={() => setYearly(false)}
+                >
+                  <span className={classes.radio}>
+                    {!yearly && <span className={classes.radioDot} />}
+                  </span>
+                  <span>{t("billMonthly", "Monthly")}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${classes.billYearly} ${yearly ? classes.billYearlyOn : ""}`}
+                  onClick={() => setYearly(true)}
+                >
+                  <span
+                    className={`${classes.check} ${yearly ? classes.checkOn : ""}`}
+                  >
+                    {yearly && "✓"}
+                  </span>
+                  <span>{t("billYearly", "Annually")}</span>
+                  <span style={{ color: "#d4d4d4" }}>|</span>
+                  <span style={{ fontWeight: 600 }}>
+                    {t("billSave", "Save 30%")}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div
+              {...reveal}
+              className={`${classes.reveal} ${classes.planGrid}`}
+            >
+              {PLANS.map((p) => (
+                <div
+                  key={p.id}
+                  className={`${classes.plan} ${p.tone === "dark" ? classes.planDark : classes.planBlue}`}
+                >
+                  <div>
+                    <div style={{ textAlign: "center", marginBottom: 16 }}>
+                      <h3 className={classes.planName}>{p.name}</h3>
+                      <p className={classes.planSub}>{p.sub}</p>
+                    </div>
+                    <div className={classes.priceBox}>
+                      <span className={classes.planMark}>{p.mark}</span>
+                      <span className={classes.planPrice}>
+                        {priceOf(p.price)}
+                      </span>
+                      <span className={classes.planPriceSub}>{p.priceSub}</span>
+                    </div>
+                    <Link to={ROUTES.REGISTER} className={classes.planBtn}>
+                      {p.cta}
+                    </Link>
+                    <div className={classes.planList}>
+                      <div className={classes.planListTitle}>
+                        What's included:
+                      </div>
+                      {p.features.map((f) => (
+                        <div key={f} className={classes.planItem}>
+                          <span>✓</span>
+                          <span>{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <div className={`${classes.darkBottom} ${classes.blurTarget}`}>
+          <section id="section-faq" className={classes.faq}>
+            <h2 {...reveal} className={`${classes.reveal} ${classes.h2Center}`}>
+              {t("faqTitle", "Frequently Asked Questions")}
+            </h2>
+            <div {...reveal} className={`${classes.reveal} ${classes.faqList}`}>
+              {FAQ.map(([q, a], i) => {
+                const open = openFaq === i;
+                return (
+                  <div
+                    key={q}
+                    className={`${classes.faqItem} ${open ? classes.faqOpen : ""}`}
+                  >
+                    <button
+                      type="button"
+                      className={classes.faqBtn}
+                      onClick={() => setOpenFaq(open ? null : i)}
+                    >
+                      <span className={classes.faqQ}>{q}</span>
+                      <span className={classes.faqIcon}>+</span>
+                    </button>
+                    <Collapse expanded={open}>
+                      <div className={classes.faqA}>{a}</div>
+                    </Collapse>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <section id="section-cta" className={classes.ctaWrap}>
+            <div {...reveal} className={`${classes.reveal} ${classes.cta}`}>
+              <h2 className={classes.ctaTitle}>
+                {t("ctaTitle1", "Ready to Create Your Own")}
+                <br />
+                {t("ctaTitle2", "Secure Hub?")}
+              </h2>
+              <p className={classes.ctaText}>
+                {t(
+                  "ctaText1",
+                  "Deploy your company's tree structure in 2 minutes.",
+                )}
+                <br />
+                {t(
+                  "ctaText2",
+                  "The free plan is available immediately after registration.",
+                )}
+              </p>
+              <Link to={ROUTES.REGISTER} className={classes.ctaBtn}>
+                {t("btnCreateHub", "Create Your Hub")}
+              </Link>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <footer className={`${classes.footer} ${classes.blurTarget}`}>
+        <div className={classes.footerLine} />
+        <div className={classes.footerInner}>
+          <div className={classes.footerGrid}>
+            <div>
+              <button
+                type="button"
+                className={classes.footerLogo}
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              >
+                <BrandLogo size={28} />
+                <span>UKRCHAT</span>
+              </button>
+              <p className={classes.footerAbout}>
+                The world's first hierarchical messenger with a CRUD permission
+                matrix and Zero Device Footprint technology for business,
+                government structures, and Ukraine's defenders.
+              </p>
+            </div>
+            {FOOTER_COLS.map(([title, links]) => (
+              <Stack key={title} gap={10} align="flex-start">
+                <div className={classes.footerHead}>{title}</div>
+                {links.map(([label, target]) => (
+                  <UnstyledButton
+                    key={label}
+                    className={classes.footerLink}
+                    onClick={() => scrollToId(target)}
+                  >
+                    {label}
+                  </UnstyledButton>
+                ))}
+                {title === "Information" && (
+                  <a
+                    href={COGNITO_LOGIN_URL}
+                    onClick={startLogin}
+                    className={classes.footerLink}
+                  >
+                    Personal Account
+                  </a>
+                )}
+              </Stack>
+            ))}
+          </div>
+          <div className={classes.footerBottom}>
+            <span>© 2026 UKRCHAT. All rights reserved.</span>
+            <Group gap="lg">
+              <Link to={`/${ROUTES.PRIVACY}`} className={classes.footerLink}>
+                Privacy Policy
+              </Link>
+              <UnstyledButton
+                className={classes.footerLink}
+                onClick={() => scrollToId("section-about")}
+              >
+                Terms of Use
+              </UnstyledButton>
+            </Group>
+          </div>
+        </div>
+      </footer>
+
+      <Modal
+        opened={secOpen}
+        onClose={() => setSecOpen(false)}
+        size="lg"
+        centered
+        title={t("securityTitle", "UKRCHAT Security")}
+        closeButtonProps={{ icon: <IconX size={18} /> }}
+      >
+        <Stack gap="md">
+          <Text fw={700}>Fundamental Data Protection Principles</Text>
+          {SECURITY_PRINCIPLES.map(([title, text]) => (
+            <div key={title}>
+              <Text fw={700}>{title}</Text>
+              <Text size="sm" c="dimmed">
+                {text}
+              </Text>
+            </div>
+          ))}
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={video !== null}
+        onClose={() => setVideo(null)}
+        size="xl"
+        centered
+        title={video?.title}
+        closeButtonProps={{ icon: <IconX size={18} /> }}
+      >
+        {video && (
+          <Stack gap="sm">
+            <video
+              src={introVideoUrl}
+              controls
+              autoPlay
+              playsInline
+              style={{ width: "100%", borderRadius: 12, background: "#000" }}
+            />
+            {video.desc && (
+              <Text size="sm" c="dimmed">
+                {video.desc}
+              </Text>
+            )}
+          </Stack>
+        )}
+      </Modal>
     </div>
   );
 }
