@@ -21,6 +21,7 @@ function EncryptedChatCard({ msg }: props) {
       toTrigger: TRIGGERS.decryptPrivateMsgDialog,
       payload: {
         _id: msg._id,
+        keyring_category_id: msg?.keyring_category_id,
       },
     });
   };

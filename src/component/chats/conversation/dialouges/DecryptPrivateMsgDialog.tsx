@@ -26,22 +26,30 @@ import { useChatStore } from "../../../../store/chats/chats.store";
 import { useAuthStore } from "../../../../store/auth/auth.store";
 import { useTranslation } from "../../../../store/language/language.store";
 import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
+import { IconCircleX } from "@tabler/icons-react";
 
 interface DECRYPT_PAYLOAD {
   [key: string]: unknown;
 }
 
 type RENDER = "MANUAL PASSWORD" | "OTP" | "UNAUTHORIZED" | null;
+type OTP_STATUS = "REJECTED" | null;
 interface STATE {
   render: RENDER;
   password: string;
   otp: string;
+  apiPolling: boolean;
+  pollingAttempt: number;
+  otpStatus: OTP_STATUS;
 }
 
 const initialState: STATE = {
   render: null,
   password: "",
   otp: "",
+  apiPolling: false,
+  pollingAttempt: 0,
+  otpStatus: null,
 };
 
 function DecryptPrivateMsgDialog() {
@@ -61,6 +69,8 @@ function DecryptPrivateMsgDialog() {
   const [decryptLoader2, DecryptFn2] = useTransition();
 
   const controller = new AbortController();
+  let OTP_SESSION_TIME = 120000;
+  const POLLING_INTERVAL = 3000;
 
   // ---------------reducer : START----------------------
 
@@ -68,7 +78,10 @@ function DecryptPrivateMsgDialog() {
     | { type: "RESET" }
     | { type: "SET_RENDER"; payload: RENDER }
     | { type: "SET_PASSWORD"; payload: string }
-    | { type: "SET_OTP"; payload: string };
+    | { type: "SET_OTP"; payload: string }
+    | { type: "SET_POLLING"; payload: boolean }
+    | { type: "SET_ATTEMPT"; payload: number }
+    | { type: "SET_OTP_STATUS"; payload: OTP_STATUS };
 
   const stateReducer = (state: STATE, action: STATE_ACTION): STATE => {
     switch (action.type) {
@@ -80,6 +93,15 @@ function DecryptPrivateMsgDialog() {
 
       case "SET_OTP":
         return { ...state, otp: action.payload };
+
+      case "SET_POLLING":
+        return { ...state, apiPolling: action.payload };
+
+      case "SET_ATTEMPT":
+        return { ...state, pollingAttempt: action.payload };
+
+      case "SET_OTP_STATUS":
+        return { ...state, otpStatus: action.payload };
 
       case "RESET":
         return initialState;
@@ -197,6 +219,66 @@ function DecryptPrivateMsgDialog() {
     }
   };
 
+  const getSessionTime = async () => {
+    const params = {
+      target_user: target_user ? target_user : undefined,
+    };
+
+    try {
+      const res = await api.get(ENDPOINTS.KEYRING_CATEGORIES.GET_SESSION, {
+        params,
+      });
+
+      if (res.data?.success) {
+        OTP_SESSION_TIME = res.data?.data?.custom_totp_validity * 1000;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const requestOtpHandler = async () => {
+    dispatch({ type: "SET_POLLING", payload: true });
+    await getSessionTime();
+  };
+
+  const requestOtp = async () => {
+    try {
+      const payload = {
+        keyring_category_id: triggerPayload?.keyring_category_id,
+      };
+
+      const params = {
+        target_user: target_user ? target_user : undefined,
+      };
+
+      const res = await api.post(
+        ENDPOINTS.KEYRING_CATEGORIES.REQ_OTP,
+        payload,
+        { params },
+      );
+
+      if (res.data?.status === "accepted") {
+        dispatch({ type: "SET_OTP", payload: res.data?.otp });
+        return "success";
+      }
+
+      if (res.data?.status === "rejected") {
+        dispatch({ type: "SET_OTP_STATUS", payload: "REJECTED" });
+        return "rejected";
+      }
+
+      return "repeat";
+    } catch (error) {
+      Notification.error(getApiErrorMessage(error));
+    }
+  };
+
+  const stopPolling = () => {
+    dispatch({ type: "SET_POLLING", payload: false });
+    dispatch({ type: "SET_ATTEMPT", payload: 0 });
+  };
+
   useEffect(() => {
     if (trigger === TRIGGERS.decryptPrivateMsgDialog) {
       handleDecrypt("auto");
@@ -207,6 +289,32 @@ function DecryptPrivateMsgDialog() {
       dispatch({ type: "RESET" });
     };
   }, [trigger]);
+
+  useEffect(() => {
+    if (!state.apiPolling) return;
+
+    if (
+      state.pollingAttempt >= Math.floor(OTP_SESSION_TIME / POLLING_INTERVAL)
+    ) {
+      stopPolling();
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      const status = await requestOtp();
+
+      if (status === "success" || status === "rejected") {
+        stopPolling();
+        return;
+      }
+
+      dispatch({ type: "SET_ATTEMPT", payload: state.pollingAttempt + 1 });
+    }, POLLING_INTERVAL);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [state.apiPolling, state.pollingAttempt]);
 
   return (
     <Modal
@@ -282,6 +390,41 @@ function DecryptPrivateMsgDialog() {
                         )}
                       </Text>
                     )}
+                    {state.apiPolling ? (
+                      <Flex
+                        mt={"sm"}
+                        justify={"center"}
+                        align={"center"}
+                        gap={2}
+                      >
+                        <Text size="xs">
+                          {translation(
+                            "chat_history.modal-chat-pass-otp-loader",
+                            "Requesting otp... Please wait",
+                          )}
+                        </Text>
+                        <div>
+                          <IconCircleX
+                            size={20}
+                            className="cursor-pointer"
+                            onClick={stopPolling}
+                          />
+                        </div>
+                      </Flex>
+                    ) : (
+                      <Text
+                        size="xs"
+                        mt={"xs"}
+                        td="underline"
+                        className="cursor-pointer text-center"
+                        onClick={requestOtpHandler}
+                      >
+                        {translation(
+                          "chat_history.modal-chat-pass-link-verify",
+                          "Get otp",
+                        )}
+                      </Text>
+                    )}
                   </div>
                 </>
               )}
@@ -294,23 +437,39 @@ function DecryptPrivateMsgDialog() {
                   )}
                 </Text>
               )}
-              {!state.render ||
-                (state.render !== "UNAUTHORIZED" && (
-                  <Flex mt={"md"} justify={"center"}>
-                    <Button
-                      onClick={() => handleDecrypt("manual")}
-                      size="xs"
-                      disabled={
-                        state.password.trim().length < 5 &&
-                        state.otp.length !== 6
-                      }
-                      loading={decryptLoader2}
-                      loaderProps={{ type: "dots" }}
-                    >
-                      {translation("chat_history.modal-decrypt-btn1", "Submit")}
-                    </Button>
-                  </Flex>
-                ))}
+
+              {state.otpStatus === "REJECTED" && (
+                <Alert
+                  variant="light"
+                  color="red"
+                  title={translation(
+                    "chat_history.modal-alert-reject-title",
+                    "OTP rejected",
+                  )}
+                  my={"sm"}
+                >
+                  {translation(
+                    "chat_history.modal-alert-reject-content",
+                    "Retry again or try after sometime.",
+                  )}
+                </Alert>
+              )}
+
+              {(!state.render || state.render !== "UNAUTHORIZED") && (
+                <Flex mt={"md"} justify={"center"}>
+                  <Button
+                    onClick={() => handleDecrypt("manual")}
+                    size="xs"
+                    disabled={
+                      state.password.trim().length < 5 && state.otp.length !== 6
+                    }
+                    loading={decryptLoader2}
+                    loaderProps={{ type: "dots" }}
+                  >
+                    {translation("chat_history.modal-decrypt-btn1", "Submit")}
+                  </Button>
+                </Flex>
+              )}
 
               {state.render === "UNAUTHORIZED" && (
                 <Alert variant="light" color="red" title="Pemission denied">
