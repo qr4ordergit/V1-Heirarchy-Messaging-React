@@ -285,7 +285,7 @@ function PrivateMessagePayloadModal() {
       try {
         const params = {
           target_user: target_user ? target_user : undefined,
-          group_id: encodeURIComponent(chatId),
+          group_id: chatId,
         };
         const response = await api.get(ENDPOINTS.GROUPS.GETMEMBERS, {
           params,
