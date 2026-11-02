@@ -374,7 +374,6 @@ export default function Home() {
     scrollToId(id);
   };
 
-  /* ---------- hero: infinite sliding track ---------- */
   const N = HERO_SLIDES.length;
   const track = [HERO_SLIDES[N - 1], ...HERO_SLIDES, HERO_SLIDES[0]];
   const [pos, setPos] = useState(1);
@@ -398,6 +397,27 @@ export default function Home() {
       setPos(N);
     }
   };
+
+  useEffect(() => {
+    if (pos >= 1 && pos <= N) return;
+    const id = window.setTimeout(() => {
+      setAnimate(false);
+      setPos(((((pos - 1) % N) + N) % N) + 1);
+    }, 800);
+    return () => window.clearTimeout(id);
+  }, [pos, N]);
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      setPos((p) => {
+        if (p >= 1 && p <= N) return p;
+        setAnimate(false);
+        return ((((p - 1) % N) + N) % N) + 1;
+      });
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [N]);
   useEffect(() => {
     const timer = window.setInterval(next, 7000);
     return () => window.clearInterval(timer);
@@ -619,6 +639,7 @@ export default function Home() {
         </section>
 
         <div className={classes.darkWrap}>
+          {/* ---------- hierarchy ---------- */}
           <section id="section-hierarchy" className={classes.hierarchy}>
             <div
               {...reveal}
