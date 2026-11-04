@@ -139,7 +139,10 @@ function PrivateMessagePayloadModal() {
       };
 
       try {
-        const res = await api.get(ENDPOINTS.KEYRING_CATEGORIES.LIST, {
+        const url = target_user
+          ? ENDPOINTS.KEYRING_CATEGORIES.SHARED_LIST
+          : ENDPOINTS.KEYRING_CATEGORIES.LIST;
+        const res = await api.get(url, {
           params,
           signal: controller.signal,
         });
@@ -316,6 +319,13 @@ function PrivateMessagePayloadModal() {
     });
   };
 
+  const resetState = () => {
+    setCategories([]);
+    setMembers([]);
+    setIsOtpInvalid(false);
+    setPasswordLabels([]);
+  };
+
   const initialActions = () => {
     fetchKeyRing();
     fetchGroupMembers();
@@ -329,6 +339,7 @@ function PrivateMessagePayloadModal() {
     return () => {
       controller.abort();
       dispatch({ type: "RESET" });
+      resetState();
     };
   }, [trigger]);
 

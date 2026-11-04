@@ -134,9 +134,11 @@ function ChatPasswordModal() {
       };
 
       try {
-        const res = await api.get(ENDPOINTS.KEYRING_CATEGORIES.LIST, {
-          params,
-        });
+        const url = target_user
+          ? ENDPOINTS.KEYRING_CATEGORIES.SHARED_LIST
+          : ENDPOINTS.KEYRING_CATEGORIES.LIST;
+
+        const res = await api.get(url, { params });
 
         if (res.data?.success) {
           storeKeyringPasswords(res.data?.data);
