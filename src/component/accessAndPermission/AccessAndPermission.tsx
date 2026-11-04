@@ -261,11 +261,10 @@ export default function AccessAndPermission({
     }
   };
 
-  const getKeyringCategories = async () => {
+  const getKeyringCategories = async (tu: string) => {
     try {
       handleLoadingSharedKC(true, "list");
-      const res =
-        await ShareKeyringCategoryService.keyringCategories(targetUser);
+      const res = await ShareKeyringCategoryService.keyringCategories(tu);
 
       setKeyringCategoriesOption(
         res.data.map((i: KeyringCategory) => ({
@@ -312,7 +311,7 @@ export default function AccessAndPermission({
 
   const fetchKeyringCategoryData = async (tu: string) => {
     await getSharedKeyringCategories(tu);
-    await getKeyringCategories();
+    await getKeyringCategories(tu);
   };
 
   const handleSelectAll = () => {
@@ -477,11 +476,11 @@ export default function AccessAndPermission({
                     {canUserAccess && (
                       <Tooltip
                         label={`
+                          ${user.display_name !== "" ? user.display_name : user.label}
                         ${translation(
                           "manage_access_permissions_modal.tooltip_modal_title_share_keyring_category_to",
                           "Share keyring category to",
                         )}
-                          ${user.display_name !== "" ? user.display_name : user.label}
                         `}
                         fz={"xs"}
                       >
@@ -647,13 +646,15 @@ export default function AccessAndPermission({
           setSelectedAccount({ id: "", name: "" });
           setSelectedKeyringCategories([]);
         }}
-        title={`
-            ${translation(
+        title={
+          <Text>
+            <b>{selectedAccount.name}</b>{" "}
+            {translation(
               "manage_access_permissions_modal.tooltip_modal_title_share_keyring_category_to",
               "Share keyring category to",
             )}
-            ${selectedAccount.name}
-            `}
+          </Text>
+        }
       >
         {sharedKCLoading.list ? (
           <Center>
