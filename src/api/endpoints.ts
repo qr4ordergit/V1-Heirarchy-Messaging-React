@@ -74,5 +74,9 @@ export const ENDPOINTS = {
   DM_GROUP_LOCK: {
     PUT: "/chat_lock",
     DELETE: "/chat_lock"
+  },
+  SHARE_KEYRING_CATEGORY:{
+    LIST : "/keyring-categories",
+    PUT_GET : '/keyring-categories/shared'
   }
 } as const;

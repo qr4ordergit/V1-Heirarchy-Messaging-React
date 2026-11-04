@@ -1,14 +1,20 @@
 import { useEffect, useState } from "react";
 
 import {
+  ActionIcon,
   Box,
   Button,
+  Center,
   Checkbox,
   Flex,
   Loader,
+  Modal,
+  MultiSelect,
   ScrollArea,
   Stack,
   Text,
+  Tooltip,
+  type ComboboxItem,
 } from "@mantine/core";
 
 import {
@@ -28,9 +34,15 @@ import {
 
 import { Notification } from "../../utils/notification";
 import { AcessAndPermissionService } from "../../api/services/access.permission.service";
-import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+import {
+  IconChecks,
+  IconChevronDown,
+  IconChevronUp,
+  IconKey,
+} from "@tabler/icons-react";
 import axios from "axios";
 import { useTranslation } from "../../store/language/language.store";
+import { ShareKeyringCategoryService } from "../../api/services/share.keyring.category.service";
 
 interface UpdateUserPermissionsPayload {
   username: string;
@@ -55,6 +67,20 @@ interface AccessAndPermissionResponse {
   sub_users: UpdateUserPermissionsPayload[];
 }
 
+interface SelectedAccountState {
+  id: string;
+  name: string | null;
+}
+
+interface KeyringCategory {
+  _id: string;
+  keyring_category_name: string;
+}
+interface SharedKCLoadingState {
+  list: boolean;
+  update: boolean;
+}
+
 export default function AccessAndPermission({
   users,
   targetUser,
@@ -67,6 +93,31 @@ export default function AccessAndPermission({
   const [changes, setChanges] = useState<UserPermissionChanges>({});
 
   const [openedUserAcc, setOpenedUserAcc] = useState<string | null>(null);
+
+  const [openedShareKeyringCategory, setOpenedShareKeyringCategory] =
+    useState<boolean>(false);
+
+  const [selectedAccount, setSelectedAccount] = useState<SelectedAccountState>({
+    id: "",
+    name: "",
+  });
+
+  const [sharedKCLoading, setSharedKCLoading] = useState<SharedKCLoadingState>({
+    list: false,
+    update: false,
+  });
+
+  const [keyringCategoriesOption, setKeyringCategoriesOption] = useState<
+    ComboboxItem[]
+  >([]);
+
+  const [selectedKeyringCategories, setSelectedKeyringCategories] = useState<
+    string[]
+  >([]);
+
+  const handleLoadingSharedKC = (status: boolean, type: string) => {
+    setSharedKCLoading((prev) => ({ ...prev, [type]: status }));
+  };
 
   const handlePermissionChange = (
     username: string,
@@ -210,6 +261,98 @@ export default function AccessAndPermission({
     }
   };
 
+  const getKeyringCategories = async () => {
+    try {
+      handleLoadingSharedKC(true, "list");
+      const res =
+        await ShareKeyringCategoryService.keyringCategories(targetUser);
+
+      setKeyringCategoriesOption(
+        res.data.map((i: KeyringCategory) => ({
+          value: i._id,
+          label: i.keyring_category_name,
+        })),
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
+        Notification.error(error.message);
+      }
+    } finally {
+      handleLoadingSharedKC(false, "list");
+    }
+  };
+
+  const getSharedKeyringCategories = async (tu: string) => {
+    try {
+      handleLoadingSharedKC(true, "list");
+      const res = await ShareKeyringCategoryService.sharedKeyringCategories(
+        targetUser,
+        tu,
+      );
+
+      setSelectedKeyringCategories(res.data.keyring_category_ids);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
+        Notification.error(error.message);
+      }
+    } finally {
+      handleLoadingSharedKC(false, "list");
+    }
+  };
+
+  const fetchKeyringCategoryData = async (tu: string) => {
+    await getSharedKeyringCategories(tu);
+    await getKeyringCategories();
+  };
+
+  const handleSelectAll = () => {
+    setSelectedKeyringCategories(
+      keyringCategoriesOption.map((item) =>
+        typeof item === "string" ? item : item.value,
+      ),
+    );
+  };
+
+  const saveSharedKeyringCategories = async () => {
+    try {
+      handleLoadingSharedKC(true, "update");
+      await ShareKeyringCategoryService.updateSharedKeyringCategories(
+        {
+          keyring_category_id: selectedKeyringCategories,
+          username: selectedAccount.id,
+        },
+        targetUser,
+      );
+      Notification.success(
+        translation(
+          "manage_access_permissions_modal.succ_msg_keyring_category_shared",
+          "Keyring category shared successfully",
+        ),
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        Notification.error(
+          error.response?.data?.message || error.message,
+          error.response?.data?.error,
+        );
+      } else if (error instanceof Error) {
+        Notification.error(error.message);
+      }
+    } finally {
+      handleLoadingSharedKC(false, "update");
+    }
+  };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAccessAndPermissions();
@@ -330,6 +473,40 @@ export default function AccessAndPermission({
                         </Text>
                       )}
                     </Flex>
+
+                    {canUserAccess && (
+                      <Tooltip
+                        label={`
+                        ${translation(
+                          "manage_access_permissions_modal.tooltip_modal_title_share_keyring_category_to",
+                          "Share keyring category to",
+                        )}
+                          ${user.display_name !== "" ? user.display_name : user.label}
+                        `}
+                        fz={"xs"}
+                      >
+                        <ActionIcon
+                          variant="subtle"
+                          color="cyan"
+                          radius={"sm"}
+                          size={"sm"}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenedShareKeyringCategory(true);
+                            setSelectedAccount({
+                              id: user.id,
+                              name:
+                                user.display_name !== ""
+                                  ? user.display_name
+                                  : user.label,
+                            });
+                            fetchKeyringCategoryData(user.id);
+                          }}
+                        >
+                          <IconKey size={14} />
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
 
                     {/* Arrow */}
                     {!opend ? (
@@ -461,6 +638,76 @@ export default function AccessAndPermission({
           )}
         </Button>
       </Flex>
+
+      <Modal
+        centered
+        opened={openedShareKeyringCategory}
+        onClose={() => {
+          setOpenedShareKeyringCategory(false);
+          setSelectedAccount({ id: "", name: "" });
+          setSelectedKeyringCategories([]);
+        }}
+        title={`
+            ${translation(
+              "manage_access_permissions_modal.tooltip_modal_title_share_keyring_category_to",
+              "Share keyring category to",
+            )}
+            ${selectedAccount.name}
+            `}
+      >
+        {sharedKCLoading.list ? (
+          <Center>
+            <Loader size={"xs"} />
+          </Center>
+        ) : (
+          <>
+            <Flex align="center" gap="xs" w="100%">
+              <MultiSelect
+                size="xs"
+                style={{ flex: 1, minWidth: 0 }}
+                placeholder={translation(
+                  "manage_access_permissions_modal.placeholder_select_keyring_categories",
+                  "Select keyring categories",
+                )}
+                data={keyringCategoriesOption}
+                value={selectedKeyringCategories}
+                onChange={setSelectedKeyringCategories}
+                searchable
+                clearable
+              />
+              <Tooltip
+                fz={"xs"}
+                label={translation(
+                  "manage_access_permissions_modal.tooltip_select_all_keyring_category",
+                  "Select all",
+                )}
+              >
+                <ActionIcon
+                  variant="subtle"
+                  size="md"
+                  style={{ flexShrink: 0 }}
+                  onClick={handleSelectAll}
+                >
+                  <IconChecks size={16} />
+                </ActionIcon>
+              </Tooltip>
+            </Flex>
+            <Flex justify="flex-end" mt={"sm"}>
+              <Button
+                size="compact-xs"
+                onClick={saveSharedKeyringCategories}
+                disabled={sharedKCLoading.update}
+                loading={sharedKCLoading.update}
+              >
+                {translation(
+                  "manage_access_permissions_modal.btn_save_changes",
+                  "Save changes",
+                )}
+              </Button>
+            </Flex>
+          </>
+        )}
+      </Modal>
     </Flex>
   );
 }
