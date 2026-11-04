@@ -183,7 +183,7 @@ export default function AccessAndPermission({
         (result, user) => {
           const updatedPermission = structuredClone(user.permissions);
           delete updatedPermission["sub-users"].read;
-
+          delete updatedPermission["shared-keyring-category"].create;
           result[user.username] = {
             username: user.username,
             permissions: updatedPermission,
@@ -312,23 +312,22 @@ export default function AccessAndPermission({
                             </Text>
                           )}
                         </Stack>
-                      ) : (
-                          user.description !== "" ? 
+                      ) : user.description !== "" ? (
                         <Text
                           size="xs"
                           fw="bolder"
                           truncate
                           className="min-w-0 flex-1"
                         >
-                          {user.label} | <span style={{color : "gray" , fontWeight : "normal"}}>{user.description}</span>
+                          {user.label} |{" "}
+                          <span style={{ color: "gray", fontWeight: "normal" }}>
+                            {user.description}
+                          </span>
                         </Text>
-                        :
-                        <Text
-                          size="xs"
-                          fw="bolder"
-                        >
+                      ) : (
+                        <Text size="xs" fw="bolder">
                           {user.label}
-                          </Text>
+                        </Text>
                       )}
                     </Flex>
 

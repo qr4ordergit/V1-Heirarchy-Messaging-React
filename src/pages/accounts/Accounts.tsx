@@ -1178,6 +1178,7 @@ export default function Accounts() {
       delete res.permissions["sub-users"];
       delete res.permissions.keyring;
       delete res.permissions["users-accesstree"];
+      delete res.permissions["shared-keyring-category"];
       setChanges(res);
       onOpenAccessAndPermissions(
         user_id,
