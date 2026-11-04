@@ -124,7 +124,7 @@ export const TRIGGERS = {
 export const OPENERS = {
   schedulerList: "schedulerList",
   editScheduledMsg: "editScheduledMsg",
-  doubleEncryption_init: "doubleEncryption_init"
+  doubleEncryption_init: "doubleEncryption_init",
 };
 
 export const CIPHER_SECRET =
@@ -175,6 +175,10 @@ const COMMON_PERMISSION = {
     update: false,
     delete: false,
   },
+};
+
+export const USER_PERMISSIONS = {
+  ...COMMON_PERMISSION,
   "keyring-categories": {
     read: false,
     create: false,
@@ -194,10 +198,6 @@ const COMMON_PERMISSION = {
     read: false,
     create: false,
   },
-};
-
-export const USER_PERMISSIONS = {
-  ...COMMON_PERMISSION,
   "user-account": {
     "reset-password": false,
     "reset-username-passkey": false,
@@ -207,6 +207,28 @@ export const USER_PERMISSIONS = {
 
 export const USER_TO_USER_PERMISSIONS = {
   ...COMMON_PERMISSION,
+  "keyring-categories": {
+    read: false,
+    create: false,
+    update: false,
+    delete: false,
+  },
+  "shared-keyring-category" : {
+    read: false,
+  },
+  "scheduled-messages": {
+    read: false,
+    create: false,
+    update: false,
+    delete: false,
+  },
+  "disappearing-messages": {
+    create: false,
+  },
+  "chat-export": {
+    read: false,
+    create: false,
+  },
   "sub-users": {
     update: false,
     "permission-update": false,
@@ -270,6 +292,9 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "keyring-categories|update": "Update",
   "keyring-categories|delete": "Delete",
 
+  // Shared Keyring Category
+  "shared-keyring-category|read": "View",
+
   // Scheduled Messages
   "scheduled-messages|read": "View",
   "scheduled-messages|create": "Allow",
@@ -311,6 +336,7 @@ export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
   contacts: "Manage Contacts",
   tags: "Manage Tags",
   "keyring-categories": "Keyring Categories",
+  "shared-keyring-category" : "Shared Keyring Category",
   "scheduled-messages": "Scheduled Messages",
   "disappearing-messages": "Disappearing Messages",
   "chat-export": "Export Chats",
