@@ -69,7 +69,8 @@ export const ENDPOINTS = {
   KEYRING_CATEGORIES: {
     LIST: "/keyring-categories",
     REQ_OTP: "/get-2fa-otp",
-    GET_SESSION: "/keyring-categories/second"
+    GET_SESSION: "/keyring-categories/second",
+    SHARED_LIST: "/keyring-categories/shared"
   },
   DM_GROUP_LOCK: {
     PUT: "/chat_lock",
