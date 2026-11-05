@@ -486,39 +486,38 @@ export default function AccessAndPermission({
                       )}
                     </Flex>
 
-                    {canUserAccess && (
-                      <Tooltip
-                        label={`
+                    <Tooltip
+                      label={`
                           ${user.display_name !== "" ? user.display_name : user.label}'s
                         ${translation(
                           "manage_access_permissions_modal.tooltip_share_keyring_category",
                           "Keyring Categories",
                         )}
                         `}
-                        fz={"xs"}
+                      fz={"xs"}
+                    >
+                      <ActionIcon
+                      disabled={!canUserAccess}
+                        variant="subtle"
+                        color="cyan"
+                        radius={"sm"}
+                        size={"sm"}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenedShareKeyringCategory(true);
+                          setSelectedAccount({
+                            id: user.id,
+                            name:
+                              user.display_name !== ""
+                                ? user.display_name
+                                : user.label,
+                          });
+                          fetchKeyringCategoryData(user.id);
+                        }}
                       >
-                        <ActionIcon
-                          variant="subtle"
-                          color="cyan"
-                          radius={"sm"}
-                          size={"sm"}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenedShareKeyringCategory(true);
-                            setSelectedAccount({
-                              id: user.id,
-                              name:
-                                user.display_name !== ""
-                                  ? user.display_name
-                                  : user.label,
-                            });
-                            fetchKeyringCategoryData(user.id);
-                          }}
-                        >
-                          <IconKey size={14} />
-                        </ActionIcon>
-                      </Tooltip>
-                    )}
+                        <IconKey size={14} />
+                      </ActionIcon>
+                    </Tooltip>
 
                     {/* Arrow */}
                     {!opend ? (
