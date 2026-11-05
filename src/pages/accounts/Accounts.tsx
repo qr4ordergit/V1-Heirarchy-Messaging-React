@@ -2037,6 +2037,8 @@ export default function Accounts() {
                     <Switch
                       size="sm"
                       ml="auto"
+                      mr={27}
+                      labelPosition="left"
                       label="Toggle to access bot accounts"
                       checked={accountTypeFilter === "bot"}
                       onChange={(e) => {

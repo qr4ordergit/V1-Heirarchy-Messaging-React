@@ -8,12 +8,13 @@ import {
   Loader,
   Modal,
   PasswordInput,
-  Checkbox,
   PinInput,
   Radio,
   SegmentedControl,
   Select,
   Stack,
+  Switch,
+  UnstyledButton,
   Text,
   Textarea,
   TextInput,
@@ -325,7 +326,9 @@ export default function CreateAccountModal({
     }
     try {
       setUserDetails(await fetchUserDetails());
-    } catch {}
+    } catch {
+      /* keep the optimistic value */
+    }
   };
 
   const handleSubmit = async () => {
@@ -1048,29 +1051,40 @@ export default function CreateAccountModal({
             minRows={2}
             maxRows={4}
           />
-          <Checkbox
-            label="Bot account"
-            description="Keep checked to unable bot access via AI Models including ChatGPT / Anthropic Claude."
-            checked={form.isBot}
-            color="blue"
-            radius="sm"
-            styles={{
-              input: {
-                border: form.isBot
-                  ? "2px solid var(--mantine-color-blue-6)"
-                  : "2px solid var(--mantine-color-gray-6)",
-                backgroundColor: form.isBot
-                  ? "var(--mantine-color-blue-6)"
-                  : "#fff",
-                cursor: "pointer",
-              },
-              label: { cursor: "pointer", fontWeight: 600 },
+          <UnstyledButton
+            type="button"
+            onClick={() => setForm((prev) => ({ ...prev, isBot: !prev.isBot }))}
+            style={{
+              width: "100%",
+              padding: "var(--mantine-spacing-sm)",
+              borderRadius: "var(--mantine-radius-md)",
+              border: form.isBot
+                ? "1.5px solid var(--mantine-color-blue-6)"
+                : "1.5px solid var(--mantine-color-gray-3)",
+              background: form.isBot
+                ? "var(--mantine-color-blue-0)"
+                : undefined,
             }}
-            onChange={(e) => {
-              const checked = e.currentTarget.checked;
-              setForm((prev) => ({ ...prev, isBot: checked }));
-            }}
-          />
+          >
+            <Group justify="space-between" wrap="nowrap" align="center">
+              <div>
+                <Text fw={600} size="sm">
+                  Bot account
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Enable bot access via AI Models including ChatGPT / Anthropic
+                  Claude
+                </Text>
+              </div>
+              <Switch
+                checked={form.isBot}
+                onChange={() => {}}
+                tabIndex={-1}
+                aria-label="Bot account"
+                style={{ pointerEvents: "none" }}
+              />
+            </Group>
+          </UnstyledButton>
           <Group justify="flex-end" mt="xs">
             <Button variant="subtle" onClick={handleClose}>
               {translation("create_account_modal.btnCancel", "Cancel")}
