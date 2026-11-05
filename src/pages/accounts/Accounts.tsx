@@ -32,7 +32,6 @@ import {
   Indicator,
   Title,
   Pagination,
-  Radio,
 } from "@mantine/core";
 import {
   IconDotsVertical,
@@ -1348,6 +1347,7 @@ export default function Accounts() {
                     )}
                 </Stack>
 
+                {/* Billing is a root-account feature */}
                 {isHubAccountLoggedIn && (
                   <>
                     <Menu.Divider m={0} />
@@ -2011,13 +2011,6 @@ export default function Accounts() {
                   </div>
                 )}
 
-                {totalManagedAccounts === 0 && (
-                  <Text size="sm" c="dimmed" ta="center" py="md">
-                    No {accountTypeFilter === "bot" ? "bot" : "normal"} accounts
-                    found.
-                  </Text>
-                )}
-
                 {accounts.length > 1 && (
                   <Group justify="space-between" align="center" wrap="wrap">
                     <Text size="xs" c="dimmed">
@@ -2041,20 +2034,40 @@ export default function Accounts() {
                       )}
                     </Text>
 
-                    <Radio.Group
-                      value={accountTypeFilter}
-                      onChange={(value) => {
-                        setAccountTypeFilter(value as "user" | "bot");
-                        setCurrentPage(1);
-                      }}
-                      ml="auto"
-                    >
-                      <Group gap="md" wrap="nowrap">
-                        <Radio value="user" label="Normal" size="xs" />
-                        <Radio value="bot" label="Bot" size="xs" />
-                      </Group>
-                    </Radio.Group>
+                    <Group gap="xs" wrap="nowrap" ml="auto">
+                      <Text
+                        size="xs"
+                        fw={accountTypeFilter === "user" ? 700 : 400}
+                        c={accountTypeFilter === "user" ? undefined : "dimmed"}
+                      >
+                        Normal
+                      </Text>
+                      <Switch
+                        size="sm"
+                        checked={accountTypeFilter === "bot"}
+                        onChange={(e) => {
+                          const checked = e.currentTarget.checked;
+                          setAccountTypeFilter(checked ? "bot" : "user");
+                          setCurrentPage(1);
+                        }}
+                        aria-label="Show bot accounts"
+                      />
+                      <Text
+                        size="xs"
+                        fw={accountTypeFilter === "bot" ? 700 : 400}
+                        c={accountTypeFilter === "bot" ? undefined : "dimmed"}
+                      >
+                        Bot
+                      </Text>
+                    </Group>
                   </Group>
+                )}
+
+                {totalManagedAccounts === 0 && (
+                  <Text size="sm" c="dimmed" ta="center" py="md">
+                    No {accountTypeFilter === "bot" ? "bot" : "normal"} accounts
+                    found.
+                  </Text>
                 )}
 
                 <Stack gap="md">
@@ -2185,6 +2198,7 @@ export default function Accounts() {
                                     variant="light"
                                     color="red"
                                     radius="sm"
+                                    // onClick={() => openLockModal(account)}
                                     style={{
                                       cursor: "pointer",
                                       fontFamily: "monospace",

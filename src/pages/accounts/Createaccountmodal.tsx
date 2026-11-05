@@ -1050,7 +1050,6 @@ export default function CreateAccountModal({
           />
           <Checkbox
             label="Bot account"
-            description="Create this account as a bot instead of a regular user."
             checked={form.isBot}
             onChange={(e) => {
               const checked = e.currentTarget.checked;
