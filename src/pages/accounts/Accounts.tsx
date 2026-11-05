@@ -2034,32 +2034,20 @@ export default function Accounts() {
                       )}
                     </Text>
 
-                    <Group gap="xs" wrap="nowrap" ml="auto">
-                      <Text
-                        size="xs"
-                        fw={accountTypeFilter === "user" ? 700 : 400}
-                        c={accountTypeFilter === "user" ? undefined : "dimmed"}
-                      >
-                        Normal
-                      </Text>
-                      <Switch
-                        size="sm"
-                        checked={accountTypeFilter === "bot"}
-                        onChange={(e) => {
-                          const checked = e.currentTarget.checked;
-                          setAccountTypeFilter(checked ? "bot" : "user");
-                          setCurrentPage(1);
-                        }}
-                        aria-label="Show bot accounts"
-                      />
-                      <Text
-                        size="xs"
-                        fw={accountTypeFilter === "bot" ? 700 : 400}
-                        c={accountTypeFilter === "bot" ? undefined : "dimmed"}
-                      >
-                        Bot
-                      </Text>
-                    </Group>
+                    <Switch
+                      size="sm"
+                      ml="auto"
+                      label="Toggle to access bot accounts"
+                      checked={accountTypeFilter === "bot"}
+                      onChange={(e) => {
+                        const checked = e.currentTarget.checked;
+                        setAccountTypeFilter(checked ? "bot" : "user");
+                        setCurrentPage(1);
+                      }}
+                      styles={{
+                        label: { fontSize: "var(--mantine-font-size-xs)" },
+                      }}
+                    />
                   </Group>
                 )}
 

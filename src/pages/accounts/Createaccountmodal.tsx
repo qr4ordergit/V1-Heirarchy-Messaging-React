@@ -1050,7 +1050,22 @@ export default function CreateAccountModal({
           />
           <Checkbox
             label="Bot account"
+            description="Keep checked to unable bot access via AI Models including ChatGPT / Anthropic Claude."
             checked={form.isBot}
+            color="blue"
+            radius="sm"
+            styles={{
+              input: {
+                border: form.isBot
+                  ? "2px solid var(--mantine-color-blue-6)"
+                  : "2px solid var(--mantine-color-gray-6)",
+                backgroundColor: form.isBot
+                  ? "var(--mantine-color-blue-6)"
+                  : "#fff",
+                cursor: "pointer",
+              },
+              label: { cursor: "pointer", fontWeight: 600 },
+            }}
             onChange={(e) => {
               const checked = e.currentTarget.checked;
               setForm((prev) => ({ ...prev, isBot: checked }));
