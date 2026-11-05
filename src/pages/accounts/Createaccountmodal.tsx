@@ -9,6 +9,7 @@ import {
   Modal,
   PasswordInput,
   PinInput,
+  Radio,
   SegmentedControl,
   Select,
   Stack,
@@ -24,6 +25,8 @@ import {
   type BulkJobState,
 } from "../../api/accountApi";
 import { suggestUsername } from "../../api/authApi";
+import { fetchUserDetails } from "../../api/userApi";
+import PrefixCombobox from "./PrefixCombobox";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { useTranslation } from "../../store/language/language.store";
 import { COUNTRY_CODES } from "../../utils/constant";
@@ -33,6 +36,8 @@ import BulkUploadPanel from "./BulkUploadPanel";
 type AddAccountMode = "single" | "bulk";
 
 type IdentifierType = "username" | "email" | "phone";
+
+type UsernameType = "normal" | "custom";
 
 interface NewAccountForm {
   identifierType: IdentifierType;
@@ -44,6 +49,10 @@ interface NewAccountForm {
   confirmPassword: string;
   displayName: string;
   description: string;
+  usernameType: UsernameType;
+  customPrefix: string;
+  usernameInfo: string;
+  usernameSuffix: string;
 }
 
 const EMPTY_FORM: NewAccountForm = {
@@ -56,10 +65,17 @@ const EMPTY_FORM: NewAccountForm = {
   confirmPassword: "",
   displayName: "",
   description: "",
+  usernameType: "normal",
+  customPrefix: "",
+  usernameInfo: "",
+  usernameSuffix: "",
 };
 
 interface NewAccountErrors {
   username?: string;
+  customPrefix?: string;
+  usernameInfo?: string;
+  usernameSuffix?: string;
   email?: string;
   phone?: string;
   password?: string;
@@ -88,6 +104,8 @@ export default function CreateAccountModal({
   const { translation } = useTranslation();
   const navigate = useNavigate();
   const userDetails = useAuthStore((state) => state.userDetails);
+  const setUserDetails = useAuthStore((state) => state.setUserDetails);
+  const savedPrefixes = userDetails?.custom_prefixes ?? [];
   const isPaidUser = Boolean(userDetails?.is_paid);
 
   const [mode, setMode] = useState<AddAccountMode>("single");
@@ -192,7 +210,18 @@ export default function CreateAccountModal({
 
   const validate = (): boolean => {
     const errors: NewAccountErrors = {};
-    if (form.identifierType === "username") {
+    if (form.identifierType === "username" && form.usernameType === "custom") {
+      if (!/^[A-Za-z]{3,8}$/.test(form.customPrefix)) {
+        errors.customPrefix = "Prefix must be 3-8 letters (A-Z only)";
+      }
+      const info = form.usernameInfo.trim();
+      if (info.length < 3 || info.length > 16) {
+        errors.usernameInfo = "Username must be 3-16 characters";
+      }
+      if (!/^\d{3,16}$/.test(form.usernameSuffix)) {
+        errors.usernameSuffix = "Suffix must be 3-16 digits";
+      }
+    } else if (form.identifierType === "username") {
       if (!form.username.trim()) {
         errors.username = translation(
           "create_account_modal.errUsernameRequired",
@@ -284,6 +313,18 @@ export default function CreateAccountModal({
     navigate("/plans");
   };
 
+  const syncCustomPrefix = async (prefix: string) => {
+    if (userDetails && !savedPrefixes.includes(prefix)) {
+      setUserDetails({
+        ...userDetails,
+        custom_prefixes: [...savedPrefixes, prefix],
+      });
+    }
+    try {
+      setUserDetails(await fetchUserDetails());
+    } catch {}
+  };
+
   const handleSubmit = async () => {
     setSubmitError(null);
     if (!validate()) return;
@@ -299,7 +340,19 @@ export default function CreateAccountModal({
         password: form.password,
         displayName: getEffectiveDisplayName(),
         description: form.description,
+        usernameType:
+          form.identifierType === "username" ? form.usernameType : "normal",
+        customPrefix: form.customPrefix,
+        usernameInfo: form.usernameInfo.trim(),
+        usernameSuffix: form.usernameSuffix,
       });
+
+      if (
+        form.identifierType === "username" &&
+        form.usernameType === "custom"
+      ) {
+        await syncCustomPrefix(form.customPrefix);
+      }
 
       if (form.identifierType === "phone") {
         setPendingPhone(trimmedPhone);
@@ -655,71 +708,195 @@ export default function CreateAccountModal({
           </div>
 
           {form.identifierType === "username" && (
-            <div>
-              <TextInput
-                label={translation(
-                  "create_account_modal.labelUsername",
-                  "Username",
-                )}
-                classNames={{ label: classes.fieldLabel }}
-                placeholder={translation(
-                  "create_account_modal.placeholderUsername",
-                  "Enter username",
-                )}
-                value={form.username}
-                onChange={(e) => handleUsernameChange(e.target.value)}
-                error={formErrors.username}
-                rightSection={
-                  usernameChecking ? (
-                    <Loader size={14} />
-                  ) : (
-                    <Button
-                      size="xs"
-                      variant="subtle"
-                      disabled={wandDisabled}
-                      onClick={() =>
-                        fetchUsernameSuggestionsOnce(form.username)
-                      }
-                    >
-                      {translation("create_account_modal.btnVerify", "Verify")}
-                    </Button>
-                  )
-                }
-                rightSectionWidth={70}
-              />
-
-              {usernameSuggestions.length > 0 && (
-                <Stack gap={4} mt={6}>
-                  {usernameSuggestions && (
-                    <Text size="xs" c="dimmed">
-                      {translation(
-                        "create_account_modal.txtChooseSuggestedUsername",
-                        "Choose one of the suggested usernames below",
-                      )}
-                    </Text>
-                  )}
-                  <Group gap={6}>
-                    {usernameSuggestions.map((suggestion) => (
-                      <Button
-                        key={suggestion}
-                        size="compact-xs"
-                        variant={
-                          form.username === suggestion.replace(/[#\s-]/g, "") &&
-                          usernameVerified
-                            ? "filled"
-                            : "light"
-                        }
-                        radius="xl"
-                        onClick={() => handleSelectSuggestion(suggestion)}
-                      >
-                        {suggestion}
-                      </Button>
-                    ))}
-                  </Group>
-                </Stack>
-              )}
-            </div>
+            <Radio.Group
+              value={form.usernameType}
+              onChange={(value) => {
+                setForm((prev) => ({
+                  ...prev,
+                  usernameType: value as UsernameType,
+                }));
+                setFormErrors({});
+              }}
+            >
+              <Group grow align="stretch" gap="sm" wrap="nowrap">
+                {(
+                  [
+                    {
+                      value: "normal",
+                      title: "Normal",
+                      desc: "We suggest an available username",
+                    },
+                    {
+                      value: "custom",
+                      title: "Custom",
+                      desc: "Your own prefix-name-number",
+                    },
+                  ] as const
+                ).map((opt) => (
+                  <Radio.Card
+                    key={opt.value}
+                    value={opt.value}
+                    radius="md"
+                    p="sm"
+                    style={{
+                      border:
+                        form.usernameType === opt.value
+                          ? "1.5px solid var(--mantine-color-blue-6)"
+                          : "1.5px solid var(--mantine-color-gray-3)",
+                      background:
+                        form.usernameType === opt.value
+                          ? "var(--mantine-color-blue-0)"
+                          : undefined,
+                    }}
+                  >
+                    <Group wrap="nowrap" align="flex-start" gap="sm">
+                      <Radio.Indicator />
+                      <div>
+                        <Text fw={600} size="sm">
+                          {opt.title}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {opt.desc}
+                        </Text>
+                      </div>
+                    </Group>
+                  </Radio.Card>
+                ))}
+              </Group>
+            </Radio.Group>
           )}
+
+          {form.identifierType === "username" &&
+            form.usernameType === "custom" && (
+              <Stack gap="sm">
+                <PrefixCombobox
+                  label="Prefix"
+                  description="3-8 letters. Select a saved prefix or type a new one."
+                  placeholder="Select or create prefix"
+                  classNames={{ label: classes.fieldLabel }}
+                  options={savedPrefixes}
+                  value={form.customPrefix}
+                  onChange={setField("customPrefix")}
+                  error={formErrors.customPrefix}
+                />
+                <TextInput
+                  label="Username"
+                  description="3-16 characters."
+                  classNames={{ label: classes.fieldLabel }}
+                  placeholder="Enter name"
+                  value={form.usernameInfo}
+                  maxLength={16}
+                  onChange={(e) =>
+                    setField("usernameInfo")(
+                      e.target.value.replace(/[#\s-]/g, ""),
+                    )
+                  }
+                  error={formErrors.usernameInfo}
+                />
+                <TextInput
+                  label="Suffix"
+                  description="3-16 digits."
+                  classNames={{ label: classes.fieldLabel }}
+                  placeholder="Enter number"
+                  value={form.usernameSuffix}
+                  inputMode="numeric"
+                  onChange={(e) =>
+                    setField("usernameSuffix")(
+                      e.target.value.replace(/\D/g, "").slice(0, 16),
+                    )
+                  }
+                  error={formErrors.usernameSuffix}
+                />
+                {(form.customPrefix ||
+                  form.usernameInfo ||
+                  form.usernameSuffix) && (
+                  <Text size="xs" c="dimmed">
+                    Username will be:{" "}
+                    <strong>
+                      {[
+                        form.customPrefix,
+                        form.usernameInfo,
+                        form.usernameSuffix,
+                      ]
+                        .filter(Boolean)
+                        .join("-")}
+                    </strong>
+                  </Text>
+                )}
+              </Stack>
+            )}
+
+          {form.identifierType === "username" &&
+            form.usernameType === "normal" && (
+              <div>
+                <TextInput
+                  label={translation(
+                    "create_account_modal.labelUsername",
+                    "Username",
+                  )}
+                  classNames={{ label: classes.fieldLabel }}
+                  placeholder={translation(
+                    "create_account_modal.placeholderUsername",
+                    "Enter username",
+                  )}
+                  value={form.username}
+                  onChange={(e) => handleUsernameChange(e.target.value)}
+                  error={formErrors.username}
+                  rightSection={
+                    usernameChecking ? (
+                      <Loader size={14} />
+                    ) : (
+                      <Button
+                        size="xs"
+                        variant="subtle"
+                        disabled={wandDisabled}
+                        onClick={() =>
+                          fetchUsernameSuggestionsOnce(form.username)
+                        }
+                      >
+                        {translation(
+                          "create_account_modal.btnVerify",
+                          "Verify",
+                        )}
+                      </Button>
+                    )
+                  }
+                  rightSectionWidth={70}
+                />
+
+                {usernameSuggestions.length > 0 && (
+                  <Stack gap={4} mt={6}>
+                    {usernameSuggestions && (
+                      <Text size="xs" c="dimmed">
+                        {translation(
+                          "create_account_modal.txtChooseSuggestedUsername",
+                          "Choose one of the suggested usernames below",
+                        )}
+                      </Text>
+                    )}
+                    <Group gap={6}>
+                      {usernameSuggestions.map((suggestion) => (
+                        <Button
+                          key={suggestion}
+                          size="compact-xs"
+                          variant={
+                            form.username ===
+                              suggestion.replace(/[#\s-]/g, "") &&
+                            usernameVerified
+                              ? "filled"
+                              : "light"
+                          }
+                          radius="xl"
+                          onClick={() => handleSelectSuggestion(suggestion)}
+                        >
+                          {suggestion}
+                        </Button>
+                      ))}
+                    </Group>
+                  </Stack>
+                )}
+              </div>
+            )}
 
           {!isPaidUser && (
             <Text size="xs" c="dimmed">
@@ -860,7 +1037,11 @@ export default function CreateAccountModal({
               radius="xl"
               variant="gradient"
               loading={submitting}
-              disabled={form.identifierType === "username" && !usernameVerified}
+              disabled={
+                form.identifierType === "username" &&
+                form.usernameType === "normal" &&
+                !usernameVerified
+              }
               onClick={handleSubmit}
             >
               {translation("create_account_modal.btnAddAccount", "Add Account")}

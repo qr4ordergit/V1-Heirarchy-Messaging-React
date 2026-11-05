@@ -39,6 +39,11 @@ export interface CreateAccountPayload {
   password: string;
   displayName?: string;
   description?: string;
+
+  usernameType?: "normal" | "custom";
+  customPrefix?: string;
+  usernameInfo?: string;
+  usernameSuffix?: string;
 }
 
 export interface CreateAccountResponse {
@@ -135,8 +140,16 @@ export async function createAccount(
     password: payload.password,
   };
 
+  body.username_type = payload.usernameType ?? "normal";
+
   if (payload.identifierType === "username") {
-    body.username = payload.username;
+    if (payload.usernameType === "custom") {
+      body.custom_prefix = payload.customPrefix;
+      body.username_info = payload.usernameInfo;
+      body.username_suffix = payload.usernameSuffix;
+    } else {
+      body.username = payload.username;
+    }
   } else if (payload.identifierType === "phone") {
     body.phone_number = withCountryCode(payload.phone);
   }

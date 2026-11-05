@@ -22,6 +22,7 @@ export interface UserDetails {
   isLocked?: boolean;
   passkey_hash?: string | null;
   is_paid?: boolean;
+  custom_prefixes?: string[];
 }
 
 export const isHubAccount = (details: UserDetails | null | undefined) =>
@@ -43,8 +44,6 @@ interface AuthState {
 
   targetUserDetails: Account | null;
 
-  // Multi-device login: true while this login has not been accepted by the
-  // backend (still checking, or the 5-device limit was hit).
   sessionPending: boolean;
   pendingSessions: ActiveSession[] | null;
   sessionMessage: string;

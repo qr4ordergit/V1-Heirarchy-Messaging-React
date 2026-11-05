@@ -15,6 +15,7 @@ import {
   Container,
   Group,
   Loader,
+  LoadingOverlay,
   Menu,
   Modal,
   PasswordInput,
@@ -1242,6 +1243,22 @@ export default function Accounts() {
 
   return (
     <div className={classes.wrapper}>
+      <LoadingOverlay
+        visible={loggingOut}
+        zIndex={3000}
+        style={{ position: "fixed" }}
+        overlayProps={{ blur: 2, backgroundOpacity: 0.6 }}
+        loaderProps={{
+          children: (
+            <Stack align="center" gap="xs">
+              <Loader />
+              <Text size="sm" c="dimmed">
+                {translation("accounts_page.btnLoggingOut", "Logging out…")}
+              </Text>
+            </Stack>
+          ),
+        }}
+      />
       <DevicesModal
         opened={devicesOpen}
         onClose={() => setDevicesOpen(false)}
@@ -1325,7 +1342,6 @@ export default function Accounts() {
                     )}
                 </Stack>
 
-                {/* Billing is a root-account feature */}
                 {isHubAccountLoggedIn && (
                   <>
                     <Menu.Divider m={0} />
