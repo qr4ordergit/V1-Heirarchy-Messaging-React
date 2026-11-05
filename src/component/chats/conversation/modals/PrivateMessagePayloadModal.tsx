@@ -132,6 +132,16 @@ function PrivateMessagePayloadModal() {
     resetTrigger();
   };
 
+  const showSharedListChecker = () => {
+    if (userDetails?.group_name === "hub") {
+      return false;
+    }
+
+    if (target_user) return true;
+
+    return false;
+  };
+
   const fetchKeyRing = () => {
     KeyRingFn(async () => {
       const params = {
@@ -139,7 +149,7 @@ function PrivateMessagePayloadModal() {
       };
 
       try {
-        const url = target_user
+        const url = showSharedListChecker()
           ? ENDPOINTS.KEYRING_CATEGORIES.SHARED_LIST
           : ENDPOINTS.KEYRING_CATEGORIES.LIST;
         const res = await api.get(url, {
