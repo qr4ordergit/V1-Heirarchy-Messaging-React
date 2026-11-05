@@ -61,6 +61,7 @@ interface userDetails {
 interface AccessAndPermissionGridProps {
   users: userDetails[];
   targetUser: string;
+  targetUserName: string | null;
 }
 
 interface AccessAndPermissionResponse {
@@ -84,6 +85,7 @@ interface SharedKCLoadingState {
 export default function AccessAndPermission({
   users,
   targetUser,
+  targetUserName,
 }: AccessAndPermissionGridProps) {
   const { translation } = useTranslation();
 
@@ -379,12 +381,23 @@ export default function AccessAndPermission({
       >
         <ScrollArea h="100%" type="auto" scrollbarSize={0} p={"xs"}>
           <Stack gap={"xs"}>
-            <Text size="xs" fw={"bolder"} c={"gray"} ms={"xs"}>
-              {translation(
-                "manage_access_permissions_modal.label_access",
-                "Access",
-              )}
-            </Text>
+            <Flex justify={"space-between"} pr={45}>
+              <Text size="xs" fw={"bolder"} c={"gray"} ms={"xs"}>
+                {translation(
+                  "manage_access_permissions_modal.label_access",
+                  "Access",
+                )}
+              </Text>
+              <Flex gap={2} align={"center"}>
+                <Text size="xs" fw={"bolder"} c={"gray"} ms={"xs"}>
+                  {translation(
+                    "manage_access_permissions_modal.label_share_keyring_categories",
+                    "Share Keyring Categories",
+                  )}
+                </Text>
+                <IconKey size={14} color={"gray"} />
+              </Flex>
+            </Flex>
             {users.map((user) => {
               const currentUser = changes[user.id];
               const canUserAccess = Boolean(currentUser);
@@ -476,10 +489,10 @@ export default function AccessAndPermission({
                     {canUserAccess && (
                       <Tooltip
                         label={`
-                          ${user.display_name !== "" ? user.display_name : user.label}
+                          ${user.display_name !== "" ? user.display_name : user.label}'s
                         ${translation(
-                          "manage_access_permissions_modal.tooltip_modal_title_share_keyring_category_to",
-                          "Share keyring category to",
+                          "manage_access_permissions_modal.tooltip_share_keyring_category",
+                          "Keyring Categories",
                         )}
                         `}
                         fz={"xs"}
@@ -647,12 +660,17 @@ export default function AccessAndPermission({
           setSelectedKeyringCategories([]);
         }}
         title={
-          <Text>
+          <Text size="xs">
+            {translation(
+              "manage_access_permissions_modal.modal_titile_1_share_keyring_category",
+              "Share Keyring Category of",
+            )}{" "}
             <b>{selectedAccount.name}</b>{" "}
             {translation(
-              "manage_access_permissions_modal.tooltip_modal_title_share_keyring_category_to",
-              "Share keyring category to",
-            )}
+              "manage_access_permissions_modal.modal_titile_2_share_keyring_category",
+              "with",
+            )}{" "}
+            <b>{targetUserName}</b>
           </Text>
         }
       >

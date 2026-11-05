@@ -3133,6 +3133,7 @@ export default function Accounts() {
           <AccessAndPermission
             users={users}
             targetUser={accessAndPermissions.targetUser}
+            targetUserName={accessAndPermissions.display_name !== "" ? accessAndPermissions.display_name : accessAndPermissions.label}
           />
         )}
       </Modal>
