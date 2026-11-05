@@ -1348,7 +1348,6 @@ export default function Accounts() {
                     )}
                 </Stack>
 
-                {/* Billing is a root-account feature */}
                 {isHubAccountLoggedIn && (
                   <>
                     <Menu.Divider m={0} />
@@ -2186,7 +2185,6 @@ export default function Accounts() {
                                     variant="light"
                                     color="red"
                                     radius="sm"
-                                    // onClick={() => openLockModal(account)}
                                     style={{
                                       cursor: "pointer",
                                       fontFamily: "monospace",

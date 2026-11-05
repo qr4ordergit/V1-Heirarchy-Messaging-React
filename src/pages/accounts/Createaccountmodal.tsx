@@ -325,9 +325,7 @@ export default function CreateAccountModal({
     }
     try {
       setUserDetails(await fetchUserDetails());
-    } catch {
-      /* keep the optimistic value */
-    }
+    } catch {}
   };
 
   const handleSubmit = async () => {
