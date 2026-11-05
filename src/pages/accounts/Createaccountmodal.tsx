@@ -8,6 +8,7 @@ import {
   Loader,
   Modal,
   PasswordInput,
+  Checkbox,
   PinInput,
   Radio,
   SegmentedControl,
@@ -53,6 +54,7 @@ interface NewAccountForm {
   customPrefix: string;
   usernameInfo: string;
   usernameSuffix: string;
+  isBot: boolean;
 }
 
 const EMPTY_FORM: NewAccountForm = {
@@ -69,6 +71,7 @@ const EMPTY_FORM: NewAccountForm = {
   customPrefix: "",
   usernameInfo: "",
   usernameSuffix: "",
+  isBot: false,
 };
 
 interface NewAccountErrors {
@@ -310,7 +313,7 @@ export default function CreateAccountModal({
 
   const handleUpgradeClick = () => {
     handleClose();
-    navigate("/plans");
+    navigate("/usage-billing");
   };
 
   const syncCustomPrefix = async (prefix: string) => {
@@ -322,7 +325,9 @@ export default function CreateAccountModal({
     }
     try {
       setUserDetails(await fetchUserDetails());
-    } catch {}
+    } catch {
+      /* keep the optimistic value */
+    }
   };
 
   const handleSubmit = async () => {
@@ -345,6 +350,7 @@ export default function CreateAccountModal({
         customPrefix: form.customPrefix,
         usernameInfo: form.usernameInfo.trim(),
         usernameSuffix: form.usernameSuffix,
+        accountType: form.isBot ? "bot" : "user",
       });
 
       if (
@@ -487,6 +493,7 @@ export default function CreateAccountModal({
         password: form.password,
         displayName: getEffectiveDisplayName(),
         description: form.description,
+        accountType: form.isBot ? "bot" : "user",
       });
       setPendingUsername(response.username || response.id || pendingUsername);
       setAccountOtp("");
@@ -686,6 +693,16 @@ export default function CreateAccountModal({
             </Text>
             <SegmentedControl
               fullWidth
+              color="blue"
+              radius="md"
+              styles={{
+                root: {
+                  backgroundColor: "#fff",
+                  border: "1px solid var(--mantine-color-gray-3)",
+                },
+                indicator: { backgroundColor: "var(--mantine-color-blue-6)" },
+                label: { fontWeight: 600 },
+              }}
               value={form.identifierType}
               onChange={handleIdentifierChange}
               data={[
@@ -812,7 +829,11 @@ export default function CreateAccountModal({
                   form.usernameSuffix) && (
                   <Text size="xs" c="dimmed">
                     Username will be:{" "}
-                    <strong>
+                    <strong
+                      style={{
+                        color: "var(--mantine-color-blue-6)",
+                      }}
+                    >
                       {[
                         form.customPrefix,
                         form.usernameInfo,
@@ -1028,6 +1049,15 @@ export default function CreateAccountModal({
             autosize
             minRows={2}
             maxRows={4}
+          />
+          <Checkbox
+            label="Bot account"
+            description="Create this account as a bot instead of a regular user."
+            checked={form.isBot}
+            onChange={(e) => {
+              const checked = e.currentTarget.checked;
+              setForm((prev) => ({ ...prev, isBot: checked }));
+            }}
           />
           <Group justify="flex-end" mt="xs">
             <Button variant="subtle" onClick={handleClose}>

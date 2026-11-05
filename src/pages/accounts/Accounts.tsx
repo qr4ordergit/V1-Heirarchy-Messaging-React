@@ -32,6 +32,7 @@ import {
   Indicator,
   Title,
   Pagination,
+  Radio,
 } from "@mantine/core";
 import {
   IconDotsVertical,
@@ -235,6 +236,9 @@ export default function Accounts() {
   const [appliedSearchQuery, setAppliedSearchQuery] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [accountTypeFilter, setAccountTypeFilter] = useState<"user" | "bot">(
+    "user",
+  );
 
   const [perType, setPerType] = useState<string>("up");
 
@@ -1076,7 +1080,9 @@ export default function Accounts() {
   });
 
   const managedAccounts = filteredAccounts.filter(
-    (account) => account.user_id !== userDetails?.username,
+    (account) =>
+      account.user_id !== userDetails?.username &&
+      (account.account_type === "bot" ? "bot" : "user") === accountTypeFilter,
   );
 
   const totalManagedAccounts = managedAccounts.length;
@@ -1342,6 +1348,7 @@ export default function Accounts() {
                     )}
                 </Stack>
 
+                {/* Billing is a root-account feature */}
                 {isHubAccountLoggedIn && (
                   <>
                     <Menu.Divider m={0} />
@@ -2005,21 +2012,49 @@ export default function Accounts() {
                   </div>
                 )}
 
-                {totalManagedAccounts > 0 && (
+                {totalManagedAccounts === 0 && (
+                  <Text size="sm" c="dimmed" ta="center" py="md">
+                    No {accountTypeFilter === "bot" ? "bot" : "normal"} accounts
+                    found.
+                  </Text>
+                )}
+
+                {accounts.length > 1 && (
                   <Group justify="space-between" align="center" wrap="wrap">
                     <Text size="xs" c="dimmed">
-                      {translation("accounts_page.txtShowing", "Showing")}{" "}
-                      {(safeCurrentPage - 1) * ACCOUNTS_PAGE_SIZE + 1}–
-                      {Math.min(
-                        safeCurrentPage * ACCOUNTS_PAGE_SIZE,
-                        totalManagedAccounts,
-                      )}{" "}
-                      {translation("accounts_page.txtTotal", "of")}{" "}
-                      {totalManagedAccounts}{" "}
-                      {totalManagedAccounts === 1
-                        ? translation("accounts_page.txtAccount", "account")
-                        : translation("accounts_page.txtAccounts", "accounts")}
+                      {totalManagedAccounts > 0 && (
+                        <>
+                          {translation("accounts_page.txtShowing", "Showing")}{" "}
+                          {(safeCurrentPage - 1) * ACCOUNTS_PAGE_SIZE + 1}–
+                          {Math.min(
+                            safeCurrentPage * ACCOUNTS_PAGE_SIZE,
+                            totalManagedAccounts,
+                          )}{" "}
+                          {translation("accounts_page.txtTotal", "of")}{" "}
+                          {totalManagedAccounts}{" "}
+                          {totalManagedAccounts === 1
+                            ? translation("accounts_page.txtAccount", "account")
+                            : translation(
+                                "accounts_page.txtAccounts",
+                                "accounts",
+                              )}
+                        </>
+                      )}
                     </Text>
+
+                    <Radio.Group
+                      value={accountTypeFilter}
+                      onChange={(value) => {
+                        setAccountTypeFilter(value as "user" | "bot");
+                        setCurrentPage(1);
+                      }}
+                      ml="auto"
+                    >
+                      <Group gap="md" wrap="nowrap">
+                        <Radio value="user" label="Normal" size="xs" />
+                        <Radio value="bot" label="Bot" size="xs" />
+                      </Group>
+                    </Radio.Group>
                   </Group>
                 )}
 
@@ -3133,7 +3168,11 @@ export default function Accounts() {
           <AccessAndPermission
             users={users}
             targetUser={accessAndPermissions.targetUser}
-            targetUserName={accessAndPermissions.display_name !== "" ? accessAndPermissions.display_name : accessAndPermissions.label}
+            targetUserName={
+              accessAndPermissions.display_name !== ""
+                ? accessAndPermissions.display_name
+                : accessAndPermissions.label
+            }
           />
         )}
       </Modal>

@@ -24,6 +24,8 @@ export interface Account {
   status: string | null;
   isLocked: boolean;
   passkey_hash?: string;
+
+  account_type?: "user" | "bot" | string | null;
 }
 
 export interface SubUserAccessDetail {
@@ -44,6 +46,7 @@ export interface CreateAccountPayload {
   customPrefix?: string;
   usernameInfo?: string;
   usernameSuffix?: string;
+  accountType?: "user" | "bot";
 }
 
 export interface CreateAccountResponse {
@@ -141,6 +144,7 @@ export async function createAccount(
   };
 
   body.username_type = payload.usernameType ?? "normal";
+  body.account_type = payload.accountType ?? "user";
 
   if (payload.identifierType === "username") {
     if (payload.usernameType === "custom") {
@@ -379,8 +383,6 @@ export async function bulkRegisterSubUsers(
       API_ENDPOINTS.AUTH_SUB_USERS_BULK,
       formData,
       {
-        // Let the browser set "multipart/form-data" with the correct
-        // boundary instead of the instance's default JSON content-type.
         headers: { "Content-Type": undefined },
       },
     );
