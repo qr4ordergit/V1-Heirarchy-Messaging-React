@@ -5,6 +5,7 @@ import {
   Alert,
   Button,
   Group,
+  Input,
   Loader,
   Modal,
   PasswordInput,
@@ -1056,7 +1057,7 @@ export default function CreateAccountModal({
             onClick={() => setForm((prev) => ({ ...prev, isBot: !prev.isBot }))}
             style={{
               width: "100%",
-              padding: "var(--mantine-spacing-sm)",
+              padding: "6px 12px",
               borderRadius: "var(--mantine-radius-md)",
               border: form.isBot
                 ? "1.5px solid var(--mantine-color-blue-6)"
@@ -1066,17 +1067,23 @@ export default function CreateAccountModal({
                 : undefined,
             }}
           >
-            <Group justify="space-between" wrap="nowrap" align="center">
-              <div>
-                <Text fw={600} size="sm">
+            <Group
+              justify="space-between"
+              wrap="nowrap"
+              align="center"
+              gap="sm"
+            >
+              <div style={{ lineHeight: 1.25 }}>
+                <Input.Label className={classes.fieldLabel}>
                   Bot account
-                </Text>
-                <Text size="xs" c="dimmed">
+                </Input.Label>
+                <Input.Description size="xs" style={{ lineHeight: 1.3 }}>
                   Enable bot access via AI Models including ChatGPT / Anthropic
                   Claude
-                </Text>
+                </Input.Description>
               </div>
               <Switch
+                size="sm"
                 checked={form.isBot}
                 onChange={() => {}}
                 tabIndex={-1}
