@@ -52,6 +52,7 @@ import {
   IconShieldLock,
   IconBell,
   IconChevronDown,
+  IconCrown,
   IconSparkles,
   IconLanguage,
 } from "@tabler/icons-react";
@@ -2181,6 +2182,26 @@ export default function Accounts() {
                                 >
                                   {account.user_id}
                                 </Text>
+                              )}
+
+                              {account.is_premium && (
+                                <Tooltip
+                                  label={translation(
+                                    "accounts_page.tooltipPremiumAccount",
+                                    "Premium account",
+                                  )}
+                                >
+                                  <IconCrown
+                                    size={16}
+                                    color="#f59f00"
+                                    fill="#ffd43b"
+                                    aria-label={translation(
+                                      "accounts_page.tooltipPremiumAccount",
+                                      "Premium account",
+                                    )}
+                                    style={{ flexShrink: 0 }}
+                                  />
+                                </Tooltip>
                               )}
 
                               <Tooltip

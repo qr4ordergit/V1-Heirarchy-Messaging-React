@@ -26,6 +26,7 @@ export interface Account {
   passkey_hash?: string;
 
   account_type?: "user" | "bot" | string | null;
+  is_premium?: boolean | null;
 }
 
 export interface SubUserAccessDetail {
