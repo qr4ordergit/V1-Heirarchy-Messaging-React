@@ -16,6 +16,9 @@ export interface PricingRule {
     free_bytes: number;
     price_per_gb: string | number;
   };
+  premium_usernames?: {
+    price_per_unit: string | number;
+  };
   effective_from: string | null;
   effective_until: string | null;
   updated_at: string;
@@ -42,6 +45,9 @@ export interface UserPricingSummary {
   storage?: {
     free_bytes: number;
     price_per_gb: string | number;
+  };
+  premium_usernames?: {
+    price_per_unit: string | number;
   };
 }
 
@@ -109,6 +115,9 @@ export interface DefaultPricingPayload {
     free_bytes: number;
     price_per_gb: string;
   };
+  premium_usernames?: {
+    price_per_unit: string;
+  };
 }
 
 export interface CustomPricingPayload {
@@ -125,6 +134,9 @@ export interface CustomPricingPayload {
     free_bytes: number;
     price_per_gb: string;
   };
+  premium_usernames?: {
+    price_per_unit: string;
+  };
 }
 
 export interface UserBillingOverviewDetails {
@@ -140,6 +152,7 @@ export interface UserBillingOverviewDetails {
     cost: {
       chat_accounts: string;
       storage: string;
+      premium_usernames?: string;
       total: string;
     };
     latest_day: {
@@ -160,6 +173,11 @@ export interface UserBillingOverviewDetails {
       storage: {
         usage_bytes: number;
         free_bytes: number;
+        unit_price: string;
+        cost: string;
+      };
+      premium_usernames?: {
+        usage: number;
         unit_price: string;
         cost: string;
       };

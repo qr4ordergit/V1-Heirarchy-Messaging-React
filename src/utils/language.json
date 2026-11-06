@@ -817,7 +817,9 @@
         "titleInvoicePdfPreview": "Invoice Document Preview",
         "btnOpenInNewTab": "Open in new tab",
         "loadingInvoicePdf": "Loading invoice PDF...",
-        "txtPdfNotAvailable": "Invoice PDF preview is not available."
+        "txtPdfNotAvailable": "Invoice PDF preview is not available.",
+        "itemPremiumUsernames": "Premium Usernames",
+        "detailPremiumUsernames": "{usage} used • ${rate}/username/{unit}"
       },
       "admin_billing": {
         "itemChatAccounts": "Chat Accounts ({count} free)",
@@ -913,7 +915,12 @@
         "buttonSaveRates": "Save Rates",
         "notiUserMovedSuccess": "User moved to custom pricing tier successfully.",
         "notiPricingUpdated": "Tier pricing configuration updated successfully.",
-        "notiUserReturnedDefault": "User reassigned to standard default pricing."
+        "notiUserReturnedDefault": "User reassigned to standard default pricing.",
+        "dividerPremiumUsernames": "Premium Usernames",
+        "labelPremiumPrice": "Rate per username ($)",
+        "descriptionPremiumPrice": "Price per premium username",
+        "itemPremiumUsernames": "Premium Usernames",
+        "detailPremiumUsernames": "{usage} used • ${rate}/username"
       }
     },
     "uk": {
@@ -1734,7 +1741,9 @@
         "titleInvoicePdfPreview": "Попередній перегляд рахунку",
         "btnOpenInNewTab": "Відкрити в новій вкладці",
         "loadingInvoicePdf": "Завантаження рахунку PDF...",
-        "txtPdfNotAvailable": "Попередній перегляд рахунку недоступний."
+        "txtPdfNotAvailable": "Попередній перегляд рахунку недоступний.",
+        "itemPremiumUsernames": "Преміум-імена користувачів",
+        "detailPremiumUsernames": "{usage} використано • ${rate}/ім'я користувача/{unit}"
       },
       "admin_billing": {
         "itemChatAccounts": "Облікові записи чату ({count} безкоштовно)",
@@ -1830,7 +1839,12 @@
         "buttonSaveRates": "Зберегти тарифи",
         "notiUserMovedSuccess": "Користувача успішно переведено на індивідуальний тариф.",
         "notiPricingUpdated": "Конфігурацію тарифу успішно оновлено.",
-        "notiUserReturnedDefault": "Користувачеві відновлено стандартний тариф."
+        "notiUserReturnedDefault": "Користувачеві відновлено стандартний тариф.",
+        "dividerPremiumUsernames": "Преміум-імена користувачів",
+        "labelPremiumPrice": "Ціна за ім'я користувача ($)",
+        "descriptionPremiumPrice": "Ціна за одне преміум-ім'я",
+        "itemPremiumUsernames": "Преміум-імена користувачів",
+        "detailPremiumUsernames": "{usage} використано • ${rate}/ім'я користувача"
       }
     }
   },

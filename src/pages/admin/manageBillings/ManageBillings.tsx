@@ -134,6 +134,7 @@ export default function ManageBillings() {
   const [editAccountPrice, setEditAccountPrice] = useState<number>(0);
   const [editFreeGb, setEditFreeGb] = useState<number>(0);
   const [editStoragePrice, setEditStoragePrice] = useState<number>(0);
+  const [editPremiumPrice, setEditPremiumPrice] = useState<number>(0);
   const [changeReason, setChangeReason] = useState<string>("");
   const [changeReasonError, setChangeReasonError] = useState<string | null>(
     null,
@@ -348,6 +349,9 @@ export default function ManageBillings() {
     setEditAccountPrice(Number(defaultPricing.chat_accounts.price_per_unit));
     setEditFreeGb(formatBytesToGb(defaultPricing.storage.free_bytes));
     setEditStoragePrice(Number(defaultPricing.storage.price_per_gb));
+    setEditPremiumPrice(
+      Number(defaultPricing.premium_usernames?.price_per_unit ?? 0.01),
+    );
     setChangeReason("");
     setChangeReasonError(null);
     setRateModalOpened(true);
@@ -361,6 +365,8 @@ export default function ManageBillings() {
     const customAccounts =
       customItem.pricing.chat_accounts || defaultPricing?.chat_accounts;
     const customStorage = customItem.pricing.storage || defaultPricing?.storage;
+    const customPremium =
+      customItem.pricing.premium_usernames || defaultPricing?.premium_usernames;
 
     setEditFreeAccounts(customAccounts?.free_quantity ?? 4);
     setEditAccountPrice(Number(customAccounts?.price_per_unit ?? 0.03));
@@ -368,6 +374,8 @@ export default function ManageBillings() {
       customStorage ? formatBytesToGb(customStorage.free_bytes) : 5,
     );
     setEditStoragePrice(Number(customStorage?.price_per_gb ?? 0.025));
+
+    setEditPremiumPrice(Number(customPremium?.price_per_unit ?? 0.01));
     setChangeReason("");
     setChangeReasonError(null);
     setRateModalOpened(true);
@@ -386,6 +394,9 @@ export default function ManageBillings() {
       defaultPricing ? formatBytesToGb(defaultPricing.storage.free_bytes) : 5,
     );
     setEditStoragePrice(Number(defaultPricing?.storage.price_per_gb ?? 0.025));
+    setEditPremiumPrice(
+      Number(defaultPricing?.premium_usernames?.price_per_unit ?? 0.01),
+    );
     setChangeReason("");
     setChangeReasonError(null);
     setRateModalOpened(true);
@@ -418,6 +429,9 @@ export default function ManageBillings() {
       storage: {
         free_bytes: Math.round(gbToBytes(Number(editFreeGb) || 0)),
         price_per_gb: String(editStoragePrice ?? 0),
+      },
+      premium_usernames: {
+        price_per_unit: String(editPremiumPrice ?? 0),
       },
     };
 
@@ -785,6 +799,12 @@ export default function ManageBillings() {
   const modalStorageUsageBytes = latestStorage?.usage_bytes ?? 0;
   const modalStorageFreeBytes = latestStorage?.free_bytes ?? 5368709120;
   const modalStorageRate = parseCost(latestStorage?.unit_price ?? "0.025");
+  const latestPremium = userEstimateData?.latest_day?.premium_usernames;
+  const modalPremiumUsage = latestPremium?.usage ?? 0;
+  const modalPremiumRate = parseCost(latestPremium?.unit_price ?? "0.01");
+  const modalPremiumCost = parseCost(
+    userEstimateData?.cost?.premium_usernames ?? latestPremium?.cost,
+  );
 
   const modalChatCost = parseCost(userEstimateData?.cost?.chat_accounts);
   const modalStorageCost = parseCost(userEstimateData?.cost?.storage);
@@ -1376,6 +1396,27 @@ export default function ManageBillings() {
                     ${modalChatCost.toFixed(2)}
                   </Table.Td>
                 </Table.Tr>
+                <Table.Tr>
+                  <Table.Td fw={500}>
+                    {translation(
+                      "admin_billing.itemPremiumUsernames",
+                      "Premium Usernames",
+                    )}
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="xs" c="dimmed">
+                      {translation(
+                        "admin_billing.detailPremiumUsernames",
+                        `${modalPremiumUsage} used • $${modalPremiumRate.toFixed(4)}/username`,
+                      )
+                        .replace(/{usage}/g, String(modalPremiumUsage))
+                        .replace(/{rate}/g, modalPremiumRate.toFixed(4))}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td style={{ textAlign: "right" }} fw={600}>
+                    ${modalPremiumCost.toFixed(2)}
+                  </Table.Td>
+                </Table.Tr>
 
                 <Table.Tr>
                   <Table.Td fw={500}>
@@ -1535,6 +1576,30 @@ export default function ManageBillings() {
               onChange={(val) => setEditStoragePrice(Number(val) || 0)}
             />
           </SimpleGrid>
+
+          <Divider
+            label={translation(
+              "admin_billing.dividerPremiumUsernames",
+              "Premium Usernames",
+            )}
+            labelPosition="left"
+          />
+
+          <NumberInput
+            label={translation(
+              "admin_billing.labelPremiumPrice",
+              "Rate per username ($)",
+            )}
+            description={translation(
+              "admin_billing.descriptionPremiumPrice",
+              "Price per premium username",
+            )}
+            size="xs"
+            min={0}
+            decimalScale={3}
+            value={editPremiumPrice}
+            onChange={(val) => setEditPremiumPrice(Number(val) || 0)}
+          />
 
           <Divider label="Audit & Reason" labelPosition="left" />
 

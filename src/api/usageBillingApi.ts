@@ -73,6 +73,7 @@ export interface EstimateData {
   cost?: {
     chat_accounts?: string | number;
     storage?: string | number;
+    premium_usernames?: string | number;
     total?: string | number;
   };
   latest_day?: {
@@ -84,12 +85,15 @@ export interface EstimateData {
     };
     chat_accounts?: LatestDayMetrics;
     storage?: LatestDayMetrics;
+    premium_usernames?: LatestDayMetrics;
   };
   total_chat_accounts_cost?: string | number;
   total_storage_cost?: string | number;
+  total_premium_usernames_cost?: string | number;
   total_estimated_cost?: string | number;
   chat_accounts?: any;
   storage?: any;
+  premium_usernames?: any;
   [key: string]: any;
 }
 
