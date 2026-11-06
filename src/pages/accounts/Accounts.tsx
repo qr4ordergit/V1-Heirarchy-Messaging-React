@@ -369,7 +369,12 @@ export default function Accounts() {
       setAccounts(allAccounts);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not load accounts.";
+        err instanceof Error
+          ? err.message
+          : translation(
+              "accounts_page.errCouldNotLoadAccounts",
+              "Could not load accounts.",
+            );
 
       const isPermissionError =
         /You do not have permission to perform this operation/i.test(message);
@@ -497,7 +502,10 @@ export default function Accounts() {
         const message =
           err instanceof Error
             ? err.message
-            : "Could not check the upload status.";
+            : translation(
+                "accounts_page.errCouldNotCheckUploadStatus",
+                "Could not check the upload status.",
+              );
 
         setBulkJob({ status: "error", errorMessage: message });
 
@@ -549,7 +557,12 @@ export default function Accounts() {
       pollBulkJob(response.job_id, source);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not process the file.";
+        err instanceof Error
+          ? err.message
+          : translation(
+              "accounts_page.errCouldNotProcessFile",
+              "Could not process the file.",
+            );
 
       setBulkJob({ status: "error", errorMessage: message });
 
@@ -704,7 +717,12 @@ export default function Accounts() {
       }
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not update profile.";
+        err instanceof Error
+          ? err.message
+          : translation(
+              "accounts_page.errCouldNotUpdateProfile",
+              "Could not update profile.",
+            );
       setProfileError(message);
       notifications.show({
         color: "red",
@@ -822,7 +840,12 @@ export default function Accounts() {
       });
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not remove account.";
+        err instanceof Error
+          ? err.message
+          : translation(
+              "accounts_page.errCouldNotRemoveAccount",
+              "Could not remove account.",
+            );
       setDeleteError(message);
       notifications.show({
         color: "red",
@@ -859,7 +882,12 @@ export default function Accounts() {
       });
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not deactivate account.";
+        err instanceof Error
+          ? err.message
+          : translation(
+              "accounts_page.errCouldNotDeactivateAccount",
+              "Could not deactivate account.",
+            );
       setDeleteError(message);
       notifications.show({
         color: "red",
@@ -896,7 +924,12 @@ export default function Accounts() {
       });
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not reactivate account.";
+        err instanceof Error
+          ? err.message
+          : translation(
+              "accounts_page.errCouldNotReactivateAccount",
+              "Could not reactivate account.",
+            );
       setDeleteError(message);
       notifications.show({
         color: "red",
@@ -965,7 +998,12 @@ export default function Accounts() {
       });
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not change password.";
+        err instanceof Error
+          ? err.message
+          : translation(
+              "accounts_page.errCouldNotChangePassword",
+              "Could not change password.",
+            );
       setPasswordError(message);
       notifications.show({
         color: "red",
@@ -1048,7 +1086,13 @@ export default function Accounts() {
         await loadAccounts();
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not lock.";
+      const message =
+        err instanceof Error
+          ? err.message
+          : translation(
+              "accounts_page.errCouldNotUpdateLock",
+              "Could not lock.",
+            );
       setLockError(message);
       notifications.show({
         color: "red",
@@ -1347,7 +1391,6 @@ export default function Accounts() {
                     )}
                 </Stack>
 
-                {/* Billing is a root-account feature */}
                 {isHubAccountLoggedIn && (
                   <>
                     <Menu.Divider m={0} />
@@ -2039,7 +2082,10 @@ export default function Accounts() {
                       ml="auto"
                       mr={27}
                       labelPosition="left"
-                      label="Toggle to access bot accounts"
+                      label={translation(
+                        "accounts_page.labelToggleBotAccounts",
+                        "Toggle to access bot accounts",
+                      )}
                       checked={accountTypeFilter === "bot"}
                       onChange={(e) => {
                         const checked = e.currentTarget.checked;
@@ -2055,8 +2101,15 @@ export default function Accounts() {
 
                 {totalManagedAccounts === 0 && (
                   <Text size="sm" c="dimmed" ta="center" py="md">
-                    No {accountTypeFilter === "bot" ? "bot" : "normal"} accounts
-                    found.
+                    {accountTypeFilter === "bot"
+                      ? translation(
+                          "accounts_page.txtNoBotAccountsFound",
+                          "No bot accounts found.",
+                        )
+                      : translation(
+                          "accounts_page.txtNoNormalAccountsFound",
+                          "No normal accounts found.",
+                        )}
                   </Text>
                 )}
 

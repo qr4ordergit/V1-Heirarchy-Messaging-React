@@ -551,7 +551,7 @@ export default function Home() {
                 onClick={() => setDrawerOpen((o) => !o)}
                 color="white"
                 size="sm"
-                aria-label="Menu"
+                aria-label={t("navMenu", "Menu")}
               />
             )}
           </Group>
@@ -583,7 +583,7 @@ export default function Home() {
         <section
           className={`${classes.hero} ${classes.blurTarget}`}
           onClick={next}
-          title="Click the picture to switch slide"
+          title={t("heroSwitchHint", "Click the picture to switch slide")}
         >
           <div className={classes.heroFrame}>
             <div
@@ -639,7 +639,6 @@ export default function Home() {
         </section>
 
         <div className={classes.darkWrap}>
-          {/* ---------- hierarchy ---------- */}
           <section id="section-hierarchy" className={classes.hierarchy}>
             <div
               {...reveal}
@@ -689,8 +688,12 @@ export default function Home() {
                   >
                     <div className={classes.crudLetter}>{letter}</div>
                     <div className={classes.crudDivider} />
-                    <h3 className={classes.crudTitle}>{title}</h3>
-                    <p className={classes.crudText}>{text}</p>
+                    <h3 className={classes.crudTitle}>
+                      {t(`crud${i + 1}Title`, title)}
+                    </h3>
+                    <p className={classes.crudText}>
+                      {t(`crud${i + 1}Text`, text)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -727,24 +730,28 @@ export default function Home() {
                   </button>
                 </div>
                 <div className={classes.videoList}>
-                  {ABOUT_VIDEOS.map(([n, title, desc]) => (
-                    <button
-                      key={n}
-                      type="button"
-                      className={classes.videoLink}
-                      onClick={() =>
-                        setVideo({ title: `${n}. ${title}`, desc })
-                      }
-                    >
-                      <span className={classes.videoLinkLeft}>
-                        <span className={classes.videoNum}>{n}</span>
-                        <span className={classes.videoTitle}>{title}</span>
-                      </span>
-                      <span className={classes.videoPlay}>
-                        <IconChevronRight size={16} stroke={2} />
-                      </span>
-                    </button>
-                  ))}
+                  {ABOUT_VIDEOS.map(([n, title0, desc0], vi) => {
+                    const title = t(`aboutVideo${vi + 1}Title`, title0);
+                    const desc = t(`aboutVideo${vi + 1}Desc`, desc0);
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        className={classes.videoLink}
+                        onClick={() =>
+                          setVideo({ title: `${n}. ${title}`, desc })
+                        }
+                      >
+                        <span className={classes.videoLinkLeft}>
+                          <span className={classes.videoNum}>{n}</span>
+                          <span className={classes.videoTitle}>{title}</span>
+                        </span>
+                        <span className={classes.videoPlay}>
+                          <IconChevronRight size={16} stroke={2} />
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -760,14 +767,20 @@ export default function Home() {
                       {value.endsWith(" sec") ? (
                         <>
                           {value.slice(0, -4)}{" "}
-                          <span className={classes.statUnit}>sec</span>
+                          <span className={classes.statUnit}>
+                            {t("statSecUnit", "sec")}
+                          </span>
                         </>
                       ) : (
                         value
                       )}
                     </div>
-                    <div className={classes.statLabel}>{label}</div>
-                    <p className={classes.statText}>{text}</p>
+                    <div className={classes.statLabel}>
+                      {t(`stat${i + 1}Label`, label)}
+                    </div>
+                    <p className={classes.statText}>
+                      {t(`stat${i + 1}Text`, text)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -783,7 +796,7 @@ export default function Home() {
               {t("downloadTitle", "Use the App on Your Preferred Platform")}
             </h2>
             <SimpleGrid cols={{ base: 1, md: 2 }} spacing={32} {...reveal}>
-              {STORES.map((c) => (
+              {STORES.map((c, si) => (
                 <div
                   key={c.title}
                   className={`${classes.storeCard} ${classes[c.cls]}`}
@@ -793,13 +806,17 @@ export default function Home() {
                       <div className={classes.rating}>
                         <span>{c.rating}</span>
                         <span className={classes.stars}>★★★★★</span>
-                        <span className={classes.reviews}>• {c.reviews}</span>
+                        <span className={classes.reviews}>
+                          • {t(`store${si + 1}Reviews`, c.reviews)}
+                        </span>
                       </div>
-                      <h3 className={classes.storeTitle}>{c.title}</h3>
+                      <h3 className={classes.storeTitle}>
+                        {t(`store${si + 1}Title`, c.title)}
+                      </h3>
                     </div>
                     <button type="button" className={classes.storeBtn}>
                       {c.icon}
-                      <span>{c.btn}</span>
+                      <span>{t(`store${si + 1}Btn`, c.btn)}</span>
                     </button>
                   </div>
                   <div className={classes.phoneWrap}>
@@ -816,7 +833,6 @@ export default function Home() {
         </div>
 
         <div className={`${classes.lightWrap} ${classes.blurTarget}`}>
-          {/* ---------- security ---------- */}
           <section id="section-security" className={classes.lightNarrow}>
             <div
               {...reveal}
@@ -840,7 +856,7 @@ export default function Home() {
               <div className={classes.bentoImgWrap}>
                 <img
                   src={img("sec_top_laptop.jpg")}
-                  alt="Zero Device Footprint"
+                  alt={t("secZeroTitle", "Zero Device Footprint")}
                   className={classes.bentoImg}
                 />
                 <div className={classes.bentoFade} />
@@ -854,10 +870,14 @@ export default function Home() {
               </div>
               <div className={classes.bentoBody}>
                 <div style={{ margin: "auto 0" }}>
-                  <h3 className={classes.bentoTitle}>Zero Device Footprint</h3>
+                  <h3 className={classes.bentoTitle}>
+                    {t("secZeroTitle", "Zero Device Footprint")}
+                  </h3>
                   <p className={classes.bentoText}>
-                    Close the browser — your device is completely clean. No
-                    files, databases, or system traces left behind.
+                    {t(
+                      "secZeroText",
+                      "Close the browser — your device is completely clean. No files, databases, or system traces left behind.",
+                    )}
                   </p>
                 </div>
                 <div style={{ textAlign: "right", marginTop: 24 }}>
@@ -866,7 +886,7 @@ export default function Home() {
                     className={classes.learnMore}
                     onClick={() => scrollToId("section-faq")}
                   >
-                    <span>Learn More</span>
+                    <span>{t("btnLearnMore", "Learn More")}</span>
                     <IconArrowRight size={16} />
                   </button>
                 </div>
@@ -877,36 +897,40 @@ export default function Home() {
               {...reveal}
               className={`${classes.reveal} ${classes.bentoRow}`}
             >
-              {SECURITY_CARDS.map(([image, title, text]) => (
-                <div
-                  key={image}
-                  className={classes.bentoCard}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setSecOpen(true)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") setSecOpen(true);
-                  }}
-                  style={{ cursor: "pointer" }}
-                >
-                  <div className={classes.bentoCardImgWrap}>
-                    <img
-                      src={img(image)}
-                      alt={title}
-                      className={classes.bentoCardImg}
-                    />
-                    <span className={classes.morePill}>
-                      {t("btnMore", "More")}
-                    </span>
-                  </div>
-                  {text && (
-                    <div className={classes.bentoCardBody}>
-                      <h4>{title}</h4>
-                      <p>{text}</p>
+              {SECURITY_CARDS.map(([image, title0, text0], ci) => {
+                const title = title0 ? t(`secCard${ci + 1}Title`, title0) : "";
+                const text = text0 ? t(`secCard${ci + 1}Text`, text0) : "";
+                return (
+                  <div
+                    key={image}
+                    className={classes.bentoCard}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSecOpen(true)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") setSecOpen(true);
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <div className={classes.bentoCardImgWrap}>
+                      <img
+                        src={img(image)}
+                        alt={title}
+                        className={classes.bentoCardImg}
+                      />
+                      <span className={classes.morePill}>
+                        {t("btnMore", "More")}
+                      </span>
                     </div>
-                  )}
-                </div>
-              ))}
+                    {text && (
+                      <div className={classes.bentoCardBody}>
+                        <h4>{title}</h4>
+                        <p>{text}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </section>
 
@@ -1001,27 +1025,33 @@ export default function Home() {
                 >
                   <div>
                     <div style={{ textAlign: "center", marginBottom: 16 }}>
-                      <h3 className={classes.planName}>{p.name}</h3>
-                      <p className={classes.planSub}>{p.sub}</p>
+                      <h3 className={classes.planName}>
+                        {t(`plan_${p.id}_name`, p.name)}
+                      </h3>
+                      <p className={classes.planSub}>
+                        {t(`plan_${p.id}_sub`, p.sub)}
+                      </p>
                     </div>
                     <div className={classes.priceBox}>
                       <span className={classes.planMark}>{p.mark}</span>
                       <span className={classes.planPrice}>
                         {priceOf(p.price)}
                       </span>
-                      <span className={classes.planPriceSub}>{p.priceSub}</span>
+                      <span className={classes.planPriceSub}>
+                        {t(`plan_${p.id}_priceSub`, p.priceSub)}
+                      </span>
                     </div>
                     <Link to={ROUTES.REGISTER} className={classes.planBtn}>
-                      {p.cta}
+                      {t(`plan_${p.id}_cta`, p.cta)}
                     </Link>
                     <div className={classes.planList}>
                       <div className={classes.planListTitle}>
-                        What's included:
+                        {t("planIncluded", "What's included:")}
                       </div>
-                      {p.features.map((f) => (
+                      {p.features.map((f, fi) => (
                         <div key={f} className={classes.planItem}>
                           <span>✓</span>
-                          <span>{f}</span>
+                          <span>{t(`plan_${p.id}_feature${fi + 1}`, f)}</span>
                         </div>
                       ))}
                     </div>
@@ -1050,11 +1080,13 @@ export default function Home() {
                       className={classes.faqBtn}
                       onClick={() => setOpenFaq(open ? null : i)}
                     >
-                      <span className={classes.faqQ}>{q}</span>
+                      <span className={classes.faqQ}>
+                        {t(`faq${i + 1}Q`, q)}
+                      </span>
                       <span className={classes.faqIcon}>+</span>
                     </button>
                     <Collapse expanded={open}>
-                      <div className={classes.faqA}>{a}</div>
+                      <div className={classes.faqA}>{t(`faq${i + 1}A`, a)}</div>
                     </Collapse>
                   </div>
                 );
@@ -1102,21 +1134,24 @@ export default function Home() {
                 <span>UKRCHAT</span>
               </button>
               <p className={classes.footerAbout}>
-                The world's first hierarchical messenger with a CRUD permission
-                matrix and Zero Device Footprint technology for business,
-                government structures, and Ukraine's defenders.
+                {t(
+                  "footerAbout",
+                  "The world's first hierarchical messenger with a CRUD permission matrix and Zero Device Footprint technology for business, government structures, and Ukraine's defenders.",
+                )}
               </p>
             </div>
-            {FOOTER_COLS.map(([title, links]) => (
+            {FOOTER_COLS.map(([title, links], fci) => (
               <Stack key={title} gap={10} align="flex-start">
-                <div className={classes.footerHead}>{title}</div>
-                {links.map(([label, target]) => (
+                <div className={classes.footerHead}>
+                  {t(`footerCol${fci + 1}Title`, title)}
+                </div>
+                {links.map(([label, target], li) => (
                   <UnstyledButton
                     key={label}
                     className={classes.footerLink}
                     onClick={() => scrollToId(target)}
                   >
-                    {label}
+                    {t(`footerCol${fci + 1}Link${li + 1}`, label)}
                   </UnstyledButton>
                 ))}
                 {title === "Information" && (
@@ -1125,23 +1160,25 @@ export default function Home() {
                     onClick={startLogin}
                     className={classes.footerLink}
                   >
-                    Personal Account
+                    {t("footerPersonalAccount", "Personal Account")}
                   </a>
                 )}
               </Stack>
             ))}
           </div>
           <div className={classes.footerBottom}>
-            <span>© 2026 UKRCHAT. All rights reserved.</span>
+            <span>
+              {t("footerRights", "© 2026 UKRCHAT. All rights reserved.")}
+            </span>
             <Group gap="lg">
               <Link to={`/${ROUTES.PRIVACY}`} className={classes.footerLink}>
-                Privacy Policy
+                {t("footerPrivacy", "Privacy Policy")}
               </Link>
               <UnstyledButton
                 className={classes.footerLink}
                 onClick={() => scrollToId("section-about")}
               >
-                Terms of Use
+                {t("footerTerms", "Terms of Use")}
               </UnstyledButton>
             </Group>
           </div>
@@ -1157,12 +1194,14 @@ export default function Home() {
         closeButtonProps={{ icon: <IconX size={18} /> }}
       >
         <Stack gap="md">
-          <Text fw={700}>Fundamental Data Protection Principles</Text>
-          {SECURITY_PRINCIPLES.map(([title, text]) => (
+          <Text fw={700}>
+            {t("secPrinciplesTitle", "Fundamental Data Protection Principles")}
+          </Text>
+          {SECURITY_PRINCIPLES.map(([title, text], pi) => (
             <div key={title}>
-              <Text fw={700}>{title}</Text>
+              <Text fw={700}>{t(`secPrinciple${pi + 1}Title`, title)}</Text>
               <Text size="sm" c="dimmed">
-                {text}
+                {t(`secPrinciple${pi + 1}Text`, text)}
               </Text>
             </div>
           ))}

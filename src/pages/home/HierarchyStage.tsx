@@ -1,6 +1,25 @@
 import { useEffect, useMemo, useRef } from "react";
 import stageSvg from "./hierarchy-stage.svg?raw";
 import classes from "./Home.module.css";
+import {
+  useLanguageStore,
+  useTranslation,
+} from "../../store/language/language.store";
+
+// English text baked into hierarchy-stage.svg  ->  translation key.
+const SVG_LABELS: Record<string, string> = {
+  "Access Level": "svgAccessLevel",
+  "(CRUD)": "svgCrud",
+  Create: "svgCreate",
+  Read: "svgRead",
+  Update: "svgUpdate",
+  Delete: "svgDelete",
+  Manager: "svgRoleManager",
+  Accountant: "svgRoleAccountant",
+  CEO: "svgRoleCeo",
+  Marketer: "svgRoleMarketer",
+  "Team Lead": "svgRoleTeamLead",
+};
 
 type CellState = "active" | "locked" | string[];
 
@@ -77,6 +96,9 @@ export default function HierarchyStage({
   onActiveChange?: (active: boolean) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const { translation } = useTranslation();
+  const langContent = useLanguageStore((state) => state.content);
+  const currentLang = useLanguageStore((state) => state.currentLang);
   const html = useMemo(
     () =>
       stageSvg.replace(/assets\/([\w.-]+)/g, (_m, name: string) => asset(name)),
@@ -88,6 +110,11 @@ export default function HierarchyStage({
     if (!root) return;
 
     root.innerHTML = html;
+    root.querySelectorAll("text").forEach((node) => {
+      const en = node.textContent?.trim() ?? "";
+      const key = SVG_LABELS[en];
+      if (key) node.textContent = translation(`home-page.${key}`, en);
+    });
     const groups = Array.from(
       root.querySelectorAll<SVGGElement>(".hier-char-group"),
     );
@@ -153,7 +180,7 @@ export default function HierarchyStage({
     cleanups.push(() => document.removeEventListener("click", outside));
 
     return () => cleanups.forEach((fn) => fn());
-  }, [html, onActiveChange]);
+  }, [html, onActiveChange, currentLang, langContent]);
 
   return <div ref={ref} className={classes.hierStage} />;
 }

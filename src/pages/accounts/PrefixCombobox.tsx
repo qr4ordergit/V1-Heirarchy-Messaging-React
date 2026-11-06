@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Combobox, InputBase, useCombobox } from "@mantine/core";
+import { useTranslation } from "../../store/language/language.store";
 
 interface PrefixComboboxProps {
   label: string;
@@ -28,6 +29,7 @@ export default function PrefixCombobox({
   error,
   classNames,
 }: PrefixComboboxProps) {
+  const { translation } = useTranslation();
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
@@ -95,11 +97,18 @@ export default function PrefixCombobox({
           ))}
           {canCreate && (
             <Combobox.Option value={CREATE_PREFIX}>
-              + Create &quot;{sanitizePrefix(search)}&quot;
+              {translation("create_account_modal.txtCreatePrefix", "+ Create")}{" "}
+              &quot;
+              {sanitizePrefix(search)}&quot;
             </Combobox.Option>
           )}
           {filtered.length === 0 && !canCreate && (
-            <Combobox.Empty>Type to create a prefix</Combobox.Empty>
+            <Combobox.Empty>
+              {translation(
+                "create_account_modal.txtTypeToCreatePrefix",
+                "Type to create a prefix",
+              )}
+            </Combobox.Empty>
           )}
         </Combobox.Options>
       </Combobox.Dropdown>

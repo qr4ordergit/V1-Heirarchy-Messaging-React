@@ -217,14 +217,23 @@ export default function CreateAccountModal({
     const errors: NewAccountErrors = {};
     if (form.identifierType === "username" && form.usernameType === "custom") {
       if (!/^[A-Za-z]{3,8}$/.test(form.customPrefix)) {
-        errors.customPrefix = "Prefix must be 3-8 letters (A-Z only)";
+        errors.customPrefix = translation(
+          "create_account_modal.errPrefixInvalid",
+          "Prefix must be 3-8 letters (A-Z only)",
+        );
       }
       const info = form.usernameInfo.trim();
       if (info.length < 3 || info.length > 16) {
-        errors.usernameInfo = "Username must be 3-16 characters";
+        errors.usernameInfo = translation(
+          "create_account_modal.errUsernameInfoLength",
+          "Username must be 3-16 characters",
+        );
       }
       if (!/^\d{3,16}$/.test(form.usernameSuffix)) {
-        errors.usernameSuffix = "Suffix must be 3-16 digits";
+        errors.usernameSuffix = translation(
+          "create_account_modal.errSuffixInvalid",
+          "Suffix must be 3-16 digits",
+        );
       }
     } else if (form.identifierType === "username") {
       if (!form.username.trim()) {
@@ -327,9 +336,7 @@ export default function CreateAccountModal({
     }
     try {
       setUserDetails(await fetchUserDetails());
-    } catch {
-      /* keep the optimistic value */
-    }
+    } catch {}
   };
 
   const handleSubmit = async () => {
@@ -742,13 +749,25 @@ export default function CreateAccountModal({
                   [
                     {
                       value: "normal",
-                      title: "Normal",
-                      desc: "We suggest an available username",
+                      title: translation(
+                        "create_account_modal.optNormalTitle",
+                        "Normal",
+                      ),
+                      desc: translation(
+                        "create_account_modal.optNormalDesc",
+                        "We suggest an available username",
+                      ),
                     },
                     {
                       value: "custom",
-                      title: "Custom",
-                      desc: "Your own prefix-name-number",
+                      title: translation(
+                        "create_account_modal.optCustomTitle",
+                        "Custom",
+                      ),
+                      desc: translation(
+                        "create_account_modal.optCustomDesc",
+                        "Your own prefix-name-number",
+                      ),
                     },
                   ] as const
                 ).map((opt) => (
@@ -789,9 +808,18 @@ export default function CreateAccountModal({
             form.usernameType === "custom" && (
               <Stack gap="sm">
                 <PrefixCombobox
-                  label="Prefix"
-                  description="3-8 letters. Select a saved prefix or type a new one."
-                  placeholder="Select or create prefix"
+                  label={translation(
+                    "create_account_modal.labelPrefix",
+                    "Prefix",
+                  )}
+                  description={translation(
+                    "create_account_modal.descPrefix",
+                    "3-8 letters. Select a saved prefix or type a new one.",
+                  )}
+                  placeholder={translation(
+                    "create_account_modal.placeholderPrefix",
+                    "Select or create prefix",
+                  )}
                   classNames={{ label: classes.fieldLabel }}
                   options={savedPrefixes}
                   value={form.customPrefix}
@@ -799,10 +827,19 @@ export default function CreateAccountModal({
                   error={formErrors.customPrefix}
                 />
                 <TextInput
-                  label="Username"
-                  description="3-16 characters."
+                  label={translation(
+                    "create_account_modal.labelUsername",
+                    "Username",
+                  )}
+                  description={translation(
+                    "create_account_modal.descCustomUsername",
+                    "3-16 characters.",
+                  )}
                   classNames={{ label: classes.fieldLabel }}
-                  placeholder="Enter name"
+                  placeholder={translation(
+                    "create_account_modal.placeholderCustomUsername",
+                    "Enter name",
+                  )}
                   value={form.usernameInfo}
                   maxLength={16}
                   onChange={(e) =>
@@ -813,10 +850,19 @@ export default function CreateAccountModal({
                   error={formErrors.usernameInfo}
                 />
                 <TextInput
-                  label="Suffix"
-                  description="3-16 digits."
+                  label={translation(
+                    "create_account_modal.labelSuffix",
+                    "Suffix",
+                  )}
+                  description={translation(
+                    "create_account_modal.descSuffix",
+                    "3-16 digits.",
+                  )}
                   classNames={{ label: classes.fieldLabel }}
-                  placeholder="Enter number"
+                  placeholder={translation(
+                    "create_account_modal.placeholderSuffix",
+                    "Enter number",
+                  )}
                   value={form.usernameSuffix}
                   inputMode="numeric"
                   onChange={(e) =>
@@ -830,7 +876,10 @@ export default function CreateAccountModal({
                   form.usernameInfo ||
                   form.usernameSuffix) && (
                   <Text size="xs" c="dimmed">
-                    Username will be:{" "}
+                    {translation(
+                      "create_account_modal.txtUsernameWillBe",
+                      "Username will be:",
+                    )}{" "}
                     <strong
                       style={{
                         color: "var(--mantine-color-blue-6)",
@@ -1075,11 +1124,16 @@ export default function CreateAccountModal({
             >
               <div style={{ lineHeight: 1.25 }}>
                 <Input.Label className={classes.fieldLabel}>
-                  Bot account
+                  {translation(
+                    "create_account_modal.labelBotAccount",
+                    "Bot account",
+                  )}
                 </Input.Label>
                 <Input.Description size="xs" style={{ lineHeight: 1.3 }}>
-                  Enable bot access via AI Models including ChatGPT / Anthropic
-                  Claude
+                  {translation(
+                    "create_account_modal.descBotAccount",
+                    "Enable bot access via AI Models including ChatGPT / Anthropic Claude",
+                  )}
                 </Input.Description>
               </div>
               <Switch
@@ -1087,7 +1141,10 @@ export default function CreateAccountModal({
                 checked={form.isBot}
                 onChange={() => {}}
                 tabIndex={-1}
-                aria-label="Bot account"
+                aria-label={translation(
+                  "create_account_modal.labelBotAccount",
+                  "Bot account",
+                )}
                 style={{ pointerEvents: "none" }}
               />
             </Group>
