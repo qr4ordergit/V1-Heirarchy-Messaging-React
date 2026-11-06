@@ -2093,7 +2093,10 @@ export default function Accounts() {
                         setCurrentPage(1);
                       }}
                       styles={{
-                        label: { fontSize: "var(--mantine-font-size-xs)" },
+                        label: {
+                          fontSize: "var(--mantine-font-size-xs)",
+                          color: "var(--mantine-color-dimmed)",
+                        },
                       }}
                     />
                   </Group>
