@@ -60,7 +60,6 @@ export default function ActiveSessions() {
   const [busyId, setBusyId] = useState<string | "all" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // The device was accepted: finish the login exactly like AuthCallback does.
   const finishLogin = useCallback(async () => {
     const details = await fetchUserDetails();
     setUserDetails(details);
@@ -69,7 +68,6 @@ export default function ActiveSessions() {
     });
   }, [navigate, setUserDetails]);
 
-  // Re-asks the backend. Either we are accepted now, or we get a fresh list.
   const recheck = useCallback(async () => {
     setError(null);
     try {
@@ -88,16 +86,17 @@ export default function ActiveSessions() {
       return;
     }
     if (!sessionPending) {
-      navigate(ROUTES.ACCOUNTS, { replace: true });
+      const current = useAuthStore.getState().userDetails;
+      navigate(isAdminAccount(current) ? ROUTES.ADMIN : ROUTES.ACCOUNTS, {
+        replace: true,
+      });
       return;
     }
     if (sessions) {
       setLoading(false);
       return;
     }
-    // Page refreshed or opened while the check is still running.
     void recheck();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken, sessionPending]);
 
   const handleLogoutDevice = async (id: string) => {
@@ -207,7 +206,11 @@ export default function ActiveSessions() {
         })}
 
         <Group justify="space-between" mt="sm">
-          <Button variant="default" onClick={handleCancel} disabled={busyId !== null}>
+          <Button
+            variant="default"
+            onClick={handleCancel}
+            disabled={busyId !== null}
+          >
             Cancel
           </Button>
           <Button

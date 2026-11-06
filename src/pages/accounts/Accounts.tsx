@@ -77,6 +77,7 @@ import { uploadImageToS3Api } from "../../api/profileApi";
 import {
   useAuthStore,
   isHubAccount,
+  isAdminAccount,
   type UserDetails,
 } from "../../store/auth/auth.store";
 import { ROUTES } from "../../router/routes";
@@ -1276,6 +1277,11 @@ export default function Accounts() {
     setTargetUserDetails(null);
 
     if (!userDetails) {
+      return;
+    }
+
+    if (isAdminAccount(userDetails)) {
+      navigate(ROUTES.ADMIN, { replace: true });
       return;
     }
 
