@@ -213,7 +213,7 @@ export const USER_TO_USER_PERMISSIONS = {
     update: false,
     delete: false,
   },
-  "shared-keyring-category" : {
+  "shared-keyring-category": {
     read: false,
   },
   "scheduled-messages": {
@@ -238,6 +238,12 @@ export const USER_TO_USER_PERMISSIONS = {
   "users-accesstree": {
     read: false,
     update: false,
+  },
+};
+
+export const BOT_USER_PERMISSIONS = {
+  "bot-messages": {
+    read: true,
   },
 };
 
@@ -325,6 +331,11 @@ export const PERMISSION_LABELS: Record<string, string> = {
   // Manage Subuser Access & Permissions
   "users-accesstree|read": "View",
   "users-accesstree|update": "Update",
+
+  // BOT
+
+  // Messages
+  "bot-messages|read": "View",
 };
 
 export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
@@ -336,13 +347,17 @@ export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
   contacts: "Manage Contacts",
   tags: "Manage Tags",
   "keyring-categories": "Keyring Categories",
-  "shared-keyring-category" : "Shared Keyring Category",
+  "shared-keyring-category": "Shared Keyring Category",
   "scheduled-messages": "Scheduled Messages",
   "disappearing-messages": "Disappearing Messages",
   "chat-export": "Export Chats",
   "sub-users": "Manage Subuser Account",
   "user-account": "Manage Account",
   "users-accesstree": "Manage Subuser's Accessed Accounts Access & Permissions",
+
+  // BOT
+  
+  "bot-messages" : "Messages"
 };
 
 // export const USER_PERMISSION_GROUP_LABELS: Record<string, string> = {

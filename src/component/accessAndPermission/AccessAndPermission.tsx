@@ -18,6 +18,7 @@ import {
 } from "@mantine/core";
 
 import {
+  BOT_USER_PERMISSIONS,
   COMMON_PERMISSION_GROUP_LABELS,
   PERMISSION_LABELS,
   USER_TO_USER_PERMISSIONS,
@@ -51,18 +52,19 @@ interface UpdateUserPermissionsPayload {
 
 type UserPermissionChanges = Record<string, UpdateUserPermissionsPayload>;
 
-interface userDetails {
-  id: string;
-  label: string | null;
-  display_name: string | null;
-  description: string | null;
-}
+  interface userDetails {
+    id: string;
+    label: string | null;
+    display_name: string | null;
+    description: string | null;
+  }
 
-interface AccessAndPermissionGridProps {
-  users: userDetails[];
-  targetUser: string;
-  targetUserName: string | null;
-}
+  interface AccessAndPermissionGridProps {
+    users: userDetails[];
+    targetUser: string;
+    targetUserName: string | null;
+    account_type? :string|null
+  }
 
 interface AccessAndPermissionResponse {
   sub_users: UpdateUserPermissionsPayload[];
@@ -86,7 +88,9 @@ export default function AccessAndPermission({
   users,
   targetUser,
   targetUserName,
+  account_type
 }: AccessAndPermissionGridProps) {
+  
   const { translation } = useTranslation();
 
   const [loading, setLoading] = useState(false);
@@ -130,7 +134,7 @@ export default function AccessAndPermission({
       const existingUser = previous[username];
 
       const currentPermissions = {
-        ...USER_TO_USER_PERMISSIONS,
+        ...(account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_PERMISSIONS),
         ...(existingUser?.permissions ?? {}),
       };
 
@@ -548,7 +552,7 @@ export default function AccessAndPermission({
                           userHasPermission
                             ? hasAllPermissions(
                                 changes[user.id].permissions,
-                                USER_TO_USER_PERMISSIONS,
+                                account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_PERMISSIONS,
                               )
                             : false
                         }
@@ -566,7 +570,7 @@ export default function AccessAndPermission({
                                 permissions: setAllPermissions(
                                   userHasPermission
                                     ? currentUser.permissions
-                                    : USER_TO_USER_PERMISSIONS,
+                                    : account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_PERMISSIONS,
                                   checked,
                                 ),
                               },
@@ -574,7 +578,7 @@ export default function AccessAndPermission({
                           });
                         }}
                       />
-                      {Object.entries(USER_TO_USER_PERMISSIONS).map(
+                      {Object.entries(account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_PERMISSIONS).map(
                         ([groupKey, permissions]) => (
                           <Stack key={groupKey} gap="xs">
                             <Text size="xs" fw={"bolder"} c={"gray"}>
@@ -600,7 +604,7 @@ export default function AccessAndPermission({
                                   Object.keys(currentUser?.permissions).length >
                                     0
                                     ? currentUser?.permissions
-                                    : USER_TO_USER_PERMISSIONS,
+                                    : account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_PERMISSIONS,
                                 );
 
                                 return (

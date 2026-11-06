@@ -94,6 +94,7 @@ import AccessAndPermission from "../../component/accessAndPermission/AccessAndPe
 import CreateAccountModal from "./Createaccountmodal";
 
 import {
+  BOT_USER_PERMISSIONS,
   COMMON_PERMISSION_GROUP_LABELS,
   PERMISSION_LABELS,
   USER_PERMISSIONS,
@@ -150,12 +151,14 @@ interface AccessAndPermissionsState {
   targetUser: string;
   label: string | null;
   display_name: string | null;
+  account_type?: string | null;
 }
 
 interface LoadPermissionsProps {
   user_id?: string;
   phone_number?: string | null;
   display_name?: string | null;
+  account_type?: string | null;
 }
 
 export default function Accounts() {
@@ -266,6 +269,7 @@ export default function Accounts() {
       targetUser: "",
       label: "",
       display_name: "",
+      account_type: "",
     });
 
   const [loadingSave, setLoadingSave] = useState(false);
@@ -293,12 +297,14 @@ export default function Accounts() {
     user_id: string,
     label: string | null,
     display_name: string | null,
+    account_type?: string |null,
   ) => {
     setAccessAndPermissions({
       open: true,
       targetUser: user_id,
       label: label,
       display_name: display_name,
+      account_type: account_type,
     });
   };
 
@@ -308,6 +314,7 @@ export default function Accounts() {
       targetUser: "",
       label: "",
       display_name: "",
+      account_type: "",
     });
     setPerType("up");
   };
@@ -1223,6 +1230,7 @@ export default function Accounts() {
     user_id = accessAndPermissions.targetUser,
     phone_number = accessAndPermissions.label,
     display_name = accessAndPermissions.display_name,
+    account_type = accessAndPermissions.account_type,
   }: LoadPermissionsProps) => {
     try {
       setLoadingP(true);
@@ -1236,6 +1244,7 @@ export default function Accounts() {
         user_id,
         phone_number !== "" ? phone_number : user_id,
         display_name,
+        account_type,
       );
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -3135,6 +3144,7 @@ export default function Accounts() {
                     user_id: accessAndPermissions.targetUser,
                     phone_number: accessAndPermissions.label,
                     display_name: accessAndPermissions.display_name,
+                    account_type: accessAndPermissions.account_type,
                   });
                   setPerType(tab.id);
                 } else {
@@ -3168,7 +3178,9 @@ export default function Accounts() {
                     )}
                     checked={hasAllPermissions(
                       changes.permissions,
-                      USER_PERMISSIONS,
+                      accessAndPermissions.account_type !== "bot"
+                        ? USER_PERMISSIONS
+                        : BOT_USER_PERMISSIONS,
                     )}
                     onChange={(event) => {
                       setChanges((prev) => ({
@@ -3181,57 +3193,60 @@ export default function Accounts() {
                     }}
                   />
 
-                  {Object.entries(USER_PERMISSIONS).map(
-                    ([groupKey, permissions]) => (
-                      <Stack key={groupKey} gap="xs">
-                        <Text size="xs" fw={"bolder"} c={"gray"}>
-                          {translation(
-                            `permission_group_labels.${groupKey}`,
-                            COMMON_PERMISSION_GROUP_LABELS[groupKey] ??
-                              groupKey,
-                          )}
-                        </Text>
+                  {Object.entries(
+                    accessAndPermissions.account_type !== "bot"
+                      ? USER_PERMISSIONS
+                      : BOT_USER_PERMISSIONS,
+                  ).map(([groupKey, permissions]) => (
+                    <Stack key={groupKey} gap="xs">
+                      <Text size="xs" fw={"bolder"} c={"gray"}>
+                        {translation(
+                          `permission_group_labels.${groupKey}`,
+                          COMMON_PERMISSION_GROUP_LABELS[groupKey] ?? groupKey,
+                        )}
+                      </Text>
 
-                        <Flex gap="md" style={{ flexWrap: "wrap" }}>
-                          {Object.keys(permissions).map((permissionKey) => {
-                            const path = `${groupKey}|${permissionKey}`;
+                      <Flex gap="md" style={{ flexWrap: "wrap" }}>
+                        {Object.keys(permissions).map((permissionKey) => {
+                          const path = `${groupKey}|${permissionKey}`;
 
-                            const checked = getPermissionValue(
-                              changes?.permissions ?? {},
-                              path,
-                            );
+                          const checked = getPermissionValue(
+                            changes?.permissions ?? {},
+                            path,
+                          );
 
-                            const disabled = isPermissionDisabled(
-                              groupKey,
-                              permissionKey,
-                              Object.keys(changes?.permissions).length > 0
-                                ? changes?.permissions
-                                : USER_PERMISSIONS,
-                            );
+                          const disabled = isPermissionDisabled(
+                            groupKey,
+                            permissionKey,
+                            Object.keys(changes?.permissions).length > 0
+                              ? changes?.permissions
+                              : accessAndPermissions.account_type !== "bot"
+                      ? USER_PERMISSIONS
+                      : BOT_USER_PERMISSIONS,
+                          );
 
-                            return (
-                              <Checkbox
-                                key={path}
-                                size="xs"
-                                disabled={disabled}
-                                checked={checked}
-                                label={translation(
-                                  `permission_labels.${path}`,
-                                  PERMISSION_LABELS[path] ?? permissionKey,
-                                )}
-                                onChange={(event) =>
-                                  handlePermissionChange(
-                                    path,
-                                    event.currentTarget.checked,
-                                  )
-                                }
-                              />
-                            );
-                          })}
-                        </Flex>
-                      </Stack>
-                    ),
-                  )}
+                          return (
+                            <Checkbox
+                              key={path}
+                              size="xs"
+                              disabled={disabled}
+                              checked={checked}
+                              label={translation(
+                                `permission_labels.${path}`,
+                                PERMISSION_LABELS[path] ?? permissionKey,
+                              )}
+                              onChange={(event) =>
+                                handlePermissionChange(
+                                  path,
+                                  event.currentTarget.checked,
+                                )
+                              }
+                            />
+                          );
+                        })}
+                      </Flex>
+                    </Stack>
+                  ))}
                 </Stack>
               </ScrollArea>
               <Flex justify="flex-end">
@@ -3258,6 +3273,7 @@ export default function Accounts() {
                 ? accessAndPermissions.display_name
                 : accessAndPermissions.label
             }
+            account_type={accessAndPermissions.account_type}
           />
         )}
       </Modal>
