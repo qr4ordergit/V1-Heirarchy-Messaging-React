@@ -352,6 +352,10 @@ function ChatPasswordModal() {
 
   useEffect(() => {
     initialActions();
+    return () => {
+      if (trigger !== TRIGGERS.chatPasswordModal) return;
+      resetStates();
+    };
   }, [trigger]);
 
   useEffect(() => {
@@ -380,13 +384,6 @@ function ChatPasswordModal() {
       clearTimeout(timer);
     };
   }, [apiPolling, pollingAttempt]);
-
-  // reset state
-  useEffect(() => {
-    return () => {
-      resetStates();
-    };
-  }, []);
 
   return (
     <Modal

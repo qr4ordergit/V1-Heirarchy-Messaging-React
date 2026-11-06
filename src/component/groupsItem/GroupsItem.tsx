@@ -10,12 +10,17 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { formatConversationTime, getAvatarColor } from "../../utils/constant";
+import {
+  formatConversationTime,
+  getAvatarColor,
+  TRIGGERS,
+} from "../../utils/constant";
 import { ROUTES } from "../../router/routes";
 import { IconDotsVertical, IconLock, IconLogout2 } from "@tabler/icons-react";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { useTranslation } from "../../store/language/language.store";
 import { useChatStore } from "../../store/chats/chats.store";
+import { useTriggerStore } from "../../store/trigger/trigger.store";
 
 interface GroupItemProps {
   groups: Groups;
@@ -35,7 +40,7 @@ const GroupsItem = ({
   const { translation } = useTranslation();
   const isLocked = Object.keys(groups.is_locked ?? {}).length > 0;
   const { insertCurrentChat, emptyChatList } = useChatStore((state) => state);
-
+  const { setTrigger } = useTriggerStore((state) => state);
   const { target_user, userDetails } = useAuthStore((state) => state);
   const isAdmin =
     target_user === ""
@@ -48,6 +53,11 @@ const GroupsItem = ({
       ...groups,
       display_name: groups.group_name,
     });
+    if (chatId === groups._id) {
+      setTrigger({
+        toTrigger: TRIGGERS.refreshChat,
+      });
+    }
     navigate(`/chats/${encodeURIComponent(groups._id)}`);
   };
 

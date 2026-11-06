@@ -89,6 +89,7 @@ export default function Chatting() {
 
       if (trigger === TRIGGERS.refreshChat) {
         params.page = 1;
+        setCurrentPage(1);
         resetTrigger();
       }
 
@@ -162,6 +163,12 @@ export default function Chatting() {
         page: currentPage,
         limit: 10,
       };
+
+      if (trigger === TRIGGERS.refreshChat) {
+        params.page = 1;
+        setCurrentPage(1);
+        resetTrigger();
+      }
 
       if (trigger === TRIGGERS.chatPasswordPayload) {
         params = {
@@ -287,6 +294,7 @@ export default function Chatting() {
       return;
     }
     fetchChats();
+    resetTrigger();
   };
 
   const triggerHandler = () => {
