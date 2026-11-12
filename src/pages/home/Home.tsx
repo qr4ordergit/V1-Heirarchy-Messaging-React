@@ -222,13 +222,15 @@ const PRICING = {
   accountPerDay: 0.03,
   storagePerGBPerDay: 0.025,
   usernamePerDay: 0.03,
+  botPerDay: 0.1,
 };
 const CONTACT_EMAIL = "support@messenger.com";
 
 const PLANS = [
   {
     id: "free",
-    sub: "Our starter plan",
+    name: "Free Usage",
+    sub: "Explore our free services",
     price: "0$",
     priceSub: "Free forever",
     cta: "Sign Up",
@@ -236,14 +238,16 @@ const PLANS = [
   },
   {
     id: "paid",
-    sub: "Pay only for what you use",
-    price: "Pay as you go",
+    name: "Paid Usage",
+    sub: "Get the comprehensive benefits",
+    price: "Pay only for what you use",
     priceSub: "Billed on actual daily usage",
     cta: "Upgrade to Paid",
     tone: "dark",
   },
   {
     id: "custom",
+    name: "Custom Pricing",
     sub: "For teams with special needs",
     price: "Negotiable",
     priceSub: "Custom billing for your organization",
@@ -431,14 +435,6 @@ export default function Home() {
   ];
 
   const paidFeatures = (): string[] => [
-    t("plan_paid_everythingFree", "Everything in (Free)"),
-    fill(
-      t(
-        "plan_paid_premiumUsernames",
-        "Premium usernames (${price} per username per {unit})",
-      ),
-      { price: rate(PRICING.usernamePerDay), unit: unitDay },
-    ),
     fill(
       bt(
         "featChatAccountsDesc",
@@ -450,6 +446,17 @@ export default function Home() {
         unit: unitDay,
       },
     ),
+    fill(
+      t(
+        "plan_paid_premiumUsernames",
+        "Premium usernames (${price} per username per {unit})",
+      ),
+      { price: rate(PRICING.usernamePerDay), unit: unitDay },
+    ),
+    fill(t("plan_paid_bot", "BOT account (${price} per account per {unit})"), {
+      price: String(PRICING.botPerDay),
+      unit: unitDay,
+    }),
     fill(
       bt(
         "featStorageDesc",
@@ -470,7 +477,7 @@ export default function Home() {
   const customFeatures = (): string[] => [
     t("plan_custom_feature1", "Custom, negotiable billing arrangements"),
     t("plan_custom_feature2", "Support for large teams and organizations"),
-    t("plan_custom_feature3", "Talk directly with our team"),
+    t("plan_custom_feature3", "Talk directly with us"),
   ];
 
   const featuresOf = (id: string): string[] =>
@@ -1051,19 +1058,14 @@ export default function Home() {
                   <div>
                     <div style={{ textAlign: "center", marginBottom: 16 }}>
                       <h3 className={classes.planName}>
-                        {t(
-                          `plan_${p.id}_name`,
-                          p.id.charAt(0).toUpperCase() + p.id.slice(1),
-                        )}
+                        {t(`plan_${p.id}_name`, p.name)}
                       </h3>
                       <p className={classes.planSub}>
                         {t(`plan_${p.id}_sub`, p.sub)}
                       </p>
                     </div>
                     <div className={classes.priceBox}>
-                      <span
-                        className={`${classes.planPrice} ${p.price.length > 4 ? classes.planPriceText : ""}`}
-                      >
+                      <span className={classes.planPrice}>
                         {t(`plan_${p.id}_price`, p.price)}
                       </span>
                       <span className={classes.planPriceSub}>
