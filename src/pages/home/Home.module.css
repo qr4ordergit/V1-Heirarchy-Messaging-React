@@ -913,69 +913,6 @@
   text-align: center;
   margin-bottom: 48px;
 }
-.billing {
-  margin-top: 24px;
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-}
-.billMonthly,
-.billYearly {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: none;
-  border: 0;
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-  color: #0b0e14;
-  font-weight: 600;
-}
-.radio {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 2px solid #0b0e14;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.radioDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #0b0e14;
-}
-.billYearly {
-  gap: 10px;
-  padding: 6px 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(59, 130, 246, 0.6);
-  background: linear-gradient(90deg, #d8ecff, #fff);
-  color: #404040;
-  font-weight: 500;
-}
-.billYearlyOn {
-  border-color: var(--blue);
-}
-.check {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  border: 1px solid #737373;
-  font-size: 10px;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.checkOn {
-  background: var(--blue);
-  border-color: var(--blue);
-}
 .planGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1010,31 +947,26 @@
 }
 .priceBox {
   position: relative;
-  height: 144px;
-  margin: 8px 0;
+  height: 84px;
+  margin: 4px 0 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
-.planMark {
-  position: absolute;
-  top: 0;
-  font-family: "Amatic SC", sans-serif;
-  letter-spacing: 0.04em;
-  font-size: 92px;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.2);
-  user-select: none;
-  pointer-events: none;
-}
 .planPrice {
   position: relative;
-  margin-top: 24px;
+  line-height: 1;
   font-size: 64px;
   font-weight: 800;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
+}
+.planPriceText {
+  font-size: 34px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-align: center;
 }
 .planPriceSub {
   position: relative;

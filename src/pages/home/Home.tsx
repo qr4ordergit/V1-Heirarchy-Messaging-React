@@ -215,61 +215,45 @@ const PARTNERS = [
   "Ukrainska Pravda",
 ];
 
+// TODO: replace with values from the pricing API when it is available.
+const PRICING = {
+  freeAccounts: 4,
+  freeStorageGB: 4,
+  accountPerDay: 0.03,
+  storagePerGBPerDay: 0.025,
+  usernamePerDay: 0.03,
+};
+const CONTACT_EMAIL = "support@messenger.com";
+
 const PLANS = [
   {
     id: "free",
-    name: "Free",
     sub: "Our starter plan",
-    mark: "FREE",
-    price: 0,
+    price: "0$",
     priceSub: "Free forever",
     cta: "Sign Up",
     tone: "blue",
-    features: [
-      "Personal & group chats",
-      "End-to-end E2EE encryption",
-      "Unlimited username accounts",
-      "Socketless & SIM-free communication",
-      "Access via any web browser",
-    ],
   },
   {
-    id: "business",
-    name: "Business",
-    sub: "Most essential features",
-    mark: "BUSINESS",
-    price: 2,
-    priceSub: "Per user per month",
-    cta: "Subscribe",
+    id: "paid",
+    sub: "Pay only for what you use",
+    price: "Pay as you go",
+    priceSub: "Billed on actual daily usage",
+    cta: "Upgrade to Paid",
     tone: "dark",
-    features: [
-      "Everything in (Free)",
-      "OTP registration",
-      "Instant access revocation",
-      "Database export lock",
-      "Core roles & permissions",
-      "Hierarchy (up to 100 accounts)",
-    ],
   },
   {
-    id: "max",
-    name: "Maximum",
-    sub: "All features unlocked",
-    mark: "MAX",
-    price: 5,
-    priceSub: "Per user per month",
-    cta: "Subscribe",
+    id: "custom",
+    sub: "For teams with special needs",
+    price: "Negotiable",
+    priceSub: "Custom billing for your organization",
+    cta: "Contact us",
     tone: "blue",
-    features: [
-      "Everything in (Business)",
-      "Full granular CRUD permission matrix",
-      "AI integration via Keyring",
-      "Forced in-memory RAM session",
-      "Centralized monitoring",
-      "Unlimited hierarchy & branches",
-    ],
   },
-];
+] as const;
+
+const fill = (text: string, vars: Record<string, string | number>) =>
+  text.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
 
 const FAQ = [
   [
@@ -423,9 +407,78 @@ export default function Home() {
     return () => window.clearInterval(timer);
   }, [pos]);
 
-  const [yearly, setYearly] = useState(false);
-  const priceOf = (p: number) =>
-    yearly ? `${+(p * 0.7).toFixed(1)}$` : `${p}$`;
+  const unitDay = translation("account_billing.unitDay", "day");
+  const rate = (n: number) => n.toFixed(4);
+  const bt = (key: string, def: string) =>
+    translation(`account_billing.${key}`, def);
+
+  const freeFeatures = (): string[] => [
+    fill(t("plan_free_accounts", "First {free} chat accounts free"), {
+      free: PRICING.freeAccounts,
+    }),
+    fill(t("plan_free_storage", "{free} GB storage free"), {
+      free: PRICING.freeStorageGB,
+    }),
+    bt("featBulkAccountsTitle", "Bulk account creation"),
+    bt("featHierarchicalAccessTitle", "Hierarchical Account Access"),
+    bt("featOneOnOneTitle", "One on One Chat - (Encrypted)"),
+    bt("featGroupChatsTitle", "Group Chats - (Encrypted)"),
+    bt("featDoubleEncryptionTitle", "Double Encryption with own password"),
+    bt("featScheduledMsgsTitle", "Scheduled Messages"),
+    bt("featDisappearingMsgsTitle", "Disappearing Messages"),
+    bt("featAccountTagsTitle", "Account & Group Tags"),
+    bt("featExportChatsTitle", "Export/Download Chats with Media"),
+  ];
+
+  const paidFeatures = (): string[] => [
+    t("plan_paid_everythingFree", "Everything in (Free)"),
+    fill(
+      t(
+        "plan_paid_premiumUsernames",
+        "Premium usernames (${price} per username per {unit})",
+      ),
+      { price: rate(PRICING.usernamePerDay), unit: unitDay },
+    ),
+    fill(
+      bt(
+        "featChatAccountsDesc",
+        "First {free} accounts are free (Beyond {free} free accounts, ${price} per account per {unit})",
+      ),
+      {
+        free: PRICING.freeAccounts,
+        price: rate(PRICING.accountPerDay),
+        unit: unitDay,
+      },
+    ),
+    fill(
+      bt(
+        "featStorageDesc",
+        "Up to {free} storage free (Beyond {free}, ${price} per GB per {unit})",
+      ),
+      {
+        free: `${PRICING.freeStorageGB} GB`,
+        price: rate(PRICING.storagePerGBPerDay),
+        unit: unitDay,
+      },
+    ),
+    `${bt("featCloudCostTitle", "Cloud computing cost")}: ${bt(
+      "featCloudCostDesc",
+      "Will be based on your actual daily usage",
+    )}`,
+  ];
+
+  const customFeatures = (): string[] => [
+    t("plan_custom_feature1", "Custom, negotiable billing arrangements"),
+    t("plan_custom_feature2", "Support for large teams and organizations"),
+    t("plan_custom_feature3", "Talk directly with our team"),
+  ];
+
+  const featuresOf = (id: string): string[] =>
+    id === "free"
+      ? freeFeatures()
+      : id === "paid"
+        ? paidFeatures()
+        : customFeatures();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const [hierActive, setHierActive] = useState(false);
@@ -984,34 +1037,6 @@ export default function Home() {
               <h2 className={classes.h2Dark}>
                 {t("pricingTitle", "Create Your Hub for Free")}
               </h2>
-              <div className={classes.billing}>
-                <button
-                  type="button"
-                  className={classes.billMonthly}
-                  onClick={() => setYearly(false)}
-                >
-                  <span className={classes.radio}>
-                    {!yearly && <span className={classes.radioDot} />}
-                  </span>
-                  <span>{t("billMonthly", "Monthly")}</span>
-                </button>
-                <button
-                  type="button"
-                  className={`${classes.billYearly} ${yearly ? classes.billYearlyOn : ""}`}
-                  onClick={() => setYearly(true)}
-                >
-                  <span
-                    className={`${classes.check} ${yearly ? classes.checkOn : ""}`}
-                  >
-                    {yearly && "✓"}
-                  </span>
-                  <span>{t("billYearly", "Annually")}</span>
-                  <span style={{ color: "#d4d4d4" }}>|</span>
-                  <span style={{ fontWeight: 600 }}>
-                    {t("billSave", "Save 30%")}
-                  </span>
-                </button>
-              </div>
             </div>
 
             <div
@@ -1026,32 +1051,47 @@ export default function Home() {
                   <div>
                     <div style={{ textAlign: "center", marginBottom: 16 }}>
                       <h3 className={classes.planName}>
-                        {t(`plan_${p.id}_name`, p.name)}
+                        {t(
+                          `plan_${p.id}_name`,
+                          p.id.charAt(0).toUpperCase() + p.id.slice(1),
+                        )}
                       </h3>
                       <p className={classes.planSub}>
                         {t(`plan_${p.id}_sub`, p.sub)}
                       </p>
                     </div>
                     <div className={classes.priceBox}>
-                      <span className={classes.planMark}>{p.mark}</span>
-                      <span className={classes.planPrice}>
-                        {priceOf(p.price)}
+                      <span
+                        className={`${classes.planPrice} ${p.price.length > 4 ? classes.planPriceText : ""}`}
+                      >
+                        {t(`plan_${p.id}_price`, p.price)}
                       </span>
                       <span className={classes.planPriceSub}>
                         {t(`plan_${p.id}_priceSub`, p.priceSub)}
                       </span>
                     </div>
-                    <Link to={ROUTES.REGISTER} className={classes.planBtn}>
-                      {t(`plan_${p.id}_cta`, p.cta)}
-                    </Link>
+                    {p.id === "custom" ? (
+                      <a
+                        href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
+                          t("plan_contact_subject", "Custom billing inquiry"),
+                        )}`}
+                        className={classes.planBtn}
+                      >
+                        {t(`plan_${p.id}_cta`, p.cta)}
+                      </a>
+                    ) : (
+                      <Link to={ROUTES.REGISTER} className={classes.planBtn}>
+                        {t(`plan_${p.id}_cta`, p.cta)}
+                      </Link>
+                    )}
                     <div className={classes.planList}>
                       <div className={classes.planListTitle}>
                         {t("planIncluded", "What's included:")}
                       </div>
-                      {p.features.map((f, fi) => (
+                      {featuresOf(p.id).map((f) => (
                         <div key={f} className={classes.planItem}>
                           <span>✓</span>
-                          <span>{t(`plan_${p.id}_feature${fi + 1}`, f)}</span>
+                          <span>{f}</span>
                         </div>
                       ))}
                     </div>
