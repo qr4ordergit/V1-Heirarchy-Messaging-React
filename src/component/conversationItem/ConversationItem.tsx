@@ -11,17 +11,12 @@ import {
 
 import { IconDotsVertical, IconLock, IconTrash } from "@tabler/icons-react";
 
-import {
-  formatConversationTime,
-  getAvatarColor,
-  TRIGGERS,
-} from "../../utils/constant";
+import { formatConversationTime, getAvatarColor } from "../../utils/constant";
 import { useNavigate, useParams } from "react-router";
 import { ROUTES } from "../../router/routes";
 import type { DM } from "../../store/dm/dm.list.store";
 import { useTranslation } from "../../store/language/language.store";
 import { useChatStore } from "../../store/chats/chats.store";
-import { useTriggerStore } from "../../store/trigger/trigger.store";
 interface ConversationItemProps {
   conversation: DM;
   onDelete: () => void;
@@ -40,18 +35,13 @@ export default function ConversationItem({
   const { translation } = useTranslation();
   const isLocked = Object.keys(conversation.is_locked ?? {}).length > 0;
   const { insertCurrentChat, emptyChatList } = useChatStore((state) => state);
-  const { setTrigger } = useTriggerStore((state) => state);
 
   const handleClick = () => {
+    if (chatId === conversation._id) return;
     emptyChatList();
     insertCurrentChat({
       ...conversation,
     });
-    if (chatId === conversation._id) {
-      setTrigger({
-        toTrigger: TRIGGERS.refreshChat,
-      });
-    }
     navigate(`/chats/${encodeURIComponent(conversation._id)}`);
   };
   return (
