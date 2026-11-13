@@ -37,6 +37,7 @@ import {
   deleteGroupTagApi,
 } from "../../api/createGroupModalApi";
 import { useTranslation } from "../../store/language/language.store";
+import { useAuthStore } from "../../store/auth/auth.store";
 
 interface CreateGroupModalProps {
   opened: boolean;
@@ -76,7 +77,9 @@ const CreateGroupModal = ({
   const [tagActionLoading, setTagActionLoading] = useState(false);
   const [deletingTag, setDeletingTag] = useState<string | null>(null);
 
+  const { userDetails, target_user } = useAuthStore((state) => state);
   const { translation } = useTranslation();
+  const youLabel = translation("contact.txtYou", "You");
 
   useEffect(() => {
     if (!opened) return;
@@ -122,6 +125,17 @@ const CreateGroupModal = ({
     setIsAddingTag(false);
     setNewTagName("");
   }, [opened, initialGroup, selectedContacts]);
+
+  const currentUserIds = [
+    typeof target_user === "string" ? target_user : "",
+    (userDetails as any)?.username,
+  ].filter(Boolean) as string[];
+
+  const isCurrentUser = (userId?: string) =>
+    Boolean(userId) && currentUserIds.includes(userId as string);
+
+  const getDisplayName = (m: Contact) =>
+    isCurrentUser(getUserId(m)) ? youLabel : m.name;
 
   const handleRemoveMember = async (memberId: string) => {
     const memberToRemove = members.find((m) => m.id === memberId);
@@ -352,14 +366,20 @@ const CreateGroupModal = ({
 
   const adminOptions = members.map((m) => ({
     value: getUserId(m),
-    label: `${m.name} (${getUserId(m)})`,
+    label: isCurrentUser(getUserId(m))
+      ? youLabel
+      : `${m.name} (${getUserId(m)})`,
   }));
 
   const transferOptions = admins.map((adminId) => {
     const memberObj = members.find((m) => getUserId(m) === adminId);
     return {
       value: adminId,
-      label: memberObj ? `${memberObj.name} (${adminId})` : adminId,
+      label: isCurrentUser(adminId)
+        ? youLabel
+        : memberObj
+          ? `${memberObj.name} (${adminId})`
+          : adminId,
     };
   });
 
@@ -465,10 +485,10 @@ const CreateGroupModal = ({
                     >
                       <Group gap={4} wrap="nowrap">
                         <Avatar color={member.color} radius="xl" size={16}>
-                          {member.name[0]}
+                          {getDisplayName(member)[0]}
                         </Avatar>
                         <Text size="xs" fw={500}>
-                          {member.name}
+                          {getDisplayName(member)}
                         </Text>
                       </Group>
                     </Pill>
