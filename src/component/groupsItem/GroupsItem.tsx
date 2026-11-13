@@ -119,7 +119,7 @@ const GroupsItem = ({
               </Menu.Target>
 
               <Menu.Dropdown>
-                <Menu.Item
+                {isAdmin&&<Menu.Item
                   leftSection={<IconLock size={13} />}
                   onClick={(event) => {
                     event.stopPropagation();
@@ -138,7 +138,7 @@ const GroupsItem = ({
                           "Unlock group",
                         )}
                   </Text>
-                </Menu.Item>
+                </Menu.Item>}
                 {!isAdmin && (
                   <Menu.Item
                     color="red"
