@@ -78,14 +78,13 @@ export default function ConversationItem({
           <Text size="xs" c="dimmed">
             {formatConversationTime(conversation.last_message_timestamp)}
           </Text>
-          <Flex gap={1} align={"center"}>
+          <Flex align={"center"}>
             {conversation.unread_count > 0 && (
               <Badge
                 color="green"
                 radius="xl"
                 variant="filled"
                 size="xs"
-                mr={"xs"}
               >
                 {conversation.unread_count}
               </Badge>

@@ -91,14 +91,13 @@ const GroupsItem = ({
           <Text size="xs" c="dimmed">
             {formatConversationTime(groups.last_message)}
           </Text>
-          <Flex gap={1} align={"center"}>
+          <Flex align={"center"}>
             {groups.unread_count > 0 && (
               <Badge
                 color="green"
                 radius="lg"
                 variant="filled"
                 size="xs"
-                mr={"xs"}
               >
                 {groups.unread_count}
               </Badge>
