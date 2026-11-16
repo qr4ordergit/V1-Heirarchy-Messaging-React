@@ -47,6 +47,7 @@ export default function ConversationItem({
   return (
     <Group
       justify="space-between"
+      align="center"
       wrap="nowrap"
       p={"xs"}
       bg={chatId === conversation._id ? "#edf2ff" : "white"}
@@ -66,19 +67,17 @@ export default function ConversationItem({
           {conversation.display_name.charAt(0).toUpperCase()}
         </Avatar>
 
-        <Stack gap={2}>
-          <Text fw={600} size="sm">
+          <Text fw={600} size="sm" style={{ flex: 1, minWidth: 0 }}>
             {conversation.display_name}
           </Text>
-        </Stack>
       </Group>
 
-      <Group gap={6} wrap="nowrap">
-        <Stack gap={6} align="flex-end">
+      <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>
+        <Stack gap={6} align="flex-end" style={{ flexShrink: 0 }}>
           <Text size="xs" c="dimmed">
             {formatConversationTime(conversation.last_message_timestamp)}
           </Text>
-          <Flex align={"center"}>
+          <Flex align={"center"} gap={6}>
             {conversation.unread_count > 0 && (
               <Badge
                 color="green"

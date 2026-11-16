@@ -55,6 +55,7 @@ const GroupsItem = ({
   return (
     <Group
       justify="space-between"
+      align="center"
       wrap="nowrap"
       p={"xs"}
       bg={chatId === groups._id ? "#edf2ff" : "white"}
@@ -74,34 +75,39 @@ const GroupsItem = ({
           {groups.group_name.charAt(0).toUpperCase()}
         </Avatar>
 
-        <Stack gap={2}>
+        <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
           <Text fw={600} size="sm">
             {groups.group_name}
           </Text>
+
           {groups.only_admins_can_message && (
-            <Text c={"dimmed"} size="xs">
+            <Text c="dimmed" size="xs">
               {translation("chat_page.label_channel", "Channel")}
             </Text>
           )}
         </Stack>
       </Group>
 
-      <Group gap={6} wrap="nowrap">
-        <Stack gap={6} align="flex-end">
-          <Text size="xs" c="dimmed">
+      <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>
+        <Stack gap={6} align="flex-end" style={{ flexShrink: 0 }}>
+          <Text
+            size="xs"
+            c="dimmed"
+            style={{
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}
+          >
             {formatConversationTime(groups.last_message)}
           </Text>
-          <Flex align={"center"}>
+
+          <Flex align="center" gap={6}>
             {groups.unread_count > 0 && (
-              <Badge
-                color="green"
-                radius="lg"
-                variant="filled"
-                size="xs"
-              >
+              <Badge color="green" radius="lg" variant="filled" size="xs">
                 {groups.unread_count}
               </Badge>
             )}
+
             <Menu position="bottom-start" withArrow>
               <Menu.Target>
                 <ActionIcon
@@ -118,26 +124,31 @@ const GroupsItem = ({
               </Menu.Target>
 
               <Menu.Dropdown>
-                {isAdmin&&<Menu.Item
-                  leftSection={<IconLock size={13} />}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    if (!isLocked) {
-                      onSetLockDmAndGroupModalData();
-                      return;
-                    }
-                    unLock();
-                  }}
-                >
-                  <Text size="xs">
-                    {!isLocked
-                      ? translation("chat_page.label_lock_group", "Lock group")
-                      : translation(
-                          "chat_page.label_unlock_group",
-                          "Unlock group",
-                        )}
-                  </Text>
-                </Menu.Item>}
+                {isAdmin && (
+                  <Menu.Item
+                    leftSection={<IconLock size={13} />}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      if (!isLocked) {
+                        onSetLockDmAndGroupModalData();
+                        return;
+                      }
+                      unLock();
+                    }}
+                  >
+                    <Text size="xs">
+                      {!isLocked
+                        ? translation(
+                            "chat_page.label_lock_group",
+                            "Lock group",
+                          )
+                        : translation(
+                            "chat_page.label_unlock_group",
+                            "Unlock group",
+                          )}
+                    </Text>
+                  </Menu.Item>
+                )}
                 {!isAdmin && (
                   <Menu.Item
                     color="red"
