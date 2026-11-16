@@ -7,6 +7,7 @@ export const ENDPOINTS = {
     LIST: "/group/chat-history",
     LEAVE: "/group/manage-members",
     GETMEMBERS: "/group",
+    EDIT_GROUP: "/group",
   },
   CHAT: {
     SEND: "/message",
@@ -15,7 +16,7 @@ export const ENDPOINTS = {
     PUT: "/message",
   },
   CHAT_HANDLER: {
-    PUT: "/dm-handler"
+    PUT: "/media-encryption"
   },
   ACCESS_PERMISSION: {
     GET: "/user-access/sub-users-permissions",
@@ -54,7 +55,7 @@ export const ENDPOINTS = {
     STATUS: "/message-reports",
   },
   MESSAGES: {
-    DISAPPEAR: "/disappear",
+    DISAPPEAR: "/disappearing-messages",
     SCHEDULED_GET: "/schedule-message",
     SCHEDULED_PUT: "/schedule-message",
     SCHEDULED_DELETE: "/schedule-message",
@@ -76,8 +77,8 @@ export const ENDPOINTS = {
     PUT: "/chat_lock",
     DELETE: "/chat_lock"
   },
-  SHARE_KEYRING_CATEGORY:{
-    LIST : "/keyring-categories",
-    PUT_GET : '/keyring-categories/shared'
+  SHARE_KEYRING_CATEGORY: {
+    LIST: "/keyring-categories",
+    PUT_GET: '/keyring-categories/shared'
   }
 } as const;
