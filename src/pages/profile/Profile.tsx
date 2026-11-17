@@ -151,9 +151,9 @@ const Profile = () => {
     return url && url !== "NA" ? url : null;
   };
 
-  const profileImage =
-    getValidAvatarSrc(targetUserDetails?.profile_picture) ||
-    getValidAvatarSrc(userDetails?.profile_picture);
+  const activeUser = targetUserDetails ?? userDetails;
+
+  const profileImage = getValidAvatarSrc(activeUser?.profile_picture);
 
   const fetchTagsList = async (): Promise<boolean> => {
     setLoadingTags(true);
