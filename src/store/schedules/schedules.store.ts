@@ -16,10 +16,10 @@ export interface SCHEDULED_MESSAGE {
     schedule_date: string
     schedule_time: string
     repeat: string
-    days: [string] | null
+    days: string[] | null
     status: STATUS,
     text: string,
-    media_url: MEDIA_URL[]
+    media_url: MEDIA_URL[] | File[]
     [key: string]: unknown
 }
 

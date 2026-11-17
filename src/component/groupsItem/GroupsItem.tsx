@@ -38,8 +38,8 @@ const GroupsItem = ({
   const { target_user, userDetails } = useAuthStore((state) => state);
   const isAdmin =
     target_user === ""
-      ? userDetails !== null && groups.admins.includes(userDetails.username)
-      : groups.admins.includes(target_user);
+      ? userDetails !== null && groups.admins?.includes(userDetails.username)
+      : groups.admins?.includes(target_user);
 
   const handleClick = () => {
     if (chatId === groups._id) return;
@@ -49,7 +49,7 @@ const GroupsItem = ({
       ...groups,
       display_name: groups.group_name,
     });
-    navigate(`/chats/${encodeURIComponent(groups._id)}`);
+    navigate(`/chats/${encodeURIComponent(groups._id || "")}`);
   };
 
   return (
@@ -69,10 +69,10 @@ const GroupsItem = ({
         <Avatar
           radius="xl"
           size={45}
-          color={getAvatarColor(groups.group_name)}
+          color={getAvatarColor(groups.group_name || "")}
           src={groups.profile_url}
         >
-          {groups.group_name.charAt(0).toUpperCase()}
+          {groups.group_name?.charAt(0).toUpperCase()}
         </Avatar>
 
         <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
@@ -98,11 +98,11 @@ const GroupsItem = ({
               flexShrink: 0,
             }}
           >
-            {formatConversationTime(groups.last_message)}
+            {formatConversationTime(groups.last_message || "")}
           </Text>
 
           <Flex align="center" gap={6}>
-            {groups.unread_count > 0 && (
+            {groups.unread_count && groups.unread_count > 0 && (
               <Badge color="green" radius="lg" variant="filled" size="xs">
                 {groups.unread_count}
               </Badge>

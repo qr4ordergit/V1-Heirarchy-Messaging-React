@@ -19,7 +19,10 @@ import {
 import { api } from "../../../../api/axios";
 import { ENDPOINTS } from "../../../../api/endpoints";
 import { Notification } from "../../../../utils/notification";
-import { useScheduleMsgsStore } from "../../../../store/schedules/schedules.store";
+import {
+  useScheduleMsgsStore,
+  type SCHEDULED_MESSAGE,
+} from "../../../../store/schedules/schedules.store";
 import { DateTimePicker, TimePicker } from "@mantine/dates";
 import dayjs from "dayjs";
 import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
@@ -45,7 +48,10 @@ function EditScheduleMsgModal() {
   };
 
   const scheduledMessage = useMemo(
-    () => openers[OPENERS.editScheduledMsg]?.payload,
+    () =>
+      openers[OPENERS.editScheduledMsg]?.payload as
+        | SCHEDULED_MESSAGE
+        | undefined,
     [openers],
   );
   const presets = [
@@ -91,8 +97,7 @@ function EditScheduleMsgModal() {
   const dataAssigner = () => {
     if (trigger !== OPENERS.editScheduledMsg) return;
 
-    const payload = openers[OPENERS.editScheduledMsg]?.payload;
-    const text = payload?.text;
+    const text = scheduledMessage?.text;
 
     if (typeof text !== "string") return;
 

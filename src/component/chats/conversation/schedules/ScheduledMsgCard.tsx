@@ -44,7 +44,7 @@ function ScheduledMsgCard({ msg }: MSG) {
   const decryptor = useSingleMediaDecryptor();
 
   const onEdit = () => {
-    insertOpener({
+    insertOpener<SCHEDULED_MESSAGE>({
       opener: OPENERS.editScheduledMsg,
       payload: msg,
     });
@@ -73,7 +73,17 @@ function ScheduledMsgCard({ msg }: MSG) {
     DeleteFn(onDelete);
   };
 
-  const onPreview = (details: MEDIA_URL) => {
+  const onPreview = (details: MEDIA_URL | File) => {
+    if (details instanceof File) return;
+
+    if (
+      !["image", "video"].includes(details.media_details.type) &&
+      !details.media_details.isEncrypted
+    ) {
+      window.open(details.media_url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     if (!details.media_details.isEncrypted) {
       setTrigger({
         toTrigger: TRIGGERS.previewMedia,
@@ -91,6 +101,11 @@ function ScheduledMsgCard({ msg }: MSG) {
       if (!file) return;
 
       const url = URL.createObjectURL(file);
+
+      if (!["image", "video"].includes(details.media_details.type)) {
+        window.open(url, "_blank", "noopener,noreferrer");
+        return;
+      }
 
       setTrigger({
         toTrigger: TRIGGERS.previewMedia,
@@ -119,14 +134,15 @@ function ScheduledMsgCard({ msg }: MSG) {
                     <IconPaperclip size={16} className="cursor-pointer" />
                   </Menu.Target>
                   <Menu.Dropdown>
-                    {msg?.media_url.map((med) => (
-                      <Menu.Item
-                        key={med?.media_url}
-                        onClick={() => onPreview(med)}
-                      >
-                        {med.media_details.file_name}
-                      </Menu.Item>
-                    ))}
+                    {msg?.media_url?.map((med, i) => {
+                      if (med instanceof File) return null;
+
+                      return (
+                        <Menu.Item key={i} onClick={() => onPreview(med)}>
+                          {med.media_details.file_name}
+                        </Menu.Item>
+                      );
+                    })}
                   </Menu.Dropdown>
                 </Menu>
               )}

@@ -19,7 +19,10 @@ import axios from "axios";
 import { useTranslation } from "../../store/language/language.store";
 import type { LockDmAndGroupModalDataState } from "../modal/LockDmAndGroupModal";
 import LockDmAndGroupModal from "../modal/LockDmAndGroupModal";
-import { DmGroupLockService, type UnlockPayload } from "../../api/services/dm.group.lock.service";
+import {
+  DmGroupLockService,
+  type UnlockPayload,
+} from "../../api/services/dm.group.lock.service";
 
 interface SelectedGrouptate {
   group_id: string;
@@ -32,10 +35,10 @@ const GroupList = () => {
   const reset = useGroupListStore((state) => state.reset);
   const search = useConversationTypeStore((state) => state.search);
 
-  const {translation} = useTranslation()
+  const { translation } = useTranslation();
 
   const filteredGroups = groups.filter((grp) =>
-    grp.group_name.toLowerCase().includes(search.trim().toLowerCase()),
+    grp?.group_name?.toLowerCase().includes(search.trim().toLowerCase()),
   );
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -46,20 +49,20 @@ const GroupList = () => {
     group_name: "",
   });
 
-    const [lockDmAndGroupModalData, setLockDmAndGroupModalData] =
-      useState<LockDmAndGroupModalDataState>({
-        open: false,
-        for: "",
-        chat_id: "",
-        dmOrGroupName : ""
-      });
+  const [lockDmAndGroupModalData, setLockDmAndGroupModalData] =
+    useState<LockDmAndGroupModalDataState>({
+      open: false,
+      for: "",
+      chat_id: "",
+      dmOrGroupName: "",
+    });
 
   const resetSelectedGroup = () => {
     setSelectedGroup({ group_id: "", group_name: "" });
   };
 
   const handleClickLeave = (id: string, group_name: string) => {
-    setLeaveOpened(true)
+    setLeaveOpened(true);
     setSelectedGroup({ group_id: id, group_name: group_name });
   };
 
@@ -83,14 +86,14 @@ const GroupList = () => {
     }
   };
 
-    const onCloseLockDmAndGroupModal = async (reload : boolean) => {
+  const onCloseLockDmAndGroupModal = async (reload: boolean) => {
     setLockDmAndGroupModalData({
       open: false,
       for: "",
       chat_id: "",
-      dmOrGroupName : ""
+      dmOrGroupName: "",
     });
-    if(reload)await loadGroups();
+    if (reload) await loadGroups();
   };
 
   const leaveGroup = async () => {
@@ -161,19 +164,21 @@ const GroupList = () => {
             <GroupsItem
               key={groups._id}
               groups={groups}
-              onLeave={() => handleClickLeave(groups._id, groups.group_name)}
+              onLeave={() =>
+                handleClickLeave(groups._id || "", groups.group_name || "")
+              }
               onSetLockDmAndGroupModalData={() =>
                 setLockDmAndGroupModalData({
                   open: true,
                   for: "GROUP",
-                  chat_id: groups._id,
-                  dmOrGroupName : groups.group_name
+                  chat_id: groups._id || "",
+                  dmOrGroupName: groups.group_name || "",
                 })
               }
               unLock={() =>
                 unLockGroup({
                   for: "GROUP",
-                  chat_id: groups._id,
+                  chat_id: groups._id || "",
                 })
               }
             />
@@ -194,18 +199,14 @@ const GroupList = () => {
             setLeaveOpened(false);
             resetSelectedGroup();
           }}
-          title={translation(
-            "chat_page.label_leave_group",
-            "Leave Group",
-          )}
+          title={translation("chat_page.label_leave_group", "Leave Group")}
           centered
         >
           <Text size="xs">
             {translation(
-            "chat_page.alert_leave_group",
-            "Are you sure you want to leave the group",
-          )}
-            {" "}
+              "chat_page.alert_leave_group",
+              "Are you sure you want to leave the group",
+            )}{" "}
             <b>{selectedGroup?.group_name}</b>?
           </Text>
 
@@ -218,10 +219,7 @@ const GroupList = () => {
                 leaveGroup();
               }}
             >
-              {translation(
-            "chat_page.btn_leave",
-            "Leave",
-          )}
+              {translation("chat_page.btn_leave", "Leave")}
             </Button>
           </Group>
         </Modal>
@@ -235,10 +233,7 @@ const GroupList = () => {
     ) : (
       <Center>
         <Text c="red.6" size="xs">
-          {translation(
-            "chat_page.label_group_not_found",
-            "No Group found",
-          )}
+          {translation("chat_page.label_group_not_found", "No Group found")}
         </Text>
       </Center>
     )
