@@ -297,7 +297,7 @@ export default function Accounts() {
     user_id: string,
     label: string | null,
     display_name: string | null,
-    account_type?: string |null,
+    account_type?: string | null,
   ) => {
     setAccessAndPermissions({
       open: true,
@@ -1134,7 +1134,8 @@ export default function Accounts() {
   const managedAccounts = filteredAccounts.filter(
     (account) =>
       account.user_id !== userDetails?.username &&
-      (account.account_type === "bot" ? "bot" : "user") === accountTypeFilter,
+      (account.account_type === "bot" ? "bot" : "user") ===
+        (isHubAccountLoggedIn ? accountTypeFilter : "user"),
   );
 
   const totalManagedAccounts = managedAccounts.length;
@@ -2093,28 +2094,30 @@ export default function Accounts() {
                       )}
                     </Text>
 
-                    <Switch
-                      size="sm"
-                      ml="auto"
-                      mr={27}
-                      labelPosition="left"
-                      label={translation(
-                        "accounts_page.labelToggleBotAccounts",
-                        "Toggle to access bot accounts",
-                      )}
-                      checked={accountTypeFilter === "bot"}
-                      onChange={(e) => {
-                        const checked = e.currentTarget.checked;
-                        setAccountTypeFilter(checked ? "bot" : "user");
-                        setCurrentPage(1);
-                      }}
-                      styles={{
-                        label: {
-                          fontSize: "var(--mantine-font-size-xs)",
-                          color: "var(--mantine-color-dimmed)",
-                        },
-                      }}
-                    />
+                    {isHubAccountLoggedIn && (
+                      <Switch
+                        size="sm"
+                        ml="auto"
+                        mr={27}
+                        labelPosition="left"
+                        label={translation(
+                          "accounts_page.labelToggleBotAccounts",
+                          "Toggle to access bot accounts",
+                        )}
+                        checked={accountTypeFilter === "bot"}
+                        onChange={(e) => {
+                          const checked = e.currentTarget.checked;
+                          setAccountTypeFilter(checked ? "bot" : "user");
+                          setCurrentPage(1);
+                        }}
+                        styles={{
+                          label: {
+                            fontSize: "var(--mantine-font-size-xs)",
+                            color: "var(--mantine-color-dimmed)",
+                          },
+                        }}
+                      />
+                    )}
                   </Group>
                 )}
 
@@ -3221,8 +3224,8 @@ export default function Accounts() {
                             Object.keys(changes?.permissions).length > 0
                               ? changes?.permissions
                               : accessAndPermissions.account_type !== "bot"
-                      ? USER_PERMISSIONS
-                      : BOT_USER_PERMISSIONS,
+                                ? USER_PERMISSIONS
+                                : BOT_USER_PERMISSIONS,
                           );
 
                           return (
