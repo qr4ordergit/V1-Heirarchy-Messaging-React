@@ -12,15 +12,18 @@ interface LOCKED_ITEM {
 
 type IS_LOCKED = Record<string, LOCKED_ITEM> | null;
 export interface Groups {
-  _id: string;
-  group_name: string;
+  _id?: string;
+  group_name?: string;
   profile_url?: string | null;
-  only_admins_can_message: boolean;
-  unread_count: number;
-  last_message: string
-  admins: string[]
+  only_admins_can_message?: boolean;
+  unread_count?: number;
+  last_message?: string
+  admins?: string[]
   disappearing_messages?: DISAPPEAR_MODE | null
-  is_locked?: IS_LOCKED;
+  is_locked?: IS_LOCKED
+  members?: string[]
+  group_description?: string
+  media_encryption?: boolean
 }
 
 interface DISAPPEAR_MODE_PAYLOAD {
@@ -33,6 +36,7 @@ interface GroupListState {
   groups: Groups[];
   setGroups: (groups: Groups[]) => void;
   updateGroupDisappearingMode: (payload: DISAPPEAR_MODE_PAYLOAD) => void;
+  updateGroupInformation: (payload: Groups) => void
   reset: () => void;
 }
 
@@ -56,6 +60,18 @@ export const useGroupListStore = create<GroupListState>((set) => ({
         })
       }
     ))
+  },
+  updateGroupInformation: (payload) => {
+    set((state) => {
+      return {
+        groups: state.groups.map((grp) => {
+          if (grp._id === payload._id) {
+            return payload
+          }
+          return grp
+        })
+      }
+    })
   },
   reset: () =>
     set({

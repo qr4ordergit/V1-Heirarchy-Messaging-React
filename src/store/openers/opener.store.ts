@@ -1,10 +1,8 @@
 import { create } from "zustand";
 
-interface INSERT_PAYLOAD {
-    opener: string,
-    payload?: {
-        [key: string]: unknown
-    }
+interface INSERT_PAYLOAD<T = unknown> {
+    opener: string;
+    payload?: T;
 }
 
 interface OPENERS {
@@ -17,7 +15,7 @@ interface POP_PAYLOAD {
 
 interface OPENERSTORE {
     openers: OPENERS,
-    insertOpener: (payload: INSERT_PAYLOAD) => void,
+    insertOpener: <T>(payload: INSERT_PAYLOAD<T>) => void,
     popOpener: (payload: POP_PAYLOAD) => void,
     resetOpener: () => void
 }
@@ -34,12 +32,13 @@ export const useOpenerStore = create<OPENERSTORE>((set) => ({
         }
     )),
 
-    popOpener: (payload) => set((state) => {
-        delete state.openers[payload.opener]
-        return {
-            openers: state.openers
-        }
-    }),
+    popOpener: (payload) =>
+        set((state) => {
+            const openers = { ...state.openers };
+            delete openers[payload.opener];
+
+            return { openers };
+        }),
 
     resetOpener: () => set({
         openers: {}

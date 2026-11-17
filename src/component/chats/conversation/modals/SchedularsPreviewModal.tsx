@@ -63,7 +63,7 @@ function SchedularsPreviewModal() {
         "chat_history.modal-schedule-msgs-title",
         "Scheduled messages",
       )}
-      size={"xl"}
+      size={"lg"}
       radius={"lg"}
     >
       {fetchLoader ? (

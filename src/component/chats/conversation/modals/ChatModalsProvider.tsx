@@ -5,6 +5,7 @@ import ChatPasswordModal from "./ChatPasswordModal";
 import DisappearMsgsModal from "./DisappearMsgsModal";
 import EditScheduleMsgModal from "./EditScheduleMsgModal";
 import ExportChatModal from "./ExportChatModal";
+import GroupInfoModal from "./GroupInfoModal";
 import MsgSchedulerTimeModal from "./MsgSchedulerTimeModal";
 import Previewer from "./Previewer";
 import PrivateMessagePayloadModal from "./PrivateMessagePayloadModal";
@@ -16,7 +17,6 @@ function ChatModalsProvider() {
     <>
       <DeleteChatDialog />
       <EditChatDialog />
-      <Previewer />
       <TagsModal />
       <PrivateMessagePayloadModal />
       <DecryptPrivateMsgDialog />
@@ -26,6 +26,8 @@ function ChatModalsProvider() {
       <SchedularsPreviewModal />
       <EditScheduleMsgModal />
       <ChatPasswordModal />
+      <GroupInfoModal />
+      <Previewer />
     </>
   );
 }

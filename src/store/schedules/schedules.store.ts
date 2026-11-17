@@ -2,6 +2,15 @@ import { create } from "zustand"
 
 type STATUS = "active" | "deactive"
 
+export interface MEDIA_URL {
+    media_url: string,
+    media_details: {
+        file_name: string,
+        isEncrypted: boolean,
+        type: string
+    }
+}
+
 export interface SCHEDULED_MESSAGE {
     _id: string
     schedule_date: string
@@ -10,7 +19,7 @@ export interface SCHEDULED_MESSAGE {
     days: [string] | null
     status: STATUS,
     text: string,
-    media_url: File[]
+    media_url: MEDIA_URL[]
     [key: string]: unknown
 }
 

@@ -3,6 +3,7 @@ import {
   IconChevronLeft,
   IconClockHour10,
   IconDotsVertical,
+  IconEdit,
   IconMessageDots,
   IconPhotoShield,
   IconProgressDown,
@@ -25,7 +26,10 @@ import { Notification } from "../../../utils/notification";
 import { getApiErrorMessage } from "../../../api/getApiErrorMessage";
 import { api } from "../../../api/axios";
 import { ENDPOINTS } from "../../../api/endpoints";
-import { useChatStore } from "../../../store/chats/chats.store";
+import {
+  useChatStore,
+  type CURRENT_CHAT,
+} from "../../../store/chats/chats.store";
 import { useDMListStore } from "../../../store/dm/dm.list.store";
 
 interface ENCRYPTION_PAYLOAD {
@@ -57,8 +61,8 @@ function Navbar() {
     () =>
       own_user_id
         ? groups
-            .find((grp) => grp._id === decodeURIComponent(chatId || ""))
-            ?.admins.includes(own_user_id)
+            .find((grp) => grp._id === chatId)
+            ?.admins?.includes(own_user_id)
         : false,
     [chatId, groups],
   );
@@ -84,6 +88,14 @@ function Navbar() {
       let allow = true;
       if (isGroup && !isAdmin) {
         allow = false;
+      }
+
+      return allow;
+    },
+    allowEdit() {
+      let allow = false;
+      if (isGroup && isAdmin) {
+        allow = true;
       }
 
       return allow;
@@ -136,6 +148,13 @@ function Navbar() {
   const onSchedule = () => {
     insertOpener({
       opener: OPENERS.schedulerList,
+    });
+  };
+
+  const onEdit = () => {
+    insertOpener<CURRENT_CHAT>({
+      opener: OPENERS.groupInfoModal,
+      payload: current_chat,
     });
   };
 
@@ -223,7 +242,17 @@ function Navbar() {
           </Avatar>
         )}
 
-        <div className="font-medium">{current_chat?.display_name}</div>
+        <div className="min-w-0">
+          <div className="font-medium truncate mr-auto">
+            {current_chat?.display_name}
+          </div>
+
+          {isGroup && current_chat?.group_description && (
+            <div className="truncate text-gray-500 text-xs">
+              {current_chat.group_description}
+            </div>
+          )}
+        </div>
         <div className="ms-auto">
           <Menu width={200} position="bottom-end">
             <Menu.Target>
@@ -364,6 +393,14 @@ function Navbar() {
                   leftSection={<IconProgressDown size={14} />}
                 >
                   {translation("chat_history.NAV-export", "Export chat")}
+                </Menu.Item>
+              )}
+              {conditionalRenderer.allowEdit() && (
+                <Menu.Item
+                  onClick={onEdit}
+                  leftSection={<IconEdit size={14} />}
+                >
+                  Edit Group
                 </Menu.Item>
               )}
             </Menu.Dropdown>

@@ -8,6 +8,7 @@ export const ENDPOINTS = {
     LEAVE: "/group/manage-members",
     GETMEMBERS: "/group",
     EDIT_GROUP: "/group",
+    ADD_REMOVE_MEM: "group/manage-members"
   },
   CHAT: {
     SEND: "/message",

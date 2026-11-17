@@ -119,12 +119,14 @@ export const TRIGGERS = {
   schedulePayload: "schedule:schedulePayload",
   chatPasswordModal: "chatPasswordModal",
   chatPasswordPayload: "chatPasswordPayload",
+  groupInfoModal: "groupInfoModal"
 };
 
 export const OPENERS = {
   schedulerList: "schedulerList",
   editScheduledMsg: "editScheduledMsg",
   doubleEncryption_init: "doubleEncryption_init",
+  groupInfoModal: "groupInfoModal"
 };
 
 export const CIPHER_SECRET =
@@ -356,8 +358,8 @@ export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
   "users-accesstree": "Manage Subuser's Accessed Accounts Access & Permissions",
 
   // BOT
-  
-  "bot-messages" : "Messages"
+
+  "bot-messages": "Messages"
 };
 
 // export const USER_PERMISSION_GROUP_LABELS: Record<string, string> = {

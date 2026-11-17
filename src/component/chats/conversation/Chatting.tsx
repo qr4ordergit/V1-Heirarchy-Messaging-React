@@ -353,8 +353,6 @@ export default function Chatting() {
       scrollHeight: 0,
       scrollTop: 0,
     };
-
-    addChats([]);
   }, [current_chat]);
 
   useEffect(() => {

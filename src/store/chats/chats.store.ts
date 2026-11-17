@@ -41,7 +41,7 @@ interface LOCKED_ITEM {
 
 type IS_LOCKED = Record<string, LOCKED_ITEM> | null;
 
-interface CURRENT_CHAT {
+export interface CURRENT_CHAT {
     media_encryption?: boolean,
     profile_url?: string | null,
     disappearing_messages?: {
@@ -52,6 +52,8 @@ interface CURRENT_CHAT {
     display_name?: string,
     admins?: string[],
     is_locked?: IS_LOCKED;
+    group_description?: string
+    members?: string[]
 
     [key: string]: unknown
 }

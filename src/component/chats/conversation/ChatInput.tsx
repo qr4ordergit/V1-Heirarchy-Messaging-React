@@ -433,14 +433,18 @@ export default function ChatInput() {
         payload["type"] = "schedule";
       }
 
-      const target_user_param = target_user
-        ? `?target_user=${target_user}`
-        : "";
+      const params = {
+        target_user: target_user ? target_user : undefined,
+      };
+      const headers = {
+        "x-timezone": dayjs.tz.guess(),
+      };
 
       const endpoint = isGroup
-        ? `${ENDPOINTS.GROUP_CHAT.POST}${target_user_param}`
-        : `${ENDPOINTS.CHAT.SEND}${target_user_param}`;
-      const response = await api.post(endpoint, payload);
+        ? ENDPOINTS.GROUP_CHAT.POST
+        : ENDPOINTS.CHAT.SEND;
+
+      const response = await api.post(endpoint, payload, { params, headers });
 
       if (!response.data?.success) {
         Notification.error(
