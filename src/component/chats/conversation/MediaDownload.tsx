@@ -65,7 +65,10 @@ function MediaDownload({ msg_id, media_data, mediaIndex }: PAYLOAD) {
 
   return (
     <div>
-      <div className="h-30 w-30 bg-gray-200 rounded relative">
+      <div
+        className="h-30 w-30 bg-gray-200 rounded relative cursor-pointer"
+        onClick={handleDecrypt}
+      >
         <div className="absolute top-1/2 left-1/2 -translate-1/2">
           <DocumentIcon size={26} />
         </div>
@@ -73,7 +76,6 @@ function MediaDownload({ msg_id, media_data, mediaIndex }: PAYLOAD) {
           className="absolute bottom-1 left-2 cursor-pointer"
           align={"center"}
           gap={2}
-          onClick={handleDecrypt}
         >
           {loader ? (
             <Loader size={12} color="dark" />

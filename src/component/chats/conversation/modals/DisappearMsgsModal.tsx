@@ -1,4 +1,4 @@
-import { Button, Group, Modal, NumberInput } from "@mantine/core";
+import { Button, Group, Modal, NumberInput, Text } from "@mantine/core";
 import { useTriggerStore } from "../../../../store/trigger/trigger.store";
 import { useAuthStore } from "../../../../store/auth/auth.store";
 import { useParams } from "react-router";
@@ -221,10 +221,14 @@ function DisappearMsgsModal() {
     <Modal
       opened={trigger === TRIGGERS.disappearChatModal}
       onClose={onClose}
-      title={translation(
-        "chat_history.modal-disappearing-timmer-title",
-        "Set timmer for disappearing messages",
-      )}
+      title={
+        <Text fw={700}>
+          {translation(
+            "chat_history.modal-disappearing-timmer-title",
+            "Set timmer for disappearing messages",
+          )}
+        </Text>
+      }
       radius={"lg"}
     >
       <div className="flex gap-2">

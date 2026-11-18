@@ -149,7 +149,11 @@ function TagsModal() {
     <Modal
       opened={trigger === TRIGGERS.tagList}
       onClose={onClose}
-      title={translation("chat_history.modal-tag-title", "Add Tags to message")}
+      title={
+        <Text fw={700}>
+          {translation("chat_history.modal-tag-title", "Add Tags to message")}
+        </Text>
+      }
     >
       <Stack gap="md">
         {fetchLoader ? (

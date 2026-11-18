@@ -1,4 +1,4 @@
-import { Image, Modal } from "@mantine/core";
+import { Image, Modal, Text } from "@mantine/core";
 import { useTriggerStore } from "../../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../../utils/constant";
 import { useTranslation } from "../../../../store/language/language.store";
@@ -17,7 +17,11 @@ function Previewer() {
     <Modal
       opened={trigger === TRIGGERS.previewMedia}
       onClose={onClose}
-      title={translation("chat_history.modal-preview-title", "Media Previewer")}
+      title={
+        <Text fw={700}>
+          {translation("chat_history.modal-preview-title", "Media Previewer")}
+        </Text>
+      }
       size="100%"
       centered
     >

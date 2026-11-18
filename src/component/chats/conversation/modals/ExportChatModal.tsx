@@ -1,4 +1,4 @@
-import { Button, Fieldset, Group, Loader, Modal } from "@mantine/core";
+import { Button, Fieldset, Group, Loader, Modal, Text } from "@mantine/core";
 import { TRIGGERS } from "../../../../utils/constant";
 import { useTriggerStore } from "../../../../store/trigger/trigger.store";
 import dayjs from "dayjs";
@@ -202,7 +202,11 @@ function ExportChatModal() {
     <Modal
       opened={trigger === TRIGGERS.exportChatModal}
       onClose={onClose}
-      title={translation("chat_history.modal-export-title", "Export Chat")}
+      title={
+        <Text fw={700}>
+          {translation("chat_history.modal-export-title", "Export Chat")}
+        </Text>
+      }
     >
       <Fieldset
         legend={translation(

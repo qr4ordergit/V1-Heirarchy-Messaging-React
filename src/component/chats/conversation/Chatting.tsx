@@ -286,8 +286,16 @@ export default function Chatting() {
 
   const initialApiCalls = () => {
     if (!user_id) return;
+    if (!Object.keys(current_chat).length) {
+      navigate("/chats");
+      return;
+    }
 
-    if (current_chat?.is_locked && current_chat.is_locked[user_id]) {
+    if (
+      current_chat?.is_locked &&
+      current_chat.is_locked[user_id] &&
+      !Object.keys(chatPassword).length
+    ) {
       setTrigger({
         toTrigger: TRIGGERS.chatPasswordModal,
       });

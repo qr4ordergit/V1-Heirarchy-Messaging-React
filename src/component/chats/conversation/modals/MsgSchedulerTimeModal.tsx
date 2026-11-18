@@ -1,4 +1,4 @@
-import { Button, Modal, MultiSelect, Stack, Tabs } from "@mantine/core";
+import { Button, Modal, MultiSelect, Stack, Tabs, Text } from "@mantine/core";
 import { TRIGGERS } from "../../../../utils/constant";
 import { useTriggerStore } from "../../../../store/trigger/trigger.store";
 import { DateTimePicker, TimePicker } from "@mantine/dates";
@@ -116,10 +116,14 @@ function MsgSchedulerTimeModal() {
     <Modal
       opened={trigger === TRIGGERS.schedulePayload}
       onClose={onClose}
-      title={translation(
-        "chat_history.modal-schedule-timmer-heading",
-        "Set time to schedule message",
-      )}
+      title={
+        <Text fw={700}>
+          {translation(
+            "chat_history.modal-schedule-timmer-heading",
+            "Set time to schedule message",
+          )}
+        </Text>
+      }
     >
       <Stack>
         <Tabs value={activeTab} onChange={setActiveTab}>

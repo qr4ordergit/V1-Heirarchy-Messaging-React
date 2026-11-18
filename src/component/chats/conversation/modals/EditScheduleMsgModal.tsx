@@ -4,6 +4,7 @@ import {
   Modal,
   MultiSelect,
   Stack,
+  Text,
   Textarea,
 } from "@mantine/core";
 import { useOpenerStore } from "../../../../store/openers/opener.store";
@@ -260,7 +261,7 @@ function EditScheduleMsgModal() {
     <Modal
       opened={trigger === OPENERS.editScheduledMsg}
       onClose={onClose}
-      title={"Edit message"}
+      title={<Text fw={700}>Edit message</Text>}
     >
       <Stack>
         <Textarea

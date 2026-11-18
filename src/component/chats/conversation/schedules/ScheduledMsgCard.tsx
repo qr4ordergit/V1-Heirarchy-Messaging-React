@@ -129,7 +129,7 @@ function ScheduledMsgCard({ msg }: MSG) {
               {previewLoader ? (
                 <Loader size={"xs"} color="dark" />
               ) : (
-                <Menu position="left-start">
+                <Menu position="left-start" width={200}>
                   <Menu.Target>
                     <IconPaperclip size={16} className="cursor-pointer" />
                   </Menu.Target>
@@ -139,7 +139,9 @@ function ScheduledMsgCard({ msg }: MSG) {
 
                       return (
                         <Menu.Item key={i} onClick={() => onPreview(med)}>
-                          {med.media_details.file_name}
+                          <Text size="xs" className="text-wrap">
+                            {med.media_details.file_name}
+                          </Text>
                         </Menu.Item>
                       );
                     })}

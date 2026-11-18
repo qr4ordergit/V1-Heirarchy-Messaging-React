@@ -320,10 +320,11 @@ function DecryptPrivateMsgDialog() {
     <Modal
       opened={trigger === TRIGGERS.decryptPrivateMsgDialog}
       onClose={onClose}
-      title={translation(
-        "chat_history.modal-decrypt-tile",
-        "Decrypting message",
-      )}
+      title={
+        <Text fw={700}>
+          {translation("chat_history.modal-decrypt-tile", "Decrypting message")}
+        </Text>
+      }
     >
       <div>
         {decryptLoader1 ? (

@@ -1,4 +1,4 @@
-import { Modal, Stack } from "@mantine/core";
+import { Modal, Stack, Text } from "@mantine/core";
 import { useOpenerStore } from "../../../../store/openers/opener.store";
 import { OPENERS } from "../../../../utils/constant";
 import { api } from "../../../../api/axios";
@@ -59,20 +59,24 @@ function SchedularsPreviewModal() {
     <Modal
       opened={trigger === OPENERS.schedulerList}
       onClose={onClose}
-      title={translation(
-        "chat_history.modal-schedule-msgs-title",
-        "Scheduled messages",
-      )}
+      title={
+        <Text fw={700}>
+          {translation(
+            "chat_history.modal-schedule-msgs-title",
+            "Scheduled messages",
+          )}
+        </Text>
+      }
       size={"lg"}
       radius={"lg"}
     >
       {fetchLoader ? (
-        <div>
+        <Text className="text-gray-600" size="sm">
           {translation(
             "chat_history.modal-schedule-loader",
             "Fetching scheduled messages. Please wait...",
           )}
-        </div>
+        </Text>
       ) : (
         <Stack align="stretch" justify="center">
           {messages.length > 0 ? (

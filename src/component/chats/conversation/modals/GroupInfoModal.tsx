@@ -36,6 +36,7 @@ import {
   getGroupTagsApi,
 } from "../../../../api/createGroupModalApi";
 import { useGroupListStore } from "../../../../store/groups/group.list.store";
+import { useTranslation } from "../../../../store/language/language.store";
 
 interface STATE {
   name: string;
@@ -142,6 +143,8 @@ function GroupInfoModal() {
   const [submitLoader, SubmitFn] = useTransition();
   const [tagsLoader, TagsFn] = useTransition();
 
+  const { translation } = useTranslation();
+
   const onClose = () => {
     resetOpener();
   };
@@ -223,6 +226,7 @@ function GroupInfoModal() {
       if (!res) return;
 
       const presignedUrl = res.data?.upload_url;
+      const profile_url = res.data?.profile_url;
 
       if (presignedUrl) {
         await fetch(presignedUrl, {
@@ -247,6 +251,7 @@ function GroupInfoModal() {
         group_description: state.description,
         group_name: state.name,
         members: state.selectedMembers,
+        profile_url: profile_url,
       };
 
       updateGroupInformation(updatedCurrentGroupInfo);
@@ -461,21 +466,36 @@ function GroupInfoModal() {
     <Modal
       opened={isOpen}
       onClose={onClose}
-      title={<Text fw={700}>Group Information</Text>}
+      title={
+        <Text fw={700}>
+          <Text fw={700} size="lg">
+            {translation("contact.txtCreateNewGroup", "Create New Group")}
+          </Text>
+        </Text>
+      }
       radius={"lg"}
     >
       <ScrollArea h={"60vh"}>
         <TextInput
-          label={"Group Name"}
-          placeholder="Update group name"
+          label={translation("contact.labelGroupName", "Group Name")}
+          placeholder={translation(
+            "contact.placeholderGroupName",
+            "Enter group name",
+          )}
           value={state.name}
           onChange={(e) =>
             dispatch({ type: "SET_NAME", payload: e.target.value })
           }
         />
         <Textarea
-          label={"Group Description"}
-          placeholder="Update group description"
+          label={translation(
+            "contact.labelGroupDescription",
+            "Group Description",
+          )}
+          placeholder={translation(
+            "contact.placeholderGroupDescription",
+            "Enter group description",
+          )}
           mt={"md"}
           value={state.description}
           onChange={(e) =>
@@ -485,7 +505,7 @@ function GroupInfoModal() {
         {openerPayload?.profile_url ? (
           <div className="mt-2">
             <Text size="sm" fw={600}>
-              Group Image
+              {translation("contact.labelGroupImage", "Group Image")}
             </Text>
             <Image src={state.profile} h={70} w={70} radius={"md"} />
             <Flex mt={"xs"} gap={4} align={"center"}>
@@ -525,7 +545,7 @@ function GroupInfoModal() {
           </div>
         ) : (
           <FileInput
-            label="Group Image"
+            label={translation("contact.labelGroupImage", "Group Image")}
             placeholder="upload picture"
             leftSection={<IconUpload stroke={2} />}
             mt={"md"}
@@ -548,8 +568,11 @@ function GroupInfoModal() {
           hidePickedOptions
         />
         <MultiSelect
-          label="Group Admins"
-          placeholder="Select admin(s)"
+          label={translation("contact.labelGroupAdmins", "Group Admins")}
+          placeholder={translation(
+            "contact.placeholderSelectAdminToAdd",
+            "Select admin(s)",
+          )}
           data={state.members}
           value={state.admins}
           onChange={(e) => dispatch({ type: "SET_ADMINS", payload: e })}
@@ -557,9 +580,15 @@ function GroupInfoModal() {
           hidePickedOptions
         />
         <Select
-          label={"Transfer Ownership"}
+          label={translation(
+            "contact.labelTransferOwnership",
+            "Transfer Ownership",
+          )}
           mt={"md"}
-          placeholder="Select user"
+          placeholder={translation(
+            "contact.placeholderSelectNewOwner",
+            "Select new owner",
+          )}
           data={state.admins
             .filter((ad) => contactNameProvider(ad) !== "You")
             .map((ad) => {
@@ -582,7 +611,10 @@ function GroupInfoModal() {
           disabled={tagsLoader}
         />
         <Checkbox
-          label="Allow admins to send messages"
+          label={translation(
+            "contact.checkboxAdminCanMsg",
+            "Allow admins to send messages",
+          )}
           mt={"md"}
           checked={state.onlyAdminAllowToMessage}
           onChange={(e) =>
