@@ -16,7 +16,7 @@ export interface Groups {
   group_name?: string;
   profile_url?: string | null;
   only_admins_can_message?: boolean;
-  unread_count?: number;
+  unread_count: number;
   last_message?: string
   admins?: string[]
   disappearing_messages?: DISAPPEAR_MODE | null

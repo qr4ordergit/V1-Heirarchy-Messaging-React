@@ -102,7 +102,7 @@ const GroupsItem = ({
           </Text>
 
           <Flex align="center" gap={6}>
-            {groups.unread_count && groups.unread_count > 0 && (
+            {groups.unread_count > 0 && (
               <Badge color="green" radius="lg" variant="filled" size="xs">
                 {groups.unread_count}
               </Badge>
