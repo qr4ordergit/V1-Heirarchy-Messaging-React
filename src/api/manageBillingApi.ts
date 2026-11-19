@@ -17,7 +17,21 @@ export interface PricingRule {
     price_per_gb: string | number;
   };
   premium_usernames?: {
+    unit?: string;
     price_per_unit: string | number;
+  };
+  bot_accounts?: {
+    price_per_unit: string | number;
+  };
+  service_calls?: {
+    free_units: number;
+    unit_size: number;
+    unit_price: string | number;
+  };
+  compute_duration?: {
+    unit: string;
+    free_units: number;
+    unit_price: string | number;
   };
   effective_from: string | null;
   effective_until: string | null;
@@ -47,7 +61,21 @@ export interface UserPricingSummary {
     price_per_gb: string | number;
   };
   premium_usernames?: {
+    unit?: string;
     price_per_unit: string | number;
+  };
+  bot_accounts?: {
+    price_per_unit: string | number;
+  };
+  service_calls?: {
+    free_units: number;
+    unit_size: number;
+    unit_price: string | number;
+  };
+  compute_duration?: {
+    unit: string;
+    free_units: number;
+    unit_price: string | number;
   };
 }
 
@@ -118,6 +146,19 @@ export interface DefaultPricingPayload {
   premium_usernames?: {
     price_per_unit: string;
   };
+  bot_accounts?: {
+    price_per_unit: string;
+  };
+  service_calls?: {
+    free_units: number;
+    unit_size: number;
+    unit_price: string;
+  };
+  compute_duration?: {
+    unit: string;
+    free_units: number;
+    unit_price: string;
+  };
 }
 
 export interface CustomPricingPayload {
@@ -137,6 +178,19 @@ export interface CustomPricingPayload {
   premium_usernames?: {
     price_per_unit: string;
   };
+  bot_accounts?: {
+    price_per_unit: string;
+  };
+  service_calls?: {
+    free_units: number;
+    unit_size: number;
+    unit_price: string;
+  };
+  compute_duration?: {
+    unit: string;
+    free_units: number;
+    unit_price: string;
+  };
 }
 
 export interface UserBillingOverviewDetails {
@@ -153,6 +207,9 @@ export interface UserBillingOverviewDetails {
       chat_accounts: string;
       storage: string;
       premium_usernames?: string;
+      bot_accounts?: string;
+      service_calls?: string;
+      compute_duration?: string;
       total: string;
     };
     latest_day: {
@@ -178,6 +235,20 @@ export interface UserBillingOverviewDetails {
       };
       premium_usernames?: {
         usage: number;
+        unit_price: string;
+        cost: string;
+      };
+      bot_accounts?: { usage: number; unit_price: string; cost: string };
+      service_calls?: {
+        usage: number;
+        unit_size: number;
+        unit_price: string;
+        cost: string;
+      };
+      compute_duration?: {
+        usage_ms: number;
+        unit: string;
+        billable_units: string;
         unit_price: string;
         cost: string;
       };

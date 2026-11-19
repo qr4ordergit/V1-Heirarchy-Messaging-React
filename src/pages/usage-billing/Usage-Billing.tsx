@@ -169,6 +169,32 @@ export default function UsageBilling() {
       latestPremium?.cost,
   );
 
+  const latestBot =
+    estimateData?.latest_day?.bot_accounts ?? estimateData?.bot_accounts;
+  const botUsage = latestBot?.usage ?? usageData?.bot_accounts ?? 0;
+  const botUnitPrice = parseCost(latestBot?.unit_price ?? 0.001);
+  const botEstimatedCost = parseCost(
+    estimateData?.cost?.bot_accounts ?? latestBot?.cost,
+  );
+
+  const latestServiceCalls =
+    estimateData?.latest_day?.service_calls ?? estimateData?.service_calls;
+  const serviceCallsUsage = parseCost(latestServiceCalls?.usage);
+  const serviceCallsUnitSize = latestServiceCalls?.unit_size ?? 1000;
+  const serviceCallsUnitPrice = parseCost(latestServiceCalls?.unit_price);
+  const serviceCallsEstimatedCost = parseCost(
+    estimateData?.cost?.service_calls ?? latestServiceCalls?.cost,
+  );
+
+  const latestCompute =
+    estimateData?.latest_day?.compute_duration ??
+    estimateData?.compute_duration;
+  const computeBillableUnits = parseCost(latestCompute?.billable_units);
+  const computeUnitPrice = parseCost(latestCompute?.unit_price);
+  const computeEstimatedCost = parseCost(
+    estimateData?.cost?.compute_duration ?? latestCompute?.cost,
+  );
+
   const formattedFreeStorage = formatBytesLocalized(storageFreeBytes, curtLang);
   const formattedUsageStorage = formatBytesLocalized(
     storageUsageBytes,
@@ -190,6 +216,14 @@ export default function UsageBilling() {
           .replace(/{free}/g, String(chatFreeUnits))
           .replace(/{price}/g, chatUnitPrice.toFixed(4))
           .replace(/{unit}/g, unitWord),
+        format: (val) => (val !== undefined ? String(val) : "0"),
+      },
+      {
+        key: "bot_accounts",
+        feature: translation(
+          "account_billing.featBotAccountsTitle",
+          "Bot Accounts",
+        ),
         format: (val) => (val !== undefined ? String(val) : "0"),
       },
       {
@@ -369,10 +403,15 @@ export default function UsageBilling() {
     () => resolveFeatures(paidFeatureDefs),
     [paidFeatureDefs, usageData, translation],
   );
-  const allCombinedFeatures = useMemo(
-    () => [...freeFeatures, ...paidFeatures],
-    [freeFeatures, paidFeatures],
-  );
+  const allCombinedFeatures = useMemo(() => {
+    const combined = [...freeFeatures];
+    const botIdx = combined.findIndex((f) => f.key === "bot_accounts");
+    const chatIdx = combined.findIndex((f) => f.key === "chat_accounts");
+    const anchorIdx = botIdx !== -1 ? botIdx : chatIdx;
+    const insertAt = anchorIdx === -1 ? combined.length : anchorIdx + 1;
+    combined.splice(insertAt, 0, ...paidFeatures);
+    return combined;
+  }, [freeFeatures, paidFeatures]);
 
   const chatItemTitle = translation(
     "account_billing.itemChatAccounts",
@@ -414,11 +453,39 @@ export default function UsageBilling() {
     .replace(/{rate}/g, premiumUnitPrice.toFixed(4))
     .replace(/{unit}/g, unitWord);
 
+  const botItemDetail = translation(
+    "account_billing.detailBotAccounts",
+    `${botUsage} used • $${botUnitPrice.toFixed(4)}/bot/${unitWord}`,
+  )
+    .replace(/{usage}/g, String(botUsage))
+    .replace(/{rate}/g, botUnitPrice.toFixed(4))
+    .replace(/{unit}/g, unitWord);
+
+  const serviceCallsItemDetail = translation(
+    "account_billing.detailServiceCalls",
+    `${serviceCallsUsage.toLocaleString()} calls • $${serviceCallsUnitPrice.toFixed(4)}/${serviceCallsUnitSize.toLocaleString()} calls`,
+  )
+    .replace(/{usage}/g, serviceCallsUsage.toLocaleString())
+    .replace(/{rate}/g, serviceCallsUnitPrice.toFixed(4))
+    .replace(/{size}/g, serviceCallsUnitSize.toLocaleString());
+
+  const computeItemDetail = translation(
+    "account_billing.detailComputeDuration",
+    `${computeBillableUnits.toFixed(2)} min • $${computeUnitPrice.toFixed(4)}/min`,
+  )
+    .replace(/{minutes}/g, computeBillableUnits.toFixed(2))
+    .replace(/{rate}/g, computeUnitPrice.toFixed(4));
+
   const billingItems: BillingItem[] = [
     {
       item: chatItemTitle,
       detail: chatItemDetail,
       cost: chatEstimatedCost,
+    },
+    {
+      item: storageItemTitle,
+      detail: storageItemDetail,
+      cost: storageEstimatedCost,
     },
     ...(latestPremium
       ? [
@@ -429,11 +496,42 @@ export default function UsageBilling() {
           },
         ]
       : []),
-    {
-      item: storageItemTitle,
-      detail: storageItemDetail,
-      cost: storageEstimatedCost,
-    },
+    ...(latestBot
+      ? [
+          {
+            item: translation(
+              "account_billing.itemBotAccounts",
+              "Bot Accounts",
+            ),
+            detail: botItemDetail,
+            cost: botEstimatedCost,
+          },
+        ]
+      : []),
+    ...(latestServiceCalls
+      ? [
+          {
+            item: translation(
+              "account_billing.itemServiceCalls",
+              "Service Calls",
+            ),
+            detail: serviceCallsItemDetail,
+            cost: serviceCallsEstimatedCost,
+          },
+        ]
+      : []),
+    ...(latestCompute
+      ? [
+          {
+            item: translation(
+              "account_billing.itemComputeDuration",
+              "Compute Duration",
+            ),
+            detail: computeItemDetail,
+            cost: computeEstimatedCost,
+          },
+        ]
+      : []),
   ];
 
   const handlePayBill = () => {

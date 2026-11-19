@@ -23,6 +23,7 @@ export interface UsageData {
   account_tags?: number;
   storage_bytes?: StorageBytes;
   snapshot_date?: string;
+  bot_accounts?: number;
   [key: string]: any;
 }
 
@@ -64,6 +65,21 @@ export interface LatestDayMetrics {
   cost: string | number;
 }
 
+export interface ServiceCallsMetrics {
+  usage?: number;
+  unit_size?: number;
+  unit_price: string | number;
+  cost: string | number;
+}
+
+export interface ComputeDurationMetrics {
+  usage_ms?: number;
+  unit?: string;
+  billable_units?: string | number;
+  unit_price: string | number;
+  cost: string | number;
+}
+
 export interface EstimateData {
   currency?: string;
   days_accrued?: number;
@@ -74,6 +90,9 @@ export interface EstimateData {
     chat_accounts?: string | number;
     storage?: string | number;
     premium_usernames?: string | number;
+    bot_accounts?: string | number;
+    service_calls?: string | number;
+    compute_duration?: string | number;
     total?: string | number;
   };
   latest_day?: {
@@ -86,6 +105,9 @@ export interface EstimateData {
     chat_accounts?: LatestDayMetrics;
     storage?: LatestDayMetrics;
     premium_usernames?: LatestDayMetrics;
+    bot_accounts?: LatestDayMetrics;
+    service_calls?: ServiceCallsMetrics;
+    compute_duration?: ComputeDurationMetrics;
   };
   total_chat_accounts_cost?: string | number;
   total_storage_cost?: string | number;
