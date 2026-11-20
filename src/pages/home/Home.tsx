@@ -605,6 +605,10 @@ export default function Home() {
               {t("btnLogin", "Login")}
             </a>
 
+            <Link to={ROUTES.REGISTER} className={classes.signUpBtn}>
+              {t("btnSignUp", "Sign Up")}
+            </Link>
+
             {isMobile && (
               <Burger
                 opened={drawerOpen}

@@ -118,6 +118,19 @@
 .loginBtn:hover {
   transform: scale(1.05);
 }
+.signUpBtn {
+  background: linear-gradient(135deg, #67aeda 0%, #009dff 100%);
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+.signUpBtn:hover {
+  transform: scale(1.05);
+}
 .drawerLink {
   padding: 10px 8px;
   font-weight: 500;
