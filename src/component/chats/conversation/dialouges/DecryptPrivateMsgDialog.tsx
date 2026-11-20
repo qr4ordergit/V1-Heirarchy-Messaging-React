@@ -26,7 +26,6 @@ import { useChatStore } from "../../../../store/chats/chats.store";
 import { useAuthStore } from "../../../../store/auth/auth.store";
 import { useTranslation } from "../../../../store/language/language.store";
 import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
-import { IconCircleX } from "@tabler/icons-react";
 
 interface DECRYPT_PAYLOAD {
   [key: string]: unknown;
@@ -69,7 +68,7 @@ function DecryptPrivateMsgDialog() {
   const [decryptLoader2, DecryptFn2] = useTransition();
 
   const controller = new AbortController();
-  let OTP_SESSION_TIME = 120000;
+  const OTP_SESSION_TIME = 120000;
   const POLLING_INTERVAL = 3000;
 
   // ---------------reducer : START----------------------
@@ -219,33 +218,15 @@ function DecryptPrivateMsgDialog() {
     }
   };
 
-  const getSessionTime = async () => {
-    const params = {
-      target_user: target_user ? target_user : undefined,
-    };
-
-    try {
-      const res = await api.get(ENDPOINTS.KEYRING_CATEGORIES.GET_SESSION, {
-        params,
-      });
-
-      if (res.data?.success) {
-        OTP_SESSION_TIME = res.data?.data?.custom_totp_validity * 1000;
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   const requestOtpHandler = async () => {
     dispatch({ type: "SET_POLLING", payload: true });
-    await getSessionTime();
   };
 
   const requestOtp = async () => {
     try {
       const payload = {
         keyring_category_id: triggerPayload?.keyring_category_id,
+        is_notified: state.pollingAttempt === 0,
       };
 
       const params = {
@@ -404,13 +385,6 @@ function DecryptPrivateMsgDialog() {
                             "Requesting otp... Please wait",
                           )}
                         </Text>
-                        <div>
-                          <IconCircleX
-                            size={20}
-                            className="cursor-pointer"
-                            onClick={stopPolling}
-                          />
-                        </div>
                       </Flex>
                     ) : (
                       <Text

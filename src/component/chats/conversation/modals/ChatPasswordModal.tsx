@@ -24,7 +24,6 @@ import usePasswordManager, {
   type KEYRINGPASSWORD,
 } from "../../../../store/keys/password.manager.store";
 import { useTranslation } from "../../../../store/language/language.store";
-import { IconCircleX } from "@tabler/icons-react";
 
 interface SUBMIT_PAYLOAD {
   keyring_category_id?: string;
@@ -34,8 +33,6 @@ interface SUBMIT_PAYLOAD {
 
 type FIELD = "KEY" | "OTP" | null;
 type ALERT_STATUS = "SUCCESS" | "REJECTED" | "PENDING" | "INVALID" | null;
-
-const POLLING_INTERVAL = 3000;
 
 function ChatPasswordModal() {
   const { trigger, resetTrigger, setTrigger } = useTriggerStore(
@@ -120,7 +117,9 @@ function ChatPasswordModal() {
       ),
     },
   };
-  let OTP_SESSION_TIME = 120000;
+
+  const OTP_SESSION_TIME = 120000;
+  const POLLING_INTERVAL = 3000;
 
   const onClose = () => {
     navigate("/chats");
@@ -280,28 +279,11 @@ function ChatPasswordModal() {
     });
   };
 
-  const getSessionTime = async () => {
-    const params = {
-      target_user: target_user ? target_user : undefined,
-    };
-
-    try {
-      const res = await api.get(ENDPOINTS.KEYRING_CATEGORIES.GET_SESSION, {
-        params,
-      });
-
-      if (res.data?.success) {
-        OTP_SESSION_TIME = res.data?.data?.custom_totp_validity * 1000;
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   const requestOtp = async () => {
     try {
       const payload = {
         keyring_category_id: selectedKeyRingCategory,
+        is_notified: pollingAttempt === 0,
       };
 
       const params = {
@@ -334,7 +316,6 @@ function ChatPasswordModal() {
   const requestOtpHandler = async () => {
     setApiPolling(true);
     setAlertStatus(null);
-    await getSessionTime();
   };
 
   const resetStates = () => {
@@ -501,16 +482,6 @@ function ChatPasswordModal() {
                         "Requesting otp... Please wait",
                       )}
                     </Text>
-                    <div>
-                      <IconCircleX
-                        size={20}
-                        className="cursor-pointer"
-                        onClick={() => {
-                          setApiPolling(false);
-                          setPollingAttempt(0);
-                        }}
-                      />
-                    </div>
                   </Flex>
                 )}
 
