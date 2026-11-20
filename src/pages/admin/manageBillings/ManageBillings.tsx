@@ -105,6 +105,7 @@ export default function ManageBillings() {
     saveRates,
     handleReturnToDefault,
     handleToggleUserStatus,
+    invoiceStatus
   } = useManageBillingApi();
 
   const [defaultSearch, setDefaultSearch] = useState("");
@@ -418,6 +419,7 @@ export default function ManageBillings() {
         onOverviewPeriodChange={handleOverviewPeriodChange}
         userEstimateData={userEstimateData}
         userInvoiceGenerated={userInvoiceGenerated}
+        invoiceStatus={invoiceStatus}
       />
 
       <RatesModal

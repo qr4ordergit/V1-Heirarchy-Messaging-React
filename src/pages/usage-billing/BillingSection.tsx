@@ -442,32 +442,44 @@ export default function BillingSection({
           )}
 
           {/* Daily Utility Breakdown & Current Cycle */}
-          <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
-            {/* Daily Utility Breakdown */}
-            <div style={{ gridColumn: "span 2" }}>
-              <Paper
-                withBorder
-                radius="md"
-                p="md"
-                bg="white"
-                style={{ position: "relative" }}
+          {/* Daily Utility Breakdown */}
+          <div style={{ gridColumn: "span 2" }}>
+            <Paper
+              withBorder
+              radius="md"
+              p="md"
+              bg="white"
+              style={{ position: "relative" }}
+            >
+              {loadingPeriod && (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    backgroundColor: "rgba(255, 255, 255, 0.7)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: 2,
+                    borderRadius: "inherit",
+                  }}
+                >
+                  <Loader size="sm" color="indigo" />
+                </div>
+              )}
+
+              <Group
+                justify="space-between"
+                align="center"
+                mb="sm"
+                wrap="nowrap"
               >
-                {loadingPeriod && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      backgroundColor: "rgba(255, 255, 255, 0.7)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      zIndex: 2,
-                      borderRadius: "inherit",
-                    }}
-                  >
-                    <Loader size="sm" color="indigo" />
-                  </div>
-                )}
+                <Title order={5}>
+                  {translation(
+                    "account_billing.titleDailyBreakdown",
+                    "Daily Utility Breakdown",
+                  )}
+                </Title>
 
                 <Group
                   justify="space-between"
@@ -475,19 +487,19 @@ export default function BillingSection({
                   mb="sm"
                   wrap="nowrap"
                 >
-                  <Title order={5}>
+                  <Text fw={600} size="xs" c="dimmed" tt="uppercase">
                     {translation(
-                      "account_billing.titleDailyBreakdown",
-                      "Daily Utility Breakdown",
+                      "account_billing.lblBillingCycle",
+                      "Billing Cycle",
                     )}
-                  </Title>
-
+                  </Text>
                   {accruedFrom && accruedThrough && (
                     <Badge
-                      size="sm"
+                      size="md"
                       variant="light"
                       color="gray"
                       radius="sm"
+                      fw={"bolder"}
                       leftSection={<IconCalendar size={12} />}
                       styles={{
                         root: { textTransform: "none", fontWeight: 500 },
@@ -496,60 +508,6 @@ export default function BillingSection({
                       {accruedFrom} — {accruedThrough}
                     </Badge>
                   )}
-                </Group>
-
-                <Table verticalSpacing="sm">
-                  <Table.Thead bg="gray.0">
-                    <Table.Tr>
-                      <Table.Th>
-                        {translation(
-                          "account_billing.thBilledItem",
-                          "Billed Item",
-                        )}
-                      </Table.Th>
-                      <Table.Th>
-                        {translation(
-                          "account_billing.thActivityRate",
-                          "Activity / Rate",
-                        )}
-                      </Table.Th>
-                      <Table.Th style={{ textAlign: "right" }}>
-                        {translation(
-                          "account_billing.thCurrentCost",
-                          "Current Cost ($)",
-                        )}
-                      </Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {billingItems.map((item, idx) => (
-                      <Table.Tr key={idx}>
-                        <Table.Td fw={500}>{item.item}</Table.Td>
-                        <Table.Td>
-                          <Text size="sm" c="dimmed">
-                            {item.detail}
-                          </Text>
-                        </Table.Td>
-                        <Table.Td style={{ textAlign: "right" }} fw={600}>
-                          ${item.cost.toFixed(2)}
-                        </Table.Td>
-                      </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
-              </Paper>
-            </div>
-
-            {/* Invoice Summary Card */}
-            <Card withBorder radius="md" p="lg" bg="white">
-              <Stack gap="md">
-                <Group justify="space-between" align="center" wrap="nowrap">
-                  <Text fw={600} size="xs" c="dimmed" tt="uppercase">
-                    {translation(
-                      "account_billing.lblBillingCycle",
-                      "Billing Cycle",
-                    )}
-                  </Text>
                   <Select
                     size="xs"
                     w={160}
@@ -573,20 +531,59 @@ export default function BillingSection({
                     }}
                   />
                 </Group>
+              </Group>
 
-                <Divider />
-
-                <Group justify="space-between" align="flex-end" wrap="wrap">
-                  <Stack gap={2}>
-                    <Text size="xs" c="dimmed" fw={600} tt="uppercase">
+              <Table verticalSpacing="sm">
+                <Table.Thead bg="gray.0">
+                  <Table.Tr>
+                    <Table.Th>
                       {translation(
-                        "account_billing.txtCurrentAccruedCost",
-                        "Current Accrued Cost",
+                        "account_billing.thBilledItem",
+                        "Billed Item",
                       )}
-                    </Text>
-                    <Title order={2}>${totalEstimatedCost.toFixed(2)}</Title>
-                  </Stack>
+                    </Table.Th>
+                    <Table.Th>
+                      {translation(
+                        "account_billing.thActivityRate",
+                        "Activity / Rate",
+                      )}
+                    </Table.Th>
+                    <Table.Th style={{ textAlign: "right" }}>
+                      {translation(
+                        "account_billing.thCurrentCost",
+                        "Current Cost ($)",
+                      )}
+                    </Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {billingItems.map((item, idx) => (
+                    <Table.Tr key={idx}>
+                      <Table.Td fw={500}>{item.item}</Table.Td>
+                      <Table.Td>
+                        <Text size="sm" c="dimmed">
+                          {item.detail}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td style={{ textAlign: "right" }} fw={600}>
+                        ${item.cost.toFixed(2)}
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
 
+              <Divider/>
+
+              <Group justify="end" wrap="wrap" mt={"sm"}>
+                <Stack gap={"sm"} align="flex-end">
+                  <Text size="xs" c="dimmed" fw={600} tt="uppercase">
+                    {translation(
+                      "account_billing.txtCurrentAccruedCost",
+                      "Current Accrued Cost",
+                    )}
+                  </Text>
+                  <Title order={2}>${totalEstimatedCost.toFixed(2)}</Title>
                   {!isInvoiceGenerated && (
                     <Badge
                       size="sm"
@@ -601,10 +598,10 @@ export default function BillingSection({
                       )}
                     </Badge>
                   )}
-                </Group>
-              </Stack>
-            </Card>
-          </SimpleGrid>
+                </Stack>
+              </Group>
+            </Paper>
+          </div>
         </Stack>
       </Accordion.Panel>
     </Accordion.Item>

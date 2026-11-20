@@ -60,6 +60,7 @@ export default function useManageBillingApi() {
     useState<string>("");
   const [availablePeriods, setAvailablePeriods] = useState<string[]>([]);
   const [overviewLoading, setOverviewLoading] = useState(false);
+  const [invoiceStatus, setInvoiceStatus] = useState<string|null>(null);
   const [userEstimateData, setUserEstimateData] = useState<
     UserBillingOverviewDetails["estimate"] | null
   >(null);
@@ -162,7 +163,7 @@ export default function useManageBillingApi() {
 
     try {
       const details = await getUserBillingOverviewApi(userId, targetPeriod);
-
+      
       if (details) {
         setUserEstimateData(details.estimate ?? null);
         setUserInvoiceGenerated(Boolean(details.invoice_generated));
@@ -172,6 +173,11 @@ export default function useManageBillingApi() {
         }
         if (Array.isArray(details.available_periods)) {
           setAvailablePeriods(details.available_periods);
+        }
+        if (details.invoice && details.invoice !== null) {
+          setInvoiceStatus(details.invoice.status)
+        }else{
+          setInvoiceStatus(null)
         }
       } else {
         setUserEstimateData(null);
@@ -344,5 +350,6 @@ export default function useManageBillingApi() {
     saveRates,
     handleReturnToDefault,
     handleToggleUserStatus,
+    invoiceStatus
   };
 }

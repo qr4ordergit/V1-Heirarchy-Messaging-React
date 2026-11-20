@@ -76,6 +76,7 @@ interface UserOverviewModalProps {
   onOverviewPeriodChange: (newPeriod: string | null) => void;
   userEstimateData: UserBillingOverviewDetails["estimate"] | null;
   userInvoiceGenerated: boolean;
+  invoiceStatus:string | null
 }
 
 export function UserOverviewModal({
@@ -88,6 +89,7 @@ export function UserOverviewModal({
   onOverviewPeriodChange,
   userEstimateData,
   userInvoiceGenerated,
+  invoiceStatus
 }: UserOverviewModalProps) {
   const { translation, currentLang } = useTranslation();
 
@@ -257,6 +259,24 @@ export function UserOverviewModal({
                 )}
               </Badge>
             )}
+
+            {
+              invoiceStatus !== null && (
+                invoiceStatus === 'pending' ?
+                <Badge size="xs" color="red" variant="light">
+                                {translation(
+                                  "account_billing.txtUnpaid",
+                                  "Unpaid",
+                                )}
+                              </Badge> :
+                              <Badge size="xs" color="blue" variant="light">
+                                {translation(
+                                  "account_billing.txtpaid",
+                                  "Paid",
+                                )}
+                              </Badge> 
+              )
+            }
           </Group>
         </Card>
 
