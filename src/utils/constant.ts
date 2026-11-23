@@ -338,11 +338,6 @@ export const BOT_USER_TO_USER_PERMISSIONS = {
     update: false,
     delete: false,
   },
-  "user-account": {
-    "reset-password": false,
-    "reset-username-passkey": false,
-    "profile-update": true,
-  },
   "chat-export": {
     create: false,
     read: false,
