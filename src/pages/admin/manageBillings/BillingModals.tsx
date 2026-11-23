@@ -817,6 +817,10 @@ export function RatesModal({
                     value: "hour",
                     label: translation("admin_billing.unitHour", "Hour"),
                   },
+                  {
+                    value: "millisecond",
+                    label: translation("admin_billing.unitMillisecond", "Millisecond"),
+                  },
                 ]}
                 value={extraRates.compute_duration.unit || "minute"}
                 onChange={(val) => {
