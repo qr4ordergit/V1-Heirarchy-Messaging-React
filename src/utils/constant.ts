@@ -119,14 +119,14 @@ export const TRIGGERS = {
   schedulePayload: "schedule:schedulePayload",
   chatPasswordModal: "chatPasswordModal",
   chatPasswordPayload: "chatPasswordPayload",
-  groupInfoModal: "groupInfoModal"
+  groupInfoModal: "groupInfoModal",
 };
 
 export const OPENERS = {
   schedulerList: "schedulerList",
   editScheduledMsg: "editScheduledMsg",
   doubleEncryption_init: "doubleEncryption_init",
-  groupInfoModal: "groupInfoModal"
+  groupInfoModal: "groupInfoModal",
 };
 
 export const CIPHER_SECRET =
@@ -243,9 +243,118 @@ export const USER_TO_USER_PERMISSIONS = {
   },
 };
 
-export const BOT_USER_PERMISSIONS = {
+export const BOT_COMMON_PERMISSION = {
+  chat: {
+    start: true,
+    "history-get": true,
+    "history-delete": false,
+  },
+  "direct-messages": {
+    create: true,
+    read: true,
+    update: false,
+    delete: false,
+    "manual-password": false,
+    DMchat_lock: false,
+    DMchat_unlock: false,
+  },
   "bot-messages": {
     read: true,
+  },
+  groups: {
+    create: false,
+    read: true,
+    update: false,
+    delete: false,
+  },
+  "group-messages": {
+    create: true,
+    read: true,
+    update: false,
+    delete: false,
+    "manual-password": false,
+    groupchat_lock: false,
+    groupchat_unlock: false,
+  },
+  "media-encryption": {
+    active: false,
+  },
+  "keyring-categories": {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  }
+}
+
+export const BOT_USER_PERMISSIONS = {
+  ...BOT_COMMON_PERMISSION,
+  contacts: {
+    create: false,
+    read: true,
+    update: false,
+    delete: false,
+  },
+  tags: {
+    create: true,
+    read: true,
+    update: false,
+    delete: false,
+  },
+  "user-account": {
+    "reset-password": false,
+    "reset-username-passkey": false,
+    "profile-update": true,
+  },
+  "chat-export": {
+    create: false,
+    read: false,
+  },
+  "scheduled-messages": {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
+  "disappearing-messages": {
+    create: false,
+  },
+};
+
+export const BOT_USER_TO_USER_PERMISSIONS = {
+  ...BOT_COMMON_PERMISSION,
+  "shared-keyring-category": {
+    read: true,
+  },
+  contacts: {
+    create: false,
+    read: true,
+    update: false,
+    delete: false,
+  },
+  tags: {
+    create: true,
+    read: true,
+    update: false,
+    delete: false,
+  },
+  "user-account": {
+    "reset-password": false,
+    "reset-username-passkey": false,
+    "profile-update": true,
+  },
+  "chat-export": {
+    create: false,
+    read: false,
+  },
+  "scheduled-messages": {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
+  "disappearing-messages": {
+    create: false,
   },
 };
 
@@ -359,7 +468,7 @@ export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
 
   // BOT
 
-  "bot-messages": "Messages"
+  "bot-messages": "Messages",
 };
 
 // export const USER_PERMISSION_GROUP_LABELS: Record<string, string> = {

@@ -18,7 +18,7 @@ import {
 } from "@mantine/core";
 
 import {
-  BOT_USER_PERMISSIONS,
+  BOT_USER_TO_USER_PERMISSIONS,
   COMMON_PERMISSION_GROUP_LABELS,
   PERMISSION_LABELS,
   USER_TO_USER_PERMISSIONS,
@@ -134,7 +134,7 @@ export default function AccessAndPermission({
       const existingUser = previous[username];
 
       const currentPermissions = {
-        ...(account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_PERMISSIONS),
+        ...(account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_TO_USER_PERMISSIONS),
         ...(existingUser?.permissions ?? {}),
       };
 
@@ -552,7 +552,7 @@ export default function AccessAndPermission({
                           userHasPermission
                             ? hasAllPermissions(
                                 changes[user.id].permissions,
-                                account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_PERMISSIONS,
+                                account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_TO_USER_PERMISSIONS,
                               )
                             : false
                         }
@@ -570,7 +570,7 @@ export default function AccessAndPermission({
                                 permissions: setAllPermissions(
                                   userHasPermission
                                     ? currentUser.permissions
-                                    : account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_PERMISSIONS,
+                                    : account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_TO_USER_PERMISSIONS,
                                   checked,
                                 ),
                               },
@@ -578,7 +578,7 @@ export default function AccessAndPermission({
                           });
                         }}
                       />
-                      {Object.entries(account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_PERMISSIONS).map(
+                      {Object.entries(account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_TO_USER_PERMISSIONS).map(
                         ([groupKey, permissions]) => (
                           <Stack key={groupKey} gap="xs">
                             <Text size="xs" fw={"bolder"} c={"gray"}>
@@ -604,7 +604,7 @@ export default function AccessAndPermission({
                                   Object.keys(currentUser?.permissions).length >
                                     0
                                     ? currentUser?.permissions
-                                    : account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_PERMISSIONS,
+                                    : account_type!=="bot" ? USER_TO_USER_PERMISSIONS : BOT_USER_TO_USER_PERMISSIONS,
                                 );
 
                                 return (
