@@ -11,6 +11,11 @@ import { useDMListStore } from "../../../../store/dm/dm.list.store";
 import { useGroupListStore } from "../../../../store/groups/group.list.store";
 import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
 import { useTranslation } from "../../../../store/language/language.store";
+import { useChatStore } from "../../../../store/chats/chats.store";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 interface TIMMER {
   days: number;
@@ -27,6 +32,7 @@ function DisappearMsgsModal() {
   const { groups, updateGroupDisappearingMode } = useGroupListStore(
     (state) => state,
   );
+  const { modifyCurrentChat, current_chat } = useChatStore((state) => state);
   const { translation } = useTranslation();
 
   const [timmer, setTimmer] = useState<TIMMER>({
@@ -151,6 +157,17 @@ function DisappearMsgsModal() {
         });
       }
 
+      modifyCurrentChat({
+        ...current_chat,
+        key: "disappearing_messages",
+        value: {
+          ...current_chat.disappearing_messages,
+          enabled: true,
+          duration: seconds,
+          updated_at: dayjs.utc().format("YYYY-MM-DDTHH:mm:ss.SSS"),
+        },
+      });
+
       onClose();
     } catch (error) {
       Notification.error(getApiErrorMessage(error));
@@ -196,6 +213,15 @@ function DisappearMsgsModal() {
           enabled: false,
         });
       }
+
+      modifyCurrentChat({
+        ...current_chat,
+        key: "disappearing_messages",
+        value: {
+          ...current_chat.disappearing_messages,
+          enabled: false,
+        },
+      });
 
       onClose();
     } catch (error) {
