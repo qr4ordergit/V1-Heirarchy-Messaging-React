@@ -714,7 +714,27 @@ export function RatesModal({
               )}
               labelPosition="left"
             />
-            <SimpleGrid cols={2} spacing="xs">
+            <SimpleGrid cols={3} spacing="xs" style={{alignItems : 'end'}}>
+              <NumberInput
+                label={translation(
+                  "admin_billing.labelServiceUnits",
+                  "Units",
+                )}
+                description={translation(
+                  "admin_billing.descriptionServiceUnits",
+                  "Unit Size",
+                )}
+                size="xs"
+                min={0}
+                value={extraRates.service_calls.unit_size}
+                onChange={(val) =>
+                  updateExtraRate(
+                    "service_calls",
+                    "unit_size",
+                    Number(val) || 0,
+                  )
+                }
+              />
               <NumberInput
                 label={translation(
                   "admin_billing.labelFreeUnits",
