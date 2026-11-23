@@ -163,7 +163,7 @@ const COMMON_PERMISSION = {
     groupchat_unlock: false,
   },
   "media-encryption": {
-    active: true,
+    active: false,
   },
   contacts: {
     read: false,
@@ -245,13 +245,13 @@ export const USER_TO_USER_PERMISSIONS = {
 
 export const BOT_COMMON_PERMISSION = {
   chat: {
-    start: true,
-    "history-get": true,
+    "history-get": false,
+    start: false,
     "history-delete": false,
   },
   "direct-messages": {
-    create: true,
-    read: true,
+    read: false,
+    create: false,
     update: false,
     delete: false,
     "manual-password": false,
@@ -259,17 +259,17 @@ export const BOT_COMMON_PERMISSION = {
     DMchat_unlock: false,
   },
   "bot-messages": {
-    read: true,
+    read: false,
   },
   groups: {
+    read: false,
     create: false,
-    read: true,
     update: false,
     delete: false,
   },
   "group-messages": {
-    create: true,
-    read: true,
+    read: false,
+    create: false,
     update: false,
     delete: false,
     "manual-password": false,
@@ -280,8 +280,8 @@ export const BOT_COMMON_PERMISSION = {
     active: false,
   },
   "keyring-categories": {
-    create: false,
     read: false,
+    create: false,
     update: false,
     delete: false,
   }
@@ -290,29 +290,29 @@ export const BOT_COMMON_PERMISSION = {
 export const BOT_USER_PERMISSIONS = {
   ...BOT_COMMON_PERMISSION,
   contacts: {
+    read: false,
     create: false,
-    read: true,
     update: false,
     delete: false,
   },
   tags: {
-    create: true,
-    read: true,
+    read: false,
+    create: false,
     update: false,
     delete: false,
   },
   "user-account": {
     "reset-password": false,
     "reset-username-passkey": false,
-    "profile-update": true,
+    "profile-update": false,
   },
   "chat-export": {
-    create: false,
     read: false,
+    create: false,
   },
   "scheduled-messages": {
-    create: false,
     read: false,
+    create: false,
     update: false,
     delete: false,
   },
@@ -324,27 +324,27 @@ export const BOT_USER_PERMISSIONS = {
 export const BOT_USER_TO_USER_PERMISSIONS = {
   ...BOT_COMMON_PERMISSION,
   "shared-keyring-category": {
-    read: true,
+    read: false,
   },
   contacts: {
+    read: false,
     create: false,
-    read: true,
     update: false,
     delete: false,
   },
   tags: {
-    create: true,
-    read: true,
+    read: false,
+    create: false,
     update: false,
     delete: false,
   },
   "chat-export": {
-    create: false,
     read: false,
+    create: false,
   },
   "scheduled-messages": {
-    create: false,
     read: false,
+    create: false,
     update: false,
     delete: false,
   },
