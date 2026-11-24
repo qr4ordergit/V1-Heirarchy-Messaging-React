@@ -6,7 +6,7 @@ const STORAGE_CONTENT_KEY = "app_skin_language_content";
 
 export const SKIN_LANGUAGE_BASE_URL =
   import.meta.env.VITE_SKIN_LANGUAGE_API_URL ||
-  "https://messaging-service-media.s3.ap-south-1.amazonaws.com/skin-languages";
+  "https://messaging-service-media-eu.s3.eu-central-1.amazonaws.com/skin-languages";
 
 export const LANGUAGE_LIST_URL = `${SKIN_LANGUAGE_BASE_URL}/language_list.json`;
 

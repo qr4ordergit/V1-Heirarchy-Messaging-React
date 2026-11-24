@@ -12,7 +12,7 @@ export const API_BASE_URL2 =
   "https://53mxdgl1ok.execute-api.eu-central-1.amazonaws.com/dev/admin";
 
 export const SKIN_LANGUAGE_URL =
-  "https://messaging-service-media.s3.ap-south-1.amazonaws.com/skin-languages/messagingApp_skinLanguage_web.txt";
+  "https://messaging-service-media-eu.s3.eu-central-1.amazonaws.com/skin-languages/messagingApp_skinLanguage_web.txt";
 
 export const API_ENDPOINTS = {
   AUTH: `${API_BASE_URL}/auth`,
