@@ -244,6 +244,9 @@ export const USER_TO_USER_PERMISSIONS = {
 };
 
 export const BOT_COMMON_PERMISSION = {
+   "bot-messages": {
+    read: false,
+  },
   chat: {
     "history-get": false,
     start: false,
@@ -257,9 +260,6 @@ export const BOT_COMMON_PERMISSION = {
     "manual-password": false,
     DMchat_lock: false,
     DMchat_unlock: false,
-  },
-  "bot-messages": {
-    read: false,
   },
   groups: {
     read: false,
