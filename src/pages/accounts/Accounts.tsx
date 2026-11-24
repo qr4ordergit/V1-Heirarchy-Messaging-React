@@ -1236,7 +1236,9 @@ export default function Accounts() {
     try {
       setLoadingP(true);
       const res = await AcessAndPermissionService.getUserPermission(user_id);
-      delete res.permissions["sub-users"];
+      if (account_type !== 'bot') {
+        delete res.permissions["sub-users"];
+      }
       delete res.permissions.keyring;
       delete res.permissions["users-accesstree"];
       delete res.permissions["shared-keyring-category"];

@@ -284,8 +284,8 @@ export const BOT_COMMON_PERMISSION = {
     create: false,
     update: false,
     delete: false,
-  }
-}
+  },
+};
 
 export const BOT_USER_PERMISSIONS = {
   ...BOT_COMMON_PERMISSION,
@@ -297,6 +297,13 @@ export const BOT_USER_PERMISSIONS = {
   },
   tags: {
     read: false,
+    create: false,
+    update: false,
+    delete: false,
+  },
+  "sub-users": {
+    read: false,
+    "bulk-create": false,
     create: false,
     update: false,
     delete: false,
@@ -420,10 +427,11 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "chat-export|read": "View",
   "chat-export|create": "Allow",
 
-  // Manage Subuser
-  "sub-users|create": "Create",
+  // Manage Sub Accounts
+  "sub-users|bulk-create" : "Create Bulk Accounts",
+  "sub-users|create": "Create Single Account",
   "sub-users|read": "View",
-  "sub-users|update": "Update Profile",
+  "sub-users|update": "Update",
   "sub-users|delete": "Delete",
   "sub-users|permission-update": "Access & Permissions",
   "sub-users|reset-password": "Reset Password",
@@ -457,7 +465,7 @@ export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
   "scheduled-messages": "Scheduled Messages",
   "disappearing-messages": "Disappearing Messages",
   "chat-export": "Export Chats",
-  "sub-users": "Manage Subuser Account",
+  "sub-users": "Manage Subuser Accounts",
   "user-account": "Manage Account",
   "users-accesstree": "Manage Subuser's Accessed Accounts Access & Permissions",
 
