@@ -5,3 +5,8 @@
   color: #868e96 !important;
   opacity: 1 !important;
 }
+
+.app-background {
+  background: var(--app-bg, linear-gradient(155deg, #6c6fb6 60%, #2a2a33 60%));
+  background-attachment: fixed;
+}

@@ -8,11 +8,9 @@ import {
   ActionIcon,
   Alert,
   Avatar as MantineAvatar,
-  Badge,
   Button,
   Card,
   Center,
-  Container,
   Group,
   Loader,
   LoadingOverlay,
@@ -35,6 +33,8 @@ import {
 } from "@mantine/core";
 import {
   IconDotsVertical,
+  IconSettings,
+  IconUser,
   IconKey,
   IconLogout,
   IconDevices,
@@ -49,9 +49,7 @@ import {
   IconCopy,
   IconCheck,
   IconPencil,
-  IconShieldLock,
   IconBell,
-  IconChevronDown,
   IconCrown,
   IconSparkles,
   IconLanguage,
@@ -115,7 +113,7 @@ import { Notification } from "../../utils/notification";
 import { fetchUserDetails } from "../../api/userApi";
 import axios from "axios";
 import { useTranslation } from "../../store/language/language.store";
-import logo from "../../assets/logo.png";
+import AccountsShell from "./AccountsShell ";
 const PASSKEY_PATTERN = /^[a-zA-Z0-9]{4,12}$/;
 const ACCOUNTS_PAGE_SIZE = 10;
 
@@ -131,20 +129,6 @@ const getAccountIdentifier = (account: Account) => {
 };
 const isInactiveStatus = (status: string | null) =>
   status?.toLowerCase() === "deactive";
-
-const statusColor = (status: string | null) => {
-  switch (status?.toLowerCase()) {
-    case "active":
-      return "teal";
-    case "pending":
-      return "yellow";
-    case "suspended":
-    case "deactive":
-      return "red";
-    default:
-      return "gray";
-  }
-};
 
 interface AccessAndPermissionsState {
   open: boolean;
@@ -1236,9 +1220,7 @@ export default function Accounts() {
     try {
       setLoadingP(true);
       const res = await AcessAndPermissionService.getUserPermission(user_id);
-      if (account_type !== 'bot') {
-        delete res.permissions["sub-users"];
-      }
+      delete res.permissions["sub-users"];
       delete res.permissions.keyring;
       delete res.permissions["users-accesstree"];
       delete res.permissions["shared-keyring-category"];
@@ -1309,6 +1291,269 @@ export default function Accounts() {
     };
   }, []);
 
+  const renderAccountRow = (account: Account, i: number, isSelf: boolean) => {
+    const isPasskeyVisible = !!visiblePasskeys[account.user_id];
+    const plainPasskey = isPasskeyVisible ? getPlainPasskey(account) : "";
+    const openChat = () => {
+      if (!isSelf) {
+        setTargetUser(account.user_id);
+        setTargetUserDetails(account);
+      }
+      navigate(`/${ROUTES.CHATS}`);
+    };
+    const manage = () => {
+      setSelectedAccountID(account.user_id);
+      loadPermissions(account);
+    };
+    const managing = selectedAccountID === account.user_id && loadingP;
+    const manageLabel = translation(
+      "accounts_page.menuManageAccessPermissions",
+      "Manage Access & Permissions",
+    );
+    const lockLabel = translation(
+      "accounts_page.menuPasskeyLock",
+      "Passkey & Lock",
+    );
+
+    return (
+      <div key={account.user_id} className={classes.row}>
+        <div className={classes.rowAvatar}>
+          <Avatar
+            name={getInitialsSource(account)}
+            colorIndex={
+              isSelf ? 0 : (safeCurrentPage - 1) * ACCOUNTS_PAGE_SIZE + i + 1
+            }
+            size={isMobile ? 64 : 68}
+            src={account.profile_picture}
+            onClick={openChat}
+          />
+        </div>
+
+        <div className={classes.rowInfo}>
+          <div className={classes.rowName}>
+            <span className={classes.rowNameText} onClick={openChat}>
+              {getAccountIdentifier(account)}
+            </span>
+            <ActionIcon
+              variant="transparent"
+              size="sm"
+              aria-label={translation(
+                "accounts_page.menuUpdateProfile",
+                "Update Profile",
+              )}
+              onClick={() => openProfileModal(account)}
+              className={classes.rowEdit}
+            >
+              <IconPencil size={16} />
+            </ActionIcon>
+            {account.is_premium && (
+              <IconCrown
+                size={16}
+                color="#f59f00"
+                fill="#ffd43b"
+                style={{ flexShrink: 0 }}
+              />
+            )}
+          </div>
+          <div className={classes.rowId}>{account.user_id}</div>
+
+          {account.description?.trim() && !isMobile && (
+            <div className={classes.rowDesc}>{account.description}</div>
+          )}
+
+          <div className={classes.rowFoot}>
+            {account.status && (
+              <span className={classes.tag}>{account.status}</span>
+            )}
+            {account.isLocked && !isMobile && (
+              <span className={classes.passkey}>
+                {isPasskeyVisible ? plainPasskey || "—" : "••••••"}
+                <ActionIcon
+                  variant="transparent"
+                  size="xs"
+                  aria-label={
+                    isPasskeyVisible
+                      ? translation(
+                          "accounts_page.tooltipHidePasskey",
+                          "Hide passkey",
+                        )
+                      : translation(
+                          "accounts_page.tooltipShowPasskey",
+                          "Show passkey",
+                        )
+                  }
+                  onClick={() => togglePasskeyVisibility(account)}
+                >
+                  {isPasskeyVisible ? (
+                    <IconEyeOff size={14} />
+                  ) : (
+                    <IconEye size={14} />
+                  )}
+                </ActionIcon>
+              </span>
+            )}
+          </div>
+
+          {isMobile && (
+            <div className={classes.mobileManage} onClick={manage}>
+              {managing ? (
+                <Loader size="xs" />
+              ) : (
+                translation(
+                  "accounts_page.mobileAccessManagement",
+                  "Access management",
+                )
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className={classes.rowActions}>
+          {!isMobile && (
+            <>
+              <Tooltip label={manageLabel}>
+                <button
+                  type="button"
+                  className={classes.iconBtn}
+                  aria-label={manageLabel}
+                  onClick={manage}
+                >
+                  {managing ? (
+                    <Loader size="xs" color="white" />
+                  ) : (
+                    <span className={classes.crud}>
+                      CR
+                      <br />
+                      UD
+                    </span>
+                  )}
+                </button>
+              </Tooltip>
+              <Tooltip label={lockLabel}>
+                <button
+                  type="button"
+                  className={classes.iconBtn}
+                  aria-label={lockLabel}
+                  onClick={() => openLockModal(account)}
+                >
+                  {account.isLocked ? (
+                    <IconLock size={20} />
+                  ) : (
+                    <IconLockOpen size={20} />
+                  )}
+                </button>
+              </Tooltip>
+              <Tooltip
+                label={
+                  copiedUserId === account.user_id ? "Copied!" : account.user_id
+                }
+              >
+                <button
+                  type="button"
+                  className={classes.iconBtn}
+                  aria-label={translation(
+                    "accounts_page.ariaCopyUsername",
+                    "Copy username",
+                  )}
+                  onClick={() => handleCopyUsername(account)}
+                >
+                  {copiedUserId === account.user_id ? (
+                    <IconCheck size={20} />
+                  ) : (
+                    <IconCopy size={20} />
+                  )}
+                </button>
+              </Tooltip>
+            </>
+          )}
+          <Menu position="bottom-end" withinPortal shadow="md" radius="md">
+            <Menu.Target>
+              <button
+                type="button"
+                className={classes.iconBtn}
+                aria-label={translation(
+                  "accounts_page.ariaAccountOptions",
+                  "Account options",
+                )}
+              >
+                {isMobile ? (
+                  <IconDotsVertical size={20} />
+                ) : (
+                  <IconSettings size={20} />
+                )}
+              </button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              {isMobile && (
+                <>
+                  <Menu.Item
+                    leftSection={
+                      account.isLocked ? (
+                        <IconLock size={14} />
+                      ) : (
+                        <IconLockOpen size={14} />
+                      )
+                    }
+                    onClick={() => openLockModal(account)}
+                  >
+                    {lockLabel}
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconCopy size={14} />}
+                    onClick={() => handleCopyUsername(account)}
+                  >
+                    {translation(
+                      "accounts_page.ariaCopyUsername",
+                      "Copy username",
+                    )}
+                  </Menu.Item>
+                  <Menu.Divider />
+                </>
+              )}
+              <Menu.Item
+                leftSection={<IconUserEdit size={14} />}
+                onClick={() => openProfileModal(account)}
+              >
+                {translation(
+                  "accounts_page.menuUpdateProfile",
+                  "Update Profile",
+                )}
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconKey size={14} />}
+                onClick={() => setPasswordTarget(account)}
+              >
+                {translation(
+                  "accounts_page.menuChangePassword",
+                  "Change Password",
+                )}
+              </Menu.Item>
+              {isHubAccountLoggedIn && (
+                <>
+                  <Menu.Divider />
+                  <Menu.Item
+                    color="red"
+                    leftSection={<IconTrash size={14} />}
+                    onClick={() => {
+                      setDeleteTarget(account);
+                      setManageAction(null);
+                      setDeleteError(null);
+                    }}
+                  >
+                    {translation(
+                      "accounts_page.menuRemoveAccount",
+                      "Remove Account",
+                    )}
+                  </Menu.Item>
+                </>
+              )}
+            </Menu.Dropdown>
+          </Menu>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={classes.wrapper}>
       <LoadingOverlay
@@ -1331,199 +1576,206 @@ export default function Accounts() {
         opened={devicesOpen}
         onClose={() => setDevicesOpen(false)}
       />
-      <Container size="md" py="xl">
-        <Group justify="space-between" align="center" mb="xl">
-          <Group gap="sm" align="center">
-            <img src={logo} alt="Ukrchat logo" className={classes.brandLogo} />
-            <Text className={classes.brand}>Ukrchat.com</Text>
-          </Group>
+      <AccountsShell
+        title={translation("accounts_page.txtYourAccounts", "Your Accounts")}
+        initial={(menuIdentifier || "A").trim().charAt(0).toUpperCase()}
+        topbar={
+          <Group
+            justify="space-between"
+            align="center"
+            wrap="nowrap"
+            style={{ width: "100%" }}
+          >
+            <div className={classes.userPill}>
+              <span className={classes.userPillAvatar}>
+                {!isHubAccountLoggedIn && userDetails?.profile_picture ? (
+                  <img src={userDetails.profile_picture} alt="" />
+                ) : (
+                  <IconUser size={22} />
+                )}
+              </span>
+              <span className={classes.userPillName}>{menuIdentifier}</span>
+            </div>
 
-          <Group gap="xs" align="center">
-            <Menu
-              shadow="lg"
-              width={280}
-              radius="md"
-              position="bottom-end"
-              offset={8}
-              withinPortal
-            >
-              <Menu.Target>
-                <UnstyledButton
-                  className={classes.accountPill}
-                  aria-label={translation(
-                    "accounts_page.ariaAccountMenu",
-                    "Account menu",
-                  )}
-                >
-                  <Avatar
-                    name={menuIdentifier}
-                    size={30}
-                    colorIndex={0}
-                    src={
-                      isHubAccountLoggedIn
-                        ? undefined
-                        : userDetails?.profile_picture
-                    }
-                  />
-                  <IconChevronDown
-                    size={14}
-                    color="#9b96b8"
-                    style={{ marginRight: 6 }}
-                  />
-                </UnstyledButton>
-              </Menu.Target>
-
-              <Menu.Dropdown p={0} style={{ overflow: "hidden" }}>
-                <Stack
-                  gap={4}
-                  align="center"
-                  py="lg"
-                  px="md"
-                  className={classes.accountMenuHeader}
-                >
-                  <Avatar
-                    name={menuIdentifier}
-                    size={56}
-                    colorIndex={0}
-                    src={
-                      isHubAccountLoggedIn
-                        ? undefined
-                        : userDetails?.profile_picture
-                    }
-                  />
-                  <Text size="xs" c="dimmed" fw={600} tt="uppercase" mt={6}>
-                    {menuRoleLabel}
-                  </Text>
-                  <Text
-                    size="sm"
-                    fw={700}
-                    ta="center"
-                    style={{ wordBreak: "break-word" }}
-                  >
-                    {menuIdentifier}
-                  </Text>
-                  {!isHubAccountLoggedIn &&
-                    userDetails?.display_name?.trim() && (
-                      <Text size="xs" c="dimmed" ta="center">
-                        {userDetails.username}
-                      </Text>
+            <Group gap="sm" wrap="nowrap" align="center">
+              <Menu shadow="md" width={160} position="bottom-end" withinPortal>
+                <Menu.Target>
+                  <Tooltip
+                    label={translation(
+                      "home-page.txtChangeLanguage",
+                      "Change Language",
                     )}
-                </Stack>
-
-                {isHubAccountLoggedIn && (
-                  <>
-                    <Menu.Divider m={0} />
-                    <Menu.Item
-                      leftSection={
-                        <IconSparkles
-                          size={16}
-                          color="var(--mantine-color-indigo-6)"
-                        />
-                      }
-                      onClick={() => navigate("/usage-billing")}
-                      py="sm"
-                      fw={500}
+                    position="bottom"
+                    withArrow
+                  >
+                    <ActionIcon
+                      variant="default"
+                      size={isMobile ? "lg" : 36}
+                      radius="md"
+                      aria-label={translation(
+                        "home-page.txtSelectLanguage",
+                        "Select Language",
+                      )}
+                      className="border-gray-200 shadow-xs hover:bg-gray-100 transition-colors"
                     >
+                      <IconLanguage size={24} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Menu.Target>
+
+                <Menu.Dropdown>
+                  <Menu.Label>
+                    {translation(
+                      "home-page.txtSelectLanguage",
+                      "Select Language",
+                    )}
+                  </Menu.Label>
+                  {availableLanguages.length > 0 ? (
+                    availableLanguages.map(([code, label]) => (
+                      <Menu.Item
+                        key={code}
+                        onClick={() => setLanguage(code)}
+                        rightSection={
+                          currentLang === code ? (
+                            <IconCheck
+                              size={16}
+                              color="var(--mantine-color-indigo-6)"
+                            />
+                          ) : null
+                        }
+                        fw={currentLang === code ? 700 : 400}
+                      >
+                        {label}
+                      </Menu.Item>
+                    ))
+                  ) : (
+                    <Menu.Item disabled>
                       {translation(
-                        "accounts_page.menuAccountBilling",
-                        "Account Billing",
+                        "home-page.txtLoadingLanguages",
+                        "Loading languages...",
                       )}
                     </Menu.Item>
-                  </>
-                )}
-
-                <Menu.Divider m={0} />
-                <Menu.Item
-                  leftSection={<IconDevices size={16} />}
-                  onClick={() => setDevicesOpen(true)}
-                  py="sm"
-                  fw={500}
-                >
-                  {translation(
-                    "accounts_page.menuLoggedInDevices",
-                    "Logged-in Devices",
                   )}
-                </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
 
-                <Menu.Divider m={0} />
-                <Menu.Item
-                  leftSection={<IconLogout size={16} />}
-                  color="red"
-                  disabled={loggingOut}
-                  onClick={handleLogout}
-                  py="sm"
-                  fw={500}
-                >
-                  {loggingOut
-                    ? translation("accounts_page.btnLoggingOut", "Logging out…")
-                    : translation("accounts_page.btnLogout", "Logout")}
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-
-            <Menu shadow="md" width={160} position="bottom-end" withinPortal>
-              <Menu.Target>
-                <Tooltip
-                  label={translation(
-                    "home-page.txtChangeLanguage",
-                    "Change Language",
-                  )}
-                  position="bottom"
-                  withArrow
-                >
+              <Menu
+                shadow="lg"
+                width={280}
+                radius="md"
+                position="bottom-end"
+                offset={8}
+                withinPortal
+              >
+                <Menu.Target>
                   <ActionIcon
                     variant="default"
                     size={isMobile ? "lg" : 36}
                     radius="md"
+                    className={classes.topIcon}
                     aria-label={translation(
-                      "home-page.txtSelectLanguage",
-                      "Select Language",
+                      "accounts_page.ariaAccountMenu",
+                      "Account menu",
                     )}
-                    className="border-gray-200 shadow-xs hover:bg-gray-100 transition-colors"
                   >
-                    <IconLanguage size={18} />
+                    <IconUser size={24} fill="currentColor" />
                   </ActionIcon>
-                </Tooltip>
-              </Menu.Target>
+                </Menu.Target>
 
-              <Menu.Dropdown>
-                <Menu.Label>
-                  {translation(
-                    "home-page.txtSelectLanguage",
-                    "Select Language",
-                  )}
-                </Menu.Label>
-                {availableLanguages.length > 0 ? (
-                  availableLanguages.map(([code, label]) => (
-                    <Menu.Item
-                      key={code}
-                      onClick={() => setLanguage(code)}
-                      rightSection={
-                        currentLang === code ? (
-                          <IconCheck
+                <Menu.Dropdown p={0} style={{ overflow: "hidden" }}>
+                  <Stack
+                    gap={4}
+                    align="center"
+                    py="lg"
+                    px="md"
+                    className={classes.accountMenuHeader}
+                  >
+                    <Avatar
+                      name={menuIdentifier}
+                      size={56}
+                      colorIndex={0}
+                      src={
+                        isHubAccountLoggedIn
+                          ? undefined
+                          : userDetails?.profile_picture
+                      }
+                    />
+                    <Text size="xs" c="dimmed" fw={600} tt="uppercase" mt={6}>
+                      {menuRoleLabel}
+                    </Text>
+                    <Text
+                      size="sm"
+                      fw={700}
+                      ta="center"
+                      style={{ wordBreak: "break-word" }}
+                    >
+                      {menuIdentifier}
+                    </Text>
+                    {!isHubAccountLoggedIn &&
+                      userDetails?.display_name?.trim() && (
+                        <Text size="xs" c="dimmed" ta="center">
+                          {userDetails.username}
+                        </Text>
+                      )}
+                  </Stack>
+
+                  {isHubAccountLoggedIn && (
+                    <>
+                      <Menu.Divider m={0} />
+                      <Menu.Item
+                        leftSection={
+                          <IconSparkles
                             size={16}
                             color="var(--mantine-color-indigo-6)"
                           />
-                        ) : null
-                      }
-                      fw={currentLang === code ? 700 : 400}
-                    >
-                      {label}
-                    </Menu.Item>
-                  ))
-                ) : (
-                  <Menu.Item disabled>
+                        }
+                        onClick={() => navigate("/usage-billing")}
+                        py="sm"
+                        fw={500}
+                      >
+                        {translation(
+                          "accounts_page.menuAccountBilling",
+                          "Account Billing",
+                        )}
+                      </Menu.Item>
+                    </>
+                  )}
+
+                  <Menu.Divider m={0} />
+                  <Menu.Item
+                    leftSection={<IconDevices size={16} />}
+                    onClick={() => setDevicesOpen(true)}
+                    py="sm"
+                    fw={500}
+                  >
                     {translation(
-                      "home-page.txtLoadingLanguages",
-                      "Loading languages...",
+                      "accounts_page.menuLoggedInDevices",
+                      "Logged-in Devices",
                     )}
                   </Menu.Item>
-                )}
-              </Menu.Dropdown>
-            </Menu>
-          </Group>
-        </Group>
 
+                  <Menu.Divider m={0} />
+                  <Menu.Item
+                    leftSection={<IconLogout size={16} />}
+                    color="red"
+                    disabled={loggingOut}
+                    onClick={handleLogout}
+                    py="sm"
+                    fw={500}
+                  >
+                    {loggingOut
+                      ? translation(
+                          "accounts_page.btnLoggingOut",
+                          "Logging out…",
+                        )
+                      : translation("accounts_page.btnLogout", "Logout")}
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
+          </Group>
+        }
+      >
         {error && (
           <Alert
             color="red"
@@ -1580,11 +1832,6 @@ export default function Accounts() {
             {filteredAccounts
               .filter((account) => account.user_id === userDetails?.username)
               .map((account) => {
-                const isPasskeyVisible = !!visiblePasskeys[account.user_id];
-                const plainPasskey = isPasskeyVisible
-                  ? getPlainPasskey(account)
-                  : "";
-
                 if (isHubAccountLoggedIn) {
                   return (
                     <div key={account.user_id}>
@@ -1600,260 +1847,14 @@ export default function Accounts() {
 
                 return (
                   <Stack key={account.user_id} gap="sm">
-                    <Text size="sm" fw={600}>
+                    <Text size="sm" fw={600} className={classes.loggedInLabel}>
                       {translation(
                         "accounts_page.txtLoggedInAccount",
                         "Logged In Account",
                       )}
                     </Text>
 
-                    <Card
-                      withBorder
-                      radius="md"
-                      padding="lg"
-                      className={classes.accountCard}
-                    >
-                      <div className={classes.cardGrid}>
-                        <div className={classes.cardGridAvatar}>
-                          <Avatar
-                            name={getInitialsSource(account)}
-                            colorIndex={0}
-                            size={48}
-                            src={account.profile_picture}
-                            onClick={() => {
-                              navigate(`/${ROUTES.CHATS}`);
-                            }}
-                          />
-                        </div>
-
-                        <div className={classes.cardGridName}>
-                          <Group gap={6} wrap="nowrap" align="center">
-                            <Text
-                              fw={600}
-                              truncate="end"
-                              className={classes.accountName}
-                              onClick={() => {
-                                navigate(`/${ROUTES.CHATS}`);
-                              }}
-                            >
-                              {getAccountIdentifier(account)}
-                            </Text>
-
-                            {account.display_name?.trim() && (
-                              <Text
-                                size="xs"
-                                c="dimmed"
-                                truncate="end"
-                                className={classes.accountUserId}
-                              >
-                                {account.user_id}
-                              </Text>
-                            )}
-
-                            <Tooltip
-                              label={
-                                copiedUserId === account.user_id
-                                  ? translation(
-                                      "accounts_page.tooltipCopied",
-                                      "Copied!",
-                                    )
-                                  : account.user_id
-                              }
-                            >
-                              <ActionIcon
-                                variant="subtle"
-                                color="gray"
-                                radius="xl"
-                                size="sm"
-                                aria-label={translation(
-                                  "accounts_page.ariaCopyUsername",
-                                  "Copy username",
-                                )}
-                                onClick={() => handleCopyUsername(account)}
-                              >
-                                {copiedUserId === account.user_id ? (
-                                  <IconCheck size={14} color="teal" />
-                                ) : (
-                                  <IconCopy size={14} />
-                                )}
-                              </ActionIcon>
-                            </Tooltip>
-
-                            {!isMobile && (
-                              <ActionIcon
-                                variant="subtle"
-                                color={account.isLocked ? "dark" : "gray"}
-                                radius="xl"
-                                size="sm"
-                                aria-label={
-                                  account.isLocked
-                                    ? translation(
-                                        "accounts_page.tooltipAccountLocked",
-                                        "Account is locked",
-                                      )
-                                    : translation(
-                                        "accounts_page.tooltipAccountUnlocked",
-                                        "Account is unlocked",
-                                      )
-                                }
-                                onClick={() => openLockModal(account)}
-                              >
-                                {account.isLocked ? (
-                                  <IconLock size={14} color="red" />
-                                ) : (
-                                  <Tooltip
-                                    label={translation(
-                                      "accounts_page.tooltipLockWithPasskey",
-                                      "Lock with passkey",
-                                    )}
-                                  >
-                                    <IconLockOpen size={14} />
-                                  </Tooltip>
-                                )}
-                              </ActionIcon>
-                            )}
-
-                            {!isMobile && account.isLocked && (
-                              <>
-                                <Badge
-                                  size="sm"
-                                  variant="light"
-                                  color="red"
-                                  radius="sm"
-                                  style={{
-                                    cursor: "pointer",
-                                    fontFamily: "monospace",
-                                  }}
-                                >
-                                  {isPasskeyVisible
-                                    ? plainPasskey || "—"
-                                    : "••••••"}
-                                </Badge>
-
-                                <ActionIcon
-                                  variant="subtle"
-                                  color="gray"
-                                  radius="xl"
-                                  size="sm"
-                                  aria-label={
-                                    isPasskeyVisible
-                                      ? translation(
-                                          "accounts_page.tooltipHidePasskey",
-                                          "Hide passkey",
-                                        )
-                                      : translation(
-                                          "accounts_page.tooltipShowPasskey",
-                                          "Show passkey",
-                                        )
-                                  }
-                                  onClick={() =>
-                                    togglePasskeyVisibility(account)
-                                  }
-                                >
-                                  {isPasskeyVisible ? (
-                                    <IconEyeOff size={14} />
-                                  ) : (
-                                    <IconEye size={14} />
-                                  )}
-                                </ActionIcon>
-
-                                <ActionIcon
-                                  variant="subtle"
-                                  color="gray"
-                                  radius="xl"
-                                  size="sm"
-                                  aria-label={translation(
-                                    "accounts_page.tooltipEditPasskey",
-                                    "Edit passkey",
-                                  )}
-                                  onClick={() => openLockModal(account)}
-                                >
-                                  <IconPencil size={14} />
-                                </ActionIcon>
-                              </>
-                            )}
-                          </Group>
-                        </div>
-
-                        <div className={classes.cardGridKebab}>
-                          <Menu
-                            position="bottom-end"
-                            withinPortal
-                            shadow="md"
-                            radius="md"
-                          >
-                            <Menu.Target>
-                              <ActionIcon
-                                variant="subtle"
-                                color="gray"
-                                radius="xl"
-                                aria-label={translation(
-                                  "accounts_page.ariaAccountOptions",
-                                  "Account options",
-                                )}
-                              >
-                                <IconDotsVertical size={16} />
-                              </ActionIcon>
-                            </Menu.Target>
-
-                            <Menu.Dropdown>
-                              {isMobile && (
-                                <>
-                                  <Menu.Item
-                                    leftSection={
-                                      account.isLocked ? (
-                                        <IconLock size={14} />
-                                      ) : (
-                                        <IconLockOpen size={14} />
-                                      )
-                                    }
-                                    onClick={() => openLockModal(account)}
-                                  >
-                                    {translation(
-                                      "accounts_page.menuPasskeyLock",
-                                      "Passkey & Lock",
-                                    )}
-                                  </Menu.Item>
-                                  <Menu.Divider />
-                                </>
-                              )}
-
-                              <Menu.Item
-                                leftSection={<IconUserEdit size={14} />}
-                                onClick={() => openProfileModal(account)}
-                              >
-                                {translation(
-                                  "accounts_page.menuUpdateProfile",
-                                  "Update Profile",
-                                )}
-                              </Menu.Item>
-                              <Menu.Item
-                                leftSection={<IconKey size={14} />}
-                                onClick={() => setPasswordTarget(account)}
-                              >
-                                {translation(
-                                  "accounts_page.menuChangePassword",
-                                  "Change Password",
-                                )}
-                              </Menu.Item>
-                            </Menu.Dropdown>
-                          </Menu>
-                        </div>
-
-                        <div className={classes.cardGridMeta}>
-                          {account.status && (
-                            <Badge
-                              size="sm"
-                              variant="light"
-                              color={statusColor(account.status)}
-                              radius="sm"
-                            >
-                              {account.status}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
+                    {renderAccountRow(account, 0, true)}
                   </Stack>
                 );
               })}
@@ -1863,30 +1864,29 @@ export default function Accounts() {
                 (account) => account.user_id !== userDetails?.username,
               )) && (
               <Stack gap="sm">
-                <Stack gap={4}>
-                  {isHubAccountLoggedIn ? (
-                    <>
-                      <Title order={2} className={classes.title} mb={0}>
-                        {translation(
-                          "accounts_page.txtYourAccounts",
-                          "Your Accounts",
-                        )}
-                      </Title>
-
-                      <Group
-                        justify="space-between"
-                        align="center"
-                        wrap="wrap"
-                        gap="xs"
-                      >
-                        <Text c="dimmed" size="sm">
-                          {translation(
-                            "accounts_page.txtCreateMultipleAccounts",
-                            "Create multiple accounts and switch between them easily.",
-                          )}
-                        </Text>
-
-                        <Group gap="xs" wrap="nowrap" ml="auto">
+                <div className={classes.controlPanel}>
+                  <div className={classes.headRow}>
+                    {isHubAccountLoggedIn ? (
+                      <>
+                        <div className={classes.titleCard}>
+                          <Title order={2} className={classes.title} mb={0}>
+                            {translation(
+                              "accounts_page.txtYourAccounts",
+                              "Your Accounts",
+                            )}
+                          </Title>
+                          <Text c="dimmed" size="sm">
+                            {translation(
+                              "accounts_page.txtCreateMultipleAccounts",
+                              "Create multiple accounts and switch between them easily.",
+                            )}
+                          </Text>
+                        </div>
+                        <Group
+                          gap="xs"
+                          wrap="nowrap"
+                          className={classes.headActions}
+                        >
                           {bulkJob.status !== "idle" && (
                             <Group gap={2} wrap="nowrap">
                               <Tooltip
@@ -1960,6 +1960,7 @@ export default function Accounts() {
                           )}
 
                           <UnstyledButton
+                            className={classes.addBtn}
                             disabled={
                               bulkJob.status === "uploading" ||
                               bulkJob.status === "processing"
@@ -1981,7 +1982,7 @@ export default function Accounts() {
                                   : "pointer",
                             }}
                           >
-                            <Text size="sm" fw={600} c="blue">
+                            <Text className={classes.addBtnText}>
                               {translation(
                                 "accounts_page.btnAddAccount",
                                 "Add Account +",
@@ -1989,89 +1990,98 @@ export default function Accounts() {
                             </Text>
                           </UnstyledButton>
                         </Group>
-                      </Group>
-                    </>
-                  ) : (
-                    <Text size="sm" fw={600}>
-                      {translation(
-                        "accounts_page.txtYourManagedAccounts",
-                        "Your Managed Accounts",
-                      )}
-                    </Text>
-                  )}
-                </Stack>
-                {accounts.length > 0 && (
-                  <div className={classes.searchWrapper}>
-                    <TextInput
-                      placeholder={
-                        isMobile
-                          ? translation(
-                              "accounts_page.placeholderSearchAccountsMobile",
-                              "Search accounts",
-                            )
-                          : translation(
-                              "accounts_page.placeholderSearchAccountsDesktop",
-                              "Search by username, display name, description, or phone number",
-                            )
-                      }
-                      value={searchQuery}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setSearchQuery(value);
-                        if (value === "") {
-                          setAppliedSearchQuery("");
-                          setCurrentPage(1);
+                      </>
+                    ) : (
+                      <Text size="sm" fw={600} className={classes.titleCard}>
+                        {translation(
+                          "accounts_page.txtYourManagedAccounts",
+                          "Your Managed Accounts",
+                        )}
+                      </Text>
+                    )}
+                  </div>
+                  {accounts.length > 0 && (
+                    <div className={classes.searchWrapper}>
+                      <TextInput
+                        placeholder={
+                          isMobile
+                            ? translation(
+                                "accounts_page.placeholderSearchAccountsMobile",
+                                "Search accounts",
+                              )
+                            : translation(
+                                "accounts_page.placeholderSearchAccountsDesktop",
+                                "Search by username, display name, description, or phone number",
+                              )
                         }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          runSearch();
-                        }
-                      }}
-                      radius="xl"
-                      size="md"
-                      name="account-search"
-                      autoComplete="off"
-                      data-1p-ignore
-                      data-lpignore="true"
-                      rightSectionWidth={searchQuery ? 84 : 45}
-                      rightSection={
-                        <Group gap={6} wrap="nowrap" justify="flex-end" pr={4}>
-                          {searchQuery && (
-                            <ActionIcon
-                              variant="transparent"
-                              radius="xl"
-                              size="sm"
-                              aria-label={translation(
-                                "accounts_page.btnClearSearch",
-                                "Clear search",
-                              )}
-                              onClick={clearSearch}
-                              className={classes.searchClearIcon}
-                            >
-                              <IconX size={16} />
-                            </ActionIcon>
-                          )}
+                        value={searchQuery}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setSearchQuery(value);
+                          if (value === "") {
+                            setAppliedSearchQuery("");
+                            setCurrentPage(1);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            runSearch();
+                          }
+                        }}
+                        radius="xl"
+                        size="md"
+                        name="account-search"
+                        autoComplete="off"
+                        data-1p-ignore
+                        data-lpignore="true"
+                        leftSectionWidth={48}
+                        leftSectionPointerEvents="auto"
+                        leftSection={
                           <UnstyledButton
                             onClick={runSearch}
-                            className={classes.searchButton}
+                            className={classes.searchIconSq}
                             aria-label={translation(
                               "accounts_page.ariaSearch",
                               "Search",
                             )}
                           >
-                            <IconSearch size={14} />
+                            <IconSearch size={18} />
                           </UnstyledButton>
-                        </Group>
-                      }
-                      classNames={{
-                        wrapper: classes.searchInputWrapper,
-                        input: classes.searchInput,
-                      }}
-                    />
-                  </div>
-                )}
+                        }
+                        rightSectionWidth={searchQuery ? 40 : 0}
+                        rightSection={
+                          <Group
+                            gap={6}
+                            wrap="nowrap"
+                            justify="flex-end"
+                            pr={4}
+                          >
+                            {searchQuery && (
+                              <ActionIcon
+                                variant="transparent"
+                                radius="xl"
+                                size="sm"
+                                aria-label={translation(
+                                  "accounts_page.btnClearSearch",
+                                  "Clear search",
+                                )}
+                                onClick={clearSearch}
+                                className={classes.searchClearIcon}
+                              >
+                                <IconX size={16} />
+                              </ActionIcon>
+                            )}
+                          </Group>
+                        }
+                        classNames={{
+                          wrapper: classes.searchInputWrapper,
+                          input: classes.searchInput,
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
 
                 {accounts.length > 1 && (
                   <Group justify="space-between" align="center" wrap="wrap">
@@ -2137,360 +2147,9 @@ export default function Accounts() {
                   </Text>
                 )}
 
-                <Stack gap="md">
+                <Stack gap="md" className={classes.listPanel}>
                   {paginatedManagedAccounts.map((account, i) => {
-                    const isPasskeyVisible = !!visiblePasskeys[account.user_id];
-
-                    const plainPasskey = isPasskeyVisible
-                      ? getPlainPasskey(account)
-                      : "";
-
-                    return (
-                      <Card
-                        key={account.user_id}
-                        withBorder
-                        radius="md"
-                        padding="lg"
-                        className={classes.accountCard}
-                      >
-                        <div className={classes.cardGrid}>
-                          <div className={classes.cardGridAvatar}>
-                            <Avatar
-                              name={getInitialsSource(account)}
-                              colorIndex={
-                                (safeCurrentPage - 1) * ACCOUNTS_PAGE_SIZE +
-                                i +
-                                1
-                              }
-                              size={48}
-                              src={account.profile_picture}
-                              onClick={() => {
-                                setTargetUser(account.user_id);
-                                setTargetUserDetails(account);
-                                navigate(`/${ROUTES.CHATS}`);
-                              }}
-                            />
-                          </div>
-
-                          <div className={classes.cardGridName}>
-                            <Group gap={6} wrap="nowrap" align="center">
-                              <Text
-                                fw={600}
-                                truncate="end"
-                                className={classes.accountName}
-                                onClick={() => {
-                                  setTargetUser(account.user_id);
-                                  setTargetUserDetails(account);
-                                  navigate(`/${ROUTES.CHATS}`);
-                                }}
-                              >
-                                {getAccountIdentifier(account)}
-                              </Text>
-
-                              {account.display_name?.trim() && (
-                                <Text
-                                  size="xs"
-                                  c="dimmed"
-                                  truncate="end"
-                                  className={classes.accountUserId}
-                                >
-                                  {account.user_id}
-                                </Text>
-                              )}
-
-                              {account.is_premium && (
-                                <Tooltip
-                                  label={translation(
-                                    "accounts_page.tooltipPremiumAccount",
-                                    "Premium account",
-                                  )}
-                                >
-                                  <IconCrown
-                                    size={16}
-                                    color="#f59f00"
-                                    fill="#ffd43b"
-                                    aria-label={translation(
-                                      "accounts_page.tooltipPremiumAccount",
-                                      "Premium account",
-                                    )}
-                                    style={{ flexShrink: 0 }}
-                                  />
-                                </Tooltip>
-                              )}
-
-                              <Tooltip
-                                label={
-                                  copiedUserId === account.user_id
-                                    ? "Copied!"
-                                    : account.user_id
-                                }
-                              >
-                                <ActionIcon
-                                  variant="subtle"
-                                  color="gray"
-                                  radius="xl"
-                                  size="sm"
-                                  aria-label={translation(
-                                    "accounts_page.ariaCopyUsername",
-                                    "Copy username",
-                                  )}
-                                  onClick={() => handleCopyUsername(account)}
-                                >
-                                  {copiedUserId === account.user_id ? (
-                                    <IconCheck size={14} color="teal" />
-                                  ) : (
-                                    <IconCopy size={14} />
-                                  )}
-                                </ActionIcon>
-                              </Tooltip>
-
-                              {!isMobile && (
-                                <ActionIcon
-                                  variant="subtle"
-                                  color={account.isLocked ? "dark" : "gray"}
-                                  radius="xl"
-                                  size="sm"
-                                  aria-label={
-                                    account.isLocked
-                                      ? translation(
-                                          "accounts_page.tooltipAccountLocked",
-                                          "Account is locked",
-                                        )
-                                      : translation(
-                                          "accounts_page.tooltipAccountUnlocked",
-                                          "Account is unlocked",
-                                        )
-                                  }
-                                  onClick={() => openLockModal(account)}
-                                >
-                                  {account.isLocked ? (
-                                    <IconLock size={14} color="red" />
-                                  ) : (
-                                    <Tooltip
-                                      label={translation(
-                                        "accounts_page.tooltipLockWithPasskey",
-                                        "Lock with passkey",
-                                      )}
-                                    >
-                                      <IconLockOpen size={14} />
-                                    </Tooltip>
-                                  )}
-                                </ActionIcon>
-                              )}
-
-                              {!isMobile && account.isLocked && (
-                                <>
-                                  <Badge
-                                    size="sm"
-                                    variant="light"
-                                    color="red"
-                                    radius="sm"
-                                    // onClick={() => openLockModal(account)}
-                                    style={{
-                                      cursor: "pointer",
-                                      fontFamily: "monospace",
-                                    }}
-                                  >
-                                    {isPasskeyVisible
-                                      ? plainPasskey || "—"
-                                      : "••••••"}
-                                  </Badge>
-
-                                  <ActionIcon
-                                    variant="subtle"
-                                    color="gray"
-                                    radius="xl"
-                                    size="sm"
-                                    aria-label={
-                                      isPasskeyVisible
-                                        ? translation(
-                                            "accounts_page.tooltipHidePasskey",
-                                            "Hide passkey",
-                                          )
-                                        : translation(
-                                            "accounts_page.tooltipShowPasskey",
-                                            "Show passkey",
-                                          )
-                                    }
-                                    onClick={() =>
-                                      togglePasskeyVisibility(account)
-                                    }
-                                  >
-                                    {isPasskeyVisible ? (
-                                      <IconEyeOff size={14} />
-                                    ) : (
-                                      <IconEye size={14} />
-                                    )}
-                                  </ActionIcon>
-
-                                  <ActionIcon
-                                    variant="subtle"
-                                    color="gray"
-                                    radius="xl"
-                                    size="sm"
-                                    aria-label={translation(
-                                      "accounts_page.tooltipEditPasskey",
-                                      "Edit passkey",
-                                    )}
-                                    onClick={() => openLockModal(account)}
-                                  >
-                                    <IconPencil size={14} />
-                                  </ActionIcon>
-                                </>
-                              )}
-                            </Group>
-                          </div>
-
-                          <div className={classes.cardGridKebab}>
-                            <Menu
-                              position="bottom-end"
-                              withinPortal
-                              shadow="md"
-                              radius="md"
-                            >
-                              <Menu.Target>
-                                <ActionIcon
-                                  variant="subtle"
-                                  color="gray"
-                                  radius="xl"
-                                  aria-label={translation(
-                                    "accounts_page.ariaAccountOptions",
-                                    "Account options",
-                                  )}
-                                >
-                                  <IconDotsVertical size={16} />
-                                </ActionIcon>
-                              </Menu.Target>
-
-                              <Menu.Dropdown>
-                                {isMobile && (
-                                  <>
-                                    <Menu.Item
-                                      leftSection={
-                                        account.isLocked ? (
-                                          <IconLock size={14} />
-                                        ) : (
-                                          <IconLockOpen size={14} />
-                                        )
-                                      }
-                                      onClick={() => openLockModal(account)}
-                                    >
-                                      {translation(
-                                        "accounts_page.menuPasskeyLock",
-                                        "Passkey & Lock",
-                                      )}
-                                    </Menu.Item>
-                                    <Menu.Item
-                                      leftSection={<IconShieldLock size={14} />}
-                                      onClick={() => {
-                                        setSelectedAccountID(account.user_id);
-                                        loadPermissions(account);
-                                      }}
-                                    >
-                                      {translation(
-                                        "accounts_page.menuManageAccessPermissions",
-                                        "Manage Access & Permissions",
-                                      )}
-                                    </Menu.Item>
-                                    <Menu.Divider />
-                                  </>
-                                )}
-
-                                <Menu.Item
-                                  leftSection={<IconUserEdit size={14} />}
-                                  onClick={() => openProfileModal(account)}
-                                >
-                                  {translation(
-                                    "accounts_page.menuUpdateProfile",
-                                    "Update Profile",
-                                  )}
-                                </Menu.Item>
-                                <Menu.Item
-                                  leftSection={<IconKey size={14} />}
-                                  onClick={() => setPasswordTarget(account)}
-                                >
-                                  {translation(
-                                    "accounts_page.menuChangePassword",
-                                    "Change Password",
-                                  )}
-                                </Menu.Item>
-
-                                {isHubAccountLoggedIn && (
-                                  <>
-                                    <Menu.Divider />
-
-                                    <Menu.Item
-                                      color="red"
-                                      leftSection={<IconTrash size={14} />}
-                                      onClick={() => {
-                                        setDeleteTarget(account);
-                                        setManageAction(null);
-                                        setDeleteError(null);
-                                      }}
-                                    >
-                                      {translation(
-                                        "accounts_page.menuRemoveAccount",
-                                        "Remove Account",
-                                      )}
-                                    </Menu.Item>
-                                  </>
-                                )}
-                              </Menu.Dropdown>
-                            </Menu>
-                          </div>
-
-                          <div className={classes.cardGridMeta}>
-                            {account.status && (
-                              <Group gap={6} mb={4} align="center">
-                                <Badge
-                                  size="sm"
-                                  variant="light"
-                                  color={statusColor(account.status)}
-                                  radius="sm"
-                                >
-                                  {account.status}
-                                </Badge>
-                              </Group>
-                            )}
-
-                            {account.description?.trim() && (
-                              <Text size="xs" c="dimmed" truncate="end">
-                                {account.description}
-                              </Text>
-                            )}
-                          </div>
-
-                          {!isMobile && (
-                            <div className={classes.cardGridManage}>
-                              {selectedAccountID === account.user_id &&
-                              loadingP ? (
-                                <Loader size={"sm"} />
-                              ) : (
-                                <Text
-                                  size="sm"
-                                  c="blue"
-                                  fw={500}
-                                  style={{
-                                    cursor: "pointer",
-                                    whiteSpace: "nowrap",
-                                    marginRight: "10px",
-                                  }}
-                                  onClick={() => {
-                                    setSelectedAccountID(account.user_id);
-                                    loadPermissions(account);
-                                  }}
-                                >
-                                  {translation(
-                                    "accounts_page.menuManageAccessPermissions",
-                                    "Manage Access & Permissions",
-                                  )}
-                                </Text>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </Card>
-                    );
+                    return renderAccountRow(account, i, false);
                   })}
                 </Stack>
 
@@ -2519,7 +2178,7 @@ export default function Accounts() {
             )}
           </Stack>
         )}
-      </Container>
+      </AccountsShell>
 
       <CreateAccountModal
         opened={modalOpen}
@@ -2535,6 +2194,12 @@ export default function Accounts() {
       />
 
       <Modal
+        classNames={{
+          content: classes.modalContent,
+          header: classes.modalHeader,
+          title: classes.modalTitle,
+          close: classes.modalClose,
+        }}
         opened={deleteTarget !== null}
         onClose={closeManageAccountModal}
         title={
@@ -2766,6 +2431,12 @@ export default function Accounts() {
       </Modal>
 
       <Modal
+        classNames={{
+          content: classes.modalContent,
+          header: classes.modalHeader,
+          title: classes.modalTitle,
+          close: classes.modalClose,
+        }}
         opened={passwordTarget !== null}
         onClose={closePasswordModal}
         title={translation(
@@ -2854,6 +2525,12 @@ export default function Accounts() {
       </Modal>
 
       <Modal
+        classNames={{
+          content: classes.modalContent,
+          header: classes.modalHeader,
+          title: classes.modalTitle,
+          close: classes.modalClose,
+        }}
         opened={profileTarget !== null}
         onClose={closeProfileModal}
         title={translation(
@@ -3006,6 +2683,12 @@ export default function Accounts() {
       </Modal>
 
       <Modal
+        classNames={{
+          content: classes.modalContent,
+          header: classes.modalHeader,
+          title: classes.modalTitle,
+          close: classes.modalClose,
+        }}
         opened={lockTarget !== null}
         onClose={closeLockModal}
         title={translation("accounts_page.titlePasskeyLock", "Passkey & Lock")}
@@ -3106,6 +2789,12 @@ export default function Accounts() {
       </Modal>
 
       <Modal
+        classNames={{
+          content: classes.modalContent,
+          header: classes.modalHeader,
+          title: classes.modalTitle,
+          close: classes.modalClose,
+        }}
         opened={accessAndPermissions.open}
         onClose={onCloseAccessAndPermissions}
         title={

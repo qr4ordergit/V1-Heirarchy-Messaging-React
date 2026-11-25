@@ -9,6 +9,9 @@ import "@mantine/dates/styles.css";
 import "./index.css";
 
 import App from "./App";
+import { applyAppTheme } from "./utils/constant";
+
+applyAppTheme();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

@@ -6,6 +6,38 @@ import { useAuthStore } from "../store/auth/auth.store";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+export const APP_THEME = {
+  background: {
+    base: "#6c6fb6",
+    dark: "#2a2a33",
+    gradient: "linear-gradient(155deg, #6c6fb6 60%, #2a2a33 60%)",
+  },
+  glass: "rgba(255, 255, 255, 0.1)",
+  glassBorder: "rgba(255, 255, 255, 0.22)",
+  surfaceDark: "rgba(36, 36, 50, 0.82)",
+  panel: "rgba(52, 52, 66, 0.8)",
+  row: "rgba(255, 255, 255, 0.12)",
+  text: "#ffffff",
+  textMuted: "#d9dbe8",
+  accent: "#4f8cff",
+} as const;
+
+export const applyAppTheme = (): void => {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement.style;
+  root.setProperty("--app-bg", APP_THEME.background.gradient);
+  root.setProperty("--app-bg-base", APP_THEME.background.base);
+  root.setProperty("--app-bg-dark", APP_THEME.background.dark);
+  root.setProperty("--app-glass", APP_THEME.glass);
+  root.setProperty("--app-glass-border", APP_THEME.glassBorder);
+  root.setProperty("--app-surface-dark", APP_THEME.surfaceDark);
+  root.setProperty("--app-panel", APP_THEME.panel);
+  root.setProperty("--app-row", APP_THEME.row);
+  root.setProperty("--app-text", APP_THEME.text);
+  root.setProperty("--app-text-muted", APP_THEME.textMuted);
+  root.setProperty("--app-accent", APP_THEME.accent);
+};
+
 export const API_BASE_URL =
   "https://53mxdgl1ok.execute-api.eu-central-1.amazonaws.com/dev/api";
 export const API_BASE_URL2 =
@@ -244,9 +276,6 @@ export const USER_TO_USER_PERMISSIONS = {
 };
 
 export const BOT_COMMON_PERMISSION = {
-   "bot-messages": {
-    read: false,
-  },
   chat: {
     "history-get": false,
     start: false,
@@ -260,6 +289,9 @@ export const BOT_COMMON_PERMISSION = {
     "manual-password": false,
     DMchat_lock: false,
     DMchat_unlock: false,
+  },
+  "bot-messages": {
+    read: false,
   },
   groups: {
     read: false,
@@ -297,13 +329,6 @@ export const BOT_USER_PERMISSIONS = {
   },
   tags: {
     read: false,
-    create: false,
-    update: false,
-    delete: false,
-  },
-  "sub-users": {
-    read: false,
-    "bulk-create": false,
     create: false,
     update: false,
     delete: false,
@@ -427,11 +452,10 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "chat-export|read": "View",
   "chat-export|create": "Allow",
 
-  // Manage Sub Accounts
-  "sub-users|bulk-create" : "Create Bulk Accounts",
-  "sub-users|create": "Create Single Account",
+  // Manage Subuser
+  "sub-users|create": "Create",
   "sub-users|read": "View",
-  "sub-users|update": "Update",
+  "sub-users|update": "Update Profile",
   "sub-users|delete": "Delete",
   "sub-users|permission-update": "Access & Permissions",
   "sub-users|reset-password": "Reset Password",
@@ -465,7 +489,7 @@ export const COMMON_PERMISSION_GROUP_LABELS: Record<string, string> = {
   "scheduled-messages": "Scheduled Messages",
   "disappearing-messages": "Disappearing Messages",
   "chat-export": "Export Chats",
-  "sub-users": "Manage Subuser Accounts",
+  "sub-users": "Manage Subuser Account",
   "user-account": "Manage Account",
   "users-accesstree": "Manage Subuser's Accessed Accounts Access & Permissions",
 
