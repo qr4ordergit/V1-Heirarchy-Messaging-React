@@ -8,33 +8,49 @@ dayjs.extend(timezone);
 
 export const APP_THEME = {
   background: {
-    base: "#6c6fb6",
-    dark: "#2a2a33",
-    gradient: "linear-gradient(155deg, #6c6fb6 60%, #2a2a33 60%)",
+    purple: "#565988",
+    dark: "#2a2b35",
+    gradient:
+      "radial-gradient(ellipse 1000px 520px at 0px 100%, #3f405b 0%, rgba(63, 64, 91, 0) 100%), linear-gradient(153deg, transparent 47.5%, #2a2b35 47.5%), linear-gradient(200deg, #696caa 0%, #5f6299 13%, #5a5d90 21%, #565988 38%, #52547f 70%, #494b6f 82%, #3f405b 93%, #3b3c56 100%)",
   },
-  glass: "rgba(255, 255, 255, 0.1)",
-  glassBorder: "rgba(255, 255, 255, 0.22)",
-  surfaceDark: "rgba(36, 36, 50, 0.82)",
-  panel: "rgba(52, 52, 66, 0.8)",
-  row: "rgba(255, 255, 255, 0.12)",
-  text: "#ffffff",
-  textMuted: "#d9dbe8",
+
+  surfaceLight: "rgba(190, 190, 190, 0.28)",
+  surfaceLightHover: "rgba(190, 190, 190, 0.36)",
+
+  surfaceGlass: "rgba(74, 74, 74, 0.5)",
+
+  surfacePanel: "rgba(74, 74, 74, 0.45)",
+
+  surfaceDark: "rgba(52, 52, 66, 0.95)",
+
+  surfaceDarker: "rgba(40, 40, 44, 0.6)",
+
+  surfaceFrame: "rgba(255, 255, 255, 0.03)",
+
+  borderLight: "rgba(255, 255, 255, 0.28)",
+  highlight: "rgba(255, 255, 255, 0.18)",
+  textPrimary: "#ffffff",
+  textSecondary: "#e3e5ee",
   accent: "#4f8cff",
 } as const;
 
 export const applyAppTheme = (): void => {
   if (typeof document === "undefined") return;
   const root = document.documentElement.style;
-  root.setProperty("--app-bg", APP_THEME.background.gradient);
-  root.setProperty("--app-bg-base", APP_THEME.background.base);
-  root.setProperty("--app-bg-dark", APP_THEME.background.dark);
-  root.setProperty("--app-glass", APP_THEME.glass);
-  root.setProperty("--app-glass-border", APP_THEME.glassBorder);
+  root.setProperty("--app-background", APP_THEME.background.gradient);
+  root.setProperty("--app-background-purple", APP_THEME.background.purple);
+  root.setProperty("--app-background-dark", APP_THEME.background.dark);
+  root.setProperty("--app-surface-glass", APP_THEME.surfaceGlass);
+  root.setProperty("--app-border-light", APP_THEME.borderLight);
+  root.setProperty("--app-surface-frame", APP_THEME.surfaceFrame);
   root.setProperty("--app-surface-dark", APP_THEME.surfaceDark);
-  root.setProperty("--app-panel", APP_THEME.panel);
-  root.setProperty("--app-row", APP_THEME.row);
-  root.setProperty("--app-text", APP_THEME.text);
-  root.setProperty("--app-text-muted", APP_THEME.textMuted);
+  root.setProperty("--app-surface-darker", APP_THEME.surfaceDarker);
+  root.setProperty("--app-surface-panel", APP_THEME.surfacePanel);
+  root.setProperty("--app-surface-light", APP_THEME.surfaceLight);
+  root.setProperty("--app-surface-light-hover", APP_THEME.surfaceLightHover);
+  root.setProperty("--app-highlight", APP_THEME.highlight);
+  root.setProperty("--app-text-primary", APP_THEME.textPrimary);
+  root.setProperty("--app-text-secondary", APP_THEME.textSecondary);
   root.setProperty("--app-accent", APP_THEME.accent);
 };
 
