@@ -8,4 +8,26 @@ body {
   & ::placeholder {
     font-family: "Inter", sans-serif;
   }
+
+   background: var(
+    --app-background,
+    radial-gradient(
+      ellipse 1000px 520px at 0px 100%,
+      #3f405b 0%,
+      rgba(63, 64, 91, 0) 100%
+    ),
+    linear-gradient(153deg, transparent 47.5%, #2a2b35 47.5%),
+    linear-gradient(
+      200deg,
+      #696caa 0%,
+      #5f6299 13%,
+      #5a5d90 21%,
+      #565988 38%,
+      #52547f 70%,
+      #494b6f 82%,
+      #3f405b 93%,
+      #3b3c56 100%
+    )
+  );
+  background-attachment: fixed;
 }

@@ -1,41 +1,12 @@
 import { Stack } from "@mantine/core";
 import SidebarItem from "./SidebarItem";
 import { navigationItems } from "../../utils/navigation";
-// import { useAuthStore } from "../../store/auth/auth.store";
-// import { ROUTES } from "../../router/routes";
-// import { useNavigate } from "react-router";
-// import { useState } from "react";
-// import { logout } from "../../api/authApi";
-// import { IconLogout } from "@tabler/icons-react";
-// import { ClearStore } from "../../store/clear.store";
 import { useTranslation } from "../../store/language/language.store";
 export default function Sidebar() {
-  // const navigate = useNavigate();
   const { translation } = useTranslation();
-  // const clearTokens = useAuthStore((state) => state.clearTokens);
-  // const [loggingOut, setLoggingOut] = useState(false);
-  // const handleLogout = async () => {
-  //   setLoggingOut(true);
-  //   try {
-  //     await logout();
-  //   } catch (err) {
-  //     console.error("Logout request failed:", err);
-  //   } finally {
-  //     clearTokens();
-  //     ClearStore();
-  //     setLoggingOut(false);
-  //     navigate(ROUTES.HOME, { replace: true });
-  //   }
-  // };
+  
   return (
-    <Stack
-      h="100%"
-      justify="space-between"
-      align="center"
-      py="md"
-      bg="var(--mantine-color-blue-1)"
-    >
-      <Stack gap="md">
+      <Stack align="center" pt={"10px"}>
         {navigationItems.map((item) => (
           <SidebarItem
             key={item.to}
@@ -45,15 +16,5 @@ export default function Sidebar() {
           />
         ))}
       </Stack>
-      {/* <ActionIcon
-        variant="transparent"
-        size="md"
-        loading={loggingOut}
-        onClick={handleLogout}
-        color="red"
-      >
-        <IconLogout size={18} />
-      </ActionIcon> */}
-    </Stack>
   );
 }

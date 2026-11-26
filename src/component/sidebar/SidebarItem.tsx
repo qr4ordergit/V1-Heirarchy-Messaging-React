@@ -1,6 +1,6 @@
 import { NavLink } from "react-router";
-import { Stack, Text, UnstyledButton } from "@mantine/core";
 import type { IconProps } from "@tabler/icons-react";
+import { Box } from "@mantine/core";
 
 interface SidebarItemProps {
   label: string;
@@ -8,34 +8,10 @@ interface SidebarItemProps {
   Icon: React.ComponentType<IconProps>;
 }
 
-export default function SidebarItem({ label, to, Icon }: SidebarItemProps) {
+export default function SidebarItem({ to, Icon }: SidebarItemProps) {
   return (
     <NavLink to={to}>
-      {({ isActive }) => (
-        <UnstyledButton
-          style={{
-            width: 64,
-            borderRadius: 12,
-            color: isActive ? "	var(--mantine-color-blue-9)" : "black",
-            padding: "8px 4px",
-          }}
-        >
-          <Stack gap={2} align="center">
-            <Icon
-              size={22}
-              color={isActive ? "	var(--mantine-color-blue-9)" : "black"}
-            />
-
-            <Text
-              size="xs"
-              fw={isActive ? 600 : 500}
-              c={isActive ? "	var(--mantine-color-blue-9)" : "black"}
-            >
-              {label}
-            </Text>
-          </Stack>
-        </UnstyledButton>
-      )}
+      {({ isActive }) =><Box  style={{backgroundColor : isActive ? 'var(--app-surface-light)' : "transparent", borderRadius : '10px', padding : "10px"}}><Icon color={"white"} /></Box> }
     </NavLink>
   );
 }

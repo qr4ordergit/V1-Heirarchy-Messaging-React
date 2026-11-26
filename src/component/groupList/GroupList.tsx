@@ -190,6 +190,7 @@ const GroupList = () => {
           right={10}
           size={30}
           onClick={loadGroups}
+          color="var(--app-surface-dark)"
         >
           <IconRefresh size={15} />
         </ActionIcon>

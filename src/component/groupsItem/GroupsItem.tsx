@@ -10,9 +10,9 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { formatConversationTime, getAvatarColor } from "../../utils/constant";
+import { formatConversationTime } from "../../utils/constant";
 import { ROUTES } from "../../router/routes";
-import { IconDotsVertical, IconLock, IconLogout2 } from "@tabler/icons-react";
+import { IconDotsVertical, IconLock, IconLogout2, IconUser } from "@tabler/icons-react";
 import { useAuthStore } from "../../store/auth/auth.store";
 import { useTranslation } from "../../store/language/language.store";
 import { useChatStore } from "../../store/chats/chats.store";
@@ -58,7 +58,7 @@ const GroupsItem = ({
       align="center"
       wrap="nowrap"
       p={"xs"}
-      bg={chatId === groups._id ? "#edf2ff" : "white"}
+      bg={chatId === groups._id ? "var(--app-surface-dark)" : "var(--app-surface-light)"}
       style={{
         borderRadius: 12,
         cursor: "pointer",
@@ -69,19 +69,20 @@ const GroupsItem = ({
         <Avatar
           radius="xl"
           size={45}
-          color={getAvatarColor(groups.group_name || "")}
+          color={"white"}
+          bg={"var(--app-surface-dark)"}
           src={groups.profile_url}
         >
-          {groups.group_name?.charAt(0).toUpperCase()}
+          <IconUser/>
         </Avatar>
 
         <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-          <Text fw={600} size="sm">
+          <Text fw={600} size="sm" c={"white"}>
             {groups.group_name}
           </Text>
 
           {groups.only_admins_can_message && (
-            <Text c="dimmed" size="xs">
+            <Text c="white" size="xs">
               {translation("chat_page.label_channel", "Channel")}
             </Text>
           )}
@@ -92,7 +93,7 @@ const GroupsItem = ({
         <Stack gap={6} align="flex-end" style={{ flexShrink: 0 }}>
           <Text
             size="xs"
-            c="dimmed"
+            c="white"
             style={{
               whiteSpace: "nowrap",
               flexShrink: 0,
@@ -103,7 +104,7 @@ const GroupsItem = ({
 
           <Flex align="center" gap={6}>
             {groups.unread_count !== undefined &&groups.unread_count > 0 && (
-              <Badge color="green" radius="lg" variant="filled" size="xs">
+              <Badge color="var(--app-surface-dark)" radius="lg" variant="filled" size="xs">
                 {groups.unread_count}
               </Badge>
             )}
@@ -112,7 +113,7 @@ const GroupsItem = ({
               <Menu.Target>
                 <ActionIcon
                   variant="subtle"
-                  color="gray"
+                  color="white"
                   size="sm"
                   onClick={(event) => {
                     event.stopPropagation();

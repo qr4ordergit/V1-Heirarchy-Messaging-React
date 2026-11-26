@@ -5,7 +5,7 @@ import ConversationPanel from "../../component/conversationPanel/ConversationPan
 import { Box } from "@mantine/core";
 
 export default function ChatsLayout() {
-  const mobile = useMediaQuery("(max-width: 1200px)");
+  const mobile = useMediaQuery("(max-width: 800px)");
   const { chatId } = useParams();
 
   if (mobile) {

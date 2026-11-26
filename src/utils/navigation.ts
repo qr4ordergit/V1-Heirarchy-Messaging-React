@@ -1,7 +1,6 @@
 import {
   IconHome,
   IconMessageCircle,
-  IconUser,
   IconUsers,
 } from "@tabler/icons-react";
 import { ROUTES } from "../router/routes";
@@ -24,11 +23,5 @@ export const navigationItems = [
     lang_id : "nav3",
     to: ROUTES.CONTACT,
     icon: IconUsers,
-  },
-  {
-    label: "Profile",
-    lang_id : "nav4",
-    to: ROUTES.PROFILE,
-    icon: IconUser,
   },
 ];

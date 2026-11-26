@@ -9,9 +9,9 @@ import {
   Text,
 } from "@mantine/core";
 
-import { IconDotsVertical, IconLock, IconTrash } from "@tabler/icons-react";
+import { IconDotsVertical, IconLock, IconTrash, IconUser } from "@tabler/icons-react";
 
-import { formatConversationTime, getAvatarColor } from "../../utils/constant";
+import { formatConversationTime } from "../../utils/constant";
 import { useNavigate, useParams } from "react-router";
 import { ROUTES } from "../../router/routes";
 import type { DM } from "../../store/dm/dm.list.store";
@@ -50,7 +50,7 @@ export default function ConversationItem({
       align="center"
       wrap="nowrap"
       p={"xs"}
-      bg={chatId === conversation._id ? "#edf2ff" : "white"}
+      bg={chatId === conversation._id ? "var(--app-surface-dark)" : "var(--app-surface-light)"}
       style={{
         borderRadius: 12,
         cursor: "pointer",
@@ -59,28 +59,29 @@ export default function ConversationItem({
     >
       <Group gap="sm" wrap="nowrap">
         <Avatar
-          radius="xl"
+          radius="md"
           size={45}
-          color={getAvatarColor(conversation.display_name)}
+          color={"white"}
+          bg={"var(--app-surface-dark)"}
           src={conversation.profile_url}
         >
-          {conversation.display_name.charAt(0).toUpperCase()}
+          <IconUser/>
         </Avatar>
 
-          <Text fw={600} size="sm" style={{ flex: 1, minWidth: 0 }}>
+          <Text fw={600} c={"white"} size="sm" style={{ flex: 1, minWidth: 0 }}>
             {conversation.display_name}
           </Text>
       </Group>
 
       <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>
         <Stack gap={6} align="flex-end" style={{ flexShrink: 0 }}>
-          <Text size="xs" c="dimmed">
+          <Text size="xs" c="white">
             {formatConversationTime(conversation.last_message_timestamp)}
           </Text>
           <Flex align={"center"} gap={6}>
             {conversation.unread_count > 0 && (
               <Badge
-                color="green"
+                color="var(--app-surface-dark)"
                 radius="xl"
                 variant="filled"
                 size="xs"
@@ -92,7 +93,7 @@ export default function ConversationItem({
               <Menu.Target>
                 <ActionIcon
                   variant="subtle"
-                  color="gray"
+                  color="white"
                   size="sm"
                   onClick={(event) => {
                     event.stopPropagation();

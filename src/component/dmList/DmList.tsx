@@ -301,6 +301,7 @@ const DmList = ({ viewportRef }: DmListProps) => {
           right={10}
           size={30}
           onClick={loadDMs}
+          color={"var(--app-surface-dark)"}
         >
           <IconRefresh size={15} />
         </ActionIcon>

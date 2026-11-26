@@ -6,7 +6,6 @@ import {
   Paper,
   ScrollArea,
   Stack,
-  Text,
 } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
 import { useConversationTypeStore } from "../../store/conversation/conversation.type.store";
@@ -14,7 +13,6 @@ import DmList from "../dmList/DmList";
 import GroupList from "../groupList/GroupList";
 import { useNavigate } from "react-router";
 import { ROUTES } from "../../router/routes";
-import { useAuthStore } from "../../store/auth/auth.store";
 import { useTranslation } from "../../store/language/language.store";
 import { useRef } from "react";
 
@@ -23,20 +21,10 @@ export default function ConversationPanel() {
   const setType = useConversationTypeStore((state) => state.setType);
   const search = useConversationTypeStore((state) => state.search);
   const setSearch = useConversationTypeStore((state) => state.setSearch);
-  const target_user = useAuthStore((state) => state.target_user);
-  const targetUserDetails = useAuthStore((state) => state.targetUserDetails);
-  const userDetails = useAuthStore((state) => state.userDetails);
 
   const navigate = useNavigate();
   const { translation } = useTranslation();
   const viewportRef = useRef<HTMLDivElement>(null);
-
-  const activeUsername =
-    targetUserDetails?.display_name ||
-    userDetails?.display_name ||
-    target_user ||
-    userDetails?.username ||
-    "";
 
   const conversationTypes = [
     { label: translation("chat_page.tab_dm", "DM"), value: "dm" },
@@ -46,7 +34,7 @@ export default function ConversationPanel() {
   return (
     <Paper
       radius="md"
-      bg="white"
+      bg="var(--app-surface-glass"
       p={10}
       style={{
         height: "100%",
@@ -61,10 +49,8 @@ export default function ConversationPanel() {
           minHeight: 0,
         }}
       >
-        <Text size="sm" c={"blue"}>
-          {activeUsername}{" "}
-        </Text>
         <Input
+        className="custom-dm-grp-search-input"
           size="xs"
           placeholder={translation("chat_page.search_dm_groups", "Search")}
           leftSection={<IconSearch size={14} />}
@@ -83,6 +69,8 @@ export default function ConversationPanel() {
                 setType(value);
                 setSearch("");
               }}
+              color={"var(--app-surface-dark)"}
+              c={"white"}
             >
               {label}
             </Button>
