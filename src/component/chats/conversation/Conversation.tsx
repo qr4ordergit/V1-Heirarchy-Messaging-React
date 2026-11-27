@@ -5,11 +5,7 @@ import Chatting from "./Chatting";
 import Navbar from "./Navbar";
 import TextFilterInputBox from "./TextFilterInputBox";
 import { api } from "../../../api/axios";
-import {
-  API_ENDPOINTS,
-  TRIGGERS,
-  withTargetUser,
-} from "../../../utils/constant";
+import { API_ENDPOINTS, withTargetUser } from "../../../utils/constant";
 import useContactStore from "../../../store/contacts/contacts.store";
 import { useAuthStore } from "../../../store/auth/auth.store";
 import { useParams } from "react-router";
@@ -32,9 +28,6 @@ function Conversation() {
   const { translation } = useTranslation();
 
   const fetchTagsList = async () => {
-    const allowedList = [TRIGGERS.tagsForNewMsgModal, TRIGGERS.tagList];
-    if (!allowedList.includes(trigger)) return;
-
     try {
       const tagsByCategories = {
         group: [],
@@ -98,7 +91,7 @@ function Conversation() {
 
   useEffect(() => {
     fetchTagsList();
-  }, [trigger]);
+  }, [chatId]);
 
   return (
     <div className="flex justify-center h-full bg-(--app-surface-glass) rounded-lg p-2">
