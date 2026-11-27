@@ -469,7 +469,7 @@ function GroupInfoModal() {
       title={
         <Text fw={700}>
           <Text fw={700} size="lg">
-            {translation("contact.txtCreateNewGroup", "Create New Group")}
+            {translation("contact.modalHeaderEditGroup", "Edit Group")}
           </Text>
         </Text>
       }

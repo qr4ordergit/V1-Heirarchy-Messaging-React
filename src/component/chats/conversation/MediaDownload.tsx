@@ -66,7 +66,7 @@ function MediaDownload({ msg_id, media_data, mediaIndex }: PAYLOAD) {
   return (
     <div>
       <div
-        className="h-30 w-30 bg-gray-200 rounded relative cursor-pointer"
+        className="h-30 w-30 bg-gray-200 rounded relative cursor-pointer border border-gray-400"
         onClick={handleDecrypt}
       >
         <div className="absolute top-1/2 left-1/2 -translate-1/2">

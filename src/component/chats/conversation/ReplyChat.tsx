@@ -51,7 +51,7 @@ function ReplyChat({ replied_to, onReplyClick }: REPLYCHAT) {
 
   return (
     <div
-      className="bg-blue-200 rounded-xl mb-1 p-2 border-l-3 border-blue-800 cursor-pointer"
+      className="rounded-xl mb-1 p-2 cursor-pointer replyChatContainer"
       onClick={() => onReplyClick(replied_to)}
     >
       <div className="flex items-center">

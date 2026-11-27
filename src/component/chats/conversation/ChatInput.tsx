@@ -14,6 +14,7 @@ import {
   IconLock,
   IconPaperclip,
   IconSend,
+  IconTag,
   IconX,
 } from "@tabler/icons-react";
 import { useEffect, useState, useTransition } from "react";
@@ -152,6 +153,10 @@ export default function ChatInput() {
         payload["repeat"] = triggerPayload?.repeat;
         payload["days"] = triggerPayload?.days;
         payload["type"] = "schedule";
+      }
+
+      if (trigger === TRIGGERS.tagsForNewMsgModal_payload) {
+        payload["tags"] = triggerPayload?.tags;
       }
 
       const params = {
@@ -433,6 +438,10 @@ export default function ChatInput() {
         payload["type"] = "schedule";
       }
 
+      if (trigger === TRIGGERS.tagsForNewMsgModal_payload) {
+        payload["tags"] = triggerPayload?.tags;
+      }
+
       const params = {
         target_user: target_user ? target_user : undefined,
       };
@@ -574,12 +583,18 @@ export default function ChatInput() {
     }
   };
 
+  const toggleTags = () => {
+    setTrigger({
+      toTrigger: TRIGGERS.tagsForNewMsgModal,
+    });
+  };
+
   useEffect(() => {
     triggerHandler();
   }, [trigger]);
 
   return (
-    <Paper shadow="xs" radius="xl" p="xs" withBorder>
+    <Paper shadow="xs" radius="lg" p="xs" bg={"var(--app-surface-dark)"}>
       {/* Replay */}
       <ReplyInputBoxCard />
 
@@ -601,6 +616,7 @@ export default function ChatInput() {
               {...props}
               variant="subtle"
               radius="xl"
+              color="white"
               size={36}
               aria-label="Attach files"
               disabled={submitLoader || trigger === TRIGGERS.isPrivate}
@@ -652,7 +668,8 @@ export default function ChatInput() {
               input: {
                 borderRadius: 999,
                 padding: "10px 16px",
-                backgroundColor: "var(--mantine-color-gray-0)",
+                backgroundColor: "var(--app-surface-dark)",
+                color: "white",
               },
             }}
             value={message}
@@ -660,6 +677,27 @@ export default function ChatInput() {
             readOnly={submitLoader}
           />
         </div>
+
+        <Tooltip label={"Add Tags"} position="top" withArrow>
+          <ActionIcon
+            variant={
+              trigger.includes(TRIGGERS.tagsForNewMsgModal)
+                ? "filled"
+                : "subtle"
+            }
+            radius="xl"
+            color="white"
+            bg={
+              trigger.includes(TRIGGERS.tagsForNewMsgModal)
+                ? "var(--app-surface-light)"
+                : ""
+            }
+            size={36}
+            onClick={toggleTags}
+          >
+            <IconTag size={20} stroke={2} />
+          </ActionIcon>
+        </Tooltip>
 
         <Tooltip
           label={translation(
@@ -672,6 +710,10 @@ export default function ChatInput() {
           <ActionIcon
             variant={trigger.includes("secret_007") ? "filled" : "subtle"}
             radius="xl"
+            color="white"
+            bg={
+              trigger.includes("secret_007") ? "var(--app-surface-light)" : ""
+            }
             size={36}
             onClick={togglePrivate}
             aria-label={translation(
@@ -693,7 +735,13 @@ export default function ChatInput() {
         >
           <ActionIcon
             variant={trigger.includes("schedulePayload") ? "filled" : "subtle"}
+            bg={
+              trigger.includes("schedulePayload")
+                ? "var(--app-surface-light)"
+                : ""
+            }
             radius="xl"
+            color="white"
             size={36}
             onClick={toggleSchedule}
             aria-label={translation(
@@ -708,6 +756,7 @@ export default function ChatInput() {
         {/* Send */}
         <ActionIcon
           variant="filled"
+          color="var(--app-surface-dark)"
           radius="xl"
           size={36}
           aria-label="Send message"

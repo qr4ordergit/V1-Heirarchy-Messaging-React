@@ -2,7 +2,7 @@ import { Skeleton } from "@mantine/core";
 
 export function ConversationShimmer() {
   return (
-    <div className="grow overflow-hidden p-4 space-y-4">
+    <div className="grow overflow-hidden p-4 space-y-4 z-0">
       {/* Left Message */}
       <div className="flex justify-start">
         <Skeleton height={50} width="55%" radius="md" animate />
@@ -23,10 +23,6 @@ export function ConversationShimmer() {
 
       <div className="flex justify-start">
         <Skeleton height={45} width="38%" radius="md" animate />
-      </div>
-
-      <div className="flex justify-end">
-        <Skeleton height={65} width="58%" radius="md" animate />
       </div>
     </div>
   );

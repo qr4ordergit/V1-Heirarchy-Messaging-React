@@ -1,0 +1,25 @@
+.message-bubble {
+  --bg: #8d8d8d;
+}
+
+.pestry1 > div {
+  height: 30px;
+  width: 30px;
+  background-color: var(--bg);
+  border-radius: 10px;
+  position: relative;
+}
+
+.pestry2 {
+  background-color: var(--bg);
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  height: 100%;
+}
+.pestry3 {
+  background-color: var(--bg);
+  max-width: 70%;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}

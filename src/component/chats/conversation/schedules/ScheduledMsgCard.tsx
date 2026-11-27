@@ -138,8 +138,12 @@ function ScheduledMsgCard({ msg }: MSG) {
                       if (med instanceof File) return null;
 
                       return (
-                        <Menu.Item key={i} onClick={() => onPreview(med)}>
-                          <Text size="xs" className="text-wrap">
+                        <Menu.Item
+                          key={i}
+                          onClick={() => onPreview(med)}
+                          className="truncate"
+                        >
+                          <Text size="xs" textWrap="wrap">
                             {med.media_details.file_name}
                           </Text>
                         </Menu.Item>

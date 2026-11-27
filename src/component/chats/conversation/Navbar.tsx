@@ -222,7 +222,7 @@ function Navbar() {
   }, [dms.length, groups.length]);
 
   return (
-    <div className="bg-white rounded-full p-2 shadow">
+    <div className="rounded-lg p-2 shadow z-10 bg-(--app-surface-glass) border border-(--app-border-light)">
       <div className="flex gap-3 items-center">
         <div className="lg:hidden block">
           <ActionIcon
@@ -234,29 +234,46 @@ function Navbar() {
             <IconChevronLeft />
           </ActionIcon>
         </div>
-        {current_chat?.profile_url ? (
-          <Avatar src={current_chat?.profile_url} />
-        ) : (
-          <Avatar color="cyan" radius="xl">
-            {current_chat?.display_name?.[0]?.toUpperCase()}
-          </Avatar>
-        )}
-
-        <div className="min-w-0">
-          <div className="font-medium truncate mr-auto">
-            {current_chat?.display_name}
-          </div>
-
-          {isGroup && current_chat?.group_description && (
-            <div className="truncate text-gray-500 text-xs">
-              {current_chat.group_description}
-            </div>
+        <Flex
+          gap={6}
+          bg={"var(--app-surface-dark)"}
+          py={6}
+          px={10}
+          align={"center"}
+          className="rounded-lg text-white max-w-1/2"
+        >
+          {current_chat?.profile_url ? (
+            <Avatar src={current_chat?.profile_url} />
+          ) : (
+            <Avatar
+              radius="xl"
+              name={current_chat?.display_name}
+              bg="var(--app-surface-light)"
+              color="white"
+            />
           )}
-        </div>
+
+          <div className="min-w-0">
+            <div className="font-medium truncate mr-auto text-sm">
+              {current_chat?.display_name}
+            </div>
+
+            {isGroup && current_chat?.group_description && (
+              <div className="truncate text-gray-400 text-xs">
+                {current_chat.group_description}
+              </div>
+            )}
+          </div>
+        </Flex>
         <div className="ms-auto">
           <Menu width={200} position="bottom-end">
             <Menu.Target>
-              <ActionIcon variant="light" radius="xl" size={36}>
+              <ActionIcon
+                variant="filled"
+                color="var(--app-surface-dark)"
+                radius="xl"
+                size={40}
+              >
                 <IconSearch />
               </ActionIcon>
             </Menu.Target>
@@ -327,14 +344,25 @@ function Navbar() {
           </Menu>
         </div>
         <div>
-          <ActionIcon variant="light" radius="xl" size={36} onClick={onRefresh}>
+          <ActionIcon
+            variant="filled"
+            color="var(--app-surface-dark)"
+            radius="xl"
+            size={40}
+            onClick={onRefresh}
+          >
             <IconRefresh />
           </ActionIcon>
         </div>
         <div>
           <Menu position="bottom-end" alignItemsLabels="none">
             <Menu.Target>
-              <ActionIcon variant="light" radius="xl" size={36}>
+              <ActionIcon
+                variant="filled"
+                color="var(--app-surface-dark)"
+                radius="xl"
+                size={40}
+              >
                 <IconDotsVertical />
               </ActionIcon>
             </Menu.Target>

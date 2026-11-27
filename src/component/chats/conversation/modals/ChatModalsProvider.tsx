@@ -10,7 +10,8 @@ import MsgSchedulerTimeModal from "./MsgSchedulerTimeModal";
 import Previewer from "./Previewer";
 import PrivateMessagePayloadModal from "./PrivateMessagePayloadModal";
 import SchedularsPreviewModal from "./SchedularsPreviewModal";
-import TagsModal from "./TagsModal";
+import AddTagsForNewMsgModal from "./Tags/AddTagsForNewMsgModal";
+import TagsModal from "./Tags/TagsModal";
 
 function ChatModalsProvider() {
   return (
@@ -28,6 +29,7 @@ function ChatModalsProvider() {
       <ChatPasswordModal />
       <GroupInfoModal />
       <Previewer />
+      <AddTagsForNewMsgModal />
     </>
   );
 }

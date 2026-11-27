@@ -1,31 +1,21 @@
 import { useEffect, useState, useTransition } from "react";
-import {
-  Button,
-  Checkbox,
-  Group,
-  Loader,
-  Modal,
-  ScrollArea,
-  Stack,
-  Text,
-} from "@mantine/core";
-import { useTriggerStore } from "../../../../store/trigger/trigger.store";
-import { TRIGGERS } from "../../../../utils/constant";
-import { useTagStore } from "../../../../store/tags/tags.store";
-import { api } from "../../../../api/axios";
-import { ENDPOINTS } from "../../../../api/endpoints";
-import { Notification } from "../../../../utils/notification";
-import { useChatStore } from "../../../../store/chats/chats.store";
+import { Button, Group, Loader, Modal, Stack, Text } from "@mantine/core";
+import { useTriggerStore } from "../../../../../store/trigger/trigger.store";
+import { TRIGGERS } from "../../../../../utils/constant";
+import { api } from "../../../../../api/axios";
+import { ENDPOINTS } from "../../../../../api/endpoints";
+import { Notification } from "../../../../../utils/notification";
+import { useChatStore } from "../../../../../store/chats/chats.store";
 import { useParams } from "react-router";
-import { useAuthStore } from "../../../../store/auth/auth.store";
-import { useTranslation } from "../../../../store/language/language.store";
-import { getApiErrorMessage } from "../../../../api/getApiErrorMessage";
+import { useAuthStore } from "../../../../../store/auth/auth.store";
+import { useTranslation } from "../../../../../store/language/language.store";
+import { getApiErrorMessage } from "../../../../../api/getApiErrorMessage";
+import TagsProvider from "./TagsProvider";
 
 function TagsModal() {
   const { trigger, resetTrigger, triggerPayload } = useTriggerStore(
     (state) => state,
   );
-  const { tagsWithCategories } = useTagStore((state) => state);
   const { updateTagStatus } = useChatStore((state) => state);
   const { chatId } = useParams<{ chatId: string }>();
   const { target_user } = useAuthStore((state) => state);
@@ -167,64 +157,10 @@ function TagsModal() {
             </Text>
           </Group>
         ) : (
-          <>
-            {chatId?.includes("group") && (
-              <Checkbox.Group
-                value={selectedTags}
-                onChange={setSelectedTags}
-                label={translation(
-                  "chat_history.modal-tag-label1",
-                  "Default group tags",
-                )}
-              >
-                {tagsWithCategories.group?.length ? (
-                  <ScrollArea
-                    h={Math.min(tagsWithCategories.group?.length * 30, 150)}
-                  >
-                    <Stack gap="sm">
-                      {tagsWithCategories?.group.map((tag) => (
-                        <Checkbox key={tag} value={tag} label={tag} />
-                      ))}
-                    </Stack>
-                  </ScrollArea>
-                ) : (
-                  <Text size="sm" className="text-red-500">
-                    {translation(
-                      "chat_history.modal-tag-empty1",
-                      "Tags not available",
-                    )}
-                  </Text>
-                )}
-              </Checkbox.Group>
-            )}
-            <Checkbox.Group
-              value={selectedTags}
-              onChange={setSelectedTags}
-              label={translation(
-                "chat_history.modal-tag-label2",
-                "Tags created by you",
-              )}
-            >
-              {tagsWithCategories.user?.length ? (
-                <ScrollArea
-                  h={Math.min(tagsWithCategories.user?.length * 30, 150)}
-                >
-                  <Stack gap="sm">
-                    {tagsWithCategories?.user.map((tag) => (
-                      <Checkbox key={tag} value={tag} label={tag} />
-                    ))}
-                  </Stack>
-                </ScrollArea>
-              ) : (
-                <Text variant="danger">
-                  {translation(
-                    "chat_history.modal-tag-empty2",
-                    "Tags not available",
-                  )}
-                </Text>
-              )}
-            </Checkbox.Group>
-          </>
+          <TagsProvider
+            selectedTags={selectedTags}
+            setSelectedTags={setSelectedTags}
+          />
         )}
 
         <Group justify="flex-end">

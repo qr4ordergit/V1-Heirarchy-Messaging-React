@@ -5,7 +5,11 @@ import Chatting from "./Chatting";
 import Navbar from "./Navbar";
 import TextFilterInputBox from "./TextFilterInputBox";
 import { api } from "../../../api/axios";
-import { API_ENDPOINTS, withTargetUser } from "../../../utils/constant";
+import {
+  API_ENDPOINTS,
+  TRIGGERS,
+  withTargetUser,
+} from "../../../utils/constant";
 import useContactStore from "../../../store/contacts/contacts.store";
 import { useAuthStore } from "../../../store/auth/auth.store";
 import { useParams } from "react-router";
@@ -28,6 +32,9 @@ function Conversation() {
   const { translation } = useTranslation();
 
   const fetchTagsList = async () => {
+    const allowedList = [TRIGGERS.tagsForNewMsgModal, TRIGGERS.tagList];
+    if (!allowedList.includes(trigger)) return;
+
     try {
       const tagsByCategories = {
         group: [],
@@ -91,38 +98,36 @@ function Conversation() {
 
   useEffect(() => {
     fetchTagsList();
-  }, [chatId]);
+  }, [trigger]);
 
   return (
-    <div className="p-2 h-full">
-      <div className="h-full rounded p-1">
-        <div className="flex justify-center h-full">
-          <div className="w-full lg:w-8/12">
-            <div className="flex flex-col h-full">
-              <Navbar />
-              {disappearingMode && (
-                <div className="text-center text-gray-400 text-[12px]">
-                  {translation(
-                    "chat_history.disappearing-active-text",
-                    "Disappearing messages mode enabled on",
-                  )}{" "}
-                  {dayjs
-                    .utc(current_chat.disappearing_messages?.updated_at)
-                    .local()
-                    .format("DD MMM YYYY hh:mm A")}
-                </div>
-              )}
-              <div className="flex-1 min-h-0">
-                <Chatting />
-              </div>
-              <div>
-                {trigger.includes("search:") ? (
-                  <TextFilterInputBox />
-                ) : (
-                  <ChatInput />
-                )}
-              </div>
+    <div className="flex justify-center h-full bg-(--app-surface-glass) rounded-lg p-2">
+      <div className="w-full rounded-lg">
+        <div className="flex flex-col h-full relative">
+          {/* blur effect on top */}
+          <div className="chattingSectionTopBlur"></div>
+          <Navbar />
+          {disappearingMode && (
+            <div className="text-center text-gray-300 text-[12px]">
+              {translation(
+                "chat_history.disappearing-active-text",
+                "Disappearing messages mode enabled on",
+              )}{" "}
+              {dayjs
+                .utc(current_chat.disappearing_messages?.updated_at)
+                .local()
+                .format("DD MMM YYYY hh:mm A")}
             </div>
+          )}
+          <div className="flex-1 min-h-0">
+            <Chatting />
+          </div>
+          <div>
+            {trigger.includes("search:") ? (
+              <TextFilterInputBox />
+            ) : (
+              <ChatInput />
+            )}
           </div>
         </div>
       </div>

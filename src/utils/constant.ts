@@ -168,6 +168,8 @@ export const TRIGGERS = {
   chatPasswordModal: "chatPasswordModal",
   chatPasswordPayload: "chatPasswordPayload",
   groupInfoModal: "groupInfoModal",
+  tagsForNewMsgModal: "tagsForNewMsgModal",
+  tagsForNewMsgModal_payload: "tagsForNewMsgModal_payload"
 };
 
 export const OPENERS = {

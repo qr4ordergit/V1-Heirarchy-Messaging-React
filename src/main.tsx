@@ -26,6 +26,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <Notifications position="top-right" zIndex={1000} />
       <App />
     </MantineProvider>
-    ,
   </React.StrictMode>,
 );

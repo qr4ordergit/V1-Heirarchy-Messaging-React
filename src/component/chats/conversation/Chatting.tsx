@@ -13,7 +13,7 @@ import { Notification } from "../../../utils/notification";
 import { useChatStore, type MESSAGE } from "../../../store/chats/chats.store";
 import { useNavigate, useParams } from "react-router";
 import { useNextPerson } from "../../../hooks/useNextPerson";
-import { MessageChat } from "./MessageChat";
+import { OwnMessageBubble } from "./OwnMessageBubble";
 import { useTriggerStore } from "../../../store/trigger/trigger.store";
 import { TRIGGERS } from "../../../utils/constant";
 import { useAuthStore } from "../../../store/auth/auth.store";
@@ -23,6 +23,8 @@ import { useTranslation } from "../../../store/language/language.store";
 import { getApiErrorMessage } from "../../../api/getApiErrorMessage";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import MessageFeatures from "../message/MessageFeatures";
+import MessageBubble from "../message/MessageBubble";
 
 dayjs.extend(utc);
 
@@ -277,10 +279,12 @@ export default function Chatting() {
       block: "center",
     });
 
-    element.classList.add("bg-gray-200");
+    const highlighter_color = "bg-gray-500";
+
+    element.classList.add(highlighter_color);
 
     setTimeout(() => {
-      element.classList.remove("bg-gray-200");
+      element.classList.remove(highlighter_color);
     }, 1500);
   };
 
@@ -324,7 +328,22 @@ export default function Chatting() {
       if (msg?.double_encryption) {
         return <EncryptedChatCard msg={msg} />;
       } else {
-        return <MessageChat msg={msg} onReplyClick={scrollToMessage} />;
+        const own_user_id = target_user ?? userDetails?.username;
+        const isMe = own_user_id === msg.created_by;
+
+        if (isMe) {
+          return (
+            <OwnMessageBubble msgId={msg._id || ""}>
+              <MessageFeatures msg={msg} onReplyClick={scrollToMessage} />
+            </OwnMessageBubble>
+          );
+        }
+
+        return (
+          <MessageBubble createdBy={msg.created_by ?? ""} msgId={msg._id || ""}>
+            <MessageFeatures msg={msg} onReplyClick={scrollToMessage} />
+          </MessageBubble>
+        );
       }
     },
   };
@@ -401,7 +420,7 @@ export default function Chatting() {
 
   return (
     <div
-      className="overflow-auto h-full"
+      className="overflow-auto h-full px-2 hide-scrollbar"
       onScroll={handlePagination}
       ref={viewport}
     >
