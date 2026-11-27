@@ -23,7 +23,6 @@
   gap: 6px;
   padding: 3px;
   border-radius: 999px;
-
   cursor: pointer;
   transition:
     filter 150ms ease,
@@ -254,9 +253,9 @@
 .wrapper {
   --accent: var(--app-accent, #4f8cff);
   --dark: var(--app-surface-dark, rgba(52, 52, 66, 0.95));
-  --control: var(--app-control, rgba(40, 40, 44, 0.6));
-  --line: var(--app-glass-border, rgba(255, 255, 255, 0.28));
-  --sub: var(--app-text-muted, #e3e5ee);
+  --surface-darker: var(--app-surface-darker, rgba(40, 40, 44, 0.6));
+  --line: var(--app-border-light, rgba(255, 255, 255, 0.28));
+  --sub: var(--app-text-secondary, #e3e5ee);
   color: #fff;
   min-height: 100vh;
   font-size: 15px;
@@ -301,7 +300,7 @@
   font-size: 15px;
 }
 .searchWrapper {
-  background: var(--app-row, rgba(190, 190, 190, 0.28));
+  background: var(--app-surface-light, rgba(190, 190, 190, 0.28));
   border-radius: 16px;
   padding: 5px;
 }
@@ -323,7 +322,7 @@
   height: 38px;
 }
 .listPanel {
-  background: var(--app-panel, rgba(74, 74, 74, 0.45));
+  background: var(--app-surface-panel, rgba(74, 74, 74, 0.45));
   border-radius: 20px;
   padding: 10px;
 }
@@ -331,21 +330,21 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: var(--app-row, rgba(190, 190, 190, 0.28));
+  background: var(--app-surface-light, rgba(190, 190, 190, 0.28));
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 10px;
   transition: background 0.15s;
 }
 .row:hover {
-  background: var(--app-row-hover, rgba(190, 190, 190, 0.36));
+  background: var(--app-surface-light-hover, rgba(190, 190, 190, 0.36));
 }
 .rowAvatar {
   flex: none;
   width: 68px;
   height: 68px;
   border-radius: 14px;
-  background: var(--control);
+  background: var(--surface-darker);
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -392,14 +391,14 @@
   flex-wrap: wrap;
 }
 .tag {
-  background: var(--control);
+  background: var(--surface-darker);
   border-radius: 999px;
   padding: 3px 12px;
   font-size: 12px;
   font-weight: 500;
 }
 .passkey {
-  background: var(--control);
+  background: var(--surface-darker);
   border-radius: 999px;
   padding: 3px 10px;
   font-family: monospace;
@@ -419,7 +418,7 @@
   height: 40px;
   border: none;
   border-radius: 12px;
-  background: var(--control);
+  background: var(--surface-darker);
   color: #fff;
   display: grid;
   place-items: center;
@@ -446,34 +445,6 @@
   font-size: 12px;
   color: #2f6fe0;
   cursor: pointer;
-}
-
-.modalContent {
-  background: linear-gradient(180deg, #e9eaef, #d4d6df) !important;
-  border: 1px solid #fff;
-  border-radius: 24px !important;
-  color: #0b0b10;
-}
-.modalHeader {
-  background: var(--app-bg-dark, #2a2a33);
-  color: #fff;
-}
-.modalTitle,
-.modalClose {
-  color: #fff;
-  font-weight: 700;
-}
-.modalContent :global(.mantine-Checkbox-input) {
-  border-radius: 7px;
-}
-.modalContent :global(.mantine-Checkbox-input:checked) {
-  background: #6a9bec;
-  border-color: #6a9bec;
-}
-.modalContent :global(.mantine-Button-root) {
-  border-radius: 999px;
-  background: var(--app-accent, #4f8cff);
-  color: #fff;
 }
 
 .userPill {
@@ -516,7 +487,7 @@
   gap: 10px;
   padding: 10px;
   border-radius: 22px;
-  background: var(--app-glass, rgba(74, 74, 74, 0.5));
+  background: var(--app-surface-glass, rgba(74, 74, 74, 0.5));
   border: 1px solid var(--line);
 }
 .headRow {
@@ -570,7 +541,7 @@
   white-space: nowrap;
 }
 .searchWrapper {
-  background: var(--app-row, rgba(190, 190, 190, 0.28));
+  background: var(--app-surface-light, rgba(190, 190, 190, 0.28));
   border-radius: 18px;
   padding: 6px;
   margin: 0;
@@ -593,7 +564,7 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: var(--control);
+  background: var(--surface-darker);
   color: #fff;
   display: grid;
   place-items: center;
@@ -770,5 +741,5 @@
 }
 
 .wrapper {
-  --mantine-color-dimmed: var(--app-text-muted, #e3e5ee);
+  --mantine-color-dimmed: var(--app-text-secondary, #e3e5ee);
 }

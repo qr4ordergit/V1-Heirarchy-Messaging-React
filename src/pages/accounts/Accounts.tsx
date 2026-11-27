@@ -2194,12 +2194,6 @@ export default function Accounts() {
       />
 
       <Modal
-        classNames={{
-          content: classes.modalContent,
-          header: classes.modalHeader,
-          title: classes.modalTitle,
-          close: classes.modalClose,
-        }}
         opened={deleteTarget !== null}
         onClose={closeManageAccountModal}
         title={
@@ -2431,12 +2425,6 @@ export default function Accounts() {
       </Modal>
 
       <Modal
-        classNames={{
-          content: classes.modalContent,
-          header: classes.modalHeader,
-          title: classes.modalTitle,
-          close: classes.modalClose,
-        }}
         opened={passwordTarget !== null}
         onClose={closePasswordModal}
         title={translation(
@@ -2525,12 +2513,6 @@ export default function Accounts() {
       </Modal>
 
       <Modal
-        classNames={{
-          content: classes.modalContent,
-          header: classes.modalHeader,
-          title: classes.modalTitle,
-          close: classes.modalClose,
-        }}
         opened={profileTarget !== null}
         onClose={closeProfileModal}
         title={translation(
@@ -2683,12 +2665,6 @@ export default function Accounts() {
       </Modal>
 
       <Modal
-        classNames={{
-          content: classes.modalContent,
-          header: classes.modalHeader,
-          title: classes.modalTitle,
-          close: classes.modalClose,
-        }}
         opened={lockTarget !== null}
         onClose={closeLockModal}
         title={translation("accounts_page.titlePasskeyLock", "Passkey & Lock")}
@@ -2789,12 +2765,6 @@ export default function Accounts() {
       </Modal>
 
       <Modal
-        classNames={{
-          content: classes.modalContent,
-          header: classes.modalHeader,
-          title: classes.modalTitle,
-          close: classes.modalClose,
-        }}
         opened={accessAndPermissions.open}
         onClose={onCloseAccessAndPermissions}
         title={
